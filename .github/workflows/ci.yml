@@ -61,3 +61,35 @@ jobs:
         run: pnpm install
       - run: pnpm run build
       - run: pnpm run typecheck
+
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node-version:
+          - 20.10.0
+          - 21.x
+    steps:
+      - name: ⬇ Checkout repository
+        uses: actions/checkout@v4
+      - name: ⚡ Cache turbo build setup
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-
+      - name: 📦 Install PNPM
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+      - name: 🅝 Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - name: 📦 Install PNPM dependencies
+        run: pnpm install
+      - run: pnpm run lint build --filter="./packages/*"
+      - run: pnpm run test --filter="./packages/*" --filter=!@foadonis/shopkeeper
