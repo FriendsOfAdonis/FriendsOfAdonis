@@ -8,7 +8,7 @@
     "dev": "next dev",
     "start": "next start",
     "lint": "eslint .",
-    "postinstall": "fumadocs-mdx"
+    "mdx": "fumadocs-mdx"
   },
   "dependencies": {
     "@radix-ui/react-collapsible": "^1.1.1",
