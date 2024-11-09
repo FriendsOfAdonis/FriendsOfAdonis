@@ -1,6 +1,6 @@
 import { ApplicationService } from '@adonisjs/core/types'
 import type GraphQlServer from '../src/server.js'
-import { GraphQlConfig } from '../src/types.js'
+import { GraphQLConfig } from '../src/types.js'
 
 declare module '@adonisjs/core/types' {
   export interface ContainerBindings {
@@ -15,10 +15,16 @@ export default class GraphQlProvider {
     this.app.container.singleton('graphql', async (resolver) => {
       const { default: GraphQlServerClass } = await import('../src/server.js')
 
-      const config = this.app.config.get<GraphQlConfig>('graphql', {})
+      const config = this.app.config.get<GraphQLConfig>('graphql', {})
       const logger = await this.app.container.make('logger')
       return new GraphQlServerClass(config, resolver, logger)
     })
+  }
+
+  async boot() {
+    const graphql = await this.app.container.make('graphql')
+    const router = await this.app.container.make('router')
+    graphql.registerRoute(router)
   }
 
   async ready() {

@@ -1,8 +1,8 @@
 import { ApolloServer } from '@apollo/server'
-import { GraphQlConfig, LazyImport } from './types.js'
+import { GraphQLConfig, LazyImport } from './types.js'
 import { HttpContext } from '@adonisjs/core/http'
 import { buildSchema } from 'type-graphql'
-import { ContainerBindings } from '@adonisjs/core/types'
+import { ContainerBindings, HttpRouterService } from '@adonisjs/core/types'
 import { adonisToGraphqlRequest, graphqlToAdonisResponse } from './utils/apollo.js'
 import { ContainerResolver } from '@adonisjs/core/container'
 import { Logger } from '@adonisjs/core/logger'
@@ -18,12 +18,12 @@ import { GraphQLSchema } from 'graphql'
 export default class GraphQLServer {
   #resolvers: LazyImport<Function>[] = []
   #container: ContainerResolver<ContainerBindings>
-  #config: GraphQlConfig
+  #config: GraphQLConfig
   #logger: Logger
   #apollo?: ApolloServer
 
   constructor(
-    config: GraphQlConfig,
+    config: GraphQLConfig,
     container: ContainerResolver<ContainerBindings>,
     logger: Logger
   ) {
@@ -123,5 +123,11 @@ export default class GraphQLServer {
     })
 
     return graphqlToAdonisResponse(ctx.response, httpGraphQLResponse)
+  }
+
+  registerRoute(router: HttpRouterService) {
+    router.route(this.#config.path, ['GET', 'POST', 'PATCH', 'HEAD', 'OPTIONS'], (ctx) =>
+      this.handle(ctx)
+    )
   }
 }

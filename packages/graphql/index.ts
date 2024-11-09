@@ -5,7 +5,11 @@ export { defineConfig } from './src/define_config.js'
 export * as errors from './src/errors/main.js'
 export { CurrentUser } from './src/decorators/user.js'
 
-export type { ResolverData, GraphQLMiddleware, GraphQlConfig } from './src/types.js'
+export type {
+  ResolverData,
+  GraphQLMiddleware,
+  GraphQLConfig as GraphQlConfig,
+} from './src/types.js'
 
 type MethodPropClassDecorator = PropertyDecorator & MethodDecorator & ClassDecorator
 
