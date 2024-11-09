@@ -29,7 +29,6 @@ export const authChecker: AuthChecker<HttpContext, BouncerAbility<any>> = async 
     }
 
     const bouncer = context.bouncer as Bouncer<any>
-    // TODO: We might want to run them all at same time
     for (const ability of abilities) {
       if (await bouncer.denies(ability)) {
         return false

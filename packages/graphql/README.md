@@ -10,11 +10,17 @@
 
 <div align="center">
 
-<!-- automd:badges color="purple" license name="@foadonis/graphql" bundlephobia packagephobia -->
+<!-- automd:badges color="brightgreen" license name="@foadonis/graphql" bundlephobia packagephobia -->
 
-[![npm version](https://img.shields.io/npm/v/@foadonis/graphql?color=purple)](https://npmjs.com/package/@foadonis/graphql)
-[![npm downloads](https://img.shields.io/npm/dm/@foadonis/graphql?color=purple)](https://npm.chart.dev/@foadonis/graphql)
-[![bundle size](https://img.shields.io/bundlephobia/minzip/@foadonis/graphql?color=purple)](https://bundlephobia.com/package/@foadonis/graphql)
+[![npm version](https://img.shields.io/npm/v/@foadonis/graphql?color=brightgreen)](https://npmjs.com/package/@foadonis/graphql)
+[![npm downloads](https://img.shields.io/npm/dm/@foadonis/graphql?color=brightgreen)](https://npm.chart.dev/@foadonis/graphql)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/@foadonis/graphql?color=brightgreen)](https://bundlephobia.com/package/@foadonis/graphql)
+
+<!-- /automd -->
+
+<!-- automd:coverage from="branches,functions" -->
+
+![Coverage](https://img.shields.io/badge/coverage-64%25-orange)
 
 <!-- /automd -->
 

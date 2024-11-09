@@ -123,6 +123,9 @@ importers:
       '@apollo/server':
         specifier: ^4.11.2
         version: 4.11.2(encoding@0.1.13)(graphql@16.9.0)
+      '@japa/expect':
+        specifier: ^3.0.2
+        version: 3.0.2(@japa/runner@3.1.4)
       type-graphql:
         specifier: 2.0.0-rc.2
         version: 2.0.0-rc.2(class-validator@0.14.1)(graphql-scalars@1.23.0(graphql@16.9.0))(graphql@16.9.0)

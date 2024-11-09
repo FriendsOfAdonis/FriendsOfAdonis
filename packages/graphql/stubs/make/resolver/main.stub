@@ -1,8 +1,0 @@
-{{#var resolverName = generators.resolverName(entity.name)}}
-{{#var resolverFileName = generators.resolverFileName(entity.name)}}
-import { Resolver } from 'adonis-graphql/decorators'
-
-@Resolver()
-export default class {{ resolverName }} {
-
-}

@@ -2,5 +2,19 @@
   "title": "Shopkeeper",
   "description": "Fluent interface for Stripe",
   "icon": "CircleDollarSign",
-  "root": true
+  "root": true,
+  "pages": [
+    "---Guide---",
+    "index",
+    "getting-started",
+    "------",
+    "customers",
+    "payment-methods",
+    "subscriptions",
+    "subscription-trials",
+    "webhooks",
+    "checkout",
+    "single-charges",
+    "invoices"
+  ]
 }

@@ -90,6 +90,7 @@
   },
   "dependencies": {
     "@apollo/server": "^4.11.2",
+    "@japa/expect": "^3.0.2",
     "type-graphql": "2.0.0-rc.2"
   },
   "optionalDependencies": {

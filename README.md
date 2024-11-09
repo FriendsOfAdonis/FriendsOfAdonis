@@ -30,9 +30,6 @@
 
 </div>
 
-## Goals
-
-
 ## Contributors
 
 <a href="https://github.com/FriendsOfAdonis/FriendsOfAdonis/graphs/contributors">

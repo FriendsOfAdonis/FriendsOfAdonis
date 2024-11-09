@@ -1,0 +1,135 @@
+---
+title: 'Getting Started'
+icon: Rocket
+---
+
+## Installation
+
+Install and configure the package using the following command :
+
+```sh
+node ace add @foadonis/shopkeeper
+```
+
+<ConfigurationSteps pkg="@foadonis/shopkeeper" providers={['shopkeeper']} config="shopkeeper" />
+
+### Migrations
+
+Shopkeeper comes with a set of migrations to add serveral columns to your `users` table, a new `subscriptions` table to hold all of your customer's subscriptions and a `subscription_items` table for subscriptions with multiple prices.
+
+You can run the migration with:
+
+```sh
+node ace migrations:run
+```
+
+Lastly, to ensure Shopkeeper properly handles all Stripe events, remember to [configure Shopkeeper's webhook handling](./webhooks).
+
+## Configuration
+
+### Billable Model
+
+Before using Shopkeeper, add the `Billable` mixin to your billable model definition. Typically, this will be the `User` model. This trait provides various methods to allow you to perform common billing tasks, such as creating subscriptions, applying coupons, and updating payment method information:
+
+```ts title="app/models/user.ts"
+import { compose } from '@adonisjs/core/helpers'
+import { BaseModel } from '@adonisjs/lucid/orm'
+import { Billable } from '@foadonis/shopkeeper/mixins'
+
+export default class User extends compose(BaseModel, Billable) {}
+```
+
+In your Shopkeeper configuration file, define your User as the Customer model:
+
+```ts
+// title: config/shopkeeper.ts
+import { defineConfig } from '@foadonis/shopkeeper'
+
+export default defineConfig({
+  customerModel: () => import('#models/user')
+  ...
+})
+```
+
+<Callout>
+
+When using a model with a different name than `User`, make sure to change the table name in the generated migration.
+
+</Callout>
+
+### API Keys
+
+Next, you should configure your Stripe API keys in your application's `.env` file. You can retrieve your Stripe API keys from the [Stripe control panel](https://dashboard.stripe.com/test/developers):
+
+```ini title=".env"
+STRIPE_KEY=your-stripe-key
+STRIPE_SECRET=your-stripe-secret
+STRIPE_WEBHOOK_SECRET=your-stripe-webhook-secret
+```
+
+<Callout type="warn">
+
+In production environment the `STRIPE_WEBHOOK_SECRET` environment variable is mandatory as it secures the Stripe webhook endpoint.
+
+</Callout>
+
+## Your first Checkout
+
+The easiest way to get started with Stripe is by using the [https://stripe.com/payments/checkout](Stripe Checkout) feature.
+
+### Create a price
+
+To start selling you must create a new price in Stripe. want to try the implementation
+
+If you have the [Stripe CLI](https://docs.stripe.com/stripe-cli) you can simply run the following command.
+
+````bash
+stripe prices create  \
+  --currency=usd \
+  --unit-amount=1000 \
+  -d "recurring[interval]"=month \
+  -d "product_data[name]"="Gold Plan"```
+````
+
+### Redirect to the Checkout
+
+Let's now create a route to redirect our user to the Stripe Checkout page for the price we just created.
+
+```ts title="start/routes.ts"
+router.get('/checkout', ({ auth }) => {
+  const user = await auth.getUserOrFail()
+  const checkout = await user.checkout('price_xxxxxxx')
+
+  response.redirect(303).toPath(checkout.session.url)
+})
+```
+
+### Handle redirect
+
+When a customer visits this route they will be redirected to Stripe's Checkout page. By default, when a user successfully completes or cancels a purchase they will be redirected to your `home` route location, but you may specify custom callback URLs using the `success_url` and `cancel_url` options:
+
+```ts
+router.get('/', async ({ auth, response }) => {
+  const user = auth.getUserOrFail()
+  const checkout = await user.checkout('price_xxxxxxx', {
+    success_url: route('checkout.success'),
+    cancel_url: route('checkout.cancel'),
+  })
+
+  response.redirect().status(303).toPath(checkout.session.url)
+})
+
+router
+  .get('/success', async ({ view }) => {
+    return view.render('checkout/success')
+  })
+  .as('checkout.success')
+
+router
+  .get('/cancel', async ({ view }) => {
+    return view.render('checkout/cancel')
+  })
+  .as('checkout.cancel')
+```
+
+Congratulation, you can now accept money and get your first customers!

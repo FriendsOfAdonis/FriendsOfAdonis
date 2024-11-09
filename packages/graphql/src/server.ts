@@ -9,6 +9,7 @@ import { Logger } from '@adonisjs/core/logger'
 import { authChecker } from './auth_checker.js'
 import { DateTime } from 'luxon'
 import { LuxonDateTimeScalar } from './scalars/luxon_datetime.js'
+import { ApolloServerPluginLandingPageDisabled } from '@apollo/server/plugin/disabled'
 
 export default class GraphQLServer {
   #apollo?: ApolloServer
@@ -44,6 +45,13 @@ export default class GraphQLServer {
       (m) => m.map((r) => r.default).filter(Boolean) as Function[]
     )
 
+    const {
+      apollo: { plugins, playground, ...apolloConfig },
+      scalarsMap,
+      validate,
+      ...buildSchemaOptions
+    } = this.#config
+
     const schema = await buildSchema({
       resolvers: resolvers as any,
       container: {
@@ -51,12 +59,19 @@ export default class GraphQLServer {
           return this.#container.make(someClass)
         },
       },
-      scalarsMap: [{ type: DateTime, scalar: LuxonDateTimeScalar }],
-      validate: true,
+      scalarsMap: [{ type: DateTime, scalar: LuxonDateTimeScalar }, ...(scalarsMap ?? [])],
       authChecker: authChecker,
+      ...buildSchemaOptions,
     })
 
-    const apollo = new ApolloServer({ schema, ...this.#config })
+    const apollo = new ApolloServer({
+      schema,
+      plugins: [
+        ...(plugins ?? []),
+        ...(playground ? [ApolloServerPluginLandingPageDisabled()] : []),
+      ],
+      ...apolloConfig,
+    })
     await apollo.start()
     this.#apollo = apollo
 

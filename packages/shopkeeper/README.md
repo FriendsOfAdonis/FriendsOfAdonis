@@ -10,11 +10,11 @@
 
 <div align="center">
 
-<!-- automd:badges color="purple" license name="@foadonis/openapi" bundlephobia packagephobia -->
+<!-- automd:badges color="brightgreen" license name="@foadonis/openapi" bundlephobia packagephobia -->
 
-[![npm version](https://img.shields.io/npm/v/@foadonis/openapi?color=purple)](https://npmjs.com/package/@foadonis/openapi)
-[![npm downloads](https://img.shields.io/npm/dm/@foadonis/openapi?color=purple)](https://npm.chart.dev/@foadonis/openapi)
-[![bundle size](https://img.shields.io/bundlephobia/minzip/@foadonis/openapi?color=purple)](https://bundlephobia.com/package/@foadonis/openapi)
+[![npm version](https://img.shields.io/npm/v/@foadonis/openapi?color=brightgreen)](https://npmjs.com/package/@foadonis/openapi)
+[![npm downloads](https://img.shields.io/npm/dm/@foadonis/openapi?color=brightgreen)](https://npm.chart.dev/@foadonis/openapi)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/@foadonis/openapi?color=brightgreen)](https://bundlephobia.com/package/@foadonis/openapi)
 
 <!-- /automd -->
 
