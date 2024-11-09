@@ -132,6 +132,9 @@ importers:
       graphql-ws:
         specifier: ^5.16.0
         version: 5.16.0(graphql@16.9.0)
+      pkg-types:
+        specifier: ^1.2.1
+        version: 1.2.1
       type-graphql:
         specifier: 2.0.0-rc.2
         version: 2.0.0-rc.2(class-validator@0.14.1)(graphql-scalars@1.23.0(graphql@16.9.0))(graphql@16.9.0)

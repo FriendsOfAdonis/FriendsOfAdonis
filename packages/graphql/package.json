@@ -94,6 +94,7 @@
     "@apollo/server": "^4.11.2",
     "@npmcli/package-json": "^6.0.1",
     "graphql-ws": "^5.16.0",
+    "pkg-types": "^1.2.1",
     "type-graphql": "2.0.0-rc.2",
     "ws": "^8.18.0"
   },

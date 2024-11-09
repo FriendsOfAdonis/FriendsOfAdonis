@@ -13,8 +13,8 @@
 */
 
 import ConfigureCommand from '@adonisjs/core/commands/configure'
-import PackageJson from '@npmcli/package-json'
 import { stubsRoot } from './stubs/main.js'
+import { readPackageJSON, writePackageJSON } from 'pkg-types'
 
 export async function configure(command: ConfigureCommand) {
   const codemods = await command.createCodemods()
@@ -29,14 +29,13 @@ export async function configure(command: ConfigureCommand) {
 }
 
 async function updatePackageJson(command: ConfigureCommand) {
-  const packageJson = await PackageJson.load(command.app.makePath())
+  const path = command.app.makePath('package.json')
+  const packageJson = await readPackageJSON(path)
 
-  packageJson.update({
-    imports: {
-      ...packageJson.content.imports,
-      '#graphql/*': './app/graphql/*.js',
-    },
-  })
+  packageJson.imports = {
+    ...packageJson.imports,
+    '#graphql/*': './app/graphql/*.js',
+  }
 
-  await packageJson.save()
+  await writePackageJSON(path, packageJson)
 }
