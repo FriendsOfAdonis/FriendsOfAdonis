@@ -2,6 +2,8 @@ import { test } from '@japa/runner'
 import { LuxonDateTimeScalar } from '../src/scalars/luxon_datetime.js'
 import { DateTime } from 'luxon'
 
+process.env.TZ = 'Europe/Paris'
+
 test.group('Luxon DateTime', () => {
   test('parse', ({ assert }) => {
     const iso = '2024-11-09T02:16:35.240+01:00'
