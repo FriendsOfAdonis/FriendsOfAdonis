@@ -129,9 +129,6 @@ importers:
       '@npmcli/package-json':
         specifier: ^6.0.1
         version: 6.0.1
-      graphql-sse:
-        specifier: ^2.5.3
-        version: 2.5.3(graphql@16.9.0)
       graphql-ws:
         specifier: ^5.16.0
         version: 5.16.0(graphql@16.9.0)
@@ -5143,12 +5140,6 @@ packages:
     engines: {node: '>=10'}
     peerDependencies:
       graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
-
-  graphql-sse@2.5.3:
-    resolution: {integrity: sha512-5IcFW3e7fPOG7oFkK1v3X1wWtCJArQKB/H1UJeNotjy7a/9EYA5K+EiHJF1BiDSVNx7y64bd0FlDETrNBSvIHQ==}
-    engines: {node: '>=12'}
-    peerDependencies:
-      graphql: '>=0.11 <=16'
 
   graphql-ws@5.16.0:
     resolution: {integrity: sha512-Ju2RCU2dQMgSKtArPbEtsK5gNLnsQyTNIo/T7cZNp96niC1x0KdJNZV0TIoilceBPQwfb5itrGl8pkFeOUMl4A==}
@@ -13953,10 +13944,6 @@ snapshots:
     dependencies:
       graphql: 16.9.0
       tslib: 2.7.0
-
-  graphql-sse@2.5.3(graphql@16.9.0):
-    dependencies:
-      graphql: 16.9.0
 
   graphql-ws@5.16.0(graphql@16.9.0):
     dependencies:
