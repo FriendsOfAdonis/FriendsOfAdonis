@@ -8,7 +8,7 @@ processCLIArgs(process.argv.splice(2))
 
 configure({
   files: ['tests/**/*.spec.ts'],
-  plugins: [assert(), expect(), fileSystem({ basePath: BASE_URL, autoClean: false })],
+  plugins: [assert(), expect(), fileSystem({ basePath: BASE_URL })],
 })
 
 run()
