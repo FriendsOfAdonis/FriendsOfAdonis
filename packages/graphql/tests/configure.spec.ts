@@ -3,7 +3,7 @@ import { IgnitorFactory } from '@adonisjs/core/factories'
 import { test } from '@japa/runner'
 import { BASE_URL } from './helpers.js'
 
-test.group('Configuration', () => {
+test.group('Configure', () => {
   test('should configure openapi', async ({ fs, assert }) => {
     const ignitor = new IgnitorFactory()
       .withCoreProviders()
@@ -24,6 +24,7 @@ test.group('Configuration', () => {
 
     await fs.create('.env', '')
     await fs.createJson('tsconfig.json', {})
+    await fs.createJson('package.json', {})
     await fs.create('start/env.ts', `export default Env.create(new URL('./'), {})`)
     await fs.create('adonisrc.ts', `export default defineConfig({})`)
 
@@ -36,6 +37,7 @@ test.group('Configuration', () => {
 
     await assert.fileExists('config/graphql.ts')
     await assert.fileContains('config/graphql.ts', 'defineConfig')
+    await assert.fileContains('package.json', '#graphql')
 
     await assert.fileExists('adonisrc.ts')
     await assert.fileContains('adonisrc.ts', '@foadonis/graphql/graphql_provider')

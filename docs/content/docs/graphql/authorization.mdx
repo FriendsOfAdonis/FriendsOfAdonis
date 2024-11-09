@@ -4,43 +4,50 @@ title: Authorization
 
 Authentication and Authorization are supported out of the box using [`@adonisjs/auth`](https://docs.adonisjs.com/guides/authentication/introduction) (authentication) and [`@adonisjs/bouncer`](https://docs.adonisjs.com/guides/security/authorization#authorization) (authorization).
 
+<Callout>
+
+You can find more information about Middlewares on the [Official TypeGraphQL
+documentation](https://typegraphql.com/docs/authorization.html)
+
+</Callout>
+
 ## Secure operations
 
 You can secure your queries to only allow authenticated users to use them by using the `@Authorized` decorator.
 
 ```ts title="app/graphql/resolvers/recipe_resolver.ts"
-import Recipe from "#models/recipe";
-import { Resolver, Query, Mutation, IsAuthorized } from "@foadonis/graphql";
+import Recipe from '#models/recipe'
+import { Resolver, Query, Mutation, Authorized } from '@foadonis/graphql'
 
 @Resolver(Recipe)
 class RecipeResolver {
   @Query(() => [Recipe])
-  @IsAuthorized() // [!code highlight]
+  @Authorized() // [!code highlight]
   recipes() {
     // ...your logic
   }
 
   @Mutation(() => [Recipe])
-  @IsAuthorized() // [!code highlight]
+  @Authorized() // [!code highlight]
   createRecipe() {
     // ...your logic
   }
 }
 ```
 
-The `IsAuthorized` decorator accepts [Bouncer abilities](https://docs.adonisjs.com/guides/security/authorization#defining-abilities) allowing you to ensure your user respects specific requirements.
+The `Authorized` decorator accepts [Bouncer abilities](https://docs.adonisjs.com/guides/security/authorization#defining-abilities) allowing you to ensure your user respects specific requirements.
 
 <Tabs items={["app/graphql/resolvers/recipe_resolver.ts", "app/abilities/main.ts"]}>
 
 ```ts tab="app/graphql/resolvers/recipe_resolver.ts"
-import Recipe from "#models/recipe";
-import { Resolver, Query, IsAuthorized } from "@foadonis/graphql";
-import abilities from "#abilities/main";
+import Recipe from '#models/recipe'
+import { Resolver, Query, Authorized } from '@foadonis/graphql'
+import abilities from '#abilities/main'
 
 @Resolver(Recipe)
 class RecipeResolver {
   @Query(() => [Recipe])
-  @IsAuthorized(abilities.isAdmin) // [!code highlight]
+  @Authorized(abilities.isAdmin) // [!code highlight]
   recipes() {
     // ...your logic
   }
@@ -48,43 +55,43 @@ class RecipeResolver {
 ```
 
 ```ts tab="app/abilities/main.ts"
-import { Bouncer } from "@adonisjs/bouncer";
+import { Bouncer } from '@adonisjs/bouncer'
 
 const abilities = {
   isAdmin = Bouncer.ability((user) => user.isAdmin),
-};
+}
 
-export default abilities;
+export default abilities
 ```
 
 </Tabs>
 
 <Callout>
-  You can pass multiple abilities to `@IsAuthorized`. The user will be
-  authorized only if all of them pass.
+  You can pass multiple abilities to `@Authorized`. The user will be authorized only if all of them
+  pass.
 </Callout>
 
 ## Secure objects
 
-The `@IsAuthorized` decorator also works on fields allowing you to protect only certain fields.
+The `@Authorized` decorator also works on fields allowing you to protect only certain fields.
 With the following example, only authenticated user can access the `fullName` and only admins can access `email`.
 
 ```ts title="app/models/user.ts"
-import { ObjectType, Authorized } from "@foadonis/graphql";
-import abilities from "#abilities/main";
+import { ObjectType, Authorized } from '@foadonis/graphql'
+import abilities from '#abilities/main'
 
 @ObjectType()
 export default class User {
   @Field()
-  declare id: string;
+  declare id: string
 
   @Field()
-  @IsAuthorized()
-  declare fullName: string;
+  @Authorized()
+  declare fullName: string
 
   @Field()
-  @IsAuthorized(abilities.isAdmin)
-  declare email: string;
+  @Authorized(abilities.isAdmin)
+  declare email: string
 }
 ```
 
@@ -93,8 +100,8 @@ export default class User {
 ### Using `@CurrentUser`
 
 ```ts title="app/graphql/resolvers/recipe_resolver.ts"
-import Recipe from "#models/recipe";
-import { Resolver, Query, CurrentUser } from "@foadonis/graphql";
+import Recipe from '#models/recipe'
+import { Resolver, Query, CurrentUser } from '@foadonis/graphql'
 
 @Resolver(Recipe)
 class RecipeResolver {
@@ -106,23 +113,22 @@ class RecipeResolver {
 ```
 
 <Callout type="warn">
-  The `@CurrentUser` decorator makes your operation only available to
-  authenticated users. If you still want to allow guest, you must use the
-  context.
+  The `@CurrentUser` decorator makes your operation only available to authenticated users. If you
+  still want to allow guest, you must use the context.
 </Callout>
 
 ### Using the context
 
 ```ts title="app/graphql/resolvers/recipe_resolver.ts"
-import Recipe from "#models/recipe";
-import { HttpContext } from "@adonisjs/core/http";
-import { Resolver, Query, Ctx } from "@foadonis/graphql";
+import Recipe from '#models/recipe'
+import { HttpContext } from '@adonisjs/core/http'
+import { Resolver, Query, Ctx } from '@foadonis/graphql'
 
 @Resolver(Recipe)
 class RecipeResolver {
   @Query(() => [Recipe])
   recipes(@Ctx() ctx: HttpContext) {
-    const user = ctx.auth.getUserOrFail();
+    const user = ctx.auth.getUserOrFail()
     // ...your logic
   }
 }

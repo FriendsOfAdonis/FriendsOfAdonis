@@ -2,27 +2,96 @@
 title: Configuration
 ---
 
-<TypeTable
-  type={{
-    playground: {
-      type: "boolean",
-      description:
-        "Enable the GraphQL Apollo Playground (defaults to true in development)",
-    },
-    autoSchemaFile: {
-      type: "boolean|string",
-      description: "Automatically generates the schema file",
-      default: "false",
-    },
-    buildSchemaOptions: {
-      type: "BuildSchemaOptions|undefined",
-      description: "Options provided to the TypeGraphQL buildSchema function",
-      default: "undefined",
-    },
-    apolloOptions: {
-      type: "ApolloServerOptions|undefined",
-      description: "Options provided to the ApolloServer",
-      default: "undefined",
-    },
-  }}
-/>
+## Emitting Schema
+
+It is possible to automatically emit the generated GraphQL schema using the `emitSchemaFile` configuration option. This might be useful for generating client without relying on schema introspection or for working in "schema-first".
+
+```ts title="config/graphql.ts"
+import { defineConfig } from '@foadonis/graphql'
+
+export default defineConfig({
+  emitSchemaFile: true, // [!code highlight]
+  // ...rest of your config
+})
+```
+
+By default it will generate a `schema.gql` file at the root of your application but you might want to define a specific path.
+
+```ts title="config/graphql.ts"
+import path from 'node:path'
+import { defineConfig } from '@foadonis/graphql'
+
+export default defineConfig({
+  emitSchemaFile: path.resolve(import.meta.dirname, '__snapshots__/schema/schema.graphql'), // [!code highlight]
+  // ...rest of your config
+})
+```
+
+<Callout>
+
+You can read more about schema emitting on the [TypeGraphQL documentation](https://typegraphql.com/docs/emit-schema.html).
+
+</Callout>
+
+## Introspection and Playground
+
+It’s often useful to ask a GraphQL schema for information about what queries it supports. GraphQL allows you to do so using the introspection system.
+
+<Callout type='warn'>
+
+It is highly recommended **to not enable introspection** in production for security reasons as it exposes the available operation of your Application.
+
+</Callout>
+
+You can use the `apollo.introspection` and `apollo.playground` options in your GraphQL configuration file:
+
+```ts title="config/graphql.ts"
+import { defineConfig } from '@foadonis/graphql'
+
+export default defineConfig({
+  apollo: {
+    playground: true, // [!code highlight]
+    introspection: true, // [!code highlight]
+  },
+})
+```
+
+## Apollo Server options
+
+The `apollo` option of your GraphQL configuration is merged with the options provided by `@foadonis/graphql` allowing you to extend the capabilies of the [ApolloServer](https://www.apollographql.com/docs/apollo-server). You can for example add [plugins](https://www.apollographql.com/docs/apollo-server/builtin-plugins).
+
+```ts
+import { defineConfig } from '@foadonis/graphql'
+import { ApolloServerPluginUsageReporting } from '@apollo/server/plugin/usageReporting'
+import MyCustomScalar from '#graphql/scalars/my_custom_scalar.ts'
+
+export default defineConfig({
+  apollo: {
+    plugins: [
+      ApolloServerPluginUsageReporting({
+        sendVariableValues: { all: true },
+      }),
+    ],
+  },
+})
+```
+
+## Schema Generation Options
+
+Your GraphQL configuration is merged with the options used to generate the GraphQL schema allowing you to extend the capabilies of your schema. For example you might want to add [Custom scalars](https://www.apollographql.com/docs/apollo-server/schema/custom-scalars).
+
+```ts
+import { defineConfig } from '@foadonis/graphql'
+import MyCustomScalar from '#graphql/scalars/my_custom_scalar.ts'
+
+export default defineConfig({
+  scalarsMap: [MyCustomScalar], // [!code highlight]
+})
+```
+
+<Callout>
+
+You can find more information about the available options on the [Official TypeGraphQL
+documentation](https://typegraphql.com/)
+
+</Callout>

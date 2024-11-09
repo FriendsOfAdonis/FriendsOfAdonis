@@ -9,12 +9,13 @@
     "getting-started",
     "------",
     "authorization",
+    "middlewares",
     "subscriptions",
     "---References---",
     "(references)/configuration",
     "(references)/decorators",
     "---Advanced---",
-    "(advanced)/custom-decorators",
-    "(advanced)/generic-types"
+    "[Custom decorators](https://typegraphql.com/docs/custom-decorators.html)",
+    "[Generic Types](https://typegraphql.com/docs/generic-types.html)"
   ]
 }

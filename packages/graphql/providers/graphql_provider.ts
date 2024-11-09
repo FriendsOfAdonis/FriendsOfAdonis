@@ -17,15 +17,16 @@ export default class GraphQlProvider {
 
       const config = this.app.config.get<GraphQlConfig>('graphql', {})
       const logger = await this.app.container.make('logger')
-
       return new GraphQlServerClass(config, resolver, logger)
     })
   }
 
   async ready() {
     if (this.app.getEnvironment() === 'web') {
+      const server = await this.app.container.make('server')
+
       const graphql = await this.app.container.make('graphql')
-      await graphql.start()
+      await graphql.start(server.getNodeServer()!)
     }
   }
 }

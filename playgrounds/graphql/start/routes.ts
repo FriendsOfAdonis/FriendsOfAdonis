@@ -12,4 +12,4 @@ import graphql from '@foadonis/graphql/services/main'
 
 router.get('/', async () => 'It works!')
 
-router.route('/graphql', ['GET', 'POST', 'PATCH'], (ctx) => graphql.handle(ctx))
+router.route('/graphql', ['GET', 'POST', 'PATCH', 'HEAD', 'OPTIONS'], (ctx) => graphql.handle(ctx))

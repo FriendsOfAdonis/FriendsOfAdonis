@@ -1,0 +1,172 @@
+---
+title: Middlewares
+---
+
+Middlewares are similar to the [Adonis Middlewares](https://docs.adonisjs.com/guides/basics/middleware) but they work in the context of a GraphQL operation.
+
+There are executed in series before reaching the resolver. Every middleare can end the request or forward it to the next middleware.
+
+<Callout>
+
+You can find more information about Middlewares on the [Official TypeGraphQL
+documentation](https://typegraphql.com/docs/middlewares.html)
+
+</Callout>
+
+## Examples
+
+### Logging
+
+```ts title="app/graphql/middlewares/access_logger_middleware.ts"
+import { inject } from '@adonisjs/core'
+import { Logger } from '@adonisjs/core/logger'
+import { NextFn, ResolverData } from '@foadonis/graphql'
+
+@inject()
+export default class AccessLoggerMiddleware {
+  constructor(private readonly logger: Logger) {}
+
+  use({ context, info }: ResolverData, next: NextFn) {
+    const user = context.auth.user
+    if (user) {
+      this.logger.info(`Access: ${user.fullName} -> ${info.parentType.name}.${info.fieldName}`)
+    }
+
+    return next()
+  }
+}
+```
+
+### Execution timing
+
+The second argument of the `use` method will execute the rest of the stack allowing you to run actions after the execution of your operations. For example you could log the execution time.
+
+```ts title="app/graphql/middlewares/performance_logger_middleware.ts"
+import { inject } from '@adonisjs/core'
+import { Logger } from '@adonisjs/core/logger'
+import { NextFn, ResolverData } from '@foadonis/graphql'
+
+@inject()
+export default class PerformanceLoggerMiddleware {
+  constructor(private readonly logger: Logger) {}
+
+  async use({ info }: ResolverData, next: NextFn) {
+    const start = Date.now()
+    await next()
+    const diff = Date.now() - start
+    this.logger.info(`${info.parentType.name}.${info.fieldName} [${diff}ms]`)
+  }
+}
+```
+
+### Intercepting the result
+
+Middleware also has the ability to intercept the result of a resolver's execution. It's not only able to e.g. create a log but also replace the result with a new value:
+
+```ts title="app/graphql/middlewares/competitor_middleware.ts"
+import { ResolverData, NextFn } from '@foadonis/graphql'
+import { inject } from '@adonisjs/core'
+
+export default class CompetitorMiddleware {
+  async use({ info }: ResolverData, next: NextFn) {
+    const result = await next()
+
+    if (result === 'ts.ed') {
+      return 'adonis'
+    }
+
+    return result
+  }
+}
+```
+
+## Guards
+
+Guards are simply middlewares that does not call the `next` function so it never reaches the resolver. This is useful when you want to block access on specific conditions.
+
+```ts title="app/graphql/middlewares/competitor_middleware.ts"
+import { ResolverData, NextFn } from '@foadonis/graphql'
+import { inject } from '@adonisjs/core'
+
+export default class CompetitorMiddleware {
+  use({ args }, next) {
+    if (args.frameworkName === 'ts.ed') {
+      throw new Error('Adonis is better')
+    }
+
+    if (args.frameworkName === 'adonis') {
+      return 'AdonisJS'
+    }
+
+    return next()
+  }
+}
+```
+
+## Attaching Middlewares
+
+### Resolver method
+
+To attach middleware to a resolver method, use the `@UseMiddleware` decorator above the method declaration. It accepts an array of middleware that will be called in the provided order. You can also pass them without an array as it supports rest parameters:
+
+```ts title="app/graphql/resolvers/recipe_resolver.ts"
+import { Resolver, UseMiddleware, Query } from '@foadonis/graphql'
+import PerformanceLoggerMiddleware from '#graphql/middlewares/performance_logger_middleware'
+import AccessLoggerMiddleware from '#graphql/middlewares/access_logger_middleware'
+
+@Resolver()
+export default class RecipeResolver {
+  @UseMiddleware(PerformanceLoggerMiddleware, AccessLoggerMiddleware) // [!code highlight]
+  @Query()
+  recipe() {}
+}
+```
+
+### Resolver
+
+If you want to apply the middlewares to all the resolver's class methods, you can put the decorator on top of the class declaration:
+
+```ts title="app/graphql/resolvers/recipe_resolver.ts"
+import { Resolver, UseMiddleware, Query } from '@foadonis/graphql'
+import PerformanceLoggerMiddleware from '#graphql/middlewares/performance_logger_middleware'
+import AccessLoggerMiddleware from '#graphql/middlewares/access_logger_middleware'
+
+@UseMiddleware(PerformanceLoggerMiddleware, AccessLoggerMiddleware) // [!code highlight]
+@Resolver()
+export default class RecipeResolver {
+  @Query()
+  recipe() {}
+}
+```
+
+### ObjectType Field
+
+You can also attach the middleware to the ObjectType fields, the same way as with the `@Authorized` decorator.
+
+```ts
+import { ObjectType, Field, Query } from '@foadonis/graphql'
+import AccessLoggerMiddleware from '#graphql/middlewares/access_logger_middleware'
+
+@ObjectType()
+export default class Recipe {
+  @Field()
+  title: string
+
+  @Field()
+  @UseMiddleware(AccessLoggerMiddleware) // [!code highlight]
+  content: string
+}
+```
+
+### Global
+
+You can apply middlewares globally using the `globalMiddlewares` option in your GraphQL configuration:
+
+```ts title="config/graphql.ts"
+import { defineConfig } from '@foadonis/graphql'
+import AccessLoggerMiddleware from '#graphql/middlewares/access_logger_middleware'
+
+export default defineConfig({
+  globalMiddlewares: [AccessLoggerMiddleware], // [!code highlight]
+})
+```

@@ -10,13 +10,17 @@ import { authChecker } from './auth_checker.js'
 import { DateTime } from 'luxon'
 import { LuxonDateTimeScalar } from './scalars/luxon_datetime.js'
 import { ApolloServerPluginLandingPageDisabled } from '@apollo/server/plugin/disabled'
+import { Server } from 'node:http'
+import { WebSocketServer } from 'ws'
+import { useServer } from 'graphql-ws/lib/use/ws'
+import { GraphQLSchema } from 'graphql'
 
 export default class GraphQLServer {
-  #apollo?: ApolloServer
   #resolvers: LazyImport<Function>[] = []
   #container: ContainerResolver<ContainerBindings>
   #config: GraphQlConfig
   #logger: Logger
+  #apollo?: ApolloServer
 
   constructor(
     config: GraphQlConfig,
@@ -40,19 +44,21 @@ export default class GraphQLServer {
     this.#resolvers = resolvers
   }
 
-  async start() {
+  async start(server: Server) {
+    const schema = await this.#buildSchema()
+
+    await this.#startApollo(schema)
+    await this.#startWebsocket(schema, server)
+  }
+
+  async #buildSchema(): Promise<GraphQLSchema> {
     const resolvers = await Promise.all(this.#resolvers.map((r) => r())).then(
       (m) => m.map((r) => r.default).filter(Boolean) as Function[]
     )
 
-    const {
-      apollo: { plugins, playground, ...apolloConfig },
-      scalarsMap,
-      validate,
-      ...buildSchemaOptions
-    } = this.#config
+    const { apollo, scalarsMap, ...buildSchemaOptions } = this.#config
 
-    const schema = await buildSchema({
+    return buildSchema({
       resolvers: resolvers as any,
       container: {
         get: (someClass) => {
@@ -63,19 +69,40 @@ export default class GraphQLServer {
       authChecker: authChecker,
       ...buildSchemaOptions,
     })
+  }
+
+  async #startApollo(schema: GraphQLSchema) {
+    const {
+      apollo: { plugins, playground, ...apolloConfig },
+    } = this.#config
 
     const apollo = new ApolloServer({
       schema,
       plugins: [
         ...(plugins ?? []),
-        ...(playground ? [ApolloServerPluginLandingPageDisabled()] : []),
+        ...(!playground ? [ApolloServerPluginLandingPageDisabled()] : []),
       ],
       ...apolloConfig,
     })
-    await apollo.start()
+
     this.#apollo = apollo
+    await apollo.start()
 
     this.#logger.info('started GraphQL Apollo Server')
+  }
+
+  async #startWebsocket(schema: GraphQLSchema, httpServer: Server) {
+    // We do not start the websocket server if pubsub is not configured
+    if (!this.#config.pubSub) {
+      return
+    }
+
+    const ws = new WebSocketServer({
+      path: '/graphql',
+      server: httpServer,
+    })
+
+    useServer({ schema }, ws)
   }
 
   async handle(ctx: HttpContext) {

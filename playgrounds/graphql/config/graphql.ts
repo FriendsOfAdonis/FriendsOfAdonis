@@ -1,11 +1,14 @@
+import pubsub from '#graphql/pubsub'
 import env from '#start/env'
-import path from 'node:path'
 import { defineConfig } from '@foadonis/graphql'
+
+const isProduction = env.get('NODE_ENV') === 'production'
 
 export default defineConfig({
   apollo: {
-    introspection: env.get('NODE_ENV') !== 'production',
-    playground: env.get('NODE_ENV') !== 'production',
+    introspection: !isProduction,
+    playground: !isProduction,
   },
-  emitSchemaFile: path.resolve(import.meta.dirname, '../schema.graphql'),
+  emitSchemaFile: true,
+  pubSub: pubsub.notification,
 })

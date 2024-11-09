@@ -11,7 +11,9 @@ import {
   Mutation,
   Query,
   Resolver,
+  UseMiddleware,
 } from '@foadonis/graphql'
+import PerformanceLoggerMiddleware from '#graphql/middlewares/performance_logger_middleware'
 
 @ArgsType()
 class RecipeArgs {
@@ -49,6 +51,7 @@ export default class RecipeResolver {
   }
 
   @Query(() => [Recipe])
+  @UseMiddleware(PerformanceLoggerMiddleware)
   recipes(@Args() { page, perPage }: RecipeArgs) {
     return Recipe.query().paginate(page, perPage)
   }

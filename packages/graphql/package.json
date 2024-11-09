@@ -64,6 +64,7 @@
     "@adonisjs/lucid": "^21.2.0",
     "@foadonis/eslint-config": "workspace:*",
     "@japa/assert": "^3.0.0",
+    "@japa/expect": "^3.0.2",
     "@japa/expect-type": "^2.0.2",
     "@japa/file-system": "^2.3.0",
     "@japa/plugin-adonisjs": "^3.0.1",
@@ -72,6 +73,7 @@
     "@types/luxon": "^3.4.2",
     "@types/node": "^22.8.6",
     "@types/sinon": "^17.0.3",
+    "@types/ws": "^8.5.13",
     "c8": "^10.1.2",
     "copyfiles": "^2.4.1",
     "del-cli": "^5.1.0",
@@ -90,8 +92,11 @@
   },
   "dependencies": {
     "@apollo/server": "^4.11.2",
-    "@japa/expect": "^3.0.2",
-    "type-graphql": "2.0.0-rc.2"
+    "@npmcli/package-json": "^6.0.1",
+    "graphql-sse": "^2.5.3",
+    "graphql-ws": "^5.16.0",
+    "type-graphql": "2.0.0-rc.2",
+    "ws": "^8.18.0"
   },
   "optionalDependencies": {
     "@adonisjs/auth": "^9.2.3",
