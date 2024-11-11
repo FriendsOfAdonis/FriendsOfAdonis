@@ -1,7 +1,9 @@
 import { generateDocument } from 'openapi-metadata'
 
-type BaseDocument = Parameters<typeof generateDocument>[0]['document']
+type GenerateDocumentParameters = Parameters<typeof generateDocument>[0]
 
 export type OpenAPIConfig = {
-  document: BaseDocument
+  document: GenerateDocumentParameters['document']
+  controllers?: GenerateDocumentParameters['controllers']
+  loaders?: GenerateDocumentParameters['loaders']
 }

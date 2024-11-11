@@ -38,9 +38,9 @@ export class OpenAPI {
     const controllers = await this.#routerLoader.load()
 
     this.#document = await generateDocument({
-      controllers,
+      controllers: [...controllers, ...(this.#config.controllers ?? [])],
       customLogger: this.#logger,
-      loaders: [LuxonTypeLoader, VineTypeLoader],
+      loaders: [LuxonTypeLoader, VineTypeLoader, ...(this.#config.loaders ?? [])],
       document: this.#config.document,
     })
 
