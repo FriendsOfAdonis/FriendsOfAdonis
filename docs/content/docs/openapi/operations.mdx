@@ -8,29 +8,31 @@ In OpenAPI terms, paths are endpoints (resources), such as `/users` or `/reports
 
 Tags allows you to categorize your endpoints, you can apply them to specific operations or on the controller.
 
-```ts
-@ApiTags("Demo")
+```ts file="app/controllers/users_controller.ts" twoslash
+import { ApiTags } from '@foadonis/openapi/decorators'
+
+@ApiTags('Demo')
 export default class UsersController {
-  @ApiTags("Other", "Public")
+  @ApiTags('Other', 'Public')
   index() {}
 }
 ```
 
-<Callout>
-  Tags will automatically be applied to your controllers using its name.
-</Callout>
+<Callout>Tags will automatically be applied to your controllers using its name.</Callout>
 
 ## Headers
 
 You can define custom headers that are expected as part of the request. You can apply it to specific operations or directly on the controller.
 
-```ts
+```ts file="app/controllers/users_controller.ts" twoslash
+import { ApiHeader } from '@foadonis/openapi/decorators'
+
 @ApiHeader({
-  name: "X-Language",
-  description: "The currently defined language",
+  name: 'X-Language',
+  description: 'The currently defined language',
 })
 export default class UsersController {
-  @ApiHeader({ name: "X-Store" })
+  @ApiHeader({ name: 'X-Store' })
   index() {}
 }
 ```
@@ -40,12 +42,15 @@ export default class UsersController {
 You can define HTTP responses using the `@ApiResponse` decorator. You can stack them on a same operation for different status codes.
 It can also be used directly on the controller to be applied on all its operations.
 
-```ts
-@ApiResponse({ status: 403, description: "Forbidden" })
+```ts file="app/controllers/users_controller.ts" twoslash
+// @noErrors
+import { ApiResponse } from '@foadonis/openapi/decorators'
+
+@ApiResponse({ status: 403, description: 'Forbidden' })
 export default class UsersController {
   @ApiResponse({
     status: 201,
-    description: "The record has been successfully created.",
+    description: 'The record has been successfully created.',
     type: User,
   })
   create() {}
@@ -56,19 +61,20 @@ export default class UsersController {
 
 You can configure the Media type on your body and responses for specific operation. For example this allow you to enable file upload.
 
-```ts
+```ts file="app/controllers/users_controller.ts" twoslash
+import { ApiProperty, ApiBody } from '@foadonis/openapi/decorators'
+
 class FilesUploadDto {
   @ApiProperty({
-    schema: { type: "array", items: { type: "string", format: "binary" } },
+    schema: { type: 'array', items: { type: 'string', format: 'binary' } },
   })
-  file: any;
+  file: any
 }
 
-@ApiResponse({ status: 403, description: "Forbidden" })
 export default class UsersController {
   @ApiBody({
     type: FilesUploadDto,
-    mediaType: "multipart/form-data",
+    mediaType: 'multipart/form-data',
   })
   uploadFile() {}
 }

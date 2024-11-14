@@ -47,6 +47,9 @@ importers:
 
   docs:
     dependencies:
+      '@foadonis/openapi':
+        specifier: workspace:*
+        version: link:../packages/openapi
       '@radix-ui/react-collapsible':
         specifier: ^1.1.1
         version: 1.1.1(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -65,6 +68,9 @@ importers:
       fumadocs-mdx:
         specifier: 11.1.1
         version: 11.1.1(acorn@8.14.0)(fumadocs-core@14.2.1(@types/react@18.3.12)(next@15.0.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@15.0.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))
+      fumadocs-twoslash:
+        specifier: ^2.0.1
+        version: 2.0.1(@types/react-dom@18.3.1)(@types/react@18.3.12)(fumadocs-ui@14.2.1(@types/react-dom@18.3.1)(@types/react@18.3.12)(next@15.0.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.8.0(@swc/helpers@0.5.13))(@types/node@22.8.6)(typescript@5.6.3))))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(shiki@1.22.2)(typescript@5.6.3)
       fumadocs-typescript:
         specifier: ^3.0.2
         version: 3.0.2(typescript@5.6.3)
@@ -310,8 +316,8 @@ importers:
   packages/openapi:
     dependencies:
       openapi-metadata:
-        specifier: 0.0.0-rc-4
-        version: 0.0.0-rc-4(reflect-metadata@0.2.2)
+        specifier: ^0.1.0
+        version: 0.1.0(reflect-metadata@0.2.2)
     devDependencies:
       '@adonisjs/assembler':
         specifier: ^7.8.2
@@ -2501,6 +2507,9 @@ packages:
   '@shikijs/rehype@1.22.2':
     resolution: {integrity: sha512-A0RHgiYR5uiHvddwHehBN9j8PhOvfT6/GebSTWrapur6M+fD/4i3mlfUv7aFK4b+4GQ1R42L8fC5N98whZjNcg==}
 
+  '@shikijs/twoslash@1.22.2':
+    resolution: {integrity: sha512-4R3A7aH/toZgtlveXHKk01nIsvn8hjAfPJ1aT550zcV4qK6vK/tfaEyYtaljOaY1wig2l5+8sKjNSEz3PcSiEw==}
+
   '@shikijs/types@1.22.2':
     resolution: {integrity: sha512-NCWDa6LGZqTuzjsGfXOBWfjS/fDIbDdmVDug+7ykVe1IKT4c1gakrvlfFYp5NhAXH/lyqLM8wsAPo5wNy73Feg==}
 
@@ -3124,6 +3133,11 @@ packages:
   '@typescript-eslint/visitor-keys@8.13.0':
     resolution: {integrity: sha512-7N/+lztJqH4Mrf0lb10R/CbI1EaAMMGyF5y0oJvFoAhafwgiRA7TXyd8TFn8FC8k5y2dTsYogg238qavRGNnlw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@typescript/vfs@1.6.0':
+    resolution: {integrity: sha512-hvJUjNVeBMp77qPINuUvYXj4FyWeeMMKZkxEATEU3hqBAQ7qdTBCUFT7Sp0Zu0faeEtFf+ldXxMEDr/bk73ISg==}
+    peerDependencies:
+      typescript: '*'
 
   '@ungap/structured-clone@1.2.0':
     resolution: {integrity: sha512-zuVdFrMJiuCDQUMCzQaD6KL28MjnqqN8XnAqiEq9PNm/hCPTSGfrXCOfwj1ow4LFb/tNymJPwsNbVePc1xFqrQ==}
@@ -4969,6 +4983,13 @@ packages:
       fumadocs-core: ^14.0.0
       next: 14.x.x || 15.x.x
 
+  fumadocs-twoslash@2.0.1:
+    resolution: {integrity: sha512-rpc4yci9sSslsmuS3KRp7ByqXFvffpSSMnmCPsByLnHY0t+aUFut7YAfvqJPyALPpj/si9ghaPJG/T1fcrL0uA==}
+    peerDependencies:
+      fumadocs-ui: ^13.0.0 || ^14.0.0
+      react: '>= 18'
+      shiki: 1.x.x
+
   fumadocs-typescript@3.0.2:
     resolution: {integrity: sha512-SqYJy+NxjjuQQeom7wLpODYiWtIKWfndguHL3XKXaMUvhlsjmsWWTaXJWKaqIfOStiYJQlGWrXxFA2Rrpbx63Q==}
     peerDependencies:
@@ -6583,8 +6604,8 @@ packages:
   oniguruma-to-js@0.4.3:
     resolution: {integrity: sha512-X0jWUcAlxORhOqqBREgPMgnshB7ZGYszBNspP+tS9hPD3l13CdaXcHbgImoHUHlrvGx/7AvFEkTRhAGYh+jzjQ==}
 
-  openapi-metadata@0.0.0-rc-4:
-    resolution: {integrity: sha512-sFw8ohDHEC6yiE702mOvm5pCU6Tjo48sVVEJNQU8JqdvwUP/iL2PoBkUmBdrOxAsIoa/I1qKUUigFqTUlnnerQ==}
+  openapi-metadata@0.1.0:
+    resolution: {integrity: sha512-BK8uLc4XgHVroeMtnsRUZ8rQ/BcjwR6B93U6muDeSmhTa3XUiywJsSkX7cWos/nLA4OlRQGueJ/1WD6ER+vEtQ==}
     peerDependencies:
       reflect-metadata: ^0.2.2
 
@@ -7979,6 +8000,14 @@ packages:
 
   tweetnacl@0.14.5:
     resolution: {integrity: sha512-KXXFFdAbFXY4geFIwoyNK+f5Z1b7swfXABfL7HXCmoIWMKU3dmS26672A4EeQtDzLKy7SXmfBu51JolvEKwtGA==}
+
+  twoslash-protocol@0.2.12:
+    resolution: {integrity: sha512-5qZLXVYfZ9ABdjqbvPc4RWMr7PrpPaaDSeaYY55vl/w1j6H6kzsWK/urAEIXlzYlyrFmyz1UbwIt+AA0ck+wbg==}
+
+  twoslash@0.2.12:
+    resolution: {integrity: sha512-tEHPASMqi7kqwfJbkk7hc/4EhlrKCSLcur+TcvYki3vhIfaRMXnXjaYFgXpoZRbT6GdprD4tGuVBEmTpUgLBsw==}
+    peerDependencies:
+      typescript: '*'
 
   type-check@0.4.0:
     resolution: {integrity: sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew==}
@@ -10629,6 +10658,15 @@ snapshots:
       unified: 11.0.5
       unist-util-visit: 5.0.0
 
+  '@shikijs/twoslash@1.22.2(typescript@5.6.3)':
+    dependencies:
+      '@shikijs/core': 1.22.2
+      '@shikijs/types': 1.22.2
+      twoslash: 0.2.12(typescript@5.6.3)
+    transitivePeerDependencies:
+      - supports-color
+      - typescript
+
   '@shikijs/types@1.22.2':
     dependencies:
       '@shikijs/vscode-textmate': 9.3.0
@@ -11325,6 +11363,13 @@ snapshots:
     dependencies:
       '@typescript-eslint/types': 8.13.0
       eslint-visitor-keys: 3.4.3
+
+  '@typescript/vfs@1.6.0(typescript@5.6.3)':
+    dependencies:
+      debug: 4.3.7
+      typescript: 5.6.3
+    transitivePeerDependencies:
+      - supports-color
 
   '@ungap/structured-clone@1.2.0': {}
 
@@ -13733,6 +13778,24 @@ snapshots:
       - acorn
       - supports-color
 
+  fumadocs-twoslash@2.0.1(@types/react-dom@18.3.1)(@types/react@18.3.12)(fumadocs-ui@14.2.1(@types/react-dom@18.3.1)(@types/react@18.3.12)(next@15.0.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.8.0(@swc/helpers@0.5.13))(@types/node@22.8.6)(typescript@5.6.3))))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(shiki@1.22.2)(typescript@5.6.3):
+    dependencies:
+      '@radix-ui/react-popover': 1.1.2(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@shikijs/twoslash': 1.22.2(typescript@5.6.3)
+      fumadocs-ui: 14.2.1(@types/react-dom@18.3.1)(@types/react@18.3.12)(next@15.0.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.8.0(@swc/helpers@0.5.13))(@types/node@22.8.6)(typescript@5.6.3)))
+      mdast-util-from-markdown: 2.0.2
+      mdast-util-gfm: 3.0.0
+      mdast-util-to-hast: 13.2.0
+      react: 18.3.1
+      shiki: 1.22.2
+      tailwind-merge: 2.5.4
+    transitivePeerDependencies:
+      - '@types/react'
+      - '@types/react-dom'
+      - react-dom
+      - supports-color
+      - typescript
+
   fumadocs-typescript@3.0.2(typescript@5.6.3):
     dependencies:
       '@types/node': 22.8.1
@@ -15761,7 +15824,7 @@ snapshots:
     dependencies:
       regex: 4.4.0
 
-  openapi-metadata@0.0.0-rc-4(reflect-metadata@0.2.2):
+  openapi-metadata@0.1.0(reflect-metadata@0.2.2):
     dependencies:
       deepmerge: 4.3.1
       openapi-types: 12.1.3
@@ -17424,6 +17487,16 @@ snapshots:
       turbo-windows-arm64: 2.2.3
 
   tweetnacl@0.14.5: {}
+
+  twoslash-protocol@0.2.12: {}
+
+  twoslash@0.2.12(typescript@5.6.3):
+    dependencies:
+      '@typescript/vfs': 1.6.0(typescript@5.6.3)
+      twoslash-protocol: 0.2.12
+      typescript: 5.6.3
+    transitivePeerDependencies:
+      - supports-color
 
   type-check@0.4.0:
     dependencies:

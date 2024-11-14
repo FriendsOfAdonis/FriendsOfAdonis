@@ -88,7 +88,7 @@
     "luxon": "^3.5.0"
   },
   "dependencies": {
-    "openapi-metadata": "0.0.0-rc-4"
+    "openapi-metadata": "^0.1.0"
   },
   "publishConfig": {
     "access": "public",

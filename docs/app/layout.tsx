@@ -1,4 +1,5 @@
 import './global.css'
+import 'fumadocs-twoslash/twoslash.css'
 import { GeistMono } from 'geist/font/mono'
 import { GeistSans } from 'geist/font/sans'
 import Script from 'next/script'

@@ -7,13 +7,15 @@ title: Types and paremeters
 One of the most powerful feature of this library is the ability to use classes as schemas.
 When using the `@ApiProperty` decorator it will automatically add the property to the generated schema and try to infer the type from your Typescript type.
 
-```ts title="app/schemas/post.ts"
+```ts title="app/schemas/post.ts" twoslash
+import { ApiProperty } from '@foadonis/openapi/decorators'
+
 export class Post {
   @ApiProperty()
-  declare id: number;
+  declare id: number
 
   @ApiProperty()
-  declare title: string;
+  declare title: string
 }
 ```
 
@@ -21,22 +23,21 @@ export class Post {
 
 The `@ApiProperty` decorator also accepts the same properties as the original OpenAPI Schema object, allowing you to extend the generated schema.
 
-```ts title="app/schemas/post.ts"
+```ts title="app/schemas/post.ts" twoslash
+import { ApiProperty } from '@foadonis/openapi/decorators'
+
 export class Post {
   @ApiProperty({
     example: 17,
   })
-  declare id: number;
+  declare id: number
 
   @ApiProperty({
-    min: 6,
-    max: 255,
-    examples: [
-      "How to create REST APIs with Adonis",
-      "Admin Dashboard for Adonis",
-    ],
+    minLength: 6,
+    maxLength: 255,
+    example: 'How to create REST APIs with Adonis',
   })
-  declare title: string;
+  declare title: string
 }
 ```
 
@@ -44,38 +45,54 @@ export class Post {
 
 Due to the lack of informations provided by the Typescript metadata it is not possible to infer if a property is optional. For this you can either use the `required` option or the `@ApiOptionalProperty` decorator.
 
-```ts title="app/schemas/post.ts"
+```ts title="app/schemas/post.ts" twoslash
+import { ApiProperty, ApiPropertyOptional } from '@foadonis/openapi/decorators'
+
 export class Post {
   @ApiProperty()
-  declare id: number;
+  declare id: number
 
   @ApiProperty()
-  declare title: string;
+  declare title: string
 
-  @ApiOptionalProperty() // [!code highlight]
-  declare content?: string;
+  @ApiPropertyOptional({ type: String }) // [!code highlight]
+  declare content?: string
+
+  @ApiProperty({ type: String, required: false }) // [!code highlight]
+  declare description?: string
 }
 ```
 
 ### Explicit type
 
-Sometimes the type of your property is too complex to be automatically inferred. When it is the case, you should see a warning in the console. To resolve this, you simply have to define explicitly the type using the `type` option.
+Sometimes the type of your property is too complex to be automatically inferred or might be serialized in a specific way. When it is the case, you should see a warning in the console. To resolve this, you simply have to define explicitly the type using the `type` option.
 
-```ts title="app/schemas/post.ts"
+```ts title="app/schemas/post.ts" twoslash
+// @noErrors
+import { ApiProperty } from '@foadonis/openapi/decorators'
+
 export class Post {
   @ApiProperty({ type: CustomSchema }) // [!code highlight]
-  customData: any;
+  customData: any
 }
 ```
+
+<Callout>
+
+You can create custom type loaders to automatically generate schemas for inferred custom types, more information on the [`openapi-metadata` documentation](https://openapi-ts.pages.dev/openapi-metadata/type-loader).
+
+</Callout>
 
 ### Circular dependencies
 
 You may have circular dependencies in your schema, for example a `Post` can have a `Post` as a parent. In this situation, you must explicitly define the type using a `Thunk`:
 
-```ts title="app/schemas/post.ts"
+```ts title="app/schemas/post.ts" twoslash
+import { ApiProperty } from '@foadonis/openapi/decorators'
+
 export class Post {
   @ApiProperty({ type: () => Post })
-  declare parent: Post;
+  declare parent: Post
 }
 ```
 
@@ -83,7 +100,10 @@ export class Post {
 
 Primitives can be defined by using their name as a string or its constructor.
 
-```ts
+```ts twoslash
+// @noErrors
+import { ApiResponse, ApiProperty, ApiBody } from '@foadonis/openapi/decorators'
+
 @ApiResponse({ type: 'string' })
 @ApiProperty({ type: Number })
 @ApiBody({ type: Boolean })
@@ -93,16 +113,23 @@ Primitives can be defined by using their name as a string or its constructor.
 
 You can configure a type to be an array by simply wrapping your base type in an array.
 
-```ts
-@ApiBody({ type: [User] })
+```ts twoslash
+// @noErrors
+import { ApiProperty, ApiBody } from '@foadonis/openapi/decorators'
+
 @ApiProperty({ type: [Post] })
+@ApiBody({ type: [User] })
 ```
 
 ## Raw schema
 
 Sometimes you may want to define a raw OpenAPI schema. For this you can use the `schema` option.
 
-```ts
+```ts twoslash
+// @noErrors
+import { ApiProperty } from '@foadonis/openapi/decorators'
+import { getSchemaPath } from '@foadonis/openapi'
+
 @ApiProperty({
   schema: {
     type: 'object',
@@ -119,14 +146,21 @@ Sometimes you may want to define a raw OpenAPI schema. For this you can use the 
 
 An enum type can be defined by providing an array of the available items or a Typescript enum.
 
-```ts
-@ApiQuery({ name: "api", enum: ["openapi", "graphql"] })
+```ts twoslash
+// @noErrors
+import { ApiQuery } from '@foadonis/openapi/decorators'
 
-// or
+@ApiQuery({ name: "api", enum: ["openapi", "graphql"] })
+```
+
+```ts twoslash
+// @noErrors
+import { ApiQuery } from '@foadonis/openapi/decorators'
 
 enum ApiEnum {
   GRAPHQL = "graphql",
   OPENAPI = "openapi"
 }
+
 @ApiQuery({ name: "api", enum: ApiEnum })
 ```

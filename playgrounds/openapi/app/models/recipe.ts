@@ -1,8 +1,10 @@
 import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { ApiProperty } from '@foadonis/openapi/decorators'
 import { DateTime } from 'luxon'
 
 export default class Recipe extends BaseModel {
   @column({ isPrimary: true })
+  @ApiProperty()
   declare id: string
 
   @column()

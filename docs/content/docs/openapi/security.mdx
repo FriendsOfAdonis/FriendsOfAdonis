@@ -4,103 +4,118 @@ title: Security
 
 You can define which security mechanisms should be used for your operations using the `@ApiSecurity` decorator.
 
-```ts
-@ApiSecurity("basic")
+```ts title="app/controllers/users_controller.ts" twoslash
+import { ApiSecurity } from '@foadonis/openapi/decorators'
+
+@ApiSecurity('basic')
 export default class UsersController {}
 ```
 
 The mechanisms must be define on your document, you can do this directly from your `config/openapi.ts` configuration file.
 
-```ts title="config/openapi.ts"
-import { defineConfig } from "@foadonis/openapi";
+```ts title="config/openapi.ts" twoslash
+// @noErrors
+import { defineConfig } from '@foadonis/openapi'
 
 export default defineConfig({
   document: {
     components: {
       securitySchemes: {
         basic: {
-          type: "http",
-          scheme: "basic",
+          type: 'http',
+          scheme: 'basic',
         },
       },
     },
   },
-});
+})
 ```
 
 ## Examples
 
 ### Basic authentication
 
-```ts
+```ts title="app/controllers/users_controller.ts" twoslash
+// @noErrors
+import { ApiBasicAuth } from '@foadonis/openapi/decorators'
+
 @ApiBasicAuth()
 export default class UsersController {}
 ```
 
-```ts title="config/openapi.ts"
-import { defineConfig } from "@foadonis/openapi";
+```ts title="config/openapi.ts" twoslash
+// @noErrors
+import { defineConfig } from '@foadonis/openapi'
 
 export default defineConfig({
   document: {
     components: {
       securitySchemes: {
         basic: {
-          type: "http",
-          scheme: "basic",
+          type: 'http',
+          scheme: 'basic',
         },
       },
     },
   },
-});
+})
 ```
 
 ### Bearer authentication
 
-```ts
+```ts title="app/controllers/users_controller.ts" twoslash
+// @noErrors
+import { ApiBearerAuth } from '@foadonis/openapi/decorators'
+
 @ApiBearerAuth()
 export default class UsersController {}
 ```
 
-```ts title="config/openapi.ts"
-import { defineConfig } from "@foadonis/openapi";
+```ts title="config/openapi.ts" twoslash
+// @noErrors
+import { defineConfig } from '@foadonis/openapi'
 
 export default defineConfig({
   document: {
     components: {
       securitySchemes: {
         bearer: {
-          type: "http",
-          scheme: "bearer",
-          bearerFormat: "JWT",
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
         },
       },
     },
   },
-});
+})
 ```
 
 ### OAuth2 authentication
 
-```ts
-@ApiOAuth2("users:read", "global:read")
+```ts title="app/controllers/users_controller.ts" twoslash
+// @noErrors
+import { ApiOAuth2 } from '@foadonis/openapi/decorators'
+
+@ApiOAuth2('users:read', 'global:read')
 export default class UsersController {}
 ```
 
-```ts title="config/openapi.ts"
-import { defineConfig } from "@foadonis/openapi";
+```ts title="config/openapi.ts" twoslash
+// @noErrors
+import { defineConfig } from '@foadonis/openapi'
 
 export default defineConfig({
   document: {
     components: {
       securitySchemes: {
         bearer: {
-          type: "oauth2",
+          type: 'oauth2',
           flows: {
             implicit: {
-              authorizationUrl: "https://example.com/api/oauth/dialog",
+              authorizationUrl: 'https://example.com/api/oauth/dialog',
               scopes: {
-                "users:read": "read users",
-                "global:read": "global read",
+                'users:read': 'read users',
+                'global:read': 'global read',
               },
             },
           },
@@ -108,5 +123,5 @@ export default defineConfig({
       },
     },
   },
-});
+})
 ```

@@ -1,5 +1,5 @@
 ---
-title: "Introduction"
+title: 'Introduction'
 icon: Album
 ---
 
@@ -7,36 +7,37 @@ Generate OpenAPI compliant specifications powered by [`openapi-metadata`](#) for
 
 <Tabs items={["app/models/post.ts", "app/controllers/posts_controller.ts"]}>
 
-```ts tab="app/models/post.ts"
-import { ApiProperty, ApiOptionalProperty } from "@foadonis/openapi";
+```ts twoslash tab="app/models/post.ts"
+import { ApiProperty } from '@foadonis/openapi/decorators'
 
 export default class Post {
   @ApiProperty()
-  id: number;
+  declare id: number
 
   @ApiProperty()
-  title: string;
+  declare title: string
 
-  @ApiOptionalProperty()
-  content?: string;
+  @ApiProperty({ required: false, type: String })
+  declare content?: string
 }
 ```
 
-```ts tab="app/controllers/posts_controller.ts"
-import { ApiOperation, ApiResponse } from "@foadonis/openapi";
-import Post from "#models/post";
+```ts tab="app/controllers/posts_controller.ts" twoslash
+// @noErrors
+import { ApiOperation, ApiResponse } from '@foadonis/openapi/decorators'
+import Post from '#models/post'
 
 export default class PostsController {
-  @ApiOperation({ summary: "List all posts" })
+  @ApiOperation({ summary: 'List all posts' })
   @ApiResponse({ type: [Post] })
   index() {
-    return Post.query();
+    return Post.query()
   }
 
-  @ApiOperation({ summary: "Create a new Post" })
+  @ApiOperation({ summary: 'Create a new Post' })
   @ApiResponse({ type: Post })
   create() {
-    return Post.create();
+    return Post.create()
   }
 }
 ```
@@ -46,7 +47,7 @@ export default class PostsController {
 <img
   src="/openapi/showcase.svg"
   alt="OpenAPI documentation with Scalar"
-  style={{ width: "100%", aspectRatio: 16 / 9 }}
+  style={{ width: '100%', aspectRatio: 16 / 9 }}
 />
 
 ## Features

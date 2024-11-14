@@ -1,4 +1,5 @@
 /* eslint-disable react/jsx-pascal-case */
+import { Popup, PopupContent, PopupTrigger } from 'fumadocs-twoslash/ui'
 import { createTypeTable } from 'fumadocs-typescript/ui'
 import { Step, Steps } from 'fumadocs-ui/components/steps'
 import { Tab, Tabs } from 'fumadocs-ui/components/tabs'
@@ -47,6 +48,9 @@ export default async function Page(props: { readonly params: Promise<{ slug?: st
             AutoTypeTable,
             Tabs,
             Tab,
+            Popup,
+            PopupContent,
+            PopupTrigger,
           }}
         />
       </DocsBody>

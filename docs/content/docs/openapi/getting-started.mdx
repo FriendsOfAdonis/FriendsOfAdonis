@@ -1,5 +1,5 @@
 ---
-title: "Getting Started"
+title: 'Getting Started'
 icon: Rocket
 ---
 
@@ -11,33 +11,28 @@ Install and configure the package using the following command :
 node ace add @foadonis/openapi
 ```
 
-<ConfigurationSteps
-  pkg="@foadonis/openapi"
-  providers={["openapi"]}
-  config="openapi"
-/>
+<ConfigurationSteps pkg="@foadonis/openapi" providers={['openapi']} config="openapi" />
 
-## Decorate your controller
+## Getting started
+
+### Decorate your controller
 
 The OpenAPI schema is automatically generated using Typescript decorators. The routes of your application are automatically loaded but you might want to add some information like the description, response type, etc.
 
-```ts title="app/controllers/posts_controller.ts"
-import Post from "#models/post";
-import { createPostValidator } from "#validators/post";
-import {
-  ApiOperation,
-  ApiBody,
-  ApiResponse,
-} from "@foadonis/openapi/decorators";
+```ts twoslash title="app/controllers/posts_controller.ts"
+// @noErrors
+import Post from '#models/post'
+import { createPostValidator } from '#validators/post'
+import { ApiOperation, ApiBody, ApiResponse } from '@foadonis/openapi/decorators'
 
 export default class PostsController {
-  @ApiOperation({ summary: "List all Posts" }) // [!code highlight]
+  @ApiOperation({ summary: 'List all Posts' }) // [!code highlight]
   @ApiResponse({ type: [Post] }) // [!code highlight]
   index() {
     // ...your logic
   }
 
-  @ApiOperation({ summary: "Create a new Post" }) // [!code highlight]
+  @ApiOperation({ summary: 'Create a new Post' }) // [!code highlight]
   @ApiBody({ type: () => createPostValidator }) // [!code highlight]
   @ApiResponse({ type: Post }) // [!code highlight]
   create() {}
@@ -55,36 +50,46 @@ Defines the response return type to be a list of Posts.
 **`@ApiBody({ type: () => createPostValidator })`**:  
 Defines the request body schema to match the Vine compiled schema `createPostValidator`.
 
-## Decorate your Model
+### Decorate your Model
 
 It is now time to decorate your model to configure which properties are available.
 
-```ts title="app/models/post.ts"
-import { ApiProperty } from "@foadonis/openapi/decorators";
+```ts twoslash title="app/models/post.ts"
+import { ApiProperty } from '@foadonis/openapi/decorators'
 
 export default class Post {
   @ApiProperty() // [!code highlight]
-  declare id: number;
+  declare id: number
 
   @ApiProperty() // [!code highlight]
-  declare title: string;
+  declare title: string
 
   @ApiProperty() // [!code highlight]
-  declare content: string;
+  declare content: string
 }
 ```
 
 <Callout>
-  Lucid decorators have been removed from the example for readability reasons
-  but you can generate your OpenAPI schemas directly from your models.
+  Lucid decorators have been removed from the example for readability reasons but you can generate
+  your OpenAPI schemas directly from your models.
 </Callout>
 
-## Access the documentation
+### Register documentation routes
+
+Let's register the routes to access our OpenAPI documentation in `start/routes.ts`:
+
+```ts title="start/routes.ts" twoslash
+import openapi from '@foadonis/openapi/services/main'
+
+openapi.registerRoutes()
+```
+
+### Access the documentation
 
 You can now head over your OpenAPI documentation at [http://localhost:3000/api](http://localhost:3000/api). It will welcome you with a beautiful documentation page of your api thanks to [Scalar](https://scalar.com).
 
 <img
   src="/openapi/showcase.svg"
   alt="OpenAPI documentation with Scalar"
-  style={{ width: "100%", aspectRatio: 16 / 9 }}
+  style={{ width: '100%', aspectRatio: 16 / 9 }}
 />

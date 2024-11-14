@@ -1,6 +1,3 @@
-{{{
-  exports({ to: app.configPath('openapi.ts') })
-}}}
 import { defineConfig } from '@foadonis/openapi'
 
 export default defineConfig({

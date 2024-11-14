@@ -6,6 +6,7 @@ import { RouterLoader } from './loader.js'
 import { Logger } from '@adonisjs/core/logger'
 import { LuxonTypeLoader } from './loaders/luxon.js'
 import { VineTypeLoader } from './loaders/vine.js'
+import { generateRapidocUI, generateScalarUI, generateSwaggerUI } from 'openapi-metadata/ui'
 
 const OpenAPIController = () => import('./controllers/openapi_controller.js')
 
@@ -47,17 +48,33 @@ export class OpenAPI {
     return this.#document
   }
 
+  /**
+   * Generates HTML do display the OpenAPI documentation UI.
+   */
+  generateUi(): string {
+    const ui = this.#config.ui
+    switch (ui) {
+      case 'scalar':
+        return generateScalarUI('/api')
+      case 'swagger':
+        return generateSwaggerUI('/api')
+      case 'rapidoc':
+        return generateRapidocUI('/api')
+    }
+  }
+
+  /**
+   * Registers Json, Yaml and UI OpenAPI routes.
+   *
+   * - /api
+   * - /api.json
+   * - /api.yaml
+   */
   registerRoutes(routeHandlerModifier?: (route: Route) => void) {
-    const routes = [
-      this.#router.get('/api', [OpenAPIController]),
-      this.#router.get('/api.json', [OpenAPIController]),
-      this.#router.get('/api.yaml', [OpenAPIController]),
-    ]
+    const route = this.#router.get('/api', [OpenAPIController])
 
     if (routeHandlerModifier) {
-      for (const route of routes) {
-        routeHandlerModifier(route)
-      }
+      routeHandlerModifier(route)
     }
   }
 }
