@@ -1,5 +1,19 @@
 # @foadonis/openapi
 
+## 0.3.0
+
+### Minor Changes
+
+- [#10](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/10) [`be26c49`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/be26c49409b5ff88fee20ac75a32a3b0e39b369f) Thanks [@kerwanp](https://github.com/kerwanp)! - Use content negotiation to display UI or OpenAPI document
+
+- [#10](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/10) [`be26c49`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/be26c49409b5ff88fee20ac75a32a3b0e39b369f) Thanks [@kerwanp](https://github.com/kerwanp)! - Add UI configuration option
+
+- [#10](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/10) [`be26c49`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/be26c49409b5ff88fee20ac75a32a3b0e39b369f) Thanks [@kerwanp](https://github.com/kerwanp)! - Upgrade to latest openapi-metadata version
+
+### Patch Changes
+
+- [#10](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/10) [`be26c49`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/be26c49409b5ff88fee20ac75a32a3b0e39b369f) Thanks [@kerwanp](https://github.com/kerwanp)! - Add comments for clarity and better documentation
+
 ## 0.2.1
 
 ### Patch Changes
