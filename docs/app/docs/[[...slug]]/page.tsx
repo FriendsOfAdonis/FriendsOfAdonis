@@ -1,4 +1,4 @@
-/* eslint-disable react/jsx-pascal-case */
+/* eslint-disable @stylistic/jsx/jsx-pascal-case */
 import { Popup, PopupContent, PopupTrigger } from 'fumadocs-twoslash/ui'
 import { createTypeTable } from 'fumadocs-typescript/ui'
 import { Step, Steps } from 'fumadocs-ui/components/steps'
