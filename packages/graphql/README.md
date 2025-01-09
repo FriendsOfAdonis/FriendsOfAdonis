@@ -20,7 +20,7 @@
 
 <!-- automd:coverage from="branches,functions" -->
 
-![Coverage](https://img.shields.io/badge/coverage-64%25-orange)
+![Coverage](https://img.shields.io/badge/coverage-66%25-orange)
 
 <!-- /automd -->
 

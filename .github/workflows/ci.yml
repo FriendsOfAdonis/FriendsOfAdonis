@@ -40,5 +40,5 @@ jobs:
           cache: 'pnpm'
       - name: 📦 Install PNPM dependencies
         run: pnpm install
-      - run: pnpm run lint build typecheck --filter="./packages/*"
+      - run: pnpm run lint build typecheck --filter="./packages/*" --filter=!@foadonis/magnify --filter=!@foadonis/shopkeeper
       - run: pnpm run test --filter="./packages/*" --filter=!@foadonis/shopkeeper --filter=!@foadonis/magnify

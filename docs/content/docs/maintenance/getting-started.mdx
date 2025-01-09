@@ -1,0 +1,30 @@
+---
+title: 'Getting Started'
+icon: Rocket
+---
+
+## Installation
+
+Install and configure the package using the following command :
+
+```sh
+node ace add @foadonis/maintenance
+```
+
+<ConfigurationSteps pkg="@foadonis/maintenance" providers={['maintenance']} />
+
+## Put in maintenance mode
+
+```sh
+node ace maintenance:down
+# or
+node ace down
+```
+
+## Come back live
+
+```sh
+node ace maintenance:up
+# or
+node ace up
+```
