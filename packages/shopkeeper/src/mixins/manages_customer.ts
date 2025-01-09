@@ -1,3 +1,5 @@
+/// <reference types="@poppinss/hooks" />
+
 import { InvalidCustomerError } from '../errors/invalid_customer.js'
 import { CustomerAlreadyCreatedError } from '../errors/customer_already_created.js'
 import shopkeeper from '../../services/shopkeeper.js'

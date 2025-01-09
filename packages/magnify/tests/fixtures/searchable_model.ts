@@ -1,3 +1,5 @@
+/// <reference types="@poppinss/hooks" />
+
 import { compose } from '@adonisjs/core/helpers'
 import { BaseModel, column } from '@adonisjs/lucid/orm'
 import { Searchable } from '../../src/mixins/searchable.js'
