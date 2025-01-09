@@ -1,0 +1,27 @@
+---
+title: 'Introduction'
+icon: Album
+---
+
+Safely and easily put your Adonis application in maintenance mode.
+
+```sh
+# Put your application in maintenance
+node ace down
+
+# With a secret for bypass
+node ace down --secret secretforbypass
+
+# With a custom maintenance page
+node ace down --template maintenance
+
+# Come back live
+node ace up
+```
+
+## Features
+
+✔ Simple commands to quickly avoid burning the house  
+✔ Supports distributed architecture  
+✔ Render custom maintenance page  
+✔ Bypass maintenance mode with secret

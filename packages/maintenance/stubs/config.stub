@@ -1,0 +1,11 @@
+{{{
+  exports({ to: app.configPath('maintenance.ts') })
+}}}
+import { defineConfig, drivers } from '@foadonis/maintenance'
+
+export default defineConfig({
+  default: 'file',
+  drivers: {
+    file: drivers.file(),
+  },
+})

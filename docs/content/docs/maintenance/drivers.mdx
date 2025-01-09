@@ -1,0 +1,77 @@
+---
+title: 'Drivers'
+---
+
+## Built-in drivers
+
+### File driver
+
+The file driver is the most simple way to configure the maintenance mode and it is the default one.
+
+It works by creating a "lockfile" in your application temporary folder to enable maintenance and delete it to disable it.
+
+```ts twoslash title="config/maintenance.ts"
+import { defineConfig, drivers } from '@foadonis/maintenance'
+
+export default defineConfig({
+  default: 'file',
+  drivers: {
+    file: drivers.file(),
+  },
+})
+```
+
+### Cache driver
+
+The cache driver is the perfect choice when running in a distibuted architecture. It relies on the [@adonisjs/cache](https://www.npmjs.com/package/@adonisjs/cache) package.
+
+```ts twoslash title="config/maintenance.ts"
+import { defineConfig, drivers } from '@foadonis/maintenance'
+
+export default defineConfig({
+  default: 'cache',
+  drivers: {
+    cache: drivers.cache(),
+  },
+})
+```
+
+## Custom driver
+
+You can create your own driver by extending the `MaintenanceDriver` class and referencing it in your `config/maintenance.ts` configuration file.
+
+```ts twoslash title="app/maintenance/drivers.ts"
+// @noErrors
+import { MaintenanceDriver } from '@foadonis/maintenance'
+
+export default class CustomMaintenanceDriver extends MaintenanceDriver {
+  public async activate(data: DownPayload): Promise<void> {
+    // Store the data somewhere and enable maintenance
+  }
+
+  public async deactivate(): Promise<void> {
+    // Disable the maintenance mode
+  }
+
+  public async active(): Promise<boolean> {
+    // Returns true if maintenance mode is active
+  }
+
+  public async data(): Promise<DownPayload> {
+    // Returns the maintenance mode data
+  }
+}
+```
+
+```ts twoslash [title="config/maintenance.ts"]
+// @noErrors
+import { defineConfig } from '@foadonis/maintenance'
+import CustomMaintenanceDriver from '#maintenance/drivers/custom_maintenance_driver'
+
+export default defineConfig({
+  default: 'custom',
+  drivers: {
+    custom: new CustomMaintenanceDriver(),
+  },
+})
+```

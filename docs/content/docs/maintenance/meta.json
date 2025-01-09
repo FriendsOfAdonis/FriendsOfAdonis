@@ -1,0 +1,7 @@
+{
+  "title": "Maintenance",
+  "description": "Put your application in maintenance mode",
+  "root": true,
+  "icon": "ScrollText",
+  "pages": ["---Guide---", "index", "getting-started", "------", "commands", "drivers"]
+}

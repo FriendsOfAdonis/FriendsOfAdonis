@@ -1,0 +1,47 @@
+---
+title: 'Commands'
+---
+
+## Allow bypassing maintenance
+
+When providing a secret using the `--secret` flag you can bypass the maintenance mode by accessing the url `https://<mysite>/<secret>`.
+
+```sh
+node ace maintenance:down --secret <secret>
+```
+
+<Callout>
+  You will be redirected with a cookie containing the hash of the secret. Consequent requests will
+  bypass the maintenance.
+</Callout>
+
+## Rendering a custom maintenance page
+
+To render a custom maintenance page you must have [Edge.js](https://docs.adonisjs.com/guides/views-and-templates/edgejs) installed and use the `--template` flag.
+
+```sh
+node ace maintenance:down --template <template>
+```
+
+<Callout>
+  To limit runtime execution during maintenance mode, the template is prerendered when activating
+  maintenance.
+</Callout>
+
+## Redirect users
+
+You can redirect users to a different url by using the `--redirect` flag.
+
+```sh
+node ace maintenance:down --redirect /maintenance
+```
+
+## Refresh and retry
+
+You can configure the `Refresh` and `Retry` headers using the `--refresh` and `--retry` flags.
+
+```sh
+node ace maintenance:down --retry 30 --refresh 30
+```
+
+<Callout>The retry value is also passed to the template as `retryAfter`.</Callout>
