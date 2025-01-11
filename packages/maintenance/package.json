@@ -1,7 +1,7 @@
 {
   "name": "@foadonis/maintenance",
   "description": "Put your Adonis application in maintenance mode",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "engines": {
     "node": ">=20.6.0"
   },
