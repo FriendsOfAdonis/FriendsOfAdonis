@@ -1,5 +1,11 @@
 # @foadonis/shopkeeper
 
+## 0.1.4
+
+### Patch Changes
+
+- [`22d5326`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/22d532670e889dc39fd86b7a968ee940a416f7d6) Thanks [@kerwanp](https://github.com/kerwanp)! - Fix build pipeline to properly include commands manifest and stubs
+
 ## 0.1.3
 
 ### Patch Changes

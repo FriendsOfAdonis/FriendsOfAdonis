@@ -1,5 +1,11 @@
 # @foadonis/graphql
 
+## 0.0.5
+
+### Patch Changes
+
+- [`22d5326`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/22d532670e889dc39fd86b7a968ee940a416f7d6) Thanks [@kerwanp](https://github.com/kerwanp)! - Fix build pipeline to properly include commands manifest and stubs
+
 ## 0.0.4
 
 ### Patch Changes

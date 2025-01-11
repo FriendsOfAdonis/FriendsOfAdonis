@@ -1,7 +1,7 @@
 {
   "name": "@foadonis/shopkeeper",
   "description": "An expressive and fluent interface to Stripe's subscription billing services.",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "engines": {
     "node": ">=20.6.0"
   },
