@@ -1,5 +1,13 @@
 # @foadonis/openapi
 
+## 0.3.2
+
+### Patch Changes
+
+- [#20](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/20) [`e3de566`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/e3de566a8a6c7ef10d9f7326be90a910a1c8565c) Thanks [@kerwanp](https://github.com/kerwanp)! - Add ability to serve documentation on different path
+
+- [#20](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/20) [`e3de566`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/e3de566a8a6c7ef10d9f7326be90a910a1c8565c) Thanks [@kerwanp](https://github.com/kerwanp)! - Migrate repository to Yarn 4
+
 ## 0.3.1
 
 ### Patch Changes
