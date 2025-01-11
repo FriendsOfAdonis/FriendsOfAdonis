@@ -27,12 +27,12 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "quick:test": "node --import=./tsnode.esm.js --enable-source-maps bin/test.ts",
-    "test": "c8 pnpm run quick:test",
-    "prebuild": "pnpm run clean",
+    "test": "c8 yarn quick:test",
+    "prebuild": "yarn clean",
     "build": "tsc",
     "dev": "tsc --watch",
-    "postbuild": "pnpm run copy:templates && pnpm run index:commands",
-    "version": "pnpm run build"
+    "postbuild": "yarn copy:templates && yarn index:commands",
+    "version": "yarn build"
   },
   "keywords": [
     "adonis",

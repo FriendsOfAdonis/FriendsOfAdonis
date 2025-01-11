@@ -13,7 +13,7 @@
     "automd": "automd",
     "version": "changeset version"
   },
-  "packageManager": "pnpm@9.12.3",
+  "packageManager": "yarn@4.6.0",
   "engines": {
     "node": ">=18"
   },
@@ -38,5 +38,11 @@
     "prettier": "^3.4.2",
     "turbo": "^2.2.3",
     "typescript": "^5.7.2"
-  }
+  },
+  "workspaces": [
+    "docs",
+    "playgrounds/*",
+    "packages/*",
+    "tooling/*"
+  ]
 }
