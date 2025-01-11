@@ -28,7 +28,17 @@ export const packages: Record<string, PackageInfo> = {
     description:
       "An expressive and fluent interface to Stripe's subscription billing services for Adonis.",
   },
+  maintenance: {
+    package: '@foadonis/maintenance',
+    name: 'Adonis Maintenance',
+    description: 'Maintenance mode library for Adonis',
+  },
 }
+
+export const baseUrl =
+  process.env.NODE_ENV === 'development'
+    ? new URL('http://localhost:3000')
+    : new URL('https://friendsofadonis.com')
 
 export function createMetadata(override: Metadata): Metadata {
   return {
@@ -47,10 +57,6 @@ export function createMetadata(override: Metadata): Metadata {
       description: override.description ?? undefined,
       ...override.twitter,
     },
+    metadataBase: baseUrl,
   }
 }
-
-export const baseUrl =
-  process.env.NODE_ENV === 'development' || !process.env.APP_URL
-    ? new URL('http://localhost:3000')
-    : new URL(process.env.APP_URL)

@@ -8,7 +8,7 @@ export default class OpenAPIController {
     const content = request.accepts(['json', 'html'])
 
     if (content === 'html') {
-      return openapi.generateUi()
+      return openapi.generateUi(request.url())
     }
 
     const document = await openapi.buildDocument()

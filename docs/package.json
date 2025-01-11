@@ -10,8 +10,8 @@
     "mdx": "fumadocs-mdx"
   },
   "dependencies": {
-    "@foadonis/openapi": "workspace:*",
     "@foadonis/maintenance": "workspace:*",
+    "@foadonis/openapi": "workspace:*",
     "@radix-ui/react-collapsible": "^1.1.1",
     "@radix-ui/react-slot": "^1.1.0",
     "automd": "^0.3.12",

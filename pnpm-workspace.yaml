@@ -1,5 +1,0 @@
-packages:
-  - "playgrounds/*"
-  - "docs"
-  - "packages/*"
-  - "tooling/*"

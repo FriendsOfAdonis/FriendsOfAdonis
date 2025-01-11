@@ -26,15 +26,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: 📦 Install PNPM dependencies
-        uses: pnpm/action-setup@v4
-        with:
-          run_install: true
-      - run: pnpm run build --filter="./packages/*"
+      - name: 📦 Install Node dependencies
+        run: yarn install --frozen-lockfile
+      - run: yarn build --filter="./packages/*"
       - uses: changesets/action@v1
         with:
-          version: pnpm run version
-          publish: pnpm exec changeset publish
+          version: yarn version
+          publish: yarn changeset publish
           commit: '[ci] release'
           title: '[ci] release'
         env:

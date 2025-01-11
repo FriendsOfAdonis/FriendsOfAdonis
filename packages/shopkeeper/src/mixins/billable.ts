@@ -1,3 +1,5 @@
+/// <reference types="@poppinss/hooks" />
+
 import { NormalizeConstructor } from '@adonisjs/core/types/helpers'
 import { BaseModel } from '@adonisjs/lucid/orm'
 import { compose } from '@adonisjs/core/helpers'
