@@ -31,7 +31,7 @@ jobs:
       - run: yarn build --filter="./packages/*"
       - uses: changesets/action@v1
         with:
-          version: yarn version
+          version: yarn changeset version
           publish: yarn changeset publish
           commit: '[ci] release'
           title: '[ci] release'
