@@ -35,6 +35,11 @@ export const packages: Record<string, PackageInfo> = {
   },
 }
 
+export const baseUrl =
+  process.env.NODE_ENV === 'development'
+    ? new URL('http://localhost:3000')
+    : new URL('https://friendsofadonis.com')
+
 export function createMetadata(override: Metadata): Metadata {
   return {
     ...override,
@@ -52,10 +57,6 @@ export function createMetadata(override: Metadata): Metadata {
       description: override.description ?? undefined,
       ...override.twitter,
     },
+    metadataBase: baseUrl,
   }
 }
-
-export const baseUrl =
-  process.env.NODE_ENV === 'development'
-    ? new URL('http://localhost:3000')
-    : new URL('https://friendsofadonis.com')

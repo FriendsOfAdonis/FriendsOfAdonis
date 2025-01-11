@@ -84,6 +84,11 @@ import openapi from '@foadonis/openapi/services/main'
 openapi.registerRoutes()
 ```
 
+<Callout>
+  `registerRoutes` method accepts a path and a route modifier to serve your documentation on a
+  different endpoint and use your own middlewares.
+</Callout>
+
 ### Access the documentation
 
 You can now head over your OpenAPI documentation at [http://localhost:3000/api](http://localhost:3000/api). It will welcome you with a beautiful documentation page of your api thanks to [Scalar](https://scalar.com).

@@ -51,15 +51,15 @@ export class OpenAPI {
   /**
    * Generates HTML do display the OpenAPI documentation UI.
    */
-  generateUi(): string {
+  generateUi(path = '/api'): string {
     const ui = this.#config.ui
     switch (ui) {
       case 'scalar':
-        return generateScalarUI('/api')
+        return generateScalarUI(path)
       case 'swagger':
-        return generateSwaggerUI('/api')
+        return generateSwaggerUI(path)
       case 'rapidoc':
-        return generateRapidocUI('/api')
+        return generateRapidocUI(path)
     }
   }
 
@@ -70,8 +70,8 @@ export class OpenAPI {
    * - /api.json
    * - /api.yaml
    */
-  registerRoutes(routeHandlerModifier?: (route: Route) => void) {
-    const route = this.#router.get('/api', [OpenAPIController])
+  registerRoutes(path = '/api', routeHandlerModifier?: (route: Route) => void) {
+    const route = this.#router.get(path, [OpenAPIController])
 
     if (routeHandlerModifier) {
       routeHandlerModifier(route)
