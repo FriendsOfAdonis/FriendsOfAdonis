@@ -29,16 +29,12 @@ jobs:
           key: ${{ runner.os }}-turbo-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-turbo-
-      - name: 📦 Install PNPM
-        uses: pnpm/action-setup@v4
-        with:
-          run_install: false
       - name: 🅝 Setup node
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'pnpm'
-      - name: 📦 Install PNPM dependencies
-        run: pnpm install
-      - run: pnpm run lint build typecheck --filter="./packages/*"
-      - run: pnpm run test --filter="./packages/*" --filter=!@foadonis/shopkeeper --filter=!@foadonis/magnify
+          cache: 'yarn'
+      - name: 📦 Install Node dependencies
+        run: yarn install
+      - run: yarn lint build typecheck --filter="./packages/*"
+      - run: yarn test --filter="./packages/*" --filter=!@foadonis/shopkeeper --filter=!@foadonis/magnify
