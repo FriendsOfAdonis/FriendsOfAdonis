@@ -7,7 +7,6 @@ import { isEncrypted } from './utils/is_encrypted.js'
 await initCrypt()
 
 async function initCrypt() {
-  let initialized = false
   let privateKey: CryptPrivateKey | undefined
   const initialCreate = Env.create
   Env.create = async function <Schema extends { [key: string]: ValidateFn<unknown> }>(
@@ -16,7 +15,6 @@ async function initCrypt() {
     schema: Schema
   ) {
     privateKey = await CryptPrivateKey.create(appRoot, '.env.keys')
-    initialized = true
     const test = initialCreate.bind(this)(appRoot, schema)
     return test
   }
