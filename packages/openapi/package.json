@@ -1,7 +1,7 @@
 {
   "name": "@foadonis/openapi",
   "description": "Generate OpenAPI specifications on Adonis",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "engines": {
     "node": ">=20.6.0"
   },
