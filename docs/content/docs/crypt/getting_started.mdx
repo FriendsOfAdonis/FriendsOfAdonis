@@ -1,0 +1,126 @@
+---
+title: 'Getting Started'
+icon: Rocket
+---
+
+## Installation
+
+Install and configure the package using the following command :
+
+```sh
+node ace add @foadonis/crypt
+```
+
+<ConfigurationSteps pkg="@foadonis/crypt" commands />
+
+## Configure your Env schema
+
+In your `start/env.ts` file, replace `Env.create` with `Crypt.create` and add your first secret.
+
+```ts title="start/env.ts" twoslash
+// @noErrors
+import { Env } from '@adonisjs/core/env'
+import { Crypt } from '@foadonis/crypt' // [!code highlight]
+
+// [!code highlight]
+export default await Crypt.create(new URL('../', import.meta.url), {
+  NODE_ENV: Env.schema.enum(['development', 'production', 'test'] as const),
+  PORT: Env.schema.number(),
+  APP_KEY: Env.schema.string(),
+  HOST: Env.schema.string({ format: 'host' }),
+  LOG_LEVEL: Env.schema.string(),
+
+  DB_PASSWORD: Crypt.secret(), // [!code highlight]
+})
+```
+
+## Generate your keypair
+
+Crypt works with [assimetric cryptography](https://en.wikipedia.org/wiki/Public-key_cryptography). It will generate two keys, one for encrypting (public key) and one for decrypting (public key).
+
+Start generating a key for your development environment using the `crypt:init` command:
+
+```sh
+node ace crypt:init
+```
+
+#### Private key (decrypt)
+
+This key is used to **decrypt** your environment variables. It is stored in a `.env.keys` file that **MUST NOT** be committed.
+
+```dotenv title=".env.keys"
+#/---------------------!CRYPT PRIVATE KEYS!-----------------------/
+#/    private decryption keys. DO NOT commit to source control    /
+#/     [how it works](https://friendsofadonis.com/docs/crypt)     /
+#/----------------------------------------------------------------/
+
+# .env
+CRYPT_PRIVATE_KEY="14bfcf42753fffe8048af0db35cd4f6acabc15e378c246cd5fbf7cea519cf707"
+```
+
+#### Public key (encrypt)
+
+This key is used to **encrypt** your environment variables. It is stored directly in your `.env` file and can be safely committed.
+
+```dotenv title=".env"
+#/---------------------[CRYPT PUBLIC KEY]-----------------------/
+#/             public-key encryption for .env files             /
+#/   [how it works](https://friendsofadonis.com/docs/crypt)     /
+#/--------------------------------------------------------------/
+CRYPT_PUBLIC_KEY="02caef368300cb9244d00b64deab85cd33c68b7e5e097b9ac73b0ba8125579f099"
+```
+
+<Callout>
+  **As the public key can only be used to encrypt variables** you can safely store it in your
+  repository, allowing other members of your team to encrypt new variables without decrypting the
+  existing ones.
+</Callout>
+
+## Encrypt your first secret
+
+Now that our schema is expecting an encrypted `DB_PASSWORD` and we have everything to encrypt and decrypt credentials, you can use the `crypt:set` command to encrypt your database password and store it in your `.env` file.
+
+```sh
+node ace crypt:set DB_PASSWORD mysuperpassword
+```
+
+This will add the encrypted credential in your `.env` file alongside unencrypted variables:
+
+```dotenv title=".env"
+#/---------------------[CRYPT PUBLIC KEY]-----------------------/
+#/             public-key encryption for .env files             /
+#/   [how it works](https://friendsofadonis.com/docs/crypt)     /
+#/--------------------------------------------------------------/
+CRYPT_PUBLIC_KEY="02caef368300cb9244d00b64deab85cd33c68b7e5e097b9ac73b0ba8125579f099"
+
+DB_USER=adonis
+DB_DATABASE=adonis
+DB_PASSWORD="encrypted:BLkwNagdhoSpSAyRR1og..."
+```
+
+You can now start your Adonis application. During startup, Crypt will automatically decrypt your `DB_PASSWORD` using the private key (`CRYPT_PRIVATE_KEY`) stored in the `.env.keys` file.
+
+## Encrypt for production
+
+Crypt select the environment variable file depending on your `NODE_ENV`. Each environment will have its own keypair named `CRYPT_PRIVATE_KEY_<environment>`/`CRYPT_PUBLIC_KEY_<environment>`.
+
+```sh
+# Encrypt the secret in `.env.production`
+node ace encrypt:set DB_PASSWORD myproductionpassword --env production
+
+# or using NODE_ENV
+NODE_ENV=production node ace encrypt:set DB_PASSWORD mystagingpassword
+```
+
+## Update Gitignore
+
+Now that you are allowed to commit your dotenv files lets update the `.gitignore`:
+
+```txt title=".gitignore"
+// [!code --]
+.env
+// [!code ++]
+.env.*.local
+// [!code ++]
+.env.keys
+```

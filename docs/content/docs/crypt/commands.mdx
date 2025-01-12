@@ -1,0 +1,47 @@
+---
+title: 'Commands'
+---
+
+## `crypt:init`
+
+Generate a new keypair and store the public key in the environment variable file and the private key in `.env.keys`.
+
+```sh
+node ace crypt:init # Initialize .env
+node ace crypt:init --env production # Initialize .env.production
+NODE_ENV=staging node ace crypt:init # Initialize .env.staging
+```
+
+## `crypt:set <key> <value>`
+
+Encrypts an environment variable using the public key and store it in the dotenv file.
+
+```sh
+node ace crypt:set DB_PASSWORD mypassword # Encrypt in .env
+node ace crypt:set DB_PASSWORD mypassword --env production # Encrypt in .env.production
+NODE_ENV=staging node ace crypt:set DB_PASSWORD mypassword # Encrypt in .env.staging
+```
+
+## `crypt:get`
+
+Decrypt and log an encrypted dotenv file using the private key stored in `.env.keys`.
+
+```sh
+node ace crypt:get # Decrypt .env
+node ace crypt:get --env production # Decrypt .env.production
+NODE_ENV=staging node ace crypt:get # Decrypt .env.staging
+```
+
+## `crypt:get <key>`
+
+Decrypt and log an encrypted environment variable using the private key stored in `.env.keys`.
+
+```sh
+node ace crypt:get DB_PASSWORD # Decrypt DB_PASSWORD from .env
+node ace crypt:get DB_PASSWORD --env production # Decrypt DB_PASSWORD from .env.production
+NODE_ENV=staging node ace crypt:get DB_PASSWORD # Decrypt DB_PASSWORD from .env.staging
+```
+
+## `crypt:rotate` (WIP)
+
+Rotate keypair by decrypting environment variables and encrypting them with a new keypair.

@@ -33,6 +33,11 @@ export const packages: Record<string, PackageInfo> = {
     name: 'Adonis Maintenance',
     description: 'Maintenance mode library for Adonis',
   },
+  crypt: {
+    package: '@foadonis/crypt',
+    name: 'Adonis Crypt',
+    description: 'Safely store your secrets in your repository',
+  },
 }
 
 export const baseUrl =
