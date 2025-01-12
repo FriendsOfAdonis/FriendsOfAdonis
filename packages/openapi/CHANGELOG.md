@@ -1,5 +1,11 @@
 # @foadonis/openapi
 
+## 0.3.4
+
+### Patch Changes
+
+- [#25](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/25) [`32de549`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/32de54973ce8cc95e9e961b07879051f7d0f52ab) Thanks [@kerwanp](https://github.com/kerwanp)! - Add pretty configure success log
+
 ## 0.3.3
 
 ### Patch Changes
