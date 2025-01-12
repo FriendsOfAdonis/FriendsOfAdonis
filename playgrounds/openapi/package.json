@@ -52,6 +52,7 @@
     "@adonisjs/bouncer": "^3.1.4",
     "@adonisjs/core": "^6.17.0",
     "@adonisjs/session": "^7.5.0",
+    "@foadonis/crypt": "workspace:*",
     "@foadonis/openapi": "workspace:*",
     "@vinejs/vine": "^3.0.0",
     "better-sqlite3": "^11.7.0",

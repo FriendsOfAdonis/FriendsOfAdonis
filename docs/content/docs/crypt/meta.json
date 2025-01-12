@@ -1,0 +1,7 @@
+{
+  "title": "Crypt",
+  "description": "Safely store your credentials in your repository",
+  "root": true,
+  "icon": "Vault",
+  "pages": ["---Guide---", "index", "getting_started", "------", "commands"]
+}

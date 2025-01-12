@@ -1,0 +1,52 @@
+---
+title: 'Introduction'
+icon: Album
+---
+
+With Crypt you can safely store your credential in your repository and commit your environment variables files.
+
+```sh
+node ace crypt:set DB_PASSWORD mysupersecret
+```
+
+```dotenv title=".env"
+#/---------------------[CRYPT PUBLIC KEY]-----------------------/
+#/             public-key encryption for .env files             /
+#/   [how it works](https://friendsofadonis.com/docs/crypt)     /
+#/--------------------------------------------------------------/
+CRYPT_PUBLIC_KEY="02caef368300cb9244d00b64deab85cd33c68b7e5e097b9ac73b0ba8125579f099"
+
+DB_USER=adonis
+DB_DATABASE=adonis
+DB_PASSWORD="encrypted:BLkwNagdhoSpSAyRR1og..."
+```
+
+## Features
+
+✔ Directly integrate with [@adonisjs/env](https://github.com/adonisjs/env)  
+✔ Stored directly in your `.env` files  
+✔ Multi-environment support  
+✔ Assymetric cryptography for security and simplified worklow
+
+## Why
+
+### Leverage version control
+
+Managing credentials across multiple environment can be tedious. By storing them encrypted, directly in your repository, you can leverage all your development workflow: Versionning, history, reviews, etc.
+
+### Simplify secrets management
+
+By using encrypted secrets stored in the repository you don't have to be scared to lose them anymore. You only have to take of a single secret: your private key.
+
+### Assymetric cryptography
+
+With traditional secrets management allowing developers to edit production secrets also allow them to read them.
+By using assimetric cryptography, your developers can encrypt new secrets without being able to read existing one.
+
+## How it works?
+
+Crypt takes its inspiration from the [dotenvx](https://dotenvx.com/) library. It directly integrate with Adonis and more specifically [@adonisjs/env](https://github.com/adonisjs/env).
+
+Each environment (development, staging, production, etc) has a generated keypair. The public key is stored in your repository for encrypting secrets and the private key is stored in a `.env.keys` file gitignored used to decrypt environment variables.
+
+When starting your Adonis application, Crypt will decrypt your environment variables automatically for you.
