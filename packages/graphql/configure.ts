@@ -38,4 +38,34 @@ async function updatePackageJson(command: ConfigureCommand) {
   }
 
   await writePackageJSON(path, packageJson)
+
+  logSuccess(command)
+}
+
+function logSuccess(command: ConfigureCommand) {
+  const c = command.colors
+  const foadonis = c.bold('Friends Of Adonis')
+  const name = c.yellow('@foadonis/graphql')
+  command.logger.log('')
+  command.logger.log(c.green('╭───────────────────────────────────────╮'))
+  command.logger.log(c.green(`│ ${foadonis} | ${name} │`))
+  command.logger.log(c.green('╰───────────────────────────────────────╯'))
+  command.logger.log('╭')
+  command.logger.log('│ Welcome to @foadonis/graphql!')
+  command.logger.log('│ ')
+  command.logger.log('│ Get started')
+  command.logger.log('│ ↪  Docs: https://friendsofadonis.com/docs/graphql')
+  command.logger.log('│ ')
+  command.logger.log(
+    `│ ${c.yellow('⭐ Give a star: https://github.com/FriendsOfAdonis/FriendsOfAdonis')}`
+  )
+  command.logger.log('╰')
+  command.logger.log('')
+  command.logger.log(
+    c.grey(
+      c.italic(
+        'I am looking for maintainers to help me grow and maintain the FriendsOfAdonis ecosystem.\nContact me on discord: "@kerwan."'
+      )
+    )
+  )
 }

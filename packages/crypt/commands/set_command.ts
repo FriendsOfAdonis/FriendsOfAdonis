@@ -29,9 +29,9 @@ export default class SetCommand extends CryptBaseCommand {
     await envFile.set(this.key, publicKey.encrypt(this.value))
 
     if (envFile.get(this.key) !== undefined) {
-      this.logger.info(`[${this.filename()}] ✔ replaced "${this.key}" with encrypted value`)
+      this.logger.success(`[${this.filename()}] ✔ replaced "${this.key}" with encrypted value`)
     } else {
-      this.logger.info(`[${this.filename()}] ✔ set "${this.key}" with encrypted value`)
+      this.logger.success(`[${this.filename()}] ✔ set "${this.key}" with encrypted value`)
     }
 
     await envFile.save()

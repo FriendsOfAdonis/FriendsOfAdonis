@@ -15,7 +15,7 @@ export default class InitCommand extends CryptBaseCommand {
 
     if (keys.get(privateKeyName)) {
       this.logger.warning(
-        `A private key ${privateKeyName} already exist in .env.keys. Use 'node ace crypt:rotate' to update existing keys.`
+        `A private key ${privateKeyName} already exist in .env.keys, use 'node ace crypt:rotate' to update existing keys.`
       )
       return
     }
@@ -29,6 +29,9 @@ export default class InitCommand extends CryptBaseCommand {
     keys.set(privateKeyName, keyPair.privateKey)
 
     await envFile.save()
+    this.logger.success(`[${this.filename()}] ✔ generated "${publicKeyName}" public key`)
+    this.logger.success(`[.env.keys] ✔ generated "${privateKeyName}" private key`)
+
     await keys.save()
   }
 }

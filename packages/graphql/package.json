@@ -15,7 +15,7 @@
     ".": "./build/index.js",
     "./commands": "./build/commands/main.js",
     "./services/main": "./build/services/main.js",
-    "./providers/graphql_provider": "./build/providers/graphql_provider.js",
+    "./graphql_provider": "./build/providers/graphql_provider.js",
     "./types": "./build/src/types.js"
   },
   "scripts": {

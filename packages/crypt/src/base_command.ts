@@ -9,10 +9,10 @@ export class CryptBaseCommand extends BaseCommand {
     default: process.env.NODE_ENV,
     parse: (value) => (process.env.NODE_ENV = value),
   })
-  declare env: string
+  declare env?: string
 
   protected filename() {
-    if (this.env === 'development') {
+    if (!this.env || this.env === 'development') {
       return '.env'
     }
 
