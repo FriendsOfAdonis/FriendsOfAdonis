@@ -21,7 +21,7 @@ export default class GetCommand extends CryptBaseCommand {
     const privateKey = await this.createPrivateKey()
 
     if (!privateKey) {
-      throw new E_PRIVATE_KEY_NOT_FOUND(this.key)
+      throw new E_PRIVATE_KEY_NOT_FOUND()
     }
 
     const envFile = await EnvFile.load(this.app.makePath(this.filename()))
@@ -40,7 +40,7 @@ export default class GetCommand extends CryptBaseCommand {
     const t = this.ui.table()
     t.head([this.filename()])
     t.row(['Key', key])
-    t.row(['Value', encrypted ? privateKey.decrypt(key, encrypted) : value])
+    t.row(['Value', encrypted ? privateKey.decrypt(encrypted) : value])
     t.row(['Encrypted', String(Boolean(encrypted))])
     t.render()
   }
@@ -51,11 +51,7 @@ export default class GetCommand extends CryptBaseCommand {
 
     for (const [key, value] of Object.entries(parsed)) {
       const encrypted = isEncrypted(value)
-      t.row([
-        key,
-        encrypted ? privateKey.decrypt(key, encrypted) : value,
-        String(Boolean(encrypted)),
-      ])
+      t.row([key, encrypted ? privateKey.decrypt(encrypted) : value, String(Boolean(encrypted))])
       t.render()
     }
   }

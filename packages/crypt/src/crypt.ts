@@ -2,11 +2,10 @@ import { ValidateFn } from '@poppinss/validator-lite/types'
 import { Env } from '@adonisjs/core/env'
 import { E_PRIVATE_KEY_NOT_FOUND } from './errors.js'
 import { CryptPrivateKey } from './private_key.js'
-import { isEncrypted } from './utils/is_encrypted.js'
 
-await initCrypt()
+initCrypt()
 
-async function initCrypt() {
+function initCrypt() {
   let privateKey: CryptPrivateKey | undefined
   const initialCreate = Env.create
   Env.create = async function <Schema extends { [key: string]: ValidateFn<unknown> }>(
@@ -19,19 +18,11 @@ async function initCrypt() {
     return test
   }
 
-  const initialGet = Env.prototype.get
-  Env.prototype.get = function (this: Env<any>, key: string, defaultValue?: string) {
-    const value = initialGet.bind(this)(key, defaultValue)
-
-    if (typeof value !== 'string') return value
-    const encrypted = isEncrypted(value)
-
-    if (!encrypted) return value
-
+  Env.identifier('encrypted', (value) => {
     if (!privateKey) {
-      throw new E_PRIVATE_KEY_NOT_FOUND(key)
+      throw new E_PRIVATE_KEY_NOT_FOUND()
     }
 
-    return privateKey.decrypt(key, encrypted)
-  }
+    return privateKey.decrypt(value)
+  })
 }

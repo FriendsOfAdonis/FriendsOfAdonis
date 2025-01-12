@@ -43,7 +43,7 @@ export class CryptPrivateKey {
     }
   }
 
-  decrypt(key: string, value: string) {
-    return decrypt(key, value, this)
+  decrypt(value: string) {
+    return decrypt(value, this)
   }
 }
