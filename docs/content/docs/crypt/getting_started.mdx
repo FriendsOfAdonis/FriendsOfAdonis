@@ -15,22 +15,17 @@ node ace add @foadonis/crypt
 
 ## Configure your Env schema
 
-In your `start/env.ts` file, replace `Env.create` with `Crypt.create` and add your first secret.
+**This step is done automatically when you first install Crypt.**
+
+In your `start/env.ts` file, import `@foadonis/crypt` to modify default `Env` behavior.
 
 ```ts title="start/env.ts" twoslash
 // @noErrors
+import '@foadonis/crypt' // [!code ++]
 import { Env } from '@adonisjs/core/env'
-import { Crypt } from '@foadonis/crypt' // [!code highlight]
 
-// [!code highlight]
-export default await Crypt.create(new URL('../', import.meta.url), {
-  NODE_ENV: Env.schema.enum(['development', 'production', 'test'] as const),
-  PORT: Env.schema.number(),
-  APP_KEY: Env.schema.string(),
-  HOST: Env.schema.string({ format: 'host' }),
-  LOG_LEVEL: Env.schema.string(),
-
-  DB_PASSWORD: Crypt.secret(), // [!code highlight]
+export default await Env.create(new URL('../', import.meta.url), {
+  [...]
 })
 ```
 

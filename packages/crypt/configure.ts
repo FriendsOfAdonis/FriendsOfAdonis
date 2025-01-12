@@ -13,6 +13,7 @@
 */
 
 import ConfigureCommand from '@adonisjs/core/commands/configure'
+import { readFile, writeFile } from 'node:fs/promises'
 
 export async function configure(command: ConfigureCommand) {
   const codemods = await command.createCodemods()
@@ -21,7 +22,21 @@ export async function configure(command: ConfigureCommand) {
     rcFile.addCommand('@foadonis/crypt/commands')
   })
 
+  await updateEnvFile(command)
+
   logSuccess(command)
+}
+
+async function updateEnvFile(command: ConfigureCommand) {
+  try {
+    const path = command.app.startPath('env.ts')
+    const content = await readFile(command.app.startPath('env.ts')).then((r) => r.toString())
+    await writeFile(path, `import '@foadonis/crypt'\n${content}`)
+  } catch (e) {
+    command.logger.warning(
+      'An error occured when injecting crypt in `start/env.ts`. You might have to do it manually.'
+    )
+  }
 }
 
 function logSuccess(command: ConfigureCommand) {

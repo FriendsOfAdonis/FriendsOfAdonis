@@ -29,6 +29,6 @@ export function decrypt(key: string, value: string, privateKey: CryptPrivateKey)
       throw new E_MALFORMED_ENCRYPTED_DATA(key)
     }
 
-    throw new E_UNKOWN_DECRYPTION_ERROR(e.message)
+    throw new E_UNKOWN_DECRYPTION_ERROR([e.message])
   }
 }

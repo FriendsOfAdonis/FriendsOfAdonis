@@ -49,4 +49,4 @@ Crypt takes its inspiration from the [dotenvx](https://dotenvx.com/) library. It
 
 Each environment (development, staging, production, etc) has a generated keypair. The public key is stored in your repository for encrypting secrets and the private key is stored in a `.env.keys` file gitignored used to decrypt environment variables.
 
-When starting your Adonis application, Crypt will decrypt your environment variables automatically for you.
+When starting your Adonis application, Crypt will override [@adonisjs/env](https://github.com/adonisjs/env) methods so every environment variable value prefixed with `encrypted:` will be decrypted automatically.
