@@ -1,7 +1,7 @@
 {
   "name": "@foadonis/crypt",
   "description": "Adonis library to safely store your secrets in your repository",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "engines": {
     "node": ">=20.6.0"
   },
