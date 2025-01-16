@@ -3099,6 +3099,33 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@foadonis/ally-extra@workspace:packages/ally-extra":
+  version: 0.0.0-use.local
+  resolution: "@foadonis/ally-extra@workspace:packages/ally-extra"
+  dependencies:
+    "@adonisjs/assembler": "npm:^7.8.2"
+    "@adonisjs/core": "npm:^6.17.0"
+    "@foadonis/eslint-config": "workspace:*"
+    "@japa/assert": "npm:^4.0.0"
+    "@japa/expect-type": "npm:^2.0.2"
+    "@japa/file-system": "npm:^2.3.1"
+    "@japa/plugin-adonisjs": "npm:^3.0.1"
+    "@japa/runner": "npm:^3.1.4"
+    "@swc/core": "npm:1.10.3"
+    "@types/node": "npm:^22.10.2"
+    c8: "npm:^10.1.3"
+    copyfiles: "npm:^2.4.1"
+    del-cli: "npm:^6.0.0"
+    edge.js: "npm:^6.2.0"
+    prettier: "npm:^3.4.2"
+    reflect-metadata: "npm:^0.2.2"
+    ts-node: "npm:^10.9.2"
+    typescript: "npm:^5.7.2"
+  peerDependencies:
+    "@adonisjs/core": ^6.2.0
+  languageName: unknown
+  linkType: soft
+
 "@foadonis/crypt@workspace:*, @foadonis/crypt@workspace:packages/crypt":
   version: 0.0.0-use.local
   resolution: "@foadonis/crypt@workspace:packages/crypt"
