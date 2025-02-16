@@ -46,7 +46,9 @@ export function defineConfig<
       if (typeof transport === 'function') {
         transports[transportName] = transport
       } else {
-        transports[transportName] = await transport.resolver(app)
+        transports[transportName] = await (
+          transport as ConfigProvider<NotificationTransportContract>
+        ).resolver(app)
       }
     }
 

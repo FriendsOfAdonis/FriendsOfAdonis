@@ -14,7 +14,7 @@ export class FirebasePushNotificationTransport implements NotificationTransportC
     this.#messaging = getMessaging(app)
   }
 
-  async send(notifiable: NotifiableContract, notification: Notification): Promise<void> {
+  async send(notifiable: NotifiableContract, _notification: Notification): Promise<void> {
     if (!notifiable.routeForPushNotification) return
 
     const token = notifiable.routeForPushNotification()
