@@ -54,8 +54,8 @@
   "license": "MIT",
   "devDependencies": {
     "@adonisjs/assembler": "^7.8.2",
-    "@adonisjs/cache": "1.0.0-4",
-    "@adonisjs/core": "^6.17.0",
+    "@adonisjs/cache": "1.1.2",
+    "@adonisjs/core": "^6.17.2",
     "@adonisjs/lucid": "^21.6.0",
     "@foadonis/eslint-config": "workspace:*",
     "@japa/assert": "^4.0.0",
@@ -64,7 +64,7 @@
     "@japa/plugin-adonisjs": "^3.0.1",
     "@japa/runner": "^3.1.4",
     "@swc/core": "1.10.3",
-    "@types/node": "^22.10.2",
+    "@types/node": "^22.13.4",
     "c8": "^10.1.3",
     "copyfiles": "^2.4.1",
     "del-cli": "^6.0.0",
@@ -72,13 +72,13 @@
     "prettier": "^3.4.2",
     "reflect-metadata": "^0.2.2",
     "ts-node": "^10.9.2",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.3"
   },
   "peerDependencies": {
     "@adonisjs/core": "^6.2.0"
   },
   "optionalDependencies": {
-    "@adonisjs/cache": "1.0.0-4",
+    "@adonisjs/cache": "1.1.2",
     "edge.js": "^6.2.0"
   },
   "publishConfig": {

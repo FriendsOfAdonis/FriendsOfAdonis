@@ -1,0 +1,74 @@
+---
+title: 'Pinpoint SMS'
+description: 'Send SMS notifications to your users with AWS Pinpoint on AdonisJS'
+---
+
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs'
+
+## Introduction
+
+The Pinpoint SMS notification channel is used to notify your users using [AWS Pinpoint](https://aws.amazon.com/pinpoint/).
+
+## Configuration
+
+### Configure channel
+
+```ts title="config/notifier.ts"
+import { defineConfig, channels } from '@foadonis/notifier'
+
+export default defineConfig({
+  channels: {
+    pinpointSMS: channels.pinpointSMS({
+      applicationId: env.get('AWS_PINPOINT_APP_ID'),
+      region: env.get('AWS_REGION'),
+      credentials: {
+        accessKeyId: env.get('AWS_ACCESS_KEY_ID'),
+        secretAccessKey: env.get('AWS_SECRET_ACCESS_KEY'),
+      },
+    }),
+  },
+})
+```
+
+### Configure your User
+
+To enable SMS Pinpoint notification on your users, you must define the `routeForSMSNotification` method.
+
+```ts title="app/models/user.ts"
+import { compose } from '@adonisjs/core/helpers'
+import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { Notifiable, NotifiableContract } from '@foadonis/notifier'
+
+export class User extends compose(BaseModel, Notifiable) implements NotifiableContract {
+  @column()
+  declare phone: string
+
+  routeForSMSNotification() {
+    return this.phone
+  }
+}
+```
+
+### Configure your Notification
+
+To make your notification available on the Pinpoint SMS channel you must define the `toPinpointSMS` method.
+
+```ts title="app/notifications/welcome_notification.ts"
+export default class WelcomeNotification {
+  constructor(private user: User) {}
+
+  toPinpointSMS() {
+    return new PinpointSMSMessage()
+      .senderId('FRIENDSOFADONIS')
+      .text(`Welcome ${this.user.firstname} to Friends Of Adonis!`)
+  }
+}
+```
+
+## Notify your User
+
+```ts
+import notifier from '@foadonis/notifier/services/main'
+
+await notifier.notify(user, new WelcomeNotification(user), ['pinpointSMS'])
+```
