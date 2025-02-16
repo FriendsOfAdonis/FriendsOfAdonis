@@ -1,0 +1,94 @@
+---
+title: 'Mail'
+description: 'Send Email notifications to your users with @adonisjs/mail on AdonisJS'
+---
+
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs'
+
+## Introduction
+
+The Mail notification channel is used to notify your users with emails. It uses the official [@adonisjs/mail package](https://docs.adonisjs.com/guides/digging-deeper/mail).
+
+## Configuration
+
+### Configure `@adonisjs/mail`
+
+```sh
+node ace add @adonisjs/mail
+```
+
+<Callout>
+  For more information, head over the [Official `@adonisjs/mail`
+  documentation](https://docs.adonisjs.com/guides/digging-deeper/mail).
+</Callout>
+
+### Configure channel
+
+```ts title="config/notifier.ts"
+import { defineConfig, channels } from '@foadonis/notifier'
+
+export default defineConfig({
+  channels: {
+    mail: channels.mail(),
+  },
+})
+```
+
+### Configure your User
+
+To enable Email notification on your users, you must define the `routeForMailNotification` method.
+
+```ts twoslash title="app/models/user.ts"
+import { compose } from '@adonisjs/core/helpers'
+import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { Notifiable, NotifiableContract } from '@foadonis/notifier'
+
+export class User extends compose(BaseModel, Notifiable) implements NotifiableContract {
+  @column()
+  declare email: string
+
+  routeForMailNotification() {
+    return this.email
+  }
+}
+```
+
+### Configure your Notification
+
+To make your notification available on the Mail channel you must define the `toMail` method.
+
+```ts title="app/notifications/welcome_notification.ts" tab="Edge view"
+export default class WelcomeNotification {
+  constructor(private user: User) {}
+
+  toMail() {
+    return new MailMessage()
+      .from('contact@friendsofadonis.com')
+      .subject('Welcome to FOA')
+      .view('mails/welcome', {
+        firstname: this.user.firstname,
+      })
+  }
+}
+```
+
+```ts title="app/notifications/welcome_notification.ts" tab="Text"
+export default class WelcomeNotification {
+  constructor(private user: User) {}
+
+  toMail() {
+    return new MailMessage()
+      .subject('Welcome to FOA')
+      .from('contact@friendsofadonis.com')
+      .text(`Welcome ${this.user.firstname} to Friends Of Adonis!`)
+  }
+}
+```
+
+## Notify your User
+
+```ts
+import notifier from '@foadonis/notifier/services/main'
+
+await notifier.notify(user, new WelcomeNotification(user), ['whatsapp'])
+```

@@ -1,0 +1,94 @@
+---
+title: 'Firebase Messaging Push'
+description: 'Send Push notifications to your users with Firebase on AdonisJS'
+---
+
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs'
+
+## Introduction
+
+The Firebase Messaging Push notification channel is used to notify your users using Firebase Messaging.
+
+## Configuration
+
+### Install `firebase-admin`
+
+This channel requires you to install the `firebase-admin` package.
+
+```sh
+npm install firebase-admin
+```
+
+### Configure channel
+
+```ts title="config/notifier.ts"
+import { defineConfig, channels } from '@foadonis/notifier'
+import googleServiceAccount from '../google-services-account.json' with { type: 'json' }
+
+export default defineConfig({
+  channels: {
+    firebasePush: transports.firebasePush({
+      credential: admin.credential.cert(googleServiceAccount),
+    }),
+  },
+})
+```
+
+### Configure your User
+
+To enable Push notification on your users, you must define the `routeForPushNotification` method.
+
+```ts twoslash title="app/models/user.ts"
+import { compose } from '@adonisjs/core/helpers'
+import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { Notifiable, NotifiableContract } from '@foadonis/notifier'
+
+export class User extends compose(BaseModel, Notifiable) implements NotifiableContract {
+  @column()
+  declare fcmRegistrationToken: string
+
+  routeForPushNotification() {
+    return this.fcmRegistrationToken
+  }
+}
+```
+
+### Configure your Notification
+
+To make your notification available on the Mail channel you must define the `toMail` method.
+
+```ts title="app/notifications/welcome_notification.ts" tab="Edge view"
+export default class WelcomeNotification {
+  constructor(private user: User) {}
+
+  toPush() {
+    return new PushMessage()
+      .from('contact@friendsofadonis.com')
+      .subject('Welcome to FOA')
+      .view('mails/welcome', {
+        firstname: this.user.firstname,
+      })
+  }
+}
+```
+
+```ts title="app/notifications/welcome_notification.ts" tab="Text"
+export default class WelcomeNotification {
+  constructor(private user: User) {}
+
+  toMail() {
+    return new MailMessage()
+      .subject('Welcome to FOA')
+      .from('contact@friendsofadonis.com')
+      .text(`Welcome ${this.user.firstname} to Friends Of Adonis!`)
+  }
+}
+```
+
+## Notify your User
+
+```ts
+import notifier from '@foadonis/notifier/services/main'
+
+await notifier.notify(user, new WelcomeNotification(user), ['whatsapp'])
+```

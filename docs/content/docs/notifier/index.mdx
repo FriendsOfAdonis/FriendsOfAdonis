@@ -1,0 +1,34 @@
+---
+title: 'Introduction'
+icon: Album
+---
+
+Notifier allows you to easily send notifications to your users across different channels. Emails, SMS, WhatsApp, etc.
+
+```ts
+export class WelcomeNotification extends Notification {
+  toMail() {
+    return new MailMessage().view('notifications/welcome')
+  }
+
+  toWhatsApp() {
+    return new WhatsAppMessage().template('welcome')
+  }
+
+  toSMS() {
+    return new SMSMessage().text('Welcome to Friends Of Adonis!')
+  }
+}
+```
+
+```ts
+await user.notify(new WelcomeNotification())
+
+await user.notify(new PaymentFailedNotification(), ['whatsapp', 'email', 'push'])
+```
+
+## Features
+
+✔ Directly integrate with [@adonisjs/mail](https://github.com/adonisjs/mail)  
+✔ Multi-channel supports  
+✔ Bring your own channels

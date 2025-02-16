@@ -1,0 +1,92 @@
+---
+title: 'WhatsApp'
+description: 'Send SMS notifications to your users with WhatsApp on AdonisJS'
+---
+
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs'
+
+## Introduction
+
+The WhatsApp notification channel is used to notify your users on WhatsApp.
+
+<Callout type="warn">
+  This channel can send both template and text notifications but{' '}
+  <b>WhatsApp will only allow template messages if your user has never interacted with your bot.</b>
+</Callout>
+
+## Configuration
+
+### Configure channel
+
+```ts title="config/notifier.ts"
+import { defineConfig, channels } from '@foadonis/notifier'
+
+export default defineConfig({
+  channels: {
+    whatsapp: channels.whatsapp({
+      accessToken: env.get('WHATSAPP_ACCESS_TOKEN'),
+      phoneId: env.get('WHATSAPP_PHONE_ID'),
+    }),
+  },
+})
+```
+
+### Configure your User
+
+To enable WhatsApp notification on your users, you must define the `routeForSMSNotification` method.
+
+```ts title="app/models/user.ts"
+import { compose } from '@adonisjs/core/helpers'
+import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { Notifiable, NotifiableContract } from '@foadonis/notifier'
+
+export class User extends compose(BaseModel, Notifiable) implements NotifiableContract {
+  @column()
+  declare phone: string
+
+  routeForSMSNotification() {
+    return this.phone
+  }
+}
+```
+
+### Configure your Notification
+
+To make your notification available on the WhatsApp channel you must define the `toWhatsApp` method.
+
+```ts title="app/notifications/welcome_notification.ts" tab="Template"
+export default class WelcomeNotification {
+  constructor(private user: User) {}
+
+  toWhatsApp() {
+    return new WhatsAppMessage().template('welcome', {
+      language: { code: 'en_US' },
+      parameters: [
+        {
+          type: 'text',
+          text: this.user.firstname,
+          parameter_name: 'firstname',
+        },
+      ],
+    })
+  }
+}
+```
+
+```ts title="app/notifications/welcome_notification.ts" tab="Text"
+export default class WelcomeNotification {
+  constructor(private user: User) {}
+
+  toWhatsApp() {
+    return new WhatsAppMessage().text(`Welcome ${this.user.firstname} to Friends Of Adonis!`)
+  }
+}
+```
+
+## Notify your User
+
+```ts
+import notifier from '@foadonis/notifier/services/main'
+
+await notifier.notify(user, new WelcomeNotification(user), ['whatsapp'])
+```
