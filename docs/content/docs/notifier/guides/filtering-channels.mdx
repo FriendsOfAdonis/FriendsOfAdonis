@@ -1,0 +1,65 @@
+---
+title: 'Filtering channels'
+---
+
+If a channel has no way of notifying a user, it will silently fail. This can occur for multiple reasons:
+
+- There is no way to route the notification to the user (ex: `routeForMailNotification`)
+- The notification cannot be converted to the format supported by the channel (ex: `toMail`)
+
+Sometimes you may want to disable channels for a specific user or notification.
+
+## Filter on Notify
+
+When sending a notification you can specify the channels.
+
+```ts
+await user.notify(new WelcomeNotification(), ['mail'])
+
+await notifier.notify(new WelcomeNotification(), user, ['mail'])
+
+await WelcomeNotification.notify(user, ['mail'])
+```
+
+## Filter on Notification
+
+You can specify the channels directly on the Notification allowing you to conditionnaly specify how you want to notify your users.
+
+```ts title="app/notifications/welcome_notification.ts"
+import { MailMessage, Notification, PushMessage, SMSMessage } from '@foadonis/notifier'
+
+export default class InvoiceUpdatedNotification extends Notification {
+  constructor(public invoice: Invoice) {}
+
+  toMail() {
+    return new MailMessage().view('mails/invoice')
+  }
+
+  toSMS() {
+    return new SMSMessage().text('Your payment has failed. Please update your payment information')
+  }
+
+  channels() {
+    return this.invoice.status === 'failed' ? ['email', 'sms'] : ['sms']
+  }
+}
+```
+
+## Filter on Notifiable
+
+You can also specify the channels directly on the user.
+
+```ts title="app/models/user.ts"
+import { compose } from '@adonisjs/core/helpers'
+import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { Notifiable, NotifiableContract } from '@foadonis/notifier'
+
+export class User extends compose(BaseModel, Notifiable) implements NotifiableContract {
+  @column()
+  declare prefersSMS: boolean
+
+  channels() {
+    return this.prefersSMS ? ['sms'] : ['email']
+  }
+}
+```

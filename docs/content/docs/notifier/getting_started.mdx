@@ -1,0 +1,102 @@
+---
+title: 'Getting Started'
+icon: Rocket
+---
+
+## Installation
+
+Install and configure the package using the following command :
+
+```sh
+node ace add @foadonis/notifier
+```
+
+<ConfigurationSteps pkg="@foadonis/notifier" providers={['notifier']} config="notifier" commands />
+
+## Configure a Channel
+
+A channel is a way to send notifications to your users. It can be an email, a SMS, or a push notification.
+You can even create custom channels to notify your users using custom libraries or vendors.
+
+In this example we will configure the MailChannel.
+
+Some channels have specific requirements. The `MailChannel` rely on `@adonisjs/mail`.
+
+```sh
+node ace add @adonisjs/mail
+```
+
+Now let's head over our `config/notifier.ts` configuration file to add our first channel.
+As most of the configuration is already handled by the mail package we don't need further configuration.
+
+```ts title="config/notifier.ts"
+import { defineConfig, channels } from '@foadonis/notifier'
+
+const notifierConfig = defineConfig({
+  transports: {
+    mail: channels.mail(), // [!code ++]
+  },
+})
+
+export default notifierConfig
+
+declare module '@foadonis/notifier/types' {
+  export interface NotificationTransports
+    extends InferNotificationTransports<typeof notifierConfig> {}
+}
+```
+
+## Prepare the User
+
+We now need to make our users **Notifiable**. We also need to define how to route the notification to the user by specifying the `routeForMailNotification` method.
+
+```ts twoslash title="app/models/user.ts"
+import { compose } from '@adonisjs/core/helpers'
+import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { Notifiable, NotifiableContract } from '@foadonis/notifier'
+
+export class User extends compose(BaseModel, Notifiable) implements NotifiableContract {
+  @column()
+  declare email: string
+
+  routeForMailNotification() {
+    return this.email
+  }
+}
+```
+
+## Create the Notification
+
+Now that our user can be notified, let's create our first notification using the make command.
+
+```sh
+node ace make:notification welcome
+```
+
+To configure this notification for Mail channels, we must configure the `toMail` method.
+
+```ts title="app/notifications/welcome_notification.ts"
+export default class WelcomeNotification {
+  toMail(user: User) {
+    return new MailMessage()
+      .subject('Welcome to FOA')
+      .from('contact@friendsofadonis.com')
+      .text(`Welcome ${user.firstname} to Friends Of Adonis!`)
+  }
+}
+```
+
+## Notify the User
+
+You can now notify your user!
+
+```ts
+// Directly on the User
+await user.notify(new WelcomeNotification())
+
+// Using the notifier service
+await notifier.notify(user, new WelcomeNotification())
+
+// Using the Notification
+await WelcomeNotification.notify(user)
+```
