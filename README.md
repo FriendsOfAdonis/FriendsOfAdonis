@@ -21,6 +21,7 @@
 
 | Package | Version | Description |  |  |
 | --- | --- | --- | --- | --- |
+| @foadonis/ally-extra | [![npm version](https://img.shields.io/npm/v/@foadonis/ally-extra?color=brightgreen)](https://npmjs.com/package/@foadonis/ally-extra) | Additional drivers for @adonisjs/ally package | [Source](https://github.com/FriendsOfAdonis/FriendsOfAdonis/tree/main/packages/ally-extra) | [Documentation](https://friendsofadonis.com/docs/ally-extra) |
 | @foadonis/crypt | [![npm version](https://img.shields.io/npm/v/@foadonis/crypt?color=brightgreen)](https://npmjs.com/package/@foadonis/crypt) | Adonis library to safely store your secrets in your repository | [Source](https://github.com/FriendsOfAdonis/FriendsOfAdonis/tree/main/packages/crypt) | [Documentation](https://friendsofadonis.com/docs/crypt) |
 | @foadonis/graphql | [![npm version](https://img.shields.io/npm/v/@foadonis/graphql?color=brightgreen)](https://npmjs.com/package/@foadonis/graphql) | Create GraphQL APIs with your Adonis Application. | [Source](https://github.com/FriendsOfAdonis/FriendsOfAdonis/tree/main/packages/graphql) | [Documentation](https://friendsofadonis.com/docs/graphql) |
 | @foadonis/magnify | [![npm version](https://img.shields.io/npm/v/@foadonis/magnify?color=brightgreen)](https://npmjs.com/package/@foadonis/magnify) | Plug and play full-text search for your Adonis application. | [Source](https://github.com/FriendsOfAdonis/FriendsOfAdonis/tree/main/packages/magnify) | [Documentation](https://friendsofadonis.com/docs/magnify) |

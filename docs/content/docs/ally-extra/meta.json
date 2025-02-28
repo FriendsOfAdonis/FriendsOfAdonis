@@ -1,0 +1,15 @@
+{
+  "title": "Ally extra",
+  "description": "Additional drivers for @adonisjs/ally package",
+  "root": true,
+  "icon": "UserPlus",
+  "pages": [
+    "---Guide---",
+    "index",
+    "getting_started",
+    "---Drivers---",
+    "drivers/oidc",
+    "drivers/authentik",
+    "drivers/twitch"
+  ]
+}
