@@ -158,5 +158,5 @@ router
     response.redirect().toPath(billingPortalUrl)
   })
   .middleware(middleware.auth())
-  .name('billing')
+  .as('billing')
 ```
