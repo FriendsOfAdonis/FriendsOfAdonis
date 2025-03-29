@@ -153,7 +153,9 @@ import router from '@adonisjs/core/services/router'
 router
   .get('/billing', ({ auth, response }) => {
     const user = auth.getUserOrFail()
-    const billingPortalUrl = await user.billingPortalUrl(route('dashboard'))
+    const billingPortalUrl = await user.billingPortalUrl(
+      router.builder().make('dashboard')
+    )
 
     response.redirect().toPath(billingPortalUrl)
   })
