@@ -1,7 +1,6 @@
 import { test } from '@japa/runner'
 import { parseModel } from '../src/index.js'
 import { globby } from 'globby'
-import { fileURLToPath } from 'node:url'
 import { readFile } from 'node:fs/promises'
 import { basename } from 'node:path'
 import { LucidParserError } from '../src/errors.js'
