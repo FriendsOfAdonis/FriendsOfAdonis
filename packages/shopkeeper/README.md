@@ -15,12 +15,13 @@
 [![npm version](https://img.shields.io/npm/v/@foadonis/openapi?color=brightgreen)](https://npmjs.com/package/@foadonis/openapi)
 [![npm downloads](https://img.shields.io/npm/dm/@foadonis/openapi?color=brightgreen)](https://npm.chart.dev/@foadonis/openapi)
 [![bundle size](https://img.shields.io/bundlephobia/minzip/@foadonis/openapi?color=brightgreen)](https://bundlephobia.com/package/@foadonis/openapi)
+[![install size](https://badgen.net/packagephobia/install/@foadonis/openapi?color=brightgreen)](https://packagephobia.com/result?p=@foadonis/openapi)
 
 <!-- /automd -->
 
 <!-- automd:coverage -->
 
-![Coverage](https://img.shields.io/badge/coverage-79%25-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-0%25-red)
 
 <!-- /automd -->
 

@@ -1,0 +1,41 @@
+{
+  "columns": [
+    {
+      "key": "$string",
+      "type": {
+        "name": "string",
+        "isArray": false,
+        "isNullable": false,
+        "isOptional": true
+      }
+    },
+    {
+      "key": "$number",
+      "type": {
+        "name": "number",
+        "isArray": false,
+        "isNullable": false,
+        "isOptional": true
+      }
+    },
+    {
+      "key": "$boolean",
+      "type": {
+        "name": "boolean",
+        "isArray": false,
+        "isNullable": false,
+        "isOptional": true
+      }
+    },
+    {
+      "key": "$explicit",
+      "type": {
+        "name": "boolean",
+        "isArray": false,
+        "isNullable": false,
+        "isOptional": true
+      }
+    }
+  ],
+  "computed": []
+}

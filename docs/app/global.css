@@ -1,3 +1,6 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@import 'fumadocs-ui/css/dusk.css';
+@import 'fumadocs-ui/css/preset.css';
+
+/* path of `fumadocs-ui` relative to the CSS file */
+@source '../../node_modules/fumadocs-ui/dist/**/*.js';

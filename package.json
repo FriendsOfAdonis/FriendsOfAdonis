@@ -16,27 +16,26 @@
   "engines": {
     "node": ">=18"
   },
-  "pnpm": {
-    "overrides": {
-      "strtok3": "8.0.1"
-    }
+  "resolutions": {
+    "eslint-mdx": "3.2.0",
+    "eslint-plugin-mdx": "3.2.0"
   },
   "manypkg": {
     "defaultBranch": "main"
   },
   "prettier": "@adonisjs/prettier-config",
   "devDependencies": {
-    "@adonisjs/prettier-config": "^1.4.0",
-    "@changesets/changelog-github": "^0.5.0",
-    "@changesets/cli": "^2.27.9",
+    "@adonisjs/prettier-config": "^1.4.4",
+    "@changesets/changelog-github": "^0.5.1",
+    "@changesets/cli": "^2.28.1",
     "@foadonis/typescript-config": "workspace:*",
     "@manypkg/cli": "^0.23.0",
-    "automd": "^0.3.12",
-    "eslint": "^9.14.0",
-    "mdbox": "^0.1.0",
-    "prettier": "^3.4.2",
-    "turbo": "^2.2.3",
-    "typescript": "^5.7.2"
+    "automd": "^0.4.0",
+    "eslint": "^9.23.0",
+    "mdbox": "^0.1.1",
+    "prettier": "^3.5.3",
+    "turbo": "^2.4.4",
+    "typescript": "^5.8.2"
   },
   "workspaces": [
     "docs",

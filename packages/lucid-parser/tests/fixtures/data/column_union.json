@@ -1,0 +1,23 @@
+{
+  "columns": [
+    {
+      "key": "$nonNull",
+      "type": {
+        "name": "complex",
+        "isArray": false,
+        "isNullable": false,
+        "isOptional": false
+      }
+    },
+    {
+      "key": "$complex",
+      "type": {
+        "name": "complex",
+        "isArray": false,
+        "isNullable": false,
+        "isOptional": false
+      }
+    }
+  ],
+  "computed": []
+}

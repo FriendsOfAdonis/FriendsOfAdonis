@@ -15,6 +15,7 @@
 [![npm version](https://img.shields.io/npm/v/@foadonis/maintenance?color=brightgreen)](https://npmjs.com/package/@foadonis/maintenance)
 [![npm downloads](https://img.shields.io/npm/dm/@foadonis/maintenance?color=brightgreen)](https://npm.chart.dev/@foadonis/maintenance)
 [![bundle size](https://img.shields.io/bundlephobia/minzip/@foadonis/maintenance?color=brightgreen)](https://bundlephobia.com/package/@foadonis/maintenance)
+[![install size](https://badgen.net/packagephobia/install/@foadonis/maintenance?color=brightgreen)](https://packagephobia.com/result?p=@foadonis/maintenance)
 
 <!-- /automd -->
 

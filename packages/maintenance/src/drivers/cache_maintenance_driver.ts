@@ -11,22 +11,25 @@ export class CacheMaintenanceDriver implements MaintenanceDriver {
 
   public async activate(data: DownPayload): Promise<void> {
     const store = await this.getStore()
-    await store.set(this.#key, data)
+    await store.set({
+      key: this.#key,
+      value: data,
+    })
   }
 
   public async deactivate(): Promise<void> {
     const store = await this.getStore()
-    await store.delete(this.#key)
+    await store.delete({ key: this.#key })
   }
 
   public async active(): Promise<boolean> {
     const store = await this.getStore()
-    return store.has(this.#key)
+    return store.has({ key: this.#key })
   }
 
   public async data(): Promise<DownPayload> {
     const store = await this.getStore()
-    const data = store.get(this.#key)
+    const data = store.get({ key: this.#key })
     if (!data)
       throw new RuntimeException('Tried to retrieve maintenance data when application is live')
     return data

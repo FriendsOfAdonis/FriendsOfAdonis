@@ -1,5 +1,5 @@
 ---
-title: "Getting Started"
+title: 'Getting Started'
 icon: Rocket
 ---
 
@@ -11,12 +11,7 @@ Install and configure the package using the following command :
 node ace add @foadonis/graphql
 ```
 
-<ConfigurationSteps
-  pkg="@foadonis/graphql"
-  providers={["graphql"]}
-  commands
-  config="graphql"
-/>
+<ConfigurationSteps pkg="@foadonis/graphql" providers={['graphql']} commands config="graphql" />
 
 ## Getting Started
 
@@ -26,8 +21,8 @@ Let's start tih the `Recipe` type, which is the foundation of our API.
 
 <Callout type="warn">
   We assume that you already now [Adonis](https://adonisjs.com/) and its ORM
-  [Lucid](https://lucid.adonisjs.com/docs/introduction). The migrations have
-  been omitted from the tutorial.
+  [Lucid](https://lucid.adonisjs.com/docs/introduction). The migrations have been omitted from the
+  tutorial.
 </Callout>
 
 ### Create our Recipe type
@@ -37,21 +32,21 @@ Let's start tih the `Recipe` type, which is the foundation of our API.
 We will start with a basic `Recipe` model.
 
 ```ts title="app/models/recipe.ts"
-import { BaseModel, column } from "@adonisjs/lucid/orm";
-import { DateTime } from "luxon";
+import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { DateTime } from 'luxon'
 
 export default class Recipe extends BaseModel {
   @column({ isPrimary: true })
-  declare id: string;
+  declare id: string
 
   @column()
-  declare title: string;
+  declare title: string
 
   @column()
-  declare description: string | null;
+  declare description: string | null
 
   @column()
-  declare ingredients: string[];
+  declare ingredients: string[]
 }
 ```
 
@@ -60,33 +55,33 @@ export default class Recipe extends BaseModel {
 We now need to create an object type from our model. It will then be used in our GraphQL schema.
 
 ```ts title="app/models/recipe.ts"
-import { BaseModel, column } from "@adonisjs/lucid/orm";
-import { ObjectType, Field } from "@foadonis/graphql/decorators"; // [!code ++]
-import { DateTime } from "luxon";
+import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { ObjectType, Field } from '@foadonis/graphql/decorators' // [!code ++]
+import { DateTime } from 'luxon'
 
 @ObjectType() // [!code ++]
 export default class Recipe extends BaseModel {
   @column({ isPrimary: true })
   @Field((type) => ID) // [!code ++]
-  declare id: string;
+  declare id: string
 
   @column()
   @Field() // [!code ++]
-  declare title: string;
+  declare title: string
 
   @column()
   @Field({ nullable: true }) // [!code ++]
-  declare description: string | null;
+  declare description: string | null
 
   @column()
   @Field(() => [String]) // [!code ++]
-  declare ingredients: string[];
+  declare ingredients: string[]
 }
 ```
 
 <Callout>
-  For simplicity here we use directly our model in our schema, but you can
-  create a type from any class.
+  For simplicity here we use directly our model in our schema, but you can create a type from any
+  class.
 </Callout>
 
 ### Create the CRUD operations
@@ -96,36 +91,36 @@ After that we want to create typical crud operations. Also called queries and mu
 #### The Resolver
 
 ```ts title="app/graphql/recipe_resolver.ts"
-import Recipe from "#models/recipe";
-import { Arg, Args, Int, Mutation, Query, Resolver } from "type-graphql";
+import Recipe from '#models/recipe'
+import { Arg, Args, Int, Mutation, Query, Resolver } from 'type-graphql'
 
 @Resolver(Recipe)
 export default class RecipeResolver {
   @Query(() => Recipe)
-  recipe(@Arg("id") id: number) {
-    return Recipe.findOrFail(id);
+  recipe(@Arg('id') id: number) {
+    return Recipe.findOrFail(id)
   }
 
   @Query(() => [Recipe])
   recipes(@Args() { page, perPage }: RecipeArgs) {
-    return Recipe.query().paginate(page, perPage);
+    return Recipe.query().paginate(page, perPage)
   }
 
   @Mutation(() => Recipe)
-  addRecipe(@Arg("newRecipeData") newRecipeData: NewRecipeInput) {
-    return Recipe.create(newRecipeData);
+  addRecipe(@Arg('newRecipeData') newRecipeData: NewRecipeInput) {
+    return Recipe.create(newRecipeData)
   }
 
   @Mutation(() => Boolean)
-  async removeRecipe(@Arg("id") id: number) {
-    const recipe = await Recipe.find(id);
+  async removeRecipe(@Arg('id') id: number) {
+    const recipe = await Recipe.find(id)
 
     if (!recipe) {
-      return false;
+      return false
     }
 
-    await recipe.delete();
-    return true;
+    await recipe.delete()
+    return true
   }
 }
 ```
@@ -136,41 +131,41 @@ We are missing two important pieces, the inputs for the `recipes` query and the 
 Let's create them:
 
 ```ts title="app/graphql/recipe_resolver.ts"
-import { ArrayMaxSize, Length, Max, MaxLength, Min } from "class-validator";
-import { ArgsType, Field, InputType, Int } from "type-graphql";
+import { ArrayMaxSize, Length, Max, MaxLength, Min } from 'class-validator'
+import { ArgsType, Field, InputType, Int } from 'type-graphql'
 
 @ArgsType()
 class RecipeArgs {
   @Field(() => Int)
   @Min(0)
-  page: number = 0;
+  page: number = 0
 
   @Field(() => Int)
   @Min(1)
   @Max(25)
-  perPage: number = 0;
+  perPage: number = 0
 }
 
 @InputType()
 class NewRecipeInput {
   @Field()
   @MaxLength(30)
-  declare title: string;
+  declare title: string
 
   @Field({ nullable: true })
   @Length(30, 255)
-  declare description?: string;
+  declare description?: string
 
   @Field(() => [String])
   @ArrayMaxSize(30)
-  declare ingredients: string[];
+  declare ingredients: string[]
 }
 ```
 
 <Callout>
   The `@Length`, `@Min` and `@ArrayMaxSize` are decorators coming from
-  [`class-validator`](https://github.com/typestack/class-validator) a well-known
-  validation library that rely on decorators.
+  [`class-validator`](https://github.com/typestack/class-validator) a well-known validation library
+  that rely on decorators.
 </Callout>
 
 #### Register the Resolver
@@ -178,9 +173,9 @@ class NewRecipeInput {
 We must now register our `Resolver` with the GraphQL server:
 
 ```ts title="start/graphql.ts"
-import graphql from "@foadonis/graphql/services/main";
+import graphql from '@foadonis/graphql/services/main'
 
-graphql.resolvers([() => import("#graphql/resolvers/recipe_resolver")]);
+graphql.resolvers([() => import('#graphql/resolvers/recipe_resolver')])
 ```
 
 <Callout>Only the root resolvers must be registered this way.</Callout>
@@ -191,4 +186,4 @@ Everything is now ready!
 
 You can access the GraphQL playground at [`http://localhost:3000/graphql`](http://localhost:3000/graphql) and start playing with your queries and mutations.
 
-![GraphQL Playground](./assets/graphql-playground.png)
+![GraphQL Playground](/graphql/graphql-playground.png)
