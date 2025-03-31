@@ -1,27 +1,36 @@
-/* eslint-disable @stylistic/jsx/jsx-pascal-case */
 import { Popup, PopupContent, PopupTrigger } from 'fumadocs-twoslash/ui'
-import { Step, Steps } from 'fumadocs-ui/components/steps'
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion'
+import { Callout } from 'fumadocs-ui/components/callout'
+import { File, Folder, Files } from 'fumadocs-ui/components/files'
 import { Tab, Tabs } from 'fumadocs-ui/components/tabs'
-import { TypeTable } from 'fumadocs-ui/components/type-table'
 import defaultMdxComponents from 'fumadocs-ui/mdx'
-import { DocsPage, DocsBody, DocsDescription, DocsTitle } from 'fumadocs-ui/page'
+import { DocsPage, DocsBody, DocsTitle, DocsDescription, DocsCategory } from 'fumadocs-ui/page'
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { ConfigurationSteps } from '@/components/configuration-steps'
+import { type ComponentProps, type FC, type ReactElement } from 'react'
 import { source } from '@/lib/source'
-import { createMetadata, packages } from '@/utils/metadata'
+import { createMetadata } from '@/utils/metadata'
 import { metadataImage } from '@/utils/metadata-image'
+import { ConfigurationSteps } from '@/components/configuration-steps'
 
-export default async function Page(props: { readonly params: Promise<{ slug?: string[] }> }) {
+export const revalidate = false
+
+export default async function Page(props: {
+  readonly params: Promise<{ slug: string[] }>
+}): Promise<ReactElement> {
   const params = await props.params
   const page = source.getPage(params.slug)
+
   if (!page) notFound()
 
-  const path = `docs/content/docs/${page.file.path}`
-
-  const MDX = page.data.body
+  const path = `apps/docs/content/docs/${page.file.path}`
+  const { body: Mdx, toc, lastModified } = await page.data.load()
 
   return (
     <DocsPage
+      article={{
+        className: 'max-sm:pb-16',
+      }}
       editOnGithub={{
         repo: 'FriendsOfAdonis',
         owner: 'FriendsOfAdonis',
@@ -29,54 +38,60 @@ export default async function Page(props: { readonly params: Promise<{ slug?: st
         path,
       }}
       full={page.data.full}
-      tableOfContent={{ style: 'clerk' }}
-      toc={page.data.toc}
+      lastUpdate={lastModified}
+      tableOfContent={{
+        style: 'clerk',
+        single: false,
+      }}
+      toc={toc}
     >
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
-      <DocsBody>
-        <MDX
+      <DocsBody className="text-fd-foreground/80">
+        <Mdx
           components={{
             ...defaultMdxComponents,
-            Step,
-            Steps,
-            ConfigurationSteps,
-            TypeTable,
-            Tabs,
-            Tab,
             Popup,
             PopupContent,
             PopupTrigger,
+            Tabs,
+            Tab,
+            Accordion,
+            Accordions,
+            ConfigurationSteps,
+            File,
+            Folder,
+            Files,
+            blockquote: Callout as unknown as FC<ComponentProps<'blockquote'>>,
           }}
         />
+        {page.data.index ? <DocsCategory from={source} page={page} /> : null}
       </DocsBody>
     </DocsPage>
   )
 }
 
-export async function generateStaticParams() {
-  return source.generateParams()
-}
-
-export async function generateMetadata(props: { params: Promise<{ slug?: string[] }> }) {
+export async function generateMetadata(props: {
+  params: Promise<{ slug: string[] }>
+}): Promise<Metadata> {
   const params = await props.params
   const page = source.getPage(params.slug)
+
   if (!page) notFound()
 
-  const pkg = packages[page.slugs[0]]
-
-  const description =
-    page.data.description ?? pkg?.description ?? 'Well-written and production ready Adonis Packages'
-
-  const suffix = pkg?.name ?? 'FriendsOfAdonis'
+  const description = page.data.description ?? 'The library for building documentation sites'
 
   return createMetadata(
     metadataImage.withImage(page.slugs, {
-      title: `${page.data.title} | ${suffix}`,
+      title: page.data.title,
       description,
       openGraph: {
         url: `/docs/${page.slugs.join('/')}`,
       },
     })
   )
+}
+
+export function generateStaticParams() {
+  return source.generateParams()
 }

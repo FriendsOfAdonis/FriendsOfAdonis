@@ -2,7 +2,7 @@
   "title": "OpenAPI",
   "description": "Generate OpenAPI specifications",
   "root": true,
-  "icon": "ScrollText",
+  "icon": "Server",
   "pages": [
     "index",
     "getting-started",

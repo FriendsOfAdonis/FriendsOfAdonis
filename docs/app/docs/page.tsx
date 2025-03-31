@@ -5,8 +5,6 @@ import { source } from '@/lib/source'
 export default function Page() {
   const pages = source.getPageTree()
 
-  console.log(pages.children[pages.children.length - 1])
-
   return (
     <DocsPage>
       <DocsTitle>Friends Of Adonis</DocsTitle>

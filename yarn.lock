@@ -2279,6 +2279,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@fumadocs/mdx-remote@npm:^1.3.0":
+  version: 1.3.0
+  resolution: "@fumadocs/mdx-remote@npm:1.3.0"
+  dependencies:
+    "@mdx-js/mdx": "npm:^3.1.0"
+    gray-matter: "npm:^4.0.3"
+    zod: "npm:^3.24.2"
+  peerDependencies:
+    fumadocs-core: ^14.0.0 || ^15.0.0
+    react: 18.x.x || 19.x.x
+  checksum: 10c0/37719116da7d7eae3379696afe6f5740454a32a8e003603dd8f46eb0d694a1837ce1591db181d724ef426a82c60b8cb8b5782bec7e1be9165b52aedd0b324c7f
+  languageName: node
+  linkType: hard
+
 "@gar/promisify@npm:^1.0.1":
   version: 1.1.3
   resolution: "@gar/promisify@npm:1.1.3"
@@ -4437,6 +4451,36 @@ __metadata:
     "@types/react-dom":
       optional: true
   checksum: 10c0/2f621c43a8e1dd0d54c828f8b4d88414c9114af6b720a650ad9587cc0a7a7536da778f2fe5181a38494cc2956f2b238fbe64790f6daad1d058b34f4acaee520e
+  languageName: node
+  linkType: hard
+
+"@radix-ui/react-tooltip@npm:^1.1.8":
+  version: 1.1.8
+  resolution: "@radix-ui/react-tooltip@npm:1.1.8"
+  dependencies:
+    "@radix-ui/primitive": "npm:1.1.1"
+    "@radix-ui/react-compose-refs": "npm:1.1.1"
+    "@radix-ui/react-context": "npm:1.1.1"
+    "@radix-ui/react-dismissable-layer": "npm:1.1.5"
+    "@radix-ui/react-id": "npm:1.1.0"
+    "@radix-ui/react-popper": "npm:1.2.2"
+    "@radix-ui/react-portal": "npm:1.1.4"
+    "@radix-ui/react-presence": "npm:1.1.2"
+    "@radix-ui/react-primitive": "npm:2.0.2"
+    "@radix-ui/react-slot": "npm:1.1.2"
+    "@radix-ui/react-use-controllable-state": "npm:1.1.0"
+    "@radix-ui/react-visually-hidden": "npm:1.1.2"
+  peerDependencies:
+    "@types/react": "*"
+    "@types/react-dom": "*"
+    react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+    react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+  peerDependenciesMeta:
+    "@types/react":
+      optional: true
+    "@types/react-dom":
+      optional: true
+  checksum: 10c0/696486eb472686e3fa7af1efa7ba10b177543c60b9f3caa7365b4527a11e3d6019b655cf820b3aa23d931b4bd2100b68f9d4125fee542abf0d44e401896615a1
   languageName: node
   linkType: hard
 
@@ -8696,8 +8740,10 @@ __metadata:
     "@foadonis/eslint-config": "workspace:*"
     "@foadonis/maintenance": "workspace:*"
     "@foadonis/openapi": "workspace:*"
+    "@fumadocs/mdx-remote": "npm:^1.3.0"
     "@radix-ui/react-collapsible": "npm:^1.1.3"
     "@radix-ui/react-slot": "npm:^1.1.2"
+    "@radix-ui/react-tooltip": "npm:^1.1.8"
     "@tailwindcss/postcss": "npm:^4.0.17"
     "@types/mdx": "npm:^2.0.13"
     "@types/node": "npm:^22.13.14"
@@ -8705,9 +8751,10 @@ __metadata:
     "@types/react-dom": "npm:^19.0.4"
     automd: "npm:^0.4.0"
     autoprefixer: "npm:^10.4.21"
+    class-variance-authority: "npm:^0.7.1"
     fumadocs-core: "npm:15.2.1"
     fumadocs-docgen: "npm:^2.0.0"
-    fumadocs-mdx: "npm:11.5.7"
+    fumadocs-mdx: "npm:^11.5.7"
     fumadocs-twoslash: "npm:^3.1.0"
     fumadocs-typescript: "npm:^4.0.1"
     fumadocs-ui: "npm:15.2.1"
@@ -8721,6 +8768,7 @@ __metadata:
     tailwindcss: "npm:^4.0.17"
     tailwindcss-animate: "npm:^1.0.7"
     typescript: "npm:^5.8.2"
+    zod: "npm:^3.24.2"
   languageName: unknown
   linkType: soft
 
@@ -10973,7 +11021,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fumadocs-mdx@npm:11.5.7":
+"fumadocs-mdx@npm:^11.5.7":
   version: 11.5.7
   resolution: "fumadocs-mdx@npm:11.5.7"
   dependencies:
