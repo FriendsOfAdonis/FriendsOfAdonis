@@ -15,6 +15,7 @@
 [![npm version](https://img.shields.io/npm/v/@foadonis/graphql?color=brightgreen)](https://npmjs.com/package/@foadonis/graphql)
 [![npm downloads](https://img.shields.io/npm/dm/@foadonis/graphql?color=brightgreen)](https://npm.chart.dev/@foadonis/graphql)
 [![bundle size](https://img.shields.io/bundlephobia/minzip/@foadonis/graphql?color=brightgreen)](https://bundlephobia.com/package/@foadonis/graphql)
+[![install size](https://badgen.net/packagephobia/install/@foadonis/graphql?color=brightgreen)](https://packagephobia.com/result?p=@foadonis/graphql)
 
 <!-- /automd -->
 
