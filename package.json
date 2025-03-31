@@ -16,10 +16,9 @@
   "engines": {
     "node": ">=18"
   },
-  "pnpm": {
-    "overrides": {
-      "strtok3": "8.0.1"
-    }
+  "resolutions": {
+    "eslint-mdx": "3.2.0",
+    "eslint-plugin-mdx": "3.2.0"
   },
   "manypkg": {
     "defaultBranch": "main"
