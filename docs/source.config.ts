@@ -43,6 +43,7 @@ export default defineConfig({
     remarkPlugins: [remarkAdmonition, remarkInstall],
     rehypeCodeOptions: {
       ...rehypeCodeDefaultOptions,
+      langs: ['ts', 'js', 'html', 'tsx', 'mdx'],
       transformers: [
         ...(rehypeCodeDefaultOptions.transformers ?? []),
         transformerTwoslash({

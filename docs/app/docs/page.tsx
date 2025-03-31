@@ -13,11 +13,22 @@ export default function Page() {
       </DocsDescription>
       <DocsBody>
         <Cards>
-          {pages.children.map((page) => (
-            <Card href={`/docs/${page.name}`} icon={page.icon} key={page.$id} title={page.name}>
-              {page.description ?? page.index.description}
-            </Card>
-          ))}
+          {pages.children
+            .filter((page) => page.type === 'folder')
+            .map(async (page) => {
+              const meta = source.getNodeMeta(page)
+              if (!meta) return null
+              return (
+                <Card
+                  href={`/docs/${page.$id}`}
+                  icon={page.icon}
+                  key={page.$id}
+                  title={meta.data.title}
+                >
+                  {meta.data.description}
+                </Card>
+              )
+            })}
         </Cards>
       </DocsBody>
     </DocsPage>
