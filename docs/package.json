@@ -6,7 +6,7 @@
     "build": "next build",
     "dev": "next dev",
     "start": "next start",
-    "lint": "eslint .",
+    "lint": "next lint",
     "mdx": "fumadocs-mdx"
   },
   "dependencies": {

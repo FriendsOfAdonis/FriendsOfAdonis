@@ -13,9 +13,9 @@ export default function CustomSearchDialog(props: SharedProps): React.ReactEleme
   return (
     <SearchDialog
       {...props}
-      index={index}
       allowClear
       defaultTag={useMode() ?? undefined}
+      index={index}
       showAlgolia
       tags={TAGS}
     />

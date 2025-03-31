@@ -8,10 +8,10 @@ import { DocsPage, DocsBody, DocsTitle, DocsDescription, DocsCategory } from 'fu
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { type ComponentProps, type FC, type ReactElement } from 'react'
+import { ConfigurationSteps } from '@/components/configuration-steps'
 import { source } from '@/lib/source'
 import { createMetadata } from '@/utils/metadata'
 import { metadataImage } from '@/utils/metadata-image'
-import { ConfigurationSteps } from '@/components/configuration-steps'
 
 export const revalidate = false
 

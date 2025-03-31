@@ -78,8 +78,6 @@ export async function GithubInfo({
 
 /**
  * Converts a number to a human-readable string with K suffix for thousands
- *
- * @example 1500 -> "1.5K", 1000000 -> "1000000"
  */
 function humanizeNumber(num: number): string {
   if (num < 1_000) {
