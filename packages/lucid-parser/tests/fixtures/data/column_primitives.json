@@ -1,0 +1,32 @@
+{
+  "columns": [
+    {
+      "key": "$string",
+      "type": {
+        "name": "string",
+        "isArray": false,
+        "isNullable": false,
+        "isOptional": false
+      }
+    },
+    {
+      "key": "$number",
+      "type": {
+        "name": "number",
+        "isArray": false,
+        "isNullable": false,
+        "isOptional": false
+      }
+    },
+    {
+      "key": "$boolean",
+      "type": {
+        "name": "boolean",
+        "isArray": false,
+        "isNullable": false,
+        "isOptional": false
+      }
+    }
+  ],
+  "computed": []
+}

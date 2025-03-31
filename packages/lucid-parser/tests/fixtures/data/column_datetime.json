@@ -1,0 +1,41 @@
+{
+  "columns": [
+    {
+      "key": "$required",
+      "type": {
+        "name": "DateTime",
+        "isArray": false,
+        "isNullable": false,
+        "isOptional": false
+      }
+    },
+    {
+      "key": "$optional",
+      "type": {
+        "name": "DateTime",
+        "isArray": false,
+        "isOptional": true,
+        "isNullable": false
+      }
+    },
+    {
+      "key": "$nullable",
+      "type": {
+        "name": "DateTime",
+        "isArray": false,
+        "isOptional": false,
+        "isNullable": true
+      }
+    },
+    {
+      "key": "$array",
+      "type": {
+        "name": "DateTime",
+        "isArray": true,
+        "isOptional": false,
+        "isNullable": false
+      }
+    }
+  ],
+  "computed": []
+}

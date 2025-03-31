@@ -1,0 +1,32 @@
+{
+  "columns": [
+    {
+      "key": "$required",
+      "type": {
+        "name": "string",
+        "isArray": true,
+        "isNullable": false,
+        "isOptional": false
+      }
+    },
+    {
+      "key": "$optional",
+      "type": {
+        "name": "number",
+        "isArray": true,
+        "isOptional": true,
+        "isNullable": false
+      }
+    },
+    {
+      "key": "$nullable",
+      "type": {
+        "name": "boolean",
+        "isArray": true,
+        "isOptional": false,
+        "isNullable": true
+      }
+    }
+  ],
+  "computed": []
+}

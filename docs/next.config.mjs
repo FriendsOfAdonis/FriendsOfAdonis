@@ -6,6 +6,7 @@ const withMDX = createMDX()
 /** @type {import('next').NextConfig} */
 const config = {
   reactStrictMode: true,
+  serverExternalPackages: ['@shikijs/twoslash', 'twoslash'],
 }
 
 export default withMDX(config)

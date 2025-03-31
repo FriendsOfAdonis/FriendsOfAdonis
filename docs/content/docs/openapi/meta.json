@@ -4,10 +4,9 @@
   "root": true,
   "icon": "ScrollText",
   "pages": [
-    "---Guide---",
     "index",
     "getting-started",
-    "------",
+    "--- Guide ---",
     "types-and-parameters",
     "operations",
     "security",

@@ -2,6 +2,7 @@ import { remarkAdmonition, rehypeCodeDefaultOptions } from 'fumadocs-core/mdx-pl
 import { remarkInstall } from 'fumadocs-docgen'
 import { defineDocs, defineConfig } from 'fumadocs-mdx/config'
 import { transformerTwoslash } from 'fumadocs-twoslash'
+import { ModuleKind, ModuleResolutionKind } from 'typescript'
 
 export const { docs, meta } = defineDocs({
   dir: 'content/docs',
@@ -19,6 +20,7 @@ export default defineConfig({
           twoslashOptions: {
             compilerOptions: {
               experimentalDecorators: true,
+              moduleResolution: ModuleResolutionKind.Bundler,
             },
           },
         }),

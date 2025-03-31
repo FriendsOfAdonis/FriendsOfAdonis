@@ -1,7 +1,7 @@
 {
-  "name": "@foadonis/openapi",
-  "description": "Generate OpenAPI specifications on Adonis",
-  "version": "0.3.4",
+  "name": "@foadonis/lucid-parser",
+  "description": "Library to parse Lucid models from AST tree",
+  "version": "0.0.0",
   "engines": {
     "node": ">=20.6.0"
   },
@@ -13,14 +13,7 @@
   ],
   "exports": {
     ".": "./build/index.js",
-    "./commands": "./build/commands/main.js",
-    "./openapi_provider": "./build/providers/openapi_provider.js",
-    "./services/main": "./build/services/main.js",
-    "./types": "./build/src/types.js",
-    "./decorators": {
-      "import": "./build/src/decorators.js",
-      "types": "./build/src/decorators.d.ts"
-    }
+    "./types": "./build/src/types.js"
   },
   "scripts": {
     "clean": "del-cli build",
@@ -38,11 +31,7 @@
   },
   "keywords": [
     "adonis",
-    "adonisjs",
-    "openapi",
-    "oapi",
-    "api",
-    "typescript"
+    "lucid"
   ],
   "author": {
     "name": "Martin Paucot",
@@ -51,17 +40,16 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/FriendsOfAdonis/FriendsOfAdonis",
-    "directory": "packages/openapi"
+    "directory": "packages/lucid-parser"
   },
   "bugs": {
     "url": "https://github.com/FriendsOfAdonis/FriendsOfAdonis/issues"
   },
-  "homepage": "https://friendsofadonis.com/docs/openapi",
+  "homepage": "https://friendsofadonis.com/docs/lucid-parser",
   "license": "MIT",
   "devDependencies": {
     "@adonisjs/assembler": "^7.8.2",
     "@adonisjs/core": "^6.17.0",
-    "@adonisjs/lucid": "^21.6.0",
     "@foadonis/eslint-config": "workspace:*",
     "@japa/assert": "^4.0.0",
     "@japa/expect-type": "^2.0.2",
@@ -69,28 +57,20 @@
     "@japa/plugin-adonisjs": "^3.0.1",
     "@japa/runner": "^3.1.4",
     "@swc/core": "1.10.3",
-    "@types/luxon": "^3.4.2",
+    "@types/luxon": "^3",
     "@types/node": "^22.10.2",
-    "@types/sinon": "^17.0.3",
-    "@vinejs/vine": "^3.0.0",
     "c8": "^10.1.3",
     "copyfiles": "^2.4.1",
     "del-cli": "^6.0.0",
-    "luxon": "^3.5.0",
-    "openapi-types": "^12.1.3",
+    "globby": "^14.1.0",
+    "luxon": "^3.6.0",
     "prettier": "^3.4.2",
     "reflect-metadata": "^0.2.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.2"
   },
   "peerDependencies": {
-    "@adonisjs/core": "^6.2.0",
-    "@adonisjs/lucid": "^21.2.0",
-    "@vinejs/vine": "^3.0.0",
-    "luxon": "^3.5.0"
-  },
-  "dependencies": {
-    "openapi-metadata": "^0.1.1"
+    "@adonisjs/lucid": "^21.6.1"
   },
   "publishConfig": {
     "access": "public",
@@ -104,5 +84,10 @@
     "exclude": [
       "tests/**"
     ]
+  },
+  "dependencies": {
+    "@babel/parser": "^7.27.0",
+    "@babel/types": "^7.27.0",
+    "recast": "^0.23.11"
   }
 }
