@@ -45,7 +45,7 @@ export class RouterLoader {
 
     const name = stringHelpers.create(target.name).removeSuffix('Controller').toString()
 
-    OperationMetadataStorage.defineMetadata(
+    OperationMetadataStorage.mergeMetadata(
       target.prototype,
       {
         path: route.pattern,
