@@ -26,7 +26,7 @@ export class OpenAPI {
   ) {
     this.#router = router
     this.#logger = logger
-    this.#routerLoader = new RouterLoader(router, logger)
+    this.#routerLoader = new RouterLoader(config, router, logger)
     this.#isProduction = isProduction
     this.#config = config
   }
