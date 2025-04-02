@@ -1,3 +1,4 @@
+import { transformerNotationFocus } from '@shikijs/transformers'
 import { remarkAdmonition, rehypeCodeDefaultOptions } from 'fumadocs-core/mdx-plugins'
 import { remarkInstall } from 'fumadocs-docgen'
 import {
@@ -33,6 +34,7 @@ export const blog = defineCollections({
   async: true,
   schema: frontmatterSchema.extend({
     author: z.string(),
+    thumbnail: z.string(),
     date: z.string().date().or(z.date()).optional(),
   }),
 })
@@ -46,6 +48,7 @@ export default defineConfig({
       langs: ['ts', 'js', 'html', 'tsx', 'mdx'],
       transformers: [
         ...(rehypeCodeDefaultOptions.transformers ?? []),
+        transformerNotationFocus(),
         transformerTwoslash({
           twoslashOptions: {
             compilerOptions: {
