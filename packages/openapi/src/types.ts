@@ -16,6 +16,12 @@ export type OpenAPIConfig = {
   ui: 'scalar' | 'swagger' | 'rapidoc'
 
   /**
+   * Does automatically generate tags for your routes
+   * based on the controller name. (Default: true)
+   */
+  generateTags?: boolean
+
+  /**
    * Additional controllers to load into your schema.
    */
   controllers?: GenerateDocumentParameters['controllers']
