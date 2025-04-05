@@ -5,13 +5,15 @@ export default class OpenAPIController {
   async handle({ request }: HttpContext) {
     const openapi = await app.container.make('openapi')
 
-    const content = request.accepts(['json', 'html'])
+    const extension = request.url().split('.').pop() as 'json' | 'yaml'
 
-    if (content === 'html') {
-      return openapi.generateUi(request.url())
+    switch (extension) {
+      case 'json':
+        return openapi.buildDocument()
+      case 'yaml':
+        return openapi.buildDocument()
+      default:
+        return openapi.generateUi(request.url())
     }
-
-    const document = await openapi.buildDocument()
-    return document
   }
 }
