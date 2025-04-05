@@ -71,10 +71,22 @@ export class OpenAPI {
    * - /api.yaml
    */
   registerRoutes(path = '/api', routeHandlerModifier?: (route: Route) => void) {
-    const route = this.#router.get(path, [OpenAPIController])
-
+    // Register UI route
+    const uiRoute = this.#router.get(path, [OpenAPIController])
     if (routeHandlerModifier) {
-      routeHandlerModifier(route)
+      routeHandlerModifier(uiRoute)
+    }
+
+    // Register JSON route
+    const jsonRoute = this.#router.get(`${path}.json`, [OpenAPIController])
+    if (routeHandlerModifier) {
+      routeHandlerModifier(jsonRoute)
+    }
+
+    // Register YAML route
+    const yamlRoute = this.#router.get(`${path}.yaml`, [OpenAPIController])
+    if (routeHandlerModifier) {
+      routeHandlerModifier(yamlRoute)
     }
   }
 }
