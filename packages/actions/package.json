@@ -1,7 +1,7 @@
 {
   "name": "@foadonis/actions",
-  "description": "Adonis Package for creating reusable actions",
-  "version": "0.0.1",
+  "description": "Adonis library to safely store your secrets in your repository",
+  "version": "0.0.2",
   "engines": {
     "node": ">=20.6.0"
   },

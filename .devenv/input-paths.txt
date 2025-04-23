@@ -1,0 +1,3 @@
+/home/martin/workspace/random/friends-of-adonis/monorepo/devenv.lock
+/home/martin/workspace/random/friends-of-adonis/monorepo/devenv.nix
+/home/martin/workspace/random/friends-of-adonis/monorepo/devenv.yaml
