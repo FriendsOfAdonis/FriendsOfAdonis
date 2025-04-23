@@ -1,0 +1,16 @@
+{
+  "title": "Actions",
+  "description": "Create actions runnable as Commands, Controllers and listeners",
+  "root": true,
+  "icon": "Rotate3d",
+  "pages": [
+    "index",
+    "getting-started",
+    "--- Guides ---",
+    "guides/actions",
+    "guides/as-controller",
+    "guides/as-command",
+    "guides/as-listener",
+    "guides/best-practices"
+  ]
+}

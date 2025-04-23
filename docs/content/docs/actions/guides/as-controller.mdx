@@ -1,0 +1,43 @@
+---
+title: Action as controller
+---
+
+Your Actions can be ran as [Controllers](https://docs.adonisjs.com/guides/basics/controllers) that can be then registered as route handlers.
+
+## Implementing `AsController`
+
+```ts [title="app/actions/users/delete_user_action.ts"] twoslash
+// @noErrors
+import User from '#models/user'
+import { BaseAction, AsController } from '@foadonis/actions'
+import { HttpContext } from '@adonisjs/core/http'
+
+export default class DeleteUserAction extends BaseAction implements AsController {
+  async handle(user: User) {
+    await user.delete()
+  }
+
+  async asController({ request }: HttpContext) {
+    const id = request.param('id')
+    const user = await User.findOrFail(id)
+
+    await this.handle(user)
+
+    return user
+  }
+}
+```
+
+## Registering the route
+
+You can then use your Action as a route handler:
+
+```ts [title="start/routes.ts"] twoslash
+// @noErrors
+import router from '@adonisjs/core/services/router'
+import actions from '@foadonis/actions/services/main'
+
+const DeleteUserAction = () => import('#actions/users/delete_user_action')
+
+router.get('/:userId', actions.asController(DeleteUserAction))
+```
