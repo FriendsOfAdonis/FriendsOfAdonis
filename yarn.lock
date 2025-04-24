@@ -16846,32 +16846,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"playground-actions@workspace:playgrounds/actions":
-  version: 0.0.0-use.local
-  resolution: "playground-actions@workspace:playgrounds/actions"
-  dependencies:
-    "@adonisjs/assembler": "npm:^7.8.2"
-    "@adonisjs/core": "npm:^6.17.2"
-    "@adonisjs/eslint-config": "npm:^2.0.0"
-    "@adonisjs/prettier-config": "npm:^1.4.4"
-    "@adonisjs/tsconfig": "npm:^1.4.0"
-    "@foadonis/actions": "workspace:*"
-    "@japa/assert": "npm:^4.0.1"
-    "@japa/plugin-adonisjs": "npm:^4.0.0"
-    "@japa/runner": "npm:^4.2.0"
-    "@swc/core": "npm:1.11.22"
-    "@types/node": "npm:^22.14.1"
-    "@vinejs/vine": "npm:^3.0.1"
-    eslint: "npm:^9.25.1"
-    hot-hook: "npm:^0.4.0"
-    pino-pretty: "npm:^13.0.0"
-    prettier: "npm:^3.5.3"
-    reflect-metadata: "npm:^0.2.2"
-    ts-node-maintained: "npm:^10.9.5"
-    typescript: "npm:~5.8.3"
-  languageName: unknown
-  linkType: soft
-
 "playground-graphql@workspace:playgrounds/graphql":
   version: 0.0.0-use.local
   resolution: "playground-graphql@workspace:playgrounds/graphql"
@@ -20287,7 +20261,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:^5.8.3, typescript@npm:~5.8.3":
+"typescript@npm:^5.8.3":
   version: 5.8.3
   resolution: "typescript@npm:5.8.3"
   bin:
@@ -20307,7 +20281,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@npm%3A^5.8.3#optional!builtin<compat/typescript>, typescript@patch:typescript@npm%3A~5.8.3#optional!builtin<compat/typescript>":
+"typescript@patch:typescript@npm%3A^5.8.3#optional!builtin<compat/typescript>":
   version: 5.8.3
   resolution: "typescript@patch:typescript@npm%3A5.8.3#optional!builtin<compat/typescript>::version=5.8.3&hash=5786d5"
   bin:
