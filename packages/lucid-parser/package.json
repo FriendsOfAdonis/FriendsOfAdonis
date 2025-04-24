@@ -1,7 +1,7 @@
 {
   "name": "@foadonis/lucid-parser",
   "description": "Library to parse Lucid models from AST tree",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "engines": {
     "node": ">=20.6.0"
   },
