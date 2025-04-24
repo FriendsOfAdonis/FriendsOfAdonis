@@ -1,7 +1,7 @@
 {
   "name": "@foadonis/actions",
-  "description": "Adonis library to safely store your secrets in your repository",
-  "version": "0.0.2",
+  "description": "Adonis Package for creating reusable actions",
+  "version": "0.0.0",
   "engines": {
     "node": ">=20.6.0"
   },
@@ -35,9 +35,7 @@
   "keywords": [
     "adonis",
     "adonisjs",
-    "secrets",
-    "dotenv",
-    "credentials"
+    "actions"
   ],
   "author": {
     "name": "Martin Paucot",
@@ -46,12 +44,12 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/FriendsOfAdonis/FriendsOfAdonis",
-    "directory": "packages/crypt"
+    "directory": "packages/actions"
   },
   "bugs": {
     "url": "https://github.com/FriendsOfAdonis/FriendsOfAdonis/issues"
   },
-  "homepage": "https://friendsofadonis.com/docs/crypt",
+  "homepage": "https://friendsofadonis.com/docs/actions",
   "license": "MIT",
   "devDependencies": {
     "@adonisjs/assembler": "^7.8.2",
@@ -90,9 +88,6 @@
     ]
   },
   "dependencies": {
-    "@poppinss/utils": "^6.9.2",
-    "@poppinss/validator-lite": "^2.1.0",
-    "@vinejs/vine": "^3.0.1",
-    "eciesjs": "^0.4.14"
+    "@poppinss/utils": "^6.9.2"
   }
 }

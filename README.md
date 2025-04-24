@@ -21,6 +21,7 @@
 
 | Package | Version | Description |  |  |
 | --- | --- | --- | --- | --- |
+| @foadonis/actions | [![npm version](https://img.shields.io/npm/v/@foadonis/actions?color=brightgreen)](https://npmjs.com/package/@foadonis/actions) | Adonis Package for creating reusable actions | [Source](https://github.com/FriendsOfAdonis/FriendsOfAdonis/tree/main/packages/actions) | [Documentation](https://friendsofadonis.com/docs/actions) |
 | @foadonis/crypt | [![npm version](https://img.shields.io/npm/v/@foadonis/crypt?color=brightgreen)](https://npmjs.com/package/@foadonis/crypt) | Adonis library to safely store your secrets in your repository | [Source](https://github.com/FriendsOfAdonis/FriendsOfAdonis/tree/main/packages/crypt) | [Documentation](https://friendsofadonis.com/docs/crypt) |
 | @foadonis/graphql | [![npm version](https://img.shields.io/npm/v/@foadonis/graphql?color=brightgreen)](https://npmjs.com/package/@foadonis/graphql) | Create GraphQL APIs with your Adonis Application. | [Source](https://github.com/FriendsOfAdonis/FriendsOfAdonis/tree/main/packages/graphql) | [Documentation](https://friendsofadonis.com/docs/graphql) |
 | @foadonis/lucid-parser | [![npm version](https://img.shields.io/npm/v/@foadonis/lucid-parser?color=brightgreen)](https://npmjs.com/package/@foadonis/lucid-parser) | Library to parse Lucid models from AST tree | [Source](https://github.com/FriendsOfAdonis/FriendsOfAdonis/tree/main/packages/lucid-parser) | [Documentation](https://friendsofadonis.com/docs/lucid-parser) |
