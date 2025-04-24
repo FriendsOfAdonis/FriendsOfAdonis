@@ -1,77 +1,86 @@
 import { test } from '@japa/runner'
-import { initializeDatabase } from './app.js'
-import { sleep } from '../utils.js'
-import app from '@adonisjs/core/services/app'
-import containers from './containers.js'
 import { TypesenseEngine } from '../../src/engines/typesense.js'
 import { StartedTestContainer } from 'testcontainers'
 import User from '../fixtures/user.js'
 import Import from '../../commands/import.js'
-import { assertSearchResults } from './utils.js'
 import Flush from '../../commands/flush.js'
+import {
+  assertSearchResults,
+  BASE_URL,
+  CONTAINERS,
+  initializeDatabase,
+  setupFakeAdonisApp,
+  sleep,
+} from '../helpers.js'
+import { ApplicationService } from '@adonisjs/core/types'
+import { Kernel } from '@adonisjs/core/ace'
+import { defineConfig as defineMagnifyConfig } from '../../src/define_config.js'
+import { FileSystem } from '@japa/file-system'
+import { fileURLToPath } from 'node:url'
 
 test.group('Typesense', (group) => {
   let container: StartedTestContainer
+  let ctx: { app: ApplicationService; ace: Kernel }
+  const fs = new FileSystem(fileURLToPath(BASE_URL))
+
+  group.tap((t) => t.timeout(20_000))
   group.setup(async () => {
-    User.shouldBeSearchable = false
-
-    container = await containers.typesense.start()
-
-    const magnify = await app.container.make('magnify')
-    magnify.config = {
-      default: 'typesense',
-      // @ts-ignore
-      engines: {
-        typesense: () =>
-          new TypesenseEngine({
-            apiKey: 'superrandomkey',
-            nodes: [{ url: `http://${container.getHost()}:${container.getFirstMappedPort()}` }],
-            collectionSettings: {
-              users: {
-                queryBy: ['name'],
-                fields: [
-                  {
-                    name: 'name',
-                    type: 'string',
-                  },
-                  {
-                    name: 'isAdmin',
-                    type: 'bool',
-                    optional: true,
-                  },
-                  {
-                    name: 'updatedAt',
-                    type: 'string',
-                  },
-                  {
-                    name: 'createdAt',
-                    type: 'int32',
-                  },
-                ],
-              },
+    container = await CONTAINERS.typesense.start()
+    const engine = new TypesenseEngine({
+      apiKey: 'superrandomkey',
+      nodes: [{ url: `http://${container.getHost()}:${container.getFirstMappedPort()}` }],
+      collectionSettings: {
+        users: {
+          queryBy: ['name'],
+          fields: [
+            {
+              name: 'name',
+              type: 'string',
             },
-          }),
+            {
+              name: 'isAdmin',
+              type: 'bool',
+              optional: true,
+            },
+            {
+              name: 'updatedAt',
+              type: 'string',
+            },
+            {
+              name: 'createdAt',
+              type: 'int32',
+            },
+          ],
+        },
       },
-    }
+    })
 
-    await sleep(5)
+    ctx = await setupFakeAdonisApp(fs, {
+      magnify: defineMagnifyConfig({
+        default: 'typesense',
+        engines: {
+          typesense: () => engine,
+        },
+      }),
+    })
 
-    await initializeDatabase(app)
+    await sleep(4)
+    await initializeDatabase(ctx.ace)
 
-    User.shouldBeSearchable = true
+    await engine.syncIndexSettings()
 
-    const ace = await app.container.make('ace')
-
-    const importCommand = await ace.create(Import, ['../fixtures/user.ts'])
+    const importCommand = await ctx.ace.create(Import, ['../fixtures/user.ts'])
     await importCommand.exec()
-    await sleep(1)
+    importCommand.assertSucceeded()
+
+    await sleep(3)
   })
 
   group.teardown(async () => {
+    await ctx.app.terminate()
     await container.stop()
+    await fs.cleanup()
   })
-
-  group.each.timeout(30000)
 
   test('can use basic search', async ({ assert }) => {
     const results = await User.search('lar').latest().take(10).get()
@@ -131,20 +140,19 @@ test.group('Typesense', (group) => {
     )
   })
 
-  // WARN: Typesense seems to take a lot of time removing a record
-  // test('document is removed when model is removed', async ({ assert }) => {
-  //   let results = await User.search('Gudrun Larkin').take(1).get()
-  //   let result = results[0]
-  //
-  //   assert.equal(result.name, 'Gudrun Larkin')
-  //
-  //   await result.delete()
-  //
-  //   results = await User.search('Gudrun Larkin').take(1).get()
-  //   result = results[0]
-  //
-  //   assert.isUndefined(result)
-  // })
+  test('document is removed when model is removed', async ({ assert }) => {
+    let results = await User.search('Gudrun Larkin').take(1).get()
+    let result = results[0]
+
+    assert.equal(result.name, 'Gudrun Larkin')
+
+    await result.delete()
+
+    results = await User.search('Gudrun Larkin').take(1).get()
+    result = results[0]
+
+    assert.isUndefined(result)
+  }).skip(true, 'Typesense seems to take a lot of time removing a record')
 
   test('document is updated when model is updated', async ({ assert }) => {
     let results = await User.search('Dax Larkin').take(1).get()
@@ -180,8 +188,7 @@ test.group('Typesense', (group) => {
   })
 
   test('flush properly remove all documents', async ({ assert }) => {
-    const ace = await app.container.make('ace')
-    const command = await ace.create(Flush, ['../fixtures/user.js'])
+    const command = await ctx.ace.create(Flush, ['../fixtures/user.js'])
     await command.exec()
     command.assertSucceeded()
 
