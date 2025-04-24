@@ -1,10 +1,12 @@
+import { getPageTreePeers } from 'fumadocs-core/server'
 import { Popup, PopupContent, PopupTrigger } from 'fumadocs-twoslash/ui'
 import { Accordion, Accordions } from 'fumadocs-ui/components/accordion'
 import { Callout } from 'fumadocs-ui/components/callout'
+import { Card, Cards } from 'fumadocs-ui/components/card'
 import { File, Folder, Files } from 'fumadocs-ui/components/files'
 import { Tab, Tabs } from 'fumadocs-ui/components/tabs'
 import defaultMdxComponents from 'fumadocs-ui/mdx'
-import { DocsPage, DocsBody, DocsTitle, DocsDescription, DocsCategory } from 'fumadocs-ui/page'
+import { DocsPage, DocsBody, DocsTitle, DocsDescription } from 'fumadocs-ui/page'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { type ComponentProps, type FC, type ReactElement } from 'react'
@@ -65,9 +67,21 @@ export default async function Page(props: {
             blockquote: Callout as unknown as FC<ComponentProps<'blockquote'>>,
           }}
         />
-        {page.data.index ? <DocsCategory from={source} page={page} /> : null}
+        {page.data.index ? <DocsCategory url={page.url} /> : null}
       </DocsBody>
     </DocsPage>
+  )
+}
+
+function DocsCategory({ url }: { readonly url: string }) {
+  return (
+    <Cards>
+      {getPageTreePeers(source.pageTree, url).map((peer) => (
+        <Card href={peer.url} key={peer.url} title={peer.name}>
+          {peer.description}
+        </Card>
+      ))}
+    </Cards>
   )
 }
 

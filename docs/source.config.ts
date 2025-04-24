@@ -17,8 +17,8 @@ export const docs = defineDocs({
     async: true,
     schema: frontmatterSchema.extend({
       preview: z.string().optional(),
-      index: z.boolean().default(true),
-      method: z.string(),
+      index: z.boolean().default(false),
+      method: z.string().optional(),
     }),
   },
   meta: {
