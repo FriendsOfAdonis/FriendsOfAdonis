@@ -56,18 +56,18 @@
     "@japa/file-system": "^2.3.2",
     "@japa/plugin-adonisjs": "^4.0.0",
     "@japa/runner": "^4.2.0",
-    "@swc/core": "1.11.13",
-    "@types/luxon": "^3.4.2",
-    "@types/node": "^22.13.14",
+    "@swc/core": "1.11.22",
+    "@types/luxon": "^3.6.2",
+    "@types/node": "^22.14.1",
     "c8": "^10.1.3",
     "copyfiles": "^2.4.1",
     "del-cli": "^6.0.0",
     "globby": "^14.1.0",
-    "luxon": "^3.6.0",
+    "luxon": "^3.6.1",
     "prettier": "^3.5.3",
     "reflect-metadata": "^0.2.2",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.3"
   },
   "peerDependencies": {
     "@adonisjs/lucid": "^21.6.1"

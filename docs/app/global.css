@@ -4,3 +4,11 @@
 
 /* path of `fumadocs-ui` relative to the CSS file */
 @source '../../node_modules/fumadocs-ui/dist/**/*.js';
+
+.shiki .line {
+  transition: 0.1s ease;
+}
+
+.shiki.has-focused:not(:hover) .line:not(.focused) {
+  filter: blur(2px);
+}

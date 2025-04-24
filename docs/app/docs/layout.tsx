@@ -7,6 +7,7 @@ import { source } from '@/lib/source'
 
 const docsOptions: DocsLayoutProps = {
   ...baseOptions,
+  links: [...(baseOptions.links?.slice(1) ?? [])],
   tree: source.pageTree,
   sidebar: {
     tabs: {

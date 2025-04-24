@@ -10,6 +10,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "play:graphql": "turbo dev --filter=playground-graphql...",
     "play:openapi": "turbo dev --filter=playground-openapi...",
+    "play:actions": "turbo dev --filter=playground-actions...",
     "automd": "automd"
   },
   "packageManager": "yarn@4.6.0",
@@ -27,15 +28,15 @@
   "devDependencies": {
     "@adonisjs/prettier-config": "^1.4.4",
     "@changesets/changelog-github": "^0.5.1",
-    "@changesets/cli": "^2.28.1",
+    "@changesets/cli": "^2.29.2",
     "@foadonis/typescript-config": "workspace:*",
     "@manypkg/cli": "^0.23.0",
     "automd": "^0.4.0",
-    "eslint": "^9.23.0",
+    "eslint": "^9.25.1",
     "mdbox": "^0.1.1",
     "prettier": "^3.5.3",
-    "turbo": "^2.4.4",
-    "typescript": "^5.8.2"
+    "turbo": "^2.5.1",
+    "typescript": "^5.8.3"
   },
   "workspaces": [
     "docs",
