@@ -32,12 +32,12 @@ export default defineConfig({
       file: () => import('@adonisjs/core/providers/repl_provider'),
       environment: ['repl', 'test'],
     },
-    () => import('@foadonis/graphql/providers/graphql_provider'),
+    () => import('@foadonis/graphql/graphql_provider'),
     () => import('@adonisjs/lucid/database_provider'),
     () => import('@adonisjs/auth/auth_provider'),
     () => import('@adonisjs/session/session_provider'),
     () => import('@adonisjs/bouncer/bouncer_provider'),
-    () => import('@adonisjs/cors/cors_provider')
+    () => import('@adonisjs/cors/cors_provider'),
   ],
 
   /*
