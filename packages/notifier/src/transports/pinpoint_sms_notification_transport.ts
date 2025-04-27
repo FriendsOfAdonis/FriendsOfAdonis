@@ -8,7 +8,7 @@ export type PinpointSMSNotificationTransportConfig = {
   applicationId: string
 } & PinpointClientConfig
 
-export class PinpointSMSNotificationTransport implements NotificationTransportContract {
+export class PinpointSMSNotificationTransport implements NotificationTransportContract<SMSMessage> {
   #config: PinpointSMSNotificationTransportConfig
   #client: PinpointClient
 
@@ -17,16 +17,14 @@ export class PinpointSMSNotificationTransport implements NotificationTransportCo
     this.#client = new PinpointClient(config)
   }
 
-  async send(notifiable: NotifiableContract, notification: Notification): Promise<void> {
-    if (!notification.toSMS) return
-    if (!notifiable.routeForSMSNotification) return
-    const message = notification.toSMS()
-    const to = notifiable.routeForSMSNotification()
+  toMessage(notification: Notification, notifiable: NotifiableContract): SMSMessage | undefined {
+    if (!notification.toSMS || !notifiable.routeForSMSNotification) return
+    return notification.toSMS().to(notifiable.routeForSMSNotification())
+  }
 
-    if (!to) return
-    if (!message.$content) return // TODO: We might want to throw an error
-
-    await this.sendMessage(to, message.$content)
+  async send(message: SMSMessage): Promise<void> {
+    const { to, content } = await message.validate()
+    await this.sendMessage(to, content)
   }
 
   protected async sendMessage(to: string, content: string) {
@@ -62,6 +60,6 @@ declare module '@foadonis/notifier' {
     toSMS?(): SMSMessage
   }
   interface NotifiableContract {
-    routeForSMSNotification?(): string | undefined
+    routeForSMSNotification?(): string
   }
 }

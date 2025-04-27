@@ -1,3 +1,4 @@
+import { expect } from '@japa/expect'
 import { assert } from '@japa/assert'
 import { fileSystem } from '@japa/file-system'
 import { configure, processCLIArgs, run } from '@japa/runner'
@@ -7,7 +8,7 @@ processCLIArgs(process.argv.splice(2))
 
 configure({
   files: ['tests/**/*.spec.ts'],
-  plugins: [assert(), fileSystem({ basePath: BASE_URL })],
+  plugins: [assert(), expect(), fileSystem({ basePath: BASE_URL })],
 })
 
 run()

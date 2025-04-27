@@ -6,7 +6,9 @@ import { getMessaging, Messaging } from 'firebase-admin/messaging'
 
 export type FirebasePushNotificationTransportConfig = AppOptions
 
-export class FirebasePushNotificationTransport implements NotificationTransportContract {
+export class FirebasePushNotificationTransport
+  implements NotificationTransportContract<PushMessage>
+{
   #messaging: Messaging
 
   constructor(config: FirebasePushNotificationTransportConfig) {
@@ -14,25 +16,23 @@ export class FirebasePushNotificationTransport implements NotificationTransportC
     this.#messaging = getMessaging(app)
   }
 
-  async send(notifiable: NotifiableContract, _notification: Notification): Promise<void> {
-    if (!notifiable.routeForPushNotification) return
+  toMessage(notification: Notification, notifiable: NotifiableContract): PushMessage | undefined {
+    if (!notification.toPush || notifiable.routeForPushNotification) return
+    return notification.toPush() // TODO: Make push
+  }
 
-    const token = notifiable.routeForPushNotification()
-    console.log(token)
+  async send(message: PushMessage): Promise<void> {
+    const { token, title, body, link } = await message.validate()
 
-    if (!token) return
-
-    const res = await this.#messaging.send({
-      notification: { title: 'Price drop', body: '5% off all electronics' },
+    await this.#messaging.send({
+      notification: { title, body },
       webpush: {
         fcmOptions: {
-          link: 'http://localhost:3333',
+          link,
         },
       },
       token,
     })
-
-    console.log(res)
   }
 }
 

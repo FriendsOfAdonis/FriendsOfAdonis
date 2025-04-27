@@ -1,9 +1,11 @@
 import { NotifierConfig } from './define_config.js'
 import { NotifiableContract } from './mixins/notifiable.js'
 import { Notification } from './notification.js'
-import { NotificationTransportContract, NotificationTransports } from './types.js'
+import { NotificationTransportContract, NotificationTransports, NotifierContract } from './types.js'
 
-export class Notifier<KnownTransports extends Record<string, NotificationTransportContract>> {
+export class Notifier<KnownTransports extends Record<string, NotificationTransportContract>>
+  implements NotifierContract
+{
   constructor(public config: NotifierConfig<KnownTransports>) {}
 
   async notify(
@@ -18,7 +20,7 @@ export class Notifier<KnownTransports extends Record<string, NotificationTranspo
     const promises = transports
       .filter(([name]) => (channels ? (channels as string[]).includes(name) : true))
       .filter(([name]) => (userChannels ? userChannels.includes(name) : true))
-      .map(([_, transport]) => transport.send(notifiable, notification))
+      .map(([_, transport]) => transport.send(transport.toMessage(notification, notifiable)))
 
     await Promise.all(promises)
   }

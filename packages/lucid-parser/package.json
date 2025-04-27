@@ -50,6 +50,7 @@
   "devDependencies": {
     "@adonisjs/assembler": "^7.8.2",
     "@adonisjs/core": "^6.17.2",
+    "@adonisjs/lucid": "^21.6.1",
     "@foadonis/eslint-config": "workspace:*",
     "@japa/assert": "^4.0.1",
     "@japa/expect-type": "^2.0.3",

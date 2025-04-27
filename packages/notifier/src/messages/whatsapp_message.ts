@@ -10,29 +10,37 @@ export type WhatsAppMessageContent =
       }
     }
 
+export type WhatsAppMessageObject = {
+  to?: string
+  from?: string
+  content?: WhatsAppMessageContent
+}
+
 export class WhatsAppMessage {
-  $to?: string
-  $from?: string
-  $content?: WhatsAppMessageContent
+  object: WhatsAppMessageObject = {}
 
   to(to: string) {
-    this.$to = to
+    this.object.to = to
     return this
   }
 
   text(text: string) {
-    this.$content = {
+    this.object.content = {
       type: 'text',
       text,
     }
   }
 
   template(name: string) {
-    this.$content = {
+    this.object.content = {
       type: 'template',
       template: {
         name,
       },
     }
+  }
+
+  toObject() {
+    return this.object
   }
 }

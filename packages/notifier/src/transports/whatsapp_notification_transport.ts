@@ -9,25 +9,31 @@ export type WhatsAppNotificationTransportConfig = {
   phoneId: string
 }
 
-export class WhatsAppNotificationTransport implements NotificationTransportContract {
+export class WhatsAppNotificationTransport
+  implements NotificationTransportContract<WhatsAppMessage>
+{
   #config: WhatsAppNotificationTransportConfig
 
   constructor(config: WhatsAppNotificationTransportConfig) {
     this.#config = config
   }
 
-  async send(notifiable: NotifiableContract, notification: Notification): Promise<void> {
-    if (!notification.toWhatsApp) return
-    if (!notifiable.routeForSMSNotification) return
-    const message = notification.toWhatsApp()
-    const to = notifiable.routeForSMSNotification()
+  toMessage(
+    notification: Notification,
+    notifiable: NotifiableContract
+  ): WhatsAppMessage | undefined {
+    if (!notification.toWhatsApp || !notifiable.routeForSMSNotification) return
+    return notification.toWhatsApp().to(notifiable.routeForSMSNotification())
+  }
 
-    if (!to) return
+  async send(message: WhatsAppMessage): Promise<void> {
+    const { content, to } = message.toObject()
+    if (!to || !content) return
 
-    if (message.$content?.type === 'text') {
-      await this.sendText(to, message.$content.text)
-    } else if (message.$content?.type === 'template') {
-      await this.sendTemplate(to, message.$content)
+    if (content.type === 'text') {
+      await this.sendText(to, content.text)
+    } else if (content.type === 'template') {
+      await this.sendTemplate(to, content)
     }
   }
 
@@ -73,6 +79,6 @@ declare module '@foadonis/notifier' {
     toWhatsApp?(): WhatsAppMessage
   }
   interface NotifiableContract {
-    routeForSMSNotification?(): string | undefined
+    routeForSMSNotification?(): string
   }
 }

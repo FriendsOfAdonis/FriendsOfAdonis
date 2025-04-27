@@ -5,24 +5,19 @@ import { BaseMail, Message } from '@adonisjs/mail'
 import { MailMessage } from '../messages/mail_message.js'
 import { NotifiableContract } from '../mixins/notifiable.js'
 
-export class MailNotificationTransport implements NotificationTransportContract {
+export class MailNotificationTransport implements NotificationTransportContract<MailMessage> {
   #mailer: MailService
 
   constructor(mailer: MailService) {
     this.#mailer = mailer
   }
 
-  async send(notifiable: NotifiableContract, notification: Notification): Promise<void> {
-    if (!notification.toMail) return
-    if (!notifiable.routeForMailNotification) return
+  toMessage(notification: Notification, notifiable: NotifiableContract): MailMessage | undefined {
+    if (!notification.toMail || !notifiable.routeForMailNotification) return
+    return notification.toMail().to(notifiable.routeForMailNotification())
+  }
 
-    const message = notification.toMail()
-    const to = notifiable.routeForMailNotification()
-
-    if (!to) return
-
-    message.to(to)
-
+  async send(message: MailMessage): Promise<void> {
     await this.#mailer.send(mailFactory(message))
   }
 }
@@ -42,6 +37,6 @@ declare module '@foadonis/notifier' {
     toMail?(): MailMessage
   }
   interface NotifiableContract {
-    routeForMailNotification?(): string | undefined
+    routeForMailNotification?(): string
   }
 }

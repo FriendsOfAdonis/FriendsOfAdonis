@@ -3,8 +3,6 @@ title: 'Mail'
 description: 'Send Email notifications to your users with @adonisjs/mail on AdonisJS'
 ---
 
-import { Tab, Tabs } from 'fumadocs-ui/components/tabs'
-
 ## Introduction
 
 The Mail notification channel is used to notify your users with emails. It uses the official [@adonisjs/mail package](https://docs.adonisjs.com/guides/digging-deeper/mail).
@@ -90,5 +88,5 @@ export default class WelcomeNotification {
 ```ts
 import notifier from '@foadonis/notifier/services/main'
 
-await notifier.notify(user, new WelcomeNotification(user), ['whatsapp'])
+await notifier.notify(user, new WelcomeNotification(user), ['mail'])
 ```

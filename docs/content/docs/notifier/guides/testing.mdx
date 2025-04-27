@@ -1,0 +1,114 @@
+---
+title: Testing
+---
+
+## Usage
+
+`@foadonis/notifier` provide a `FakeNotifier` allowing you to test your notifications without actually sending any.
+
+```ts
+test('example', ({ cleanup }) => {
+  /**
+   * Turns on fake mode
+   */
+  const notifications = notifier.fake()
+
+  notifications.assertCount(1)
+
+  /**
+   * The cleanup hooks are executed after the test
+   * finishes successfully or with an error.
+   */
+  cleanup(() => notifier.restore())
+})
+```
+
+Alternatively you can apply the following to perform the above for each tests in the group.
+
+```ts
+test.group('emails', (group) => {
+  let notifications: FakeNotifier
+
+  group.each.tap(() => {
+    notifications = notifier.fake()
+  })
+
+  group.each.teardown(() => notifier.restore())
+})
+```
+
+## Basic tests
+
+```ts
+test('should send reset password email', () => {
+  const notifications = notifier.fake()
+
+  await user.resetPassword()
+
+  notifications.assertSent(ResetPasswordEmail)
+})
+```
+
+You can also ensure that only one notification has been sent using `assertCount`
+
+```ts
+test('should send reset password email', () => {
+  const notifications = notifier.fake()
+
+  await user.resetPassword()
+
+  notifications.assertSent(ResetPasswordEmail)
+  notifications.assertCount(1)
+
+  notifications.clear()
+  notifications.assertSentNothing()
+})
+```
+
+## Advanced testing
+
+`assertSent` and `assertCount` accept a filtering function allowing you to perform further checks on the actual notification.
+
+```ts
+test('should send reset password email', () => {
+  const notifications = notifier.fake()
+
+  await user.resetPassword()
+
+  notifications.assertSent(ResetPasswordEmail, (notification) => notification.hasChannel('email'))
+  notifications.assertCount(1, (notification) => notification.hasChannel('email'))
+})
+```
+
+To make things easier, the filtering function accepts a list of boolean to make a `AND` operation.
+
+```ts
+test('should send reset password email', () => {
+  const notifications = notifier.fake()
+
+  await user.resetPassword()
+
+  notifications.assertCount(1, (notification) => [
+    notification.isInstanceOf(ResetPasswordEmail),
+    notification.hasChannel('email'),
+  ])
+})
+```
+
+The `notification.hasChannel` method accept a filtering function as a second argument to perform further check on the sent message.
+
+```ts
+test('should send reset password email', () => {
+  const notifications = notifier.fake()
+
+  await user.resetPassword()
+
+  notifications.assertCount(1, (notification) => [
+    notification.isInstanceOf(ResetPasswordEmail),
+    notification.hasChannel('email', (message) => [
+      message.hasTo('john.doe@example.org'),
+      message.hasFrom('noreply@friendsofadonis.com'),
+    ]),
+  ])
+})
+```

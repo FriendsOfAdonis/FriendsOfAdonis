@@ -27,7 +27,7 @@ router.get('/', async ({ view, auth }) => {
     await guard.login(user)
   }
 
-  await notifier.notify(user, new WelcomeNotification(), ['firebasePush'])
+  await notifier.notify(user, new WelcomeNotification(), ['mail'])
 
   return view.render('pages/home')
 })

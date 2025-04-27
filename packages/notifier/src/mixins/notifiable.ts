@@ -1,7 +1,7 @@
 import type { NormalizeConstructor } from '@adonisjs/core/types/helpers'
 import type { BaseModel } from '@adonisjs/lucid/orm'
-import { Notification } from '../notification.js'
-import { NotificationTransports } from '../types.js'
+import type { Notification } from '../notification.js'
+import type { NotificationTransports } from '../types.js'
 
 export interface NotifiableContract {
   notify(notification: Notification): Promise<void>

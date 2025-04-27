@@ -8,9 +8,12 @@
     "getting_started",
     "---Guides---",
     "guides/filtering-channels",
+    "guides/testing",
     "---Channels---",
     "channels/mail",
     "channels/pinpoint-sms",
-    "channels/whatsapp"
+    "channels/firebase-messaging",
+    "channels/whatsapp",
+    "channels/custom"
   ]
 }

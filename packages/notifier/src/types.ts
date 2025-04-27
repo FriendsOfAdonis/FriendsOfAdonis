@@ -3,8 +3,9 @@ import { Notification } from './notification.js'
 import { Notifier } from './notifier.js'
 import { NotifiableContract } from './mixins/notifiable.js'
 
-export interface NotificationTransportContract {
-  send(notifiable: NotifiableContract, notification: Notification): Promise<void>
+export interface NotificationTransportContract<TMessage = unknown> {
+  toMessage(notification: Notification, notifiable: NotifiableContract): TMessage | undefined
+  send(message: TMessage): Promise<void>
 }
 
 export interface NotificationTransports {}
@@ -21,3 +22,13 @@ export interface NotifierService
       ? NotificationTransports
       : never
   > {}
+
+export interface NotifierContract {
+  notify(
+    notifiable: NotifiableContract,
+    notification: Notification,
+    channels?: (keyof NotificationTransports)[]
+  ): Promise<void>
+}
+
+export interface NotificationMessenger {}
