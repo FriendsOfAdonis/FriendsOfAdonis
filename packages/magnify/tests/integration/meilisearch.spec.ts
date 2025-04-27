@@ -1,55 +1,58 @@
 import { test } from '@japa/runner'
 import { StartedTestContainer } from 'testcontainers'
-import { initializeDatabase } from './app.js'
 import SyncIndexSettings from '../../commands/sync_index_settings.js'
-import { sleep } from '../utils.js'
-import app from '@adonisjs/core/services/app'
-import containers from './containers.js'
 import { MeilisearchEngine } from '../../src/engines/meilisearch.js'
 import User from '../fixtures/user.js'
 import Import from '../../commands/import.js'
-import { assertSearchResults } from './utils.js'
 import Flush from '../../commands/flush.js'
+import { ApplicationService } from '@adonisjs/core/types'
+import { Kernel } from '@adonisjs/core/ace'
+import {
+  assertSearchResults,
+  CONTAINERS,
+  initializeDatabase,
+  setupFakeAdonisApp,
+  sleep,
+} from '../helpers.js'
+import { defineConfig as defineMagnifyConfig } from '../../src/define_config.js'
 
 test.group('Meilisearch', async (group) => {
   let container: StartedTestContainer
+  let ctx: { app: ApplicationService; ace: Kernel }
 
-  group.setup(async () => {
-    User.shouldBeSearchable = false
-    container = await containers.meilisearch.start()
-
-    const magnify = await app.container.make('magnify')
-    magnify.config = {
-      default: 'meilisearch',
-      // @ts-ignore
-      engines: {
-        meilisearch: () =>
-          new MeilisearchEngine({
-            host: `http://${container.getHost()}:${container.getFirstMappedPort()}`,
-            indexSettings: {
-              users: {
-                filterableAttributes: ['isAdmin'],
-                sortableAttributes: ['createdAt'],
+  group.tap((t) => t.timeout(20_000))
+  group.each.setup(async ({ context }) => {
+    container = await CONTAINERS.meilisearch.start()
+    ctx = await setupFakeAdonisApp(context.fs, {
+      magnify: defineMagnifyConfig({
+        default: 'meilisearch',
+        engines: {
+          meilisearch: () =>
+            new MeilisearchEngine({
+              host: `http://${container.getHost()}:${container.getFirstMappedPort()}`,
+              indexSettings: {
+                users: {
+                  filterableAttributes: ['isAdmin'],
+                  sortableAttributes: ['createdAt'],
+                },
               },
-            },
-          }),
-      },
-    }
+            }),
+        },
+      }),
+    })
 
-    await initializeDatabase(app)
+    await initializeDatabase(ctx.ace)
 
-    User.shouldBeSearchable = true
-
-    const ace = await app.container.make('ace')
-    const syncCommand = await ace.create(SyncIndexSettings, [])
+    const syncCommand = await ctx.ace.create(SyncIndexSettings, [])
     await syncCommand.exec()
 
-    const importCommand = await ace.create(Import, ['../fixtures/user.ts'])
+    const importCommand = await ctx.ace.create(Import, ['../fixtures/user.ts'])
     await importCommand.exec()
-    await sleep(1)
+    await sleep(2)
   })
 
-  group.teardown(async () => {
+  group.each.teardown(async () => {
+    await ctx.app.terminate()
     await container.stop()
   })
 
@@ -159,8 +162,7 @@ test.group('Meilisearch', async (group) => {
   }).timeout(10000)
 
   test('flush properly remove all documents', async ({ assert }) => {
-    const ace = await app.container.make('ace')
-    const command = await ace.create(Flush, ['../fixtures/user.js'])
+    const command = await ctx.ace.create(Flush, ['../fixtures/user.js'])
     await command.exec()
     command.assertSucceeded()
 

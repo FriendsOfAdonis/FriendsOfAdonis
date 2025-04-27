@@ -1,5 +1,5 @@
 import { SimplePaginator } from '@adonisjs/lucid/database'
-import { Builder } from '../builder.js'
+import { SearchBuilder } from '../builder.js'
 import { SearchableModel, SearchableRow } from '../types.js'
 
 export abstract class MagnifyEngine {
@@ -16,17 +16,17 @@ export abstract class MagnifyEngine {
   /**
    * Perform the given search on the engine.
    */
-  abstract search(builder: Builder): Promise<any>
+  abstract search(builder: SearchBuilder): Promise<any>
 
   /**
    * Map the given results to instances of the given model.
    */
-  abstract map(builder: Builder, results: any): Promise<any[]>
+  abstract map(builder: SearchBuilder, results: any): Promise<any[]>
 
   /**
    * Perform the given search on the engine.
    */
-  abstract paginate(builder: Builder, perPage: number, page: number): Promise<SimplePaginator>
+  abstract paginate(builder: SearchBuilder, perPage: number, page: number): Promise<SimplePaginator>
 
   /**
    * Flush all of the model's records from the engine.
@@ -41,7 +41,7 @@ export abstract class MagnifyEngine {
   /**
    * Get the results of the given query mapped onto models.
    */
-  async get(builder: Builder): Promise<any[]> {
+  async get(builder: SearchBuilder): Promise<any[]> {
     return this.map(builder, await this.search(builder))
   }
 }

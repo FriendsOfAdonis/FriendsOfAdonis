@@ -13,15 +13,9 @@ export default class SyncIndexSettings extends BaseCommand {
     const engine = magnify.engine() as MagnifyEngine
 
     if (!engine.syncIndexSettings) {
-      this.logger.error(`The driver "${String(engine)}" does not support updating index settings.`)
-      return
+      throw new Error(`The driver "${String(engine)}" does not support updating index settings.`)
     }
 
-    try {
-      await engine.syncIndexSettings()
-    } catch (error) {
-      this.logger.error(error.message)
-      return
-    }
+    await engine.syncIndexSettings()
   }
 }

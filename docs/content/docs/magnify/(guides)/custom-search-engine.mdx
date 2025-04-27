@@ -1,0 +1,51 @@
+---
+title: Custom Search Engine
+---
+
+If the available Search Engines does not fit your needs you can integrate your own custom search engine.
+
+## Writing the Engine
+
+Your Search Engine should extend the `MagnifyEngine` class and implement the following methods:
+
+```ts twoslash
+// @noErrors
+import { SearchableModel, SearchableRow } from '@foadonis/magnify/types'
+import { MagnifyEngine } from '@foadonis/magnify'
+
+export class CustomSearchEngine extends MagnifyEngine {
+  async update(...models: SearchableRow[]) {}
+
+  async delete(...models: SearchableRow[]) {}
+
+  async search(builder: Builder) {}
+
+  async map(builder: SearchBuilder, results: any) {}
+
+  async paginate(builder: SearchBuilder, perPage: number, page: number) {}
+
+  async flush(model: SearchableModel) {}
+}
+```
+
+<Callout>
+
+You can head to the [natively supported Search Engines source code](https://github.com/FriendsOfAdonis/FriendsOfAdonis/tree/main/packages/magnify/src/engines) for more information about the implementation.
+
+</Callout>
+
+## Registering the Engine
+
+You can now add your `CustomSearchEngine` to the `config/magnify.ts` file:
+
+```ts title="config/magnify.ts" twoslash
+// @noErrors
+const magnifyConfig = defineConfig({
+  default: 'custom',
+  engines: {
+    custom: new CustomSearchEngine(),
+  },
+})
+
+export default magnifyConfig
+```

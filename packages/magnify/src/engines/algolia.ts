@@ -1,5 +1,5 @@
 import { SimplePaginator } from '@adonisjs/lucid/database'
-import { Builder } from '../builder.js'
+import { SearchBuilder } from '../builder.js'
 import { AlgoliaConfig, SearchableModel, SearchableRow } from '../types.js'
 import { MagnifyEngine } from './main.js'
 import {
@@ -55,19 +55,19 @@ export class AlgoliaEngine implements MagnifyEngine {
     await this.#client.deleteObjects({ indexName: Static.$searchIndex, objectIDs: keys })
   }
 
-  async search(builder: Builder): Promise<SearchResponse> {
+  async search(builder: SearchBuilder): Promise<SearchResponse> {
     return this.#performSearch(builder, {
       numericFilters: this.#filters(builder),
       hitsPerPage: builder.$limit,
     })
   }
 
-  map(builder: Builder, results: SearchResponse): Promise<any[]> {
+  map(builder: SearchBuilder, results: SearchResponse): Promise<any[]> {
     const ids = results.hits.map((hit) => hit.objectID)
     return builder.$model.$queryMagnifyModelsByIds(builder, ...ids)
   }
 
-  async paginate(builder: Builder, perPage: number, page: number): Promise<SimplePaginator> {
+  async paginate(builder: SearchBuilder, perPage: number, page: number): Promise<SimplePaginator> {
     const results = await this.#performSearch(builder, {
       page: page - 1,
       hitsPerPage: perPage,
@@ -86,11 +86,11 @@ export class AlgoliaEngine implements MagnifyEngine {
     await this.#client.clearObjects({ indexName: model.$searchIndex })
   }
 
-  async get(builder: Builder): Promise<any[]> {
+  async get(builder: SearchBuilder): Promise<any[]> {
     return this.map(builder, await this.search(builder))
   }
 
-  #filters(builder: Builder): NumericFilters | undefined {
+  #filters(builder: SearchBuilder): NumericFilters | undefined {
     const wheres = Object.entries(builder.$wheres).map(([key, value]) => {
       if (is.boolean(value)) return `${key} = ${value ? 1 : 0}`
       return `${key} = ${value}`
@@ -111,7 +111,7 @@ export class AlgoliaEngine implements MagnifyEngine {
     return filters.length <= 0 ? undefined : filters
   }
 
-  #performSearch(builder: Builder, params: SearchParams = {}) {
+  #performSearch(builder: SearchBuilder, params: SearchParams = {}) {
     return this.#client.searchSingleIndex({
       indexName: builder.$model.$searchIndex,
       searchParams: {
@@ -119,5 +119,12 @@ export class AlgoliaEngine implements MagnifyEngine {
         ...params,
       },
     })
+  }
+
+  static configuration() {
+    return {
+      dependencies: ['algoliasearch'],
+      variables: ['ALGOLIA_APP_ID', 'ALGOLIA_API_KEY'],
+    }
   }
 }

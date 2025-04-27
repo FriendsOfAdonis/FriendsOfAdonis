@@ -3,6 +3,7 @@
 }}}
 import env from '#start/env'
 import { defineConfig, engines } from '@foadonis/magnify'
+import type { InferEngines } from '@foadonis/magnify/types'
 
 const magnifyConfig = defineConfig({
   default: 'typesense',

@@ -1,0 +1,95 @@
+---
+title: Searching
+---
+
+You should already have a `Searchable` model and a Search Engine configured. If it is not the case, please read the [Getting Started](./getting-started) guide.
+
+## Basic Search
+
+You can begin searching a model using the `search` method. It accepts a single string as a search query.
+
+```ts
+const posts = await Post.search('Adonis').get()
+```
+
+```ts
+router.get('/posts', async ({ request }) => {
+  const query = request.input('query')
+  return Post.search(query).get()
+})
+```
+
+### Raw results
+
+Magnify automatically map the results from the Search Engine with your Lucid Model by querying the database.
+Sometimes you might want to get the raw results from your Search Engine. You can do that by using the `raw` method.
+
+```ts
+const results = await Post.search('Adonis').raw()
+```
+
+### Custom Index
+
+When searching a model it will use the `searchableAs` method to determine the index name. If you want to search a different index, you can use the `within` method.
+
+```ts
+const results = await Post.search('Adonis').within('posts_legacy').get()
+```
+
+## Filtering
+
+You can filter the results using the `where`, `whereIn` and `whereNotIn` methods.
+
+```ts
+const posts = await Post.search('Adonis').where('published', true).get()
+const posts = await Post.search('Adonis').whereIn('status', ['published']).get()
+const posts = await Post.search('Adonis').whereNotIn('status', ['draft']).get()
+```
+
+It is possible to chain filters
+
+```ts
+const posts = await Post.search('Adonis')
+  .where('published', true)
+  .where('categoryId', 150)
+  .whereIn('tag', ['frameworks'])
+  .get()
+```
+
+## Sorting
+
+Sorting is done using the `orderBy` method. It accepts a field name and a direction. The direction can be either `asc` or `desc`.
+
+```ts
+const posts = await Post.search('Adonis').orderBy('createdAt', 'desc').get()
+const posts = await Post.search('Adonis').latest().get()
+```
+
+It can be chained to refine the results order.
+
+```ts
+const posts = await Post.search('Adonis')
+  .orderBy('createdAt', 'desc')
+  .orderBy('author', 'desc')
+  .get()
+```
+
+## Pagination
+
+Pagination is done using the `paginate` method. It accepts a page number and a per page limit.
+
+```ts
+const posts = await Post.search('Adonis').paginate(10, 1)
+```
+
+It returns a [`SimplePaginator`](https://lucid.adonisjs.com/docs/pagination):
+
+```ts
+const { total, currentpage, hasMorePages } = await Post.search('Adonis').paginate(10, 1)
+
+router.get('/posts', async ({ request }) => {
+  const page = request.input('page', 1)
+  const posts = await Post.search('Adonis').paginate(10, page)
+  return posts.toJSON()
+})
+```

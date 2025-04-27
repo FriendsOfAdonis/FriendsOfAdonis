@@ -13,85 +13,147 @@
 */
 
 import ConfigureCommand from '@adonisjs/core/commands/configure'
-import string from '@adonisjs/core/helpers/string'
 import { stubsRoot } from './stubs/main.js'
+import { Codemods } from '@adonisjs/core/ace/codemods'
+import { BaseCommand } from '@adonisjs/core/ace'
+import stringHelpers from '@adonisjs/core/helpers/string'
 
-type EngineConfig = {
-  name: string
-  dependencies: string[]
-  envVars: Record<string, string>
-  envValidation: Record<string, string>
+export const ENGINE_CONFIGURATIONS = [
+  {
+    id: 'algolia',
+    name: 'Algolia',
+    description: 'Closed-source Search Engine',
+    dependencies: ['algoliasearch'],
+    variables: [
+      {
+        name: 'Your App Id found in your Application settings (under API Keys)',
+        key: 'ALGOLIA_APP_ID',
+        schema: 'Env.schema.string()',
+      },
+      {
+        name: 'Your API Key found in your Application settings (under API Keys)',
+        key: 'ALGOLIA_API_KEY',
+        schema: 'Env.schema.string()',
+      },
+    ],
+  },
+  {
+    id: 'meilisearch',
+    name: 'Meilisearch',
+    description: 'Open-source Search Engine written in Rust',
+    variables: [
+      {
+        name: 'URL to your Meilisearch instance (eg. http://localhost:7700)',
+        key: 'MEILISEARCH_HOST',
+        schema: `Env.schema.string({ format: 'host' })`,
+      },
+      {
+        name: 'API Key to authenticate against Meilisearch',
+        key: 'MEILISEARCH_API_KEY',
+        schema: 'Env.schema.string()',
+      },
+    ],
+    dependencies: ['meilisearch'],
+  },
+  {
+    id: 'typesense',
+    name: 'Typesense',
+    description: 'Open-source Search Engine written in C++',
+    variables: [
+      {
+        name: 'Host of your Typesense instance',
+        key: 'TYPESENSE_NODE_URL',
+        schema: `Env.schema.string({ format: 'host' })`,
+      },
+      {
+        name: 'API Key to authenticate against Typesense',
+        key: 'TYPESENSE_API_KEY',
+        schema: 'Env.schema.string()',
+      },
+    ],
+    dependencies: ['typesense'],
+  },
+]
+
+export type EngineConfiguration = (typeof ENGINE_CONFIGURATIONS)[number]
+
+export async function installDependencies(
+  command: BaseCommand,
+  codemods: Codemods,
+  configuration: EngineConfiguration
+) {
+  const shouldInstall = await command.prompt.confirm(
+    `Do you want to install ${stringHelpers.sentence(configuration.variables)}?`,
+    { name: 'install' }
+  )
+
+  if (!shouldInstall) return
+
+  await codemods.installPackages(
+    configuration.dependencies.map((p) => ({
+      isDevDependency: false,
+      name: p,
+    }))
+  )
 }
 
-const ENGINES: Record<string, EngineConfig> = {
-  algolia: {
-    name: 'Algolia',
-    dependencies: ['algoliasearch'],
-    envVars: {
-      ALGOLIA_APP_ID: '',
-      ALGOLIA_API_KEY: '',
-    },
-    envValidation: {
-      ALGOLIA_APP_ID: `Env.schema.string()`,
-      ALGOLIA_API_KEY: `Env.schema.string()`,
-    },
-  },
-  meilisearch: {
-    name: 'Meilisearch',
-    dependencies: ['meilisearch'],
-    envVars: {
-      MEILISEARCH_HOST: ``,
-      MEILISEARCH_API_KEY: ``,
-    },
-    envValidation: {
-      MEILISEARCH_HOST: `Env.schema.string({ format: 'host' })`,
-      MEILISEARCH_API_KEY: `Env.schema.string.optional()`,
-    },
-  },
-  typesense: {
-    name: 'Typesense',
-    dependencies: ['typesense'],
-    envVars: {
-      TYPESENSE_NODE_URL: ``,
-      TYPESENSE_API_KEY: ``,
-    },
-    envValidation: {
-      TYPESENSE_NODE_URL: `Env.schema.string({ format: 'host' })`,
-      TYPESENSE_API_KEY: `Env.schema.string()`,
-    },
-  },
+export async function configureEnvVariables(
+  command: BaseCommand,
+  codemods: Codemods,
+  configuration: EngineConfiguration
+) {
+  const variables: Record<string, string> = {}
+
+  for (const variable of configuration.variables) {
+    const result = await command.prompt.ask(variable.key, {
+      name: variable.key,
+      hint: variable.name,
+    })
+
+    variables[variable.key] = result
+  }
+
+  await codemods.defineEnvVariables(variables)
+}
+
+export async function configureEnvValidations(
+  codemods: Codemods,
+  configuration: EngineConfiguration
+) {
+  await codemods.defineEnvValidations({
+    leadingComment: `Variables for configuring ${configuration.name} Search Engine`,
+    variables: configuration.variables.reduce(
+      (a, v) => ({
+        ...a,
+        [v.key]: v.schema,
+      }),
+      {}
+    ),
+  })
 }
 
 export async function configure(command: ConfigureCommand) {
-  let engineName: string | undefined = command.parsedFlags.engine
-  let shouldInstallPackages: boolean | undefined = command.parsedFlags.install
+  let engineName = command.parsedFlags.engine
 
   if (engineName === undefined) {
     engineName = await command.prompt.choice(
-      'Select the Search engine you want to use',
-      Object.entries(ENGINES).map(([key, value]) => ({
-        name: key,
-        message: value.name,
+      'What Search Engine do you want to configure?',
+      ENGINE_CONFIGURATIONS.map((engine) => ({
+        name: engine.id,
+        message: engine.name,
+        hint: engine.description,
       })),
-      { validate: (value) => !!value }
+      {
+        name: 'engine',
+      }
     )
   }
 
-  const engine = ENGINES[engineName!]
+  const configuration = ENGINE_CONFIGURATIONS.find((e) => e.id === engineName)
 
-  if (!engine) {
-    command.logger.error(
-      `The selected search engine "${engineName}" is invalid. Select one from: ${string.sentence(
-        Object.values(ENGINES).map((e) => e.name)
-      )}`
-    )
-    command.exitCode = 1
-    return
-  }
-
-  if (shouldInstallPackages === undefined) {
-    shouldInstallPackages = await command.prompt.confirm(
-      'Do you want to install additional packages required by "@foadonis/magnify" and the selected search engine?'
+  if (!configuration) {
+    throw new Error(
+      `The Search Engine ${engineName} is not valid (available: ${stringHelpers.sentence(ENGINE_CONFIGURATIONS.map((e) => e.id))})`
     )
   }
 
@@ -104,21 +166,9 @@ export async function configure(command: ConfigureCommand) {
 
   await codemods.makeUsingStub(stubsRoot, `config/${engineName}.stub`, {})
 
-  await codemods.defineEnvValidations({
-    variables: engine.envValidation,
-    leadingComment: 'Variables for configuring Magnify search engine',
-  })
-
-  await codemods.defineEnvVariables(engine.envVars)
-
-  if (shouldInstallPackages) {
-    await codemods.installPackages(
-      engine.dependencies.map((name) => ({
-        name,
-        isDevDependency: false,
-      }))
-    )
-  }
+  await configureEnvValidations(codemods, configuration)
+  await configureEnvVariables(command, codemods, configuration)
+  await installDependencies(command, codemods, configuration)
 
   logSuccess(command)
 }

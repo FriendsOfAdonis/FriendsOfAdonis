@@ -1,6 +1,6 @@
 import { MeilisearchConfig, SearchableModel, SearchableRow } from '../types.js'
 import { MeiliSearch, SearchParams, SearchResponse } from 'meilisearch'
-import { Builder } from '../builder.js'
+import { SearchBuilder } from '../builder.js'
 import { SimplePaginator } from '@adonisjs/lucid/database'
 import { MagnifyEngine } from './main.js'
 import is from '@adonisjs/core/helpers/is'
@@ -54,7 +54,7 @@ export class MeilisearchEngine implements MagnifyEngine {
     await index.deleteDocuments(keys as string[] | number[])
   }
 
-  async search<T extends Record<string, any> = Record<string, any>>(builder: Builder) {
+  async search<T extends Record<string, any> = Record<string, any>>(builder: SearchBuilder) {
     return this.#performSearch<T>(builder, {
       filter: this.#filters(builder),
       hitsPerPage: builder.$limit,
@@ -62,7 +62,7 @@ export class MeilisearchEngine implements MagnifyEngine {
     })
   }
 
-  async paginate(builder: Builder, perPage: number, page: number) {
+  async paginate(builder: SearchBuilder, perPage: number, page: number) {
     const results = await this.#performSearch(builder, {
       hitsPerPage: perPage,
       page,
@@ -85,12 +85,12 @@ export class MeilisearchEngine implements MagnifyEngine {
   async map<
     T extends Record<string, any> = Record<string, any>,
     S extends SearchParams = SearchParams,
-  >(builder: Builder, results: SearchResponse<T, S>): Promise<any[]> {
+  >(builder: SearchBuilder, results: SearchResponse<T, S>): Promise<any[]> {
     const ids = results.hits.map((hit) => hit[builder.$model.$searchKey])
     return builder.$model.$queryMagnifyModelsByIds(builder, ...ids)
   }
 
-  async get(builder: Builder): Promise<any[]> {
+  async get(builder: SearchBuilder): Promise<any[]> {
     return this.map(builder, await this.search(builder))
   }
 
@@ -102,7 +102,7 @@ export class MeilisearchEngine implements MagnifyEngine {
     }
   }
 
-  #filters(builder: Builder) {
+  #filters(builder: SearchBuilder) {
     const filters = Object.entries(builder.$wheres).map(([key, value]) => {
       if (is.boolean(value)) {
         return `${key}=${value ? 'true' : 'false'}`
@@ -143,14 +143,14 @@ export class MeilisearchEngine implements MagnifyEngine {
     return filters.join(' AND ')
   }
 
-  #buildSortFromOrderByClauses(builder: Builder): string[] {
+  #buildSortFromOrderByClauses(builder: SearchBuilder): string[] {
     return builder.$orders.map((order) => `${order.column}:${order.direction}`)
   }
 
   #performSearch<
     T extends Record<string, any> = Record<string, any>,
     S extends SearchParams = SearchParams,
-  >(builder: Builder, searchParams: S) {
+  >(builder: SearchBuilder, searchParams: S) {
     const index = this.#client.index<T>(builder.$index ?? builder.$model.$searchIndex)
     // TODO: Add builder options
 

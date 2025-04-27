@@ -2,7 +2,7 @@ import { SimplePaginator } from '@adonisjs/lucid/database'
 import { MagnifyEngine } from './engines/main.js'
 import { SearchableModel } from './types.js'
 
-export class Builder<Model extends SearchableModel = SearchableModel> {
+export class SearchBuilder<Model extends SearchableModel = SearchableModel> {
   /**
    * The custom index specified for the search.
    */
@@ -101,7 +101,8 @@ export class Builder<Model extends SearchableModel = SearchableModel> {
   }
 
   async paginate(perPage = 20, page = 1): Promise<SimplePaginator> {
-    return this.$engine.paginate(this, perPage, page)
+    const engine = await this.$getEngine()
+    return engine.paginate(this, perPage, page)
   }
 
   /**
@@ -118,11 +119,12 @@ export class Builder<Model extends SearchableModel = SearchableModel> {
     return this.orderBy(column, 'asc')
   }
 
-  get $engine(): MagnifyEngine {
-    return this.$model.$searchEngine
+  $getEngine(): Promise<MagnifyEngine> {
+    return this.$model.$getSearchEngine()
   }
 
-  get(): Promise<InstanceType<Model>[]> {
-    return this.$engine.get(this)
+  async get(): Promise<InstanceType<Model>[]> {
+    const engine = await this.$getEngine()
+    return engine.get(this)
   }
 }

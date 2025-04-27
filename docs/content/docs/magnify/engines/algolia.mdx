@@ -1,3 +1,73 @@
 ---
 title: Algolia
+description: Configure Algolia for @foadonis/magnify
 ---
+
+[Algolia](https://www.algolia.com) is a closed-source, lightning-fast search engine for apps and websites. It delivers smart, instant results and offers a free plan to get started.
+
+## Getting Started
+
+<div className='fd-steps [&_h3]:fd-step'>
+
+### Install dependencies
+
+First install the [algoliasearch](https://www.npmjs.com/package/algoliasearch) package.
+
+```package-install
+npm install algoliasearch
+```
+
+Head over your Algolia Application and grab your **Application Id** and the **Write API Key**.
+
+### Configure environment variables
+
+Update your environment variables schema and add them to your `.env` file.
+
+```ts tab="start/env.ts" twoslash
+import { Env } from '@adonisjs/core/env'
+
+export default await Env.create(new URL('../', import.meta.url), {
+  ALGOLIA_APP_ID: Env.schema.string(),
+  ALGOLIA_API_KEY: Env.schema.string(),
+})
+```
+
+```dotenv tab=".env"
+ALGOLIA_APP_ID=your-algolia-app-id
+ALGOLIA_API_KEY=your-algolia-api-key
+```
+
+### Configure the Search Engine
+
+Add the `AlgoliaEngine` to your Magnify configuration.
+
+```ts [title="config/magnify.ts"] twoslash
+// @noErrors
+import env from '#start/env'
+import { defineConfig, engines } from '@foadonis/magnify'
+import type { InferEngines } from '@foadonis/magnify/types'
+
+const magnifyConfig = defineConfig({
+  default: 'algolia',
+  engines: {
+    algolia: engines.algolia({
+      appId: env.get('ALGOLIA_APP_ID'),
+      apiKey: env.get('ALGOLIA_API_KEY'),
+    }),
+  },
+})
+
+export default magnifyConfig
+
+/**
+ * Inferring types for the list of engines you have configured
+ * in your application.
+ */
+declare module '@foadonis/magnify/types' {
+  export interface EnginesList extends InferEngines<typeof magnifyConfig> {}
+}
+```
+
+### [Start Searching](../searching)
+
+</div>

@@ -2,10 +2,10 @@ import { RuntimeException } from '@adonisjs/core/exceptions'
 import { NormalizeConstructor } from '@adonisjs/core/types/helpers'
 import { BaseModel } from '@adonisjs/lucid/orm'
 import { ModelObject } from '@adonisjs/lucid/types/model'
-import { Builder } from '../builder.js'
-import magnify from '../../services/main.js'
+import { SearchBuilder } from '../builder.js'
 import { MagnifyEngine } from '../engines/main.js'
 import { SearchableModel } from '../types.js'
+import app from '@adonisjs/core/services/app'
 
 type Constructor = NormalizeConstructor<typeof BaseModel>
 
@@ -21,7 +21,8 @@ export function Searchable<T extends Constructor>(superclass: T) {
     /**
      * Get the Magnify engine for the model.
      */
-    static get $searchEngine(): MagnifyEngine {
+    static async $getSearchEngine(): Promise<MagnifyEngine> {
+      const magnify = await app.container.make('magnify')
       return magnify.engine()
     }
 
@@ -49,8 +50,8 @@ export function Searchable<T extends Constructor>(superclass: T) {
     /**
      * Perform a search against the model's indexed data.
      */
-    static search<M extends SearchableModel>(this: M, query = ''): Builder<M> {
-      return new Builder(this, query)
+    static search<M extends SearchableModel>(this: M, query = ''): SearchBuilder<M> {
+      return new SearchBuilder(this, query)
     }
 
     /**
@@ -60,7 +61,8 @@ export function Searchable<T extends Constructor>(superclass: T) {
       this: M,
       ...models: InstanceType<M>[]
     ): Promise<void> {
-      await this.$searchEngine.update(...(models.filter((m) => m.shouldBeSearchable()) as any))
+      const engine = await this.$getSearchEngine()
+      await engine.update(...(models.filter((m) => m.shouldBeSearchable()) as any))
     }
 
     /**
@@ -78,7 +80,8 @@ export function Searchable<T extends Constructor>(superclass: T) {
      * Remove all instances of the model from the search index.
      */
     static async $removeAllFromSearch(): Promise<void> {
-      await this.$searchEngine.flush(this)
+      const engine = await this.$getSearchEngine()
+      await engine.flush(this)
     }
 
     /**
@@ -86,7 +89,7 @@ export function Searchable<T extends Constructor>(superclass: T) {
      */
     static $queryMagnifyModelsByIds<M extends SearchableModel>(
       this: M,
-      _builder: Builder<M>,
+      _builder: SearchBuilder<M>,
       ...ids: string[]
     ): Promise<any[]> {
       const query = this.query()
@@ -136,17 +139,20 @@ export function Searchable<T extends Constructor>(superclass: T) {
      * Remove this model instance from the search index.
      */
     async $makeUnsearchable(): Promise<void> {
-      await SearchableImpl.$searchEngine.delete(this)
+      const engine = await SearchableImpl.$getSearchEngine()
+      await engine.delete(this)
     }
   }
 
   SearchableImpl.boot()
 
   SearchableImpl.after('create', async (model) => {
+    if (!model.shouldBeSearchable()) return
     await model.$makeSearchable()
   })
 
   SearchableImpl.after('update', async (model) => {
+    if (!model.shouldBeSearchable()) return
     await model.$makeSearchable()
   })
 

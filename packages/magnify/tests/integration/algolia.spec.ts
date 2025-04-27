@@ -1,41 +1,49 @@
 import { test } from '@japa/runner'
-import { initializeDatabase } from './app.js'
-import { sleep } from '../utils.js'
-import app from '@adonisjs/core/services/app'
 import User from '../fixtures/user.js'
 import { AlgoliaEngine } from '../../src/engines/algolia.js'
-import { assertSearchResults } from './utils.js'
 import env from '../env.js'
+import {
+  assertSearchResults,
+  BASE_URL,
+  initializeDatabase,
+  setupFakeAdonisApp,
+  sleep,
+} from '../helpers.js'
+import { defineConfig as defineMagnifyConfig } from '../../src/define_config.js'
+import { ApplicationService } from '@adonisjs/core/types'
+import { Kernel } from '@adonisjs/core/ace'
 import Import from '../../commands/import.js'
 import Flush from '../../commands/flush.js'
+import { FileSystem } from '@japa/file-system'
+import { fileURLToPath } from 'node:url'
 
 test.group('Algolia', async (group) => {
+  let ctx: { app: ApplicationService; ace: Kernel }
+
+  group.tap((t) => t.timeout(20_000))
   group.setup(async () => {
-    User.shouldBeSearchable = false
+    const fs = new FileSystem(fileURLToPath(BASE_URL))
+    ctx = await setupFakeAdonisApp(fs, {
+      magnify: defineMagnifyConfig({
+        default: 'algolia',
+        engines: {
+          algolia: () =>
+            new AlgoliaEngine({
+              appId: env.get('ALGOLIA_APP_ID'),
+              apiKey: env.get('ALGOLIA_API_KEY'),
+            }),
+        },
+      }),
+    })
 
-    const magnify = await app.container.make('magnify')
-    magnify.config = {
-      default: 'algolia',
-      // @ts-ignore
-      engines: {
-        algolia: () =>
-          new AlgoliaEngine({
-            appId: env.get('ALGOLIA_APP_ID'),
-            apiKey: env.get('ALGOLIA_API_KEY'),
-          }),
-      },
-    }
+    await initializeDatabase(ctx.ace)
 
-    await initializeDatabase(app)
-
-    User.shouldBeSearchable = true
-
-    const ace = await app.container.make('ace')
-
-    const importCommand = await ace.create(Import, ['../fixtures/user.ts'])
+    const importCommand = await ctx.ace.create(Import, ['../fixtures/user.ts'])
     await importCommand.exec()
     await sleep(4)
   })
+
+  group.teardown(() => ctx.app.terminate())
 
   test('can use basic search', async ({ assert }) => {
     const results = await User.search('lar').latest().take(10).get()
@@ -109,23 +117,22 @@ test.group('Algolia', async (group) => {
     assert.isUndefined(result)
   })
 
-  // WARN: Algolia seems to take a lot of time updating records
-  // test('document is updated when model is updated', async ({ assert }) => {
-  //   let results = await User.search('Dax Larkin').take(1).get()
-  //   let result = results[0]
-  //
-  //   assert.equal(result.name, 'Dax Larkin')
-  //
-  //   result.name = 'Dax Larkin Updated'
-  //   await result.save()
-  //
-  //   await sleep(5)
-  //
-  //   results = await User.search('Dax Larkin Updated').take(1).get()
-  //   result = results[0]
-  //
-  //   assert.equal(result.name, 'Dax Larkin Updated')
-  // })
+  test('document is updated when model is updated', async ({ assert }) => {
+    let results = await User.search('Dax Larkin').take(1).get()
+    let result = results[0]
+
+    assert.equal(result.name, 'Dax Larkin')
+
+    result.name = 'Dax Larkin Updated'
+    await result.save()
+
+    await sleep(5)
+
+    results = await User.search('Dax Larkin Updated').take(1).get()
+    result = results[0]
+
+    assert.equal(result.name, 'Dax Larkin Updated')
+  }).skip(false, 'Algolia seems to take a lot of time updating records')
 
   test('document is added when model is created', async ({ assert }) => {
     let results = await User.search('New User').take(1).get()
@@ -137,24 +144,23 @@ test.group('Algolia', async (group) => {
       name: 'New User',
     })
 
-    await sleep(5)
+    await sleep(6)
 
     results = await User.search('New User').take(1).get()
     result = results[0]
 
     assert.equal(result.name, 'New User')
-  }).timeout(10000)
+  })
 
   test('flush properly remove all documents', async ({ assert }) => {
-    const ace = await app.container.make('ace')
-    const command = await ace.create(Flush, ['../fixtures/user.js'])
+    const command = await ctx.ace.create(Flush, ['../fixtures/user.js'])
     await command.exec()
     command.assertSucceeded()
 
     // We wait for the documents to be successfully flushed by the engine
-    await sleep(5)
+    await sleep(6)
 
     const results = await User.search('').get()
     assert.lengthOf(results, 0)
-  }).timeout(10000)
+  })
 })

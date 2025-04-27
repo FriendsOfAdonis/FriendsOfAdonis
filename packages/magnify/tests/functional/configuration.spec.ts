@@ -1,61 +1,24 @@
 import Configure from '@adonisjs/core/commands/configure'
-import { IgnitorFactory } from '@adonisjs/core/factories'
-import { FileSystem } from '@japa/file-system'
 import { test } from '@japa/runner'
-import { fileURLToPath } from 'node:url'
-
-const BASE_URL = new URL('../tmp/configure/', import.meta.url)
-
-async function configure(fs: FileSystem, choice: number) {
-  const ignitor = new IgnitorFactory()
-    .withCoreProviders()
-    .withCoreConfig()
-    .create(BASE_URL, {
-      importer: (filePath) => {
-        if (filePath.startsWith('./') || filePath.startsWith('../')) {
-          return import(new URL(filePath, BASE_URL).href)
-        }
-
-        return import(filePath)
-      },
-    })
-
-  const app = ignitor.createApp('console')
-  await app.init()
-  await app.boot()
-
-  await fs.create('.env', '')
-  await fs.createJson('tsconfig.json', {})
-  await fs.create('start/env.ts', `export default Env.create(new URL('./'), {})`)
-  await fs.create('adonisrc.ts', `export default defineConfig({})`)
-
-  const ace = await app.container.make('ace')
-
-  ace.prompt.trap('Select the Search engine you want to use').chooseOption(choice)
-  ace.prompt
-    .trap(
-      'Do you want to install additional packages required by "@foadonis/magnify" and the selected search engine?'
-    )
-    .reject()
-
-  const command = await ace.create(Configure, ['../../../index.js'])
-  await command.exec()
-
-  command.assertSucceeded()
-
-  return app
-}
+import { setupApp, setupFakeAdonisProject } from '../helpers.js'
 
 test.group('Configuration', (group) => {
-  group.each.setup(({ context }) => {
-    context.fs.baseUrl = BASE_URL
-    context.fs.basePath = fileURLToPath(BASE_URL)
-  })
+  group.each.setup(({ context }) => setupFakeAdonisProject(context.fs))
+  group.each.teardown(({ context }) => context.fs.cleanup())
+  group.tap((t) => t.timeout(20_000))
 
-  group.each.disableTimeout()
+  test('configure algolia engine', async ({ assert }) => {
+    const { ace } = await setupApp()
 
-  test('configure algolia engine', async ({ fs, assert }) => {
-    await configure(fs, 0)
+    ace.prompt.trap('engine').replyWith('algolia')
+    ace.prompt.trap('ALGOLIA_APP_ID').replyWith('<app-id>')
+    ace.prompt.trap('ALGOLIA_API_KEY').replyWith('<api-key>')
+    ace.prompt.trap('install').reject()
+
+    const command = await ace.create(Configure, ['../../index.js'])
+    await command.exec()
+
+    command.assertSucceeded()
 
     await assert.fileExists('config/magnify.ts')
     await assert.fileContains('config/magnify.ts', 'defineConfig')
@@ -69,9 +32,18 @@ test.group('Configuration', (group) => {
     await assert.fileContains('.env', 'ALGOLIA_API_KEY')
   })
 
-  test('configure meilisearch engine', async ({ fs, assert }) => {
-    await configure(fs, 1)
+  test('configure meilisearch engine', async ({ assert }) => {
+    const { ace } = await setupApp()
 
+    ace.prompt.trap('engine').replyWith('meilisearch')
+    ace.prompt.trap('MEILISEARCH_HOST').replyWith('<host>')
+    ace.prompt.trap('MEILISEARCH_API_KEY').replyWith('<api-key>')
+    ace.prompt.trap('install').reject()
+
+    const command = await ace.create(Configure, ['../../index.js'])
+    await command.exec()
+
+    command.assertSucceeded()
     await assert.fileExists('config/magnify.ts')
     await assert.fileContains('config/magnify.ts', 'defineConfig')
     await assert.fileContains('config/magnify.ts', 'meilisearch')
@@ -83,9 +55,18 @@ test.group('Configuration', (group) => {
     await assert.fileContains('.env', 'MEILISEARCH_HOST')
   })
 
-  test('configure typesense engine', async ({ fs, assert }) => {
-    await configure(fs, 2)
+  test('configure typesense engine', async ({ assert }) => {
+    const { ace } = await setupApp()
 
+    ace.prompt.trap('engine').replyWith('typesense')
+    ace.prompt.trap('TYPESENSE_NODE_URL').replyWith('<node-url>')
+    ace.prompt.trap('TYPESENSE_API_KEY').replyWith('<api-key>')
+    ace.prompt.trap('install').reject()
+
+    const command = await ace.create(Configure, ['../../index.js'])
+    await command.exec()
+
+    command.assertSucceeded()
     await assert.fileExists('config/magnify.ts')
     await assert.fileContains('config/magnify.ts', 'defineConfig')
     await assert.fileContains('config/magnify.ts', 'typesense')

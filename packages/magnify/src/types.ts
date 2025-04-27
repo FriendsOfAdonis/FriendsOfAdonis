@@ -9,7 +9,7 @@ import { ConfigProvider } from '@adonisjs/core/types'
 import { MagnifyEngine } from './engines/main.js'
 import { CollectionCreateSchema } from 'typesense/lib/Typesense/Collections.js'
 import { LucidModel, LucidRow, ModelObject } from '@adonisjs/lucid/types/model'
-import { Builder } from './builder.js'
+import { SearchBuilder } from './builder.js'
 
 export type MeilisearchConfig = MeilisearchClientConfig & {
   indexSettings?: Record<string, MeilisearchIndexSettings>
@@ -84,7 +84,7 @@ export interface SearchableModel extends Omit<LucidModel, 'constructor'> {
   /**
    * Get the Magnify engine for the model.
    */
-  get $searchEngine(): MagnifyEngine
+  $getSearchEngine(): Promise<MagnifyEngine>
 
   /**
    * Get the key name used to index the model.
@@ -99,7 +99,7 @@ export interface SearchableModel extends Omit<LucidModel, 'constructor'> {
   /**
    * Perform a search against the model's indexed data.
    */
-  search<Model extends SearchableModel>(this: Model, query: string): Builder<Model>
+  search<Model extends SearchableModel>(this: Model, query: string): SearchBuilder<Model>
 
   /**
    * Make the given models searchable.
@@ -121,7 +121,7 @@ export interface SearchableModel extends Omit<LucidModel, 'constructor'> {
    */
   $queryMagnifyModelsByIds<M extends SearchableModel>(
     this: M,
-    builder: Builder<M>,
+    builder: SearchBuilder<M>,
     ...ids: string[]
   ): Promise<InstanceType<M>[]>
 
