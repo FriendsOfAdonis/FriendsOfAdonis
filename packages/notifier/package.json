@@ -72,8 +72,10 @@
     "copyfiles": "^2.4.1",
     "del-cli": "^6.0.0",
     "edge.js": "^6.2.1",
+    "mailhog": "^4.16.0",
     "prettier": "^3.5.3",
     "reflect-metadata": "^0.2.2",
+    "testcontainers": "^10.24.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   },

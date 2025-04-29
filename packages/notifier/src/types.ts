@@ -10,6 +10,13 @@ export interface NotificationTransportContract<TMessage = unknown> {
 
 export interface NotificationTransports {}
 
+export type NotificationTransportMessage<T extends NotificationTransportContract> = NonNullable<
+  ReturnType<T['toMessage']>
+>
+
+export type KnownNotificationTransport = NotificationTransports[keyof NotificationTransports]
+export type KnownMessage = NonNullable<KnownNotificationTransport>
+
 export type InferNotificationTransports<
   Config extends ConfigProvider<{
     transports: unknown
@@ -32,3 +39,17 @@ export interface NotifierContract {
 }
 
 export interface NotificationMessenger {}
+
+export type NotificationEvent<
+  T extends NotificationTransportContract = NotificationTransportContract,
+> = {
+  notification: Notification
+  transport: T
+  message: NotificationTransportMessage<T>
+  notifiable: NotifiableContract
+}
+
+export type NotifierEvents = {
+  'notifier:notify:before': NotificationEvent
+  'notifier:notify:after': NotificationEvent
+}

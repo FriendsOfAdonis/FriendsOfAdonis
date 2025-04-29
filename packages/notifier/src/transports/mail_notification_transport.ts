@@ -1,14 +1,17 @@
-import { MailService } from '@adonisjs/mail/types'
+import { MailerContract, MailTransportContract } from '@adonisjs/mail/types'
 import { Notification } from '../notification.js'
 import { NotificationTransportContract } from '../types.js'
 import { BaseMail, Message } from '@adonisjs/mail'
 import { MailMessage } from '../messages/mail_message.js'
 import { NotifiableContract } from '../mixins/notifiable.js'
 
-export class MailNotificationTransport implements NotificationTransportContract<MailMessage> {
-  #mailer: MailService
+export class MailNotificationTransport<
+  TTransport extends MailTransportContract = MailTransportContract,
+> implements NotificationTransportContract<MailMessage>
+{
+  #mailer: MailerContract<TTransport>
 
-  constructor(mailer: MailService) {
+  constructor(mailer: MailerContract<TTransport>) {
     this.#mailer = mailer
   }
 
