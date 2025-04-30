@@ -1,0 +1,13 @@
+{
+  "extends": "@foadonis/typescript-config/adonis.package.json",
+  "compilerOptions": {
+    "rootDir": "./",
+    "outDir": "./build",
+    "types": ["reflect-metadata"],
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "@foadonis/osmos",
+    "lib": ["ESNext", "DOM"]
+  }
+}

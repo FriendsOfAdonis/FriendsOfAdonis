@@ -1,0 +1,172 @@
+---
+title: Components
+---
+
+Components are the core concept of Osmos.
+
+## Rendering components
+
+Osmos add JSX support to your Adonis application allowing you to render HTML directly from your routes:
+
+```tsx
+router.get('/', () => {
+  return (
+    <div>
+      <h1>Hello Osmos!</h1>
+    </div>
+  )
+})
+```
+
+## Server components
+
+Server components are similar to [React Class components](https://react.dev/reference/react/Component) but with way more power.
+
+```tsx
+export class Button extends BaseComponent {
+  render() {
+    return <button>Hello World</button>
+  }
+}
+```
+
+Server components live on your server which means that you can safely access your services.
+For example you can fetch posts from your database.
+
+```tsx
+export class PostsList extends BaseComponent {
+  async render() {
+    const posts = await Post.findMany()
+
+    return (
+      <ul>
+        {posts.map((post) => (
+          <li>{post.title}</li>
+        ))}
+      </ul>
+    )
+  }
+}
+```
+
+### Props
+
+A server component can receive props by specifing the type `BaseComponent<P>` they are then accessible using `this.props`.
+
+```tsx
+export class PageHeader extends BaseComponent<{ title: string }> {
+  async render() {
+    const posts = await Post.findMany()
+
+    return (
+      <h1>{this.props.title}</ul>
+    )
+  }
+}
+```
+
+```tsx
+<PageHeader title="Hello Osmos!" />
+```
+
+Similar to React, it is also possible to use the special `children` property:
+
+```tsx
+export class PageHeader extends BaseComponent<{ children: string }> {
+  async render() {
+    const posts = await Post.findMany()
+
+    return (
+      <h1>{this.props.children}</ul>
+    )
+  }
+}
+```
+
+```tsx
+<PageHeader>Hello Osmos!</PageHeader>
+```
+
+### Actions
+
+Actions are what make Osmos extremely powerful. Because even tho components are living on the server, you can still create interactivity.
+You an read more about [Actions](./actions) on the dedicated page.
+
+```tsx
+export class Counter extends BaseComponent {
+  count = 0
+
+  async render() {
+    return (
+      <div>
+        <h1>Counter {this.count}</h1>
+        <button $click={this.increment}>Increment</button>
+        <button $click={this.decrement}>Decrement</button>
+      </div>
+    )
+  }
+
+  increment() {
+    this.count++
+  }
+
+  decrement() {
+    this.count--
+  }
+}
+```
+
+### Dependency Injection
+
+Components can benefit from the [dependency injection](https://docs.adonisjs.com/guides/concepts/dependency-injection) feature of Adonis.
+
+```tsx
+@inject()
+export class PageHeader extends BaseComponent {
+  constructor(private posts: PostsService) {
+    super()
+  }
+
+  async render() {
+    return (
+      <ul>
+        {this.posts.map((post) => (
+          <li>{post.title}</li>
+        ))}
+      </ul>
+    )
+  }
+}
+```
+
+### Function components
+
+Class components are great when you need two way bindings (models, actions, etc).
+But sometimes you might just want to render basic HTML, in this case you can use Function Components.
+
+```tsx
+export const Button = ({ children }) => {
+  return <button>{children}</button>
+}
+```
+
+Function components also live on the server and can be async!
+
+```tsx
+import Post from '#models/post'
+
+export const PostsList = () => {
+  const posts = await Post.findMany()
+  return (
+    <div>
+      <ul>
+        {posts.map((post) => (
+          <li>{post.title}</li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+```
+
+## Client components [WIP]

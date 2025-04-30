@@ -1,0 +1,37 @@
+---
+title: Forms
+---
+
+Osmos makes it easy to build reactive forms with server-side validation and complex logic.
+
+## Submit
+
+You can combine the `$model` to provide two-way data binding and the `$submit` attribute to trigger an action when a form is sumitted.
+
+```tsx
+export class CreatePost extends BaseComponent {
+  title = ''
+  content = ''
+
+  render() {
+    return (
+      <form $submit={this.create}>
+        <input $model={this.title} />
+        <input $model={this.content} />
+        <button type="submit">Create</button>
+      </form>
+    )
+  }
+
+  create() {
+    const post = await Post.create({
+      title: this.title,
+      content: this.content,
+    })
+
+    this.redirect(`/posts/${user.id}`)
+  }
+}
+```
+
+### Validation [WIP]

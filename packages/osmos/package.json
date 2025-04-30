@@ -1,6 +1,6 @@
 {
-  "name": "@foadonis/lucid-parser",
-  "description": "Library to parse Lucid models from AST tree",
+  "name": "@foadonis/osmos",
+  "description": "Adonis Package for creating reusable actions",
   "version": "0.0.1",
   "engines": {
     "node": ">=20.6.0"
@@ -9,10 +9,17 @@
   "files": [
     "build",
     "!build/bin",
-    "!build/tests"
+    "!build/tests",
+    "lib"
   ],
   "exports": {
     ".": "./build/index.js",
+    "./provider": "./build/providers/osmos_provider.js",
+    "./services/main": "./build/services/main.js",
+    "./commands": "./build/commands/main.js",
+    "./middleware": "./build/src/middleware.js",
+    "./jsx-runtime": "./build/src/runtime/index.js",
+    "./client": "./build/src/client/index.js",
     "./types": "./build/src/types.js"
   },
   "scripts": {
@@ -26,12 +33,15 @@
     "test": "c8 yarn quick:test",
     "prebuild": "yarn clean",
     "build": "tsc && yarn copy:templates && yarn index:commands",
+    "build:client": "tsup",
     "dev": "tsc --watch",
+    "dev:client": "tsup --watch",
     "version": "yarn build"
   },
   "keywords": [
     "adonis",
-    "lucid"
+    "adonisjs",
+    "actions"
   ],
   "author": {
     "name": "Martin Paucot",
@@ -40,38 +50,40 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/FriendsOfAdonis/FriendsOfAdonis",
-    "directory": "packages/lucid-parser"
+    "directory": "packages/actions"
   },
   "bugs": {
     "url": "https://github.com/FriendsOfAdonis/FriendsOfAdonis/issues"
   },
-  "homepage": "https://friendsofadonis.com/docs/lucid-parser",
+  "homepage": "https://friendsofadonis.com/docs/actions",
   "license": "MIT",
   "devDependencies": {
     "@adonisjs/assembler": "^7.8.2",
     "@adonisjs/core": "^6.17.2",
-    "@adonisjs/lucid": "^21.6.1",
     "@foadonis/eslint-config": "workspace:*",
     "@japa/assert": "^4.0.1",
+    "@japa/expect": "^3.0.3",
     "@japa/expect-type": "^2.0.3",
     "@japa/file-system": "^2.3.2",
     "@japa/plugin-adonisjs": "^4.0.0",
     "@japa/runner": "^4.2.0",
     "@swc/core": "1.11.22",
-    "@types/luxon": "^3.6.2",
+    "@types/alpinejs": "^3",
+    "@types/alpinejs__morph": "^3",
+    "@types/escape-html": "^1",
     "@types/node": "^22.14.1",
     "c8": "^10.1.3",
     "copyfiles": "^2.4.1",
     "del-cli": "^6.0.0",
-    "globby": "^14.1.0",
-    "luxon": "^3.6.1",
+    "edge.js": "^6.2.1",
     "prettier": "^3.5.3",
     "reflect-metadata": "^0.2.2",
     "ts-node": "^10.9.2",
+    "tsup": "8.3.0",
     "typescript": "^5.8.3"
   },
   "peerDependencies": {
-    "@adonisjs/lucid": "^21.6.1"
+    "@adonisjs/core": "^6.2.0"
   },
   "publishConfig": {
     "access": "public",
@@ -87,8 +99,13 @@
     ]
   },
   "dependencies": {
-    "@babel/parser": "^7.27.0",
-    "@babel/types": "^7.27.0",
-    "recast": "^0.23.11"
+    "@alpinejs/morph": "^3.14.9",
+    "@poppinss/utils": "^6.9.2",
+    "@vinejs/vine": "^3.0.1",
+    "alpinejs": "^3.14.9",
+    "devalue": "^5.1.1",
+    "escape-html": "^1.0.3",
+    "html-creator": "^0.7.4",
+    "snabbdom-to-html": "^7.1.0"
   }
 }

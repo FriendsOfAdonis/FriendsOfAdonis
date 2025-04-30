@@ -1,0 +1,14 @@
+{
+  "title": "Osmos",
+  "description": "Build Reactive Web Application powered by Adonis",
+  "root": true,
+  "icon": "Sparkle",
+  "pages": [
+    "index",
+    "getting-started",
+    "--- Concepts ---",
+    "concepts/components",
+    "concepts/properties",
+    "concepts/actions"
+  ]
+}

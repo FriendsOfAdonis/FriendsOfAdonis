@@ -11,6 +11,7 @@
     "play:graphql": "turbo dev --filter=playground-graphql...",
     "play:openapi": "turbo dev --filter=playground-openapi...",
     "play:actions": "turbo dev --filter=playground-actions...",
+    "play:osmos": "turbo dev --filter=playground-osmos...",
     "automd": "automd"
   },
   "packageManager": "yarn@4.6.0",
