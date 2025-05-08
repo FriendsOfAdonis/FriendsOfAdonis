@@ -1,6 +1,6 @@
 import { Alpine } from 'alpinejs'
 import { OsmosInstance } from './osmos.js'
-import { HTMLComponentElement } from './component.js'
+import { HTMLComponentElement } from './components/component.js'
 
 export function AlpinePlugin(osmos: OsmosInstance) {
   return (alpine: Alpine) => {

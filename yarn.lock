@@ -2811,6 +2811,7 @@ __metadata:
   dependencies:
     "@adonisjs/assembler": "npm:^7.8.2"
     "@adonisjs/core": "npm:^6.17.2"
+    "@adonisjs/vite": "npm:^4.0.0"
     "@alpinejs/morph": "npm:^3.14.9"
     "@foadonis/eslint-config": "workspace:*"
     "@japa/assert": "npm:^4.0.1"
@@ -2820,6 +2821,7 @@ __metadata:
     "@japa/plugin-adonisjs": "npm:^4.0.0"
     "@japa/runner": "npm:^4.2.0"
     "@poppinss/utils": "npm:^6.9.2"
+    "@sindresorhus/is": "npm:^7.0.1"
     "@swc/core": "npm:1.11.22"
     "@types/alpinejs": "npm:^3"
     "@types/alpinejs__morph": "npm:^3"
@@ -10606,6 +10608,7 @@ __metadata:
     "@foadonis/eslint-config": "workspace:*"
     "@foadonis/maintenance": "workspace:*"
     "@foadonis/openapi": "workspace:*"
+    "@foadonis/osmos": "workspace:*"
     "@fumadocs/mdx-remote": "npm:^1.3.0"
     "@oramacloud/client": "npm:^2.1.4"
     "@radix-ui/react-collapsible": "npm:^1.1.8"
@@ -12989,10 +12992,14 @@ __metadata:
     "@foadonis/typescript-config": "workspace:*"
     "@manypkg/cli": "npm:^0.23.0"
     automd: "npm:^0.4.0"
+    class-variance-authority: "npm:^0.7.1"
+    clsx: "npm:^2.1.1"
     eslint: "npm:^9.25.1"
     mdbox: "npm:^0.1.1"
     prettier: "npm:^3.5.3"
+    tailwind-merge: "npm:^3.2.0"
     turbo: "npm:^2.5.1"
+    tw-animate-css: "npm:^1.2.9"
     typescript: "npm:^5.8.3"
   languageName: unknown
   linkType: soft
@@ -18152,9 +18159,12 @@ __metadata:
   resolution: "playground-osmos@workspace:playgrounds/osmos"
   dependencies:
     "@adonisjs/assembler": "npm:^7.8.2"
+    "@adonisjs/auth": "npm:^9.4.0"
     "@adonisjs/core": "npm:^6.17.2"
     "@adonisjs/eslint-config": "npm:^2.0.0"
+    "@adonisjs/lucid": "npm:^21.6.1"
     "@adonisjs/prettier-config": "npm:^1.4.4"
+    "@adonisjs/session": "npm:^7.5.1"
     "@adonisjs/tsconfig": "npm:^1.4.0"
     "@adonisjs/vite": "npm:^4.0.0"
     "@foadonis/osmos": "workspace:*"
@@ -18163,9 +18173,13 @@ __metadata:
     "@japa/runner": "npm:^4.2.0"
     "@swc/core": "npm:1.11.22"
     "@tailwindcss/vite": "npm:^4.1.5"
+    "@types/luxon": "npm:^3.6.2"
     "@vinejs/vine": "npm:^3.0.1"
+    better-sqlite3: "npm:^11.9.1"
+    class-variance-authority: "npm:^0.7.1"
     eslint: "npm:^9.25.1"
     hot-hook: "npm:^0.4.0"
+    luxon: "npm:^3.6.1"
     pino-pretty: "npm:^13.0.0"
     prettier: "npm:^3.5.3"
     reflect-metadata: "npm:^0.2.2"
@@ -21556,6 +21570,13 @@ __metadata:
   bin:
     turbo: bin/turbo
   checksum: 10c0/0b9f7ee7b5613451a2784a9f5d9e19bcf4d472f855af50261a0d2d1823cc20c226d723a1d202fd3b36a9ecbc9453ae0d3745b25f880b9d78e81ea28f871e86db
+  languageName: node
+  linkType: hard
+
+"tw-animate-css@npm:^1.2.9":
+  version: 1.2.9
+  resolution: "tw-animate-css@npm:1.2.9"
+  checksum: 10c0/ffbd6dfbb34490a8752b185b40192168ce4bfa69949d153dc831d9471dec2758501f27f1784b6615de7da73a546d01d7201ed691f5220fe3e0a53694cb275a3a
   languageName: node
   linkType: hard
 

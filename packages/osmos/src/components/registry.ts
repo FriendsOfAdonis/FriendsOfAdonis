@@ -1,12 +1,12 @@
 import { NormalizeConstructor } from '@poppinss/utils/types'
-import { BaseComponent } from './main.js'
+import { Component } from './main.js'
 
-type ComponentClass = new (...args: any[]) => BaseComponent
+type ComponentClass = new (...args: any[]) => Component
 
 export class ComponentsRegistry {
   #components = new Map<string, NormalizeConstructor<ComponentClass>>()
 
-  register(component: typeof BaseComponent) {
+  register(component: typeof Component) {
     this.#components.set(component.$id, component as unknown as ComponentClass)
   }
 

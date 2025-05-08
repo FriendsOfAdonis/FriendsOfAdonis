@@ -1,0 +1,48 @@
+---
+title: Ref Accessor
+---
+
+To achieve two-way data-binding we must know at runtime **both the property (for client->server) and its value (server->client)**.
+
+In the following example the attribute `$model` needs to know:
+
+- The key (`query`) to update the value on the server when the input changes on the client
+- The value (`'Hello World!'`) to be used as the input value on the client.
+
+```tsx
+class Demo extends Component {
+  query = 'Hello World'
+
+  render(that: RefAccessor<Demo>) {
+    return <input $model={that.query} />
+  }
+}
+```
+
+To achieve the following we created something called `RefAccessor` which create a proxy around an object (`Demo` instance) that return both the value and the property name when accessed.
+
+```ts
+const obj = {
+  query: 'Hello World',
+}
+
+const proxy = new Proxy(obj, {
+  get(target, property) {
+    return {
+      value: target[property],
+      property: property,
+    }
+  },
+})
+
+assert(proxy.query, {
+  value: 'Hello World',
+  property: 'query',
+})
+```
+
+<Callout>
+
+The above example is over-simplified, it applies to everything and does not work with nested objects.
+
+</Callout>

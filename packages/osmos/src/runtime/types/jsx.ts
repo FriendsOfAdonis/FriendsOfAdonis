@@ -1,13 +1,10 @@
-// deno-lint-ignore-file no-explicit-any
-
-import { InteractiveRefactorArguments } from 'typescript'
-import { BaseComponent } from '../../component/main.js'
+import { Component } from '../../components/main.js'
 import { Renderable } from '../../contracts/renderable.js'
 import type { HTML } from './html.js'
 
 export type ChildType =
-  | typeof BaseComponent
-  | VNode
+  | typeof Component
+  | OsmosElement
   | Renderable
   | string
   | number
@@ -15,53 +12,86 @@ export type ChildType =
   | boolean
   | null
 
-// export type VNode = readonly [
-//   tag: string | symbol | FC<any>,
-//   props: Record<string, any>,
-//   $vnode: symbol,
-// ]
-
 type IntrinsicElementsProps<T extends keyof JSX.IntrinsicElements> = JSX.IntrinsicElements[T]
 
+// TODO: Add BaseComponent and FC
 export type ComponentProps<T extends keyof JSX.IntrinsicElements> =
   T extends keyof JSX.IntrinsicElements ? IntrinsicElementsProps<T> : never
 
-export type VNode = {
-  $$typeof: Symbol
-  type: string | typeof BaseComponent | FC<any>
-  props: Record<string, any>
+export interface FunctionComponent<P = {}> {
+  (props: P): OsmosNode
 }
 
-export interface FC<P = {}> {
-  (props: P): ChildType | Promise<ChildType> | Generator<ChildType> | AsyncGenerator<ChildType>
-  displayName?: string
-  rendering?: string
+type JSXElementConstructor<P> = ((props: P) => OsmosNode) | (new (...args: any[]) => Component<P>)
+
+/**
+ * Represents a JSX element.
+ */
+export type OsmosElement<
+  P = {},
+  T extends string | JSXElementConstructor<P> | symbol =
+    | string
+    | JSXElementConstructor<any>
+    | symbol,
+> = {
+  $$typeof: symbol
+  type: T
+  props: P
 }
 
-export interface TC {
-  (strings: TemplateStringsArray, ...values: unknown[]): VNode
-}
+export type AwaitedOsmosNode =
+  | OsmosElement
+  | string
+  | number
+  | bigint
+  | Iterable<OsmosNode>
+  | boolean
+  | null
+  | undefined
+
+/**
+ * Represents all of the things Osmos can render.
+ *
+ * Where {@link OsmosElement} only represents JSX, `OsmosNode` represents all of the things Osmos can render.
+ */
+export type OsmosNode =
+  | OsmosElement
+  | string
+  | number
+  | bigint
+  | Iterable<OsmosNode>
+  | boolean
+  | null
+  | undefined
+  | Promise<AwaitedOsmosNode>
+  /**
+   * Used to render already hydrated and mounted components.
+   *
+   * @internal
+   */
+  | Component<any>
+
+export type FC<P = {}> = FunctionComponent<P>
 
 declare global {
   namespace JSX {
-    type ElementType<P = any> =
-      | {
-          [K in keyof IntrinsicElements]: P extends IntrinsicElements[K] ? K : never
-        }[keyof IntrinsicElements]
-      | FC<P>
-      | typeof BaseComponent<P>
-    interface Element extends VNode {}
-    interface ElementClass {
-      render: any
+    type ElementType<P = any> = string | JSXElementConstructor<any>
+
+    interface Element extends OsmosElement<any, any> {}
+
+    interface ElementClass extends Component<any> {
+      render(): any
     }
 
     interface ElementAttributesProperty {
-      props: any
+      $props: {}
+    }
+
+    interface ElementChildrenAttribute {
+      children: {}
     }
 
     interface IntrinsicAttributes {}
     interface IntrinsicElements extends HTML.Elements, HTML.SVGElements {}
   }
-  // eslint-disable-next-line one-var
-  var html: TC, css: TC, js: TC
 }

@@ -1,82 +1,184 @@
-// @ts-expect-error
-import HtmlCreator from 'html-creator'
-import { BaseComponent } from '../component/main.js'
 import * as devalue from 'devalue'
-import { ComponentsRegistry } from '../component/registry.js'
+import { ComponentsRegistry } from '../components/registry.js'
 import { inspect } from 'node:util'
 import { AsyncLocalStorage } from 'node:async_hooks'
 import { ComponentContext } from '../types.js'
-import { VNode } from './types/jsx.js'
-import { isRef, ref } from '../ref.js'
-import { REF_SYMBOL, VNODE_SYMBOL } from '../symbols.js'
+import { OsmosElement, OsmosNode } from './types/jsx.js'
+import { createRefProxyAccessor, isRef } from '../ref.js'
+import { VNODE_HEAD_SYMBOL, VNODE_FRAGMENT_SYMBOL, VNODE_HTML_TAG } from '../symbols.js'
+import { collectHeads } from './head.js'
+import escapeHTML from 'escape-html'
+import { ReadableStream } from 'node:stream/web'
+import { toAlpineEventAttributes } from './alpine.js'
+import is from '@sindresorhus/is'
+import JSXRenderError from '../errors/jsx_render_error.js'
+import { Component } from '../components/main.js'
 
 export type RenderContext = {
   registry: ComponentsRegistry
+  functions: Map<string, Function>
+  head?: OsmosElement[]
   children?: ComponentContext[]
+  write: (chunk: string) => void
+  onError: (err: unknown) => void
+}
+
+export type PipeableStream = {
+  abort: (reason?: unknown) => void
+  pipe: <Writable extends WritableStream>(destination: Writable) => Writable
 }
 
 export const LocalStorage = new AsyncLocalStorage<boolean>()
 
-type Node = null | undefined | boolean | string | bigint | number | boolean | JSX.Element
+const encoder = new TextEncoder()
+const selfClosingTags = new Set(
+  'area,base,br,col,embed,hr,img,input,keygen,link,meta,param,source,track,wbr'.split(',')
+)
 
-export async function renderToString(node: Node | Node[], context: RenderContext): Promise<string> {
+/**
+ * Renders Osmos tree to an HTML string.
+ */
+export async function renderToString(
+  node: OsmosNode,
+  context: { registry: ComponentsRegistry }
+): Promise<string> {
+  let output = ''
+
+  await render(node, {
+    registry: context.registry,
+    functions: new Map(),
+    write: (chunk) => {
+      output += chunk
+    },
+    onError: (err) => {
+      console.warn(err)
+    },
+  })
+
+  return output
+}
+
+/**
+ * Renders Osmos tree to a Readable Node Stream.
+ */
+export function renderToReadableStream(
+  node: OsmosNode,
+  context: { registry: ComponentsRegistry }
+): ReadableStream {
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      const write = (chunk: string) => controller.enqueue(encoder.encode(chunk))
+      const functions = new Map()
+
+      await render(node, {
+        registry: context.registry,
+        functions,
+        write,
+        onError: (err) => {
+          console.warn(err)
+        },
+      })
+
+      write(`<script>`)
+      write(`const __osmos_events = {}\n`)
+
+      functions.forEach((value, key) => {
+        write(`__osmos_events["${key}"] = "${value}"\n`)
+      })
+
+      write(`</script>`)
+
+      controller.close()
+    },
+  })
+
+  return stream
+}
+
+async function render(node: OsmosNode, context: RenderContext): Promise<void> {
+  if (!context.head) {
+    context.head = collectHeads(node)
+  }
+
   if (node === null || node === undefined) {
-    return ''
+    return context.write('')
   }
 
   // Booleans are not rendered to make ternaries usable.
   if (typeof node === 'boolean') {
-    return ''
+    return context.write('')
   }
 
-  if (
-    typeof node === 'string' ||
-    typeof node === 'bigint' ||
-    typeof node === 'number' ||
-    typeof node === 'boolean'
-  ) {
-    return node.toString()
+  if (typeof node === 'string' || typeof node === 'bigint' || typeof node === 'number') {
+    return context.write(escapeHTML(node.toString()))
   }
 
   if (isRef(node)) {
-    return node.toString()
+    // TODO: Remove as OsmosNode
+    return render(node.value as OsmosNode, context)
   }
 
   if (isVnode(node)) {
     return renderVNodeToString(node, context)
   }
 
-  if (Array.isArray(node)) {
-    const p = node.map((n) => renderToString(n, context))
-    return Promise.all(p).then((r) => r.join(''))
+  if (is.iterable(node)) {
+    for (const n of node) {
+      await render(n, context)
+    }
+    return
   }
 
-  if ('then' in node) {
+  if (is.promise(node)) {
     const result = await node
-    return renderToString(result, context)
+    return render(result, context)
   }
 
-  throw new Error(`Invalid element ${inspect(node)}`)
+  return renderComponentToString(node, {}, context)
 }
 
 /**
  * Render a VNode (JSX.Element).
  */
-function renderVNodeToString(node: VNode, context: RenderContext): Promise<string> {
+async function renderVNodeToString(node: OsmosElement, context: RenderContext): Promise<void> {
   if (typeof node.type === 'string') {
     return renderHTMLElementToString(node.type, node.props, context)
   }
 
-  if (node.type.prototype instanceof BaseComponent) {
-    const component = new (node.type as any)()
+  if (is.symbol(node.type)) {
+    if (node.type === VNODE_HTML_TAG) {
+      if (!('innerHTML' in node.props) || typeof node.props.innerHTML !== 'string') {
+        context.onError(new JSXRenderError('innerHTML is required for VNODE_HTML_TAG'))
+        return
+      }
+
+      return context.write(node.props.innerHTML)
+    }
+
+    if (node.type === VNODE_HEAD_SYMBOL) {
+      return
+    }
+
+    if (node.type === VNODE_FRAGMENT_SYMBOL) {
+      if (!('children' in node.props)) {
+        context.onError(new JSXRenderError('innerHTML is required for VNODE_HTML_TAG'))
+        return
+      }
+
+      return render(node.props.children as OsmosNode, context)
+    }
+  }
+
+  if (is.class(node.type)) {
+    const component = new node.type()
     return renderComponentToString(component, node.props, context)
   }
 
-  if (typeof node.type === 'function') {
-    return renderToString(node.type(node.props), context)
+  if (is.function(node.type)) {
+    return render(node.type(node.props), context)
   }
 
-  throw new Error(`renderVNodeToString does not handle type ${inspect(node)}`)
+  context.onError(new JSXRenderError(`renderVNodeToString does not handle type ${inspect(node)}`))
 }
 
 /**
@@ -85,52 +187,60 @@ function renderVNodeToString(node: VNode, context: RenderContext): Promise<strin
  * @example
  * renderHTMLElementToString('div') === '<div></div>'
  */
-async function renderHTMLElementToString(tag: string, props: any = {}, context: RenderContext) {
-  const { children, className, $click, $model, $lazy, ...attributes } = props
+async function renderHTMLElementToString(
+  tag: string,
+  props: any = {},
+  context: RenderContext
+): Promise<void> {
+  let { children, className, $lazy, ...attributes } = props
 
-  if ($click && isRef($click)) {
-    attributes['x-on:click'] = `$osmos.action('${$click[REF_SYMBOL]}')`
+  attributes = toAlpineEventAttributes(attributes)
+
+  attributes['class'] = className
+
+  if (tag === 'head') {
+    // TODO: This will fail if single children
+    children = [...(children ?? []), ...(context.head ?? [])].flat()
   }
 
-  if ($model && isRef($model)) {
-    attributes['x-on:keyup'] = `$osmos.model('${$model[REF_SYMBOL]}', $event)`
-    attributes['value'] = $model.toString()
+  let buffer = `<${tag}`
+
+  for (const [key, value] of Object.entries(attributes)) {
+    if (value === undefined) continue
+    if (typeof value === 'boolean' && value) {
+      buffer += ` ${key}`
+    } else {
+      buffer += ` ${escapeHTML(key)}="${value}"`
+    }
   }
 
-  const html = new HtmlCreator([
-    {
-      type: tag,
-      attributes: {
-        class: className,
-        ...attributes,
-      },
-      content: await renderToString(children, context),
-    },
-  ])
+  if (children || !selfClosingTags.has(tag)) {
+    buffer += `>`
 
-  return html.renderHTML({ excludeHTMLtag: true })
+    context.write(buffer)
+
+    if (children) {
+      await render(children, context)
+    }
+
+    context.write(`</${tag}>`)
+  } else {
+    buffer += ` />`
+    context.write(buffer)
+  }
 }
 
-export async function renderComponentToString(
-  component: BaseComponent,
+async function renderComponentToString(
+  component: Component<any>,
   props: any,
   context: RenderContext
-) {
+): Promise<void> {
   const { $lazy, ...rest } = props
 
-  component.props = rest
+  // @ts-expect-error -- Readonly is for user only
+  component.$props = rest
 
-  const proxy = new Proxy(component, {
-    get(obj, prop) {
-      if (typeof prop === 'symbol') throw new Error('You cannot do that on symbol') // TODO: Error
-      if (!(prop in obj))
-        throw new Error(`Cannot create ref has object does not have property ${prop}`)
-
-      const value = obj[prop as keyof typeof obj]
-
-      return ref(prop, value)
-    },
-  })
+  const proxy = createRefProxyAccessor(component)
 
   let child: ComponentContext | undefined
   if (context.children) {
@@ -138,15 +248,16 @@ export async function renderComponentToString(
     if (child) component.$hydrate(child?.data)
   }
 
-  const result = await component.render.call(proxy)
+  const result = await component.render(proxy)
 
   context.registry.register(component.constructor as any)
 
   const data = component.$data()
-  const attributes: Record<string, string> = {
-    'osmos:data': devalue.uneval(data).replaceAll('\"', "'"),
+
+  const attributes: Record<string, any> = {
+    'x-data': devalue.uneval(data).replaceAll('\"', "'"),
     'osmos:id': component.$id,
-    'osmos:component': component.constructor.$id,
+    'osmos:component': (component.constructor as any).$id,
     'children': result,
   }
 
@@ -156,7 +267,7 @@ export async function renderComponentToString(
   }
 
   return renderHTMLElementToString('osmos-component', attributes, {
-    registry: context.registry,
+    ...context,
     children: component.$childrenData,
   })
 }
@@ -164,11 +275,11 @@ export async function renderComponentToString(
 /**
  * Returns if a value is a VNode
  */
-export function isVnode(value: unknown): value is VNode {
+export function isVnode(value: unknown): value is OsmosElement {
   return (
     value !== null &&
     typeof value === 'object' &&
     '$$typeof' in value &&
-    value.$$typeof === VNODE_SYMBOL
+    typeof value.$$typeof === 'symbol'
   )
 }

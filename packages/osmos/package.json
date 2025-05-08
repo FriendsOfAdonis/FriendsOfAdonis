@@ -99,8 +99,10 @@
     ]
   },
   "dependencies": {
+    "@adonisjs/vite": "^4.0.0",
     "@alpinejs/morph": "^3.14.9",
     "@poppinss/utils": "^6.9.2",
+    "@sindresorhus/is": "^7.0.1",
     "@vinejs/vine": "^3.0.1",
     "alpinejs": "^3.14.9",
     "devalue": "^5.1.1",

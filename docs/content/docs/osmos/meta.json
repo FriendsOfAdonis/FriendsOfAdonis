@@ -1,6 +1,6 @@
 {
   "title": "Osmos",
-  "description": "Build Reactive Web Application powered by Adonis",
+  "description": "Build Reactive Applications without leaving your backend",
   "root": true,
   "icon": "Sparkle",
   "pages": [
@@ -9,6 +9,14 @@
     "--- Concepts ---",
     "concepts/components",
     "concepts/properties",
-    "concepts/actions"
+    "concepts/actions",
+    "concepts/forms",
+    "concepts/navigation",
+    "--- Reference ---",
+    "reference/components",
+    "reference/functions",
+    "reference/types",
+    "--- Advanced ---",
+    "advanced/ref-accessor"
   ]
 }

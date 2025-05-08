@@ -1,9 +1,8 @@
-/// <reference lib="dom" />
-
+import { OsmosNode } from './jsx.js'
+import { AlpineEventAttributes, AlpineFormAttributes, AlpineInputAttributes } from './alpine.js'
 import type * as Aria from './aria.js'
 
 export namespace HTML {
-  type HTMLClass = string | boolean | undefined | null | Record<string, unknown>
   type CrossOrigin = 'anonymous' | 'use-credentials'
   type Target = '_blank' | '_self' | '_parent' | '_top'
   type ReferrerPolicy =
@@ -43,11 +42,11 @@ export namespace HTML {
   interface GlobalAttributes<T extends EventTarget>
     extends EventAttributes<T>,
       Aria.Attributes,
-      JSX.HtmlTag {
+      AlpineEventAttributes {
     /** Defines a unique identifier (ID) which must be unique in the whole document. Its purpose is to identify the element when linking (using a fragment identifier), scripting, or styling (with CSS). */
     id?: string
     /** A space-separated list of the classes of the element. Classes allow CSS and JavaScript to select and access specific elements via the [class selectors](https://developer.mozilla.org/en-US/docs/Web/CSS/Class_selectors) or functions like the method [`Document.getElementsByClassName()`](https://developer.mozilla.org/en-US/docs/Web/API/Document/getElementsByClassName). */
-    class?: HTMLClass | HTMLClass[]
+    className?: string
     /** Contains [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) styling declarations to be applied to the element. Note that it is recommended for styles to be defined in a separate file or files. This attribute and the [`<style>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/style) element have mainly the purpose of allowing for quick styling, for example for testing purposes. */
     style?: string
     /** An enumerated attribute indicating that the element is not yet, or is no longer, relevant. For example, it can be used to hide elements of the page that can't be used until the login process has been completed. The browser won't render such elements. This attribute must not be used to hide content that could legitimately be shown. */
@@ -103,6 +102,8 @@ export namespace HTML {
     is?: string
     /** A boolean value that makes the browser disregard user input events for the element. Useful when click events are present. */
     inert?: boolean
+
+    children?: OsmosNode | undefined
   }
 
   interface HtmlAttributes<T extends EventTarget> extends GlobalAttributes<T> {}
@@ -136,7 +137,9 @@ export namespace HTML {
     width?: number | string
   }
 
-  interface FormAttributes<T extends EventTarget> extends GlobalAttributes<T> {
+  interface FormAttributes<T extends EventTarget>
+    extends GlobalAttributes<T>,
+      AlpineFormAttributes {
     'accept-charset'?: string
     'autoComplete'?: 'on' | 'off'
     'encType'?: 'application/x-www-form-urlencoded' | 'multipart/form-data' | 'text/plain'
@@ -144,14 +147,12 @@ export namespace HTML {
     'name'?: string
     'noValidate'?: boolean
     'target'?: Target
-    'onSubmit'?: EventHandler<Event, T>
-    'onReset'?: EventHandler<Event, T>
-    'onFormData'?: EventHandler<Event, T>
   }
 
   interface InputAttributes<T extends EventTarget>
     extends GlobalAttributes<T>,
-      InputElementAttributes<T> {
+      InputElementAttributes<T>,
+      AlpineInputAttributes {
     accept?: string
     alt?: string
     autoComplete?: string
@@ -192,13 +193,6 @@ export namespace HTML {
      * @see https://developer.mozilla.org/en-US/docs/Web/API/Popover_API
      */
     popovertargetaction?: 'hide' | 'show' | 'toggle'
-    // for type="search"
-    onSearch?: EventHandler<Event, T>
-
-    /**
-     * Osmos attributes
-     */
-    $model: any
   }
 
   interface OptionAttributes<T extends EventTarget> extends GlobalAttributes<T> {
@@ -236,7 +230,6 @@ export namespace HTML {
     rows?: number
     value?: string
     wrap?: string
-    onChange?: EventHandler<Event, T>
   }
 
   interface ButtonAttributes<T extends EventTarget> extends GlobalAttributes<T> {
@@ -263,8 +256,6 @@ export namespace HTML {
 
   interface DialogAttributes<T extends EventTarget> extends GlobalAttributes<T> {
     open?: boolean
-    onClose?: EventHandler<Event, T>
-    onCancel?: EventHandler<Event, T>
   }
 
   interface AreaAttributes<T extends EventTarget> extends GlobalAttributes<T> {
@@ -405,32 +396,11 @@ export namespace HTML {
     playsInline?: boolean
     preload?: string
     src?: string
-    onAbort?: EventHandler<Event, T>
-    onCanPlay?: EventHandler<Event, T>
-    onCanPlayThrough?: EventHandler<Event, T>
-    onDurationChange?: EventHandler<Event, T>
-    onEmptied?: EventHandler<Event, T>
-    onEncrypted?: EventHandler<Event, T>
-    onEnded?: EventHandler<Event, T>
-    onLoadedData?: EventHandler<Event, T>
-    onLoadedMetadata?: EventHandler<Event, T>
-    onLoadStart?: EventHandler<Event, T>
-    onPause?: EventHandler<Event, T>
-    onPlay?: EventHandler<Event, T>
-    onPlaying?: EventHandler<Event, T>
-    onProgress?: EventHandler<Event, T>
-    onRateChange?: EventHandler<Event, T>
-    onSeeked?: EventHandler<Event, T>
-    onSeeking?: EventHandler<Event, T>
-    onStalled?: EventHandler<Event, T>
-    onSuspend?: EventHandler<Event, T>
-    onTimeUpdate?: EventHandler<Event, T>
-    onVolumeChange?: EventHandler<Event, T>
-    onWaiting?: EventHandler<Event, T>
   }
 
   interface MetaAttributes<T extends EventTarget> extends GlobalAttributes<T> {
-    charSet?: string
+    charset?: string
+    content?: string
     httpEquiv?: string
     name?: string
     media?: string
@@ -821,117 +791,16 @@ export namespace HTML {
     zoomAndPan?: string
   }
 
-  type EventHandler<E extends Event, T extends EventTarget> = (
-    event: Omit<E, 'target'> & { target: T }
-  ) => unknown | Promise<unknown>
+  // @ts-expect-error -- For future use
+  interface InputElementAttributes<T extends EventTarget> {}
 
-  interface InputElementAttributes<T extends EventTarget> {
-    onChange?: EventHandler<Event, T>
-    onInvalid?: EventHandler<Event, T>
-  }
-
+  // @ts-expect-error -- For future use
   interface LoaderElementAttributes<T extends EventTarget> {
-    onLoad?: EventHandler<Event, T>
-    onError?: EventHandler<Event, T>
+    // TODO: Add loader events
   }
 
-  interface EventAttributes<T extends EventTarget> {
-    // mono-jsx specific
-    onMount?: (e: { type: 'mount'; currentTarget: T; target: T }) => void | Promise<void>
-
-    // Input Events
-    onBeforeInput?: EventHandler<Event, T>
-    onInput?: EventHandler<Event, T>
-
-    // Composition Events
-    onCompositionEnd?: EventHandler<CompositionEvent, T>
-    onCompositionStart?: EventHandler<CompositionEvent, T>
-    onCompositionUpdate?: EventHandler<CompositionEvent, T>
-
-    // Clipboard Events
-    onCopy?: EventHandler<ClipboardEvent, T>
-    onCut?: EventHandler<ClipboardEvent, T>
-    onPaste?: EventHandler<ClipboardEvent, T>
-
-    // Details & Popover Events
-    onToggle?: EventHandler<Event, T>
-
-    // Focus Events
-    onFocus?: EventHandler<FocusEvent, T>
-    onFocusIn?: EventHandler<FocusEvent, T>
-    onFocusOut?: EventHandler<FocusEvent, T>
-    onBlur?: EventHandler<FocusEvent, T>
-
-    // Keyboard Events
-    onKeyDown?: EventHandler<KeyboardEvent, T>
-    onKeyUp?: EventHandler<KeyboardEvent, T>
-
-    // Mouse Events
-    onClick?: EventHandler<MouseEvent, T>
-    onContextMenu?: EventHandler<MouseEvent, T>
-    onDblClick?: EventHandler<MouseEvent, T>
-    onMouseDown?: EventHandler<MouseEvent, T>
-    onMouseEnter?: EventHandler<MouseEvent, T>
-    onMouseLeave?: EventHandler<MouseEvent, T>
-    onMouseMove?: EventHandler<MouseEvent, T>
-    onMouseOut?: EventHandler<MouseEvent, T>
-    onMouseOver?: EventHandler<MouseEvent, T>
-    onMouseUp?: EventHandler<MouseEvent, T>
-
-    // Drag Events
-    onDrag?: EventHandler<DragEvent, T>
-    onDragEnd?: EventHandler<DragEvent, T>
-    onDragEnter?: EventHandler<DragEvent, T>
-    onDragExit?: EventHandler<DragEvent, T>
-    onDragLeave?: EventHandler<DragEvent, T>
-    onDragOver?: EventHandler<DragEvent, T>
-    onDragStart?: EventHandler<DragEvent, T>
-    onDrop?: EventHandler<DragEvent, T>
-
-    // Selection Events
-    onSelect?: EventHandler<Event, T>
-
-    // Touch Events
-    onTouchCancel?: EventHandler<TouchEvent, T>
-    onTouchEnd?: EventHandler<TouchEvent, T>
-    onTouchMove?: EventHandler<TouchEvent, T>
-    onTouchStart?: EventHandler<TouchEvent, T>
-
-    // Pointer Events
-    onPointerOver?: EventHandler<PointerEvent, T>
-    onPointerEnter?: EventHandler<PointerEvent, T>
-    onPointerDown?: EventHandler<PointerEvent, T>
-    onPointerMove?: EventHandler<PointerEvent, T>
-    onPointerUp?: EventHandler<PointerEvent, T>
-    onPointerCancel?: EventHandler<PointerEvent, T>
-    onPointerOut?: EventHandler<PointerEvent, T>
-    onPointerLeave?: EventHandler<PointerEvent, T>
-
-    // UI Events
-    onScroll?: EventHandler<UIEvent, T>
-
-    // Wheel Events
-    onWheel?: EventHandler<WheelEvent, T>
-
-    // Animation Events
-    onAnimationStart?: EventHandler<AnimationEvent, T>
-    onAnimationEnd?: EventHandler<AnimationEvent, T>
-    onAnimationIteration?: EventHandler<AnimationEvent, T>
-
-    // Transition Events
-    onTransitionCancel?: EventHandler<TransitionEvent, T>
-    onTransitionEnd?: EventHandler<TransitionEvent, T>
-    onTransitionRun?: EventHandler<TransitionEvent, T>
-    onTransitionStart?: EventHandler<TransitionEvent, T>
-
-    // PictureInPicture Events
-    onEnterPictureInPicture?: EventHandler<PictureInPictureEvent, T>
-    onLeavePictureInPicture?: EventHandler<PictureInPictureEvent, T>
-    onResize?: EventHandler<PictureInPictureEvent, T>
-
-    // Osmos attributes
-    $click?: any
-  }
+  // @ts-expect-error -- For future use
+  interface EventAttributes<T extends EventTarget> {}
 
   export interface Elements {
     // custom elements

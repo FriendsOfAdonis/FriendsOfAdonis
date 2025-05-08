@@ -8,6 +8,13 @@ Components are the core concept of Osmos.
 
 Osmos add JSX support to your Adonis application allowing you to render HTML directly from your routes:
 
+### From routes
+
+You can return JSX directly from your routes or your controllers.
+The result will be wrapped into the `rootLayout` configured in `config/osmos.ts`.
+
+It is then rendered as HTML and streamed to the client.
+
 ```tsx
 router.get('/', () => {
   return (
@@ -18,9 +25,77 @@ router.get('/', () => {
 })
 ```
 
-## Server components
+### Manually
 
-Server components are similar to [React Class components](https://react.dev/reference/react/Component) but with way more power.
+Sometimes you may want to render manually to HTML. Wether it is for using a custom layout or for different usage.
+You can create a `Renderer` using the `createRenderer` method.
+
+```tsx
+import osmos from '@foadonis/osmos/services/main'
+import MyCustomLayout from '#osmos/layouts/my_custom_layout'
+
+const renderer = osmos.createRenderer()
+
+const html = await renderer
+  .layout(MyCustomLayout)
+  .render(<div>Hello</div>)
+  .toString()
+```
+
+## Function components
+
+Function components are really similar to the one you might already know with [React](https://react.dev/).
+
+```tsx
+const ExampleComponent = () => {
+  return <div>Hello World!</div>
+}
+
+const Demo = () => (
+  <div>
+    <ExampleComponent />
+  </div>
+)
+```
+
+They can accept props, receive children, className, etc.
+
+```tsx
+export const Button = ({
+  children,
+  className,
+  icon,
+  ...props
+}: ComponentProps<'button'> & { icon?: JSX.Element }) => {
+  return (
+    <button className={cn('bg-black text-white', className)}>
+      {icon} {children}
+    </button>
+  )
+}
+```
+
+Function components can also be async, which means that you can fetch data directly from your database.
+
+```tsx
+export const UsersList = async () => {
+  const users = await User.all()
+
+  return (
+    <ul>
+      {users.map((user) => (
+        <li>{user.name}</li>
+      ))}
+    </ul>
+  )
+}
+```
+
+## Class components
+
+Class components are similar to [React Class components](https://react.dev/reference/react/Component) but with way more power as they live only on the server, can contain state and server actions.
+
+A Class Component must contain a `render` method wich return JSX to be rendered.
 
 ```tsx
 export class Button extends BaseComponent {
@@ -30,7 +105,7 @@ export class Button extends BaseComponent {
 }
 ```
 
-Server components live on your server which means that you can safely access your services.
+Class components live on your server which means that you can safely access your services.
 For example you can fetch posts from your database.
 
 ```tsx
@@ -169,4 +244,50 @@ export const PostsList = () => {
 }
 ```
 
-## Client components [WIP]
+### HttpContext
+
+Thanks to [Async Local Storage](https://docs.adonisjs.com/guides/concepts/async-local-storage#async-local-storage) the [HttpContext](https://docs.adonisjs.com/guides/concepts/http-context) is available inside your components, allowing you to access the request, response, session, etc.
+
+```tsx
+export default class Greeter extends Component {
+  async render() {
+    const user = this.ctx.auth.getUserOrFail()
+
+    return <h1>Hello {user.name}</h1>
+  }
+}
+```
+
+## Client-side interactivity
+
+Under the hood Osmos uses [Alpine.js](https://alpinejs.dev/) to provide client-side interactivity making it available for you as well.
+
+```tsx
+export const Username = () => (
+  <div x-data="{ username: 'Gaston' }">
+    Username: <strong x-text="username"></strong>
+  </div>
+)
+```
+
+### Events
+
+[Alpine.js events feature](https://alpinejs.dev/directives/on) uses a naming that does not work with JSX. Luckily, Osmos brings a special syntax to handle this by allowing you to prefix event names with `$` instead of `x-on:`.
+
+```tsx tab="JSX"
+<button $click="console.log('Hello World')"></button>
+```
+
+```html tab="Result"
+<button x-on:click="console.log('Hello World')"></button>
+```
+
+You can also use apply [Event modifiers](https://alpinejs.dev/directives/on#modifiers):
+
+```tsx tab="JSX"
+<button $click={["console.log('Hello World')", { stop: true, debounce: 500 }]}></button>
+```
+
+```html tab="Result"
+<button x-on:click.stop.debounce.500ms="console.log('Hello World')"></button>
+```

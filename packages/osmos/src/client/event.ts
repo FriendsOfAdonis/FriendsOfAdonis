@@ -18,7 +18,7 @@ export class TypedEventTarget<Events extends EventMap> extends EventTarget {
   }
 
   emit<K extends keyof Events>(type: K, detail: Events[K]): CustomEvent<Events[K]> {
-    const event = new CustomEvent<Events[K]>(type as string, { detail })
+    const event = new CustomEvent<Events[K]>(type as string, { detail, cancelable: true })
     super.dispatchEvent(event)
     return event
   }

@@ -1,8 +1,10 @@
-import { ComponentsRegistry } from './component/registry.js'
-import { renderToString } from './runtime/render.js'
-import { ComponentContext } from './types.js'
+import { jsx } from './runtime/jsx.js'
+import { ComponentsRegistry } from './components/registry.js'
+import { renderToReadableStream, renderToString } from './runtime/render.js'
+import { ComponentContext, OsmosConfig } from './types.js'
+import { Renderer } from './renderer.js'
 
-type MountOptions = {
+type UpdateOptions = {
   id: string
   component: string
   data: Record<string, any>
@@ -12,12 +14,14 @@ type MountOptions = {
 
 export class OsmosManager {
   readonly components: ComponentsRegistry
+  readonly config: OsmosConfig
 
-  constructor() {
+  constructor(config: OsmosConfig) {
     this.components = new ComponentsRegistry()
+    this.config = config
   }
 
-  async mount({ id, component: componentId, data, actions, children }: MountOptions) {
+  async updateComponent({ id, component: componentId, data, actions, children }: UpdateOptions) {
     const componentClass = this.components.get(componentId)
     if (!componentClass) throw new Error(`component ${componentId} not found`) // TODO: error
 
@@ -35,5 +39,21 @@ export class OsmosManager {
 
   render(node: any) {
     return renderToString(node, { registry: this.components })
+  }
+
+  async renderWithLayout(node: any) {
+    const Layout = await this.config.layout().then((r) => r.default)
+    const layout = jsx(Layout, { children: node })
+
+    return renderToReadableStream(layout, {
+      registry: this.components,
+    })
+  }
+
+  /**
+   * Creates a new renderer.
+   */
+  createRenderer() {
+    return new Renderer(this.components)
   }
 }

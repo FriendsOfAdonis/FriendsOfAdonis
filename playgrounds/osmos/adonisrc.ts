@@ -10,7 +10,7 @@ export default defineConfig({
   | will be scanned automatically from the "./commands" directory.
   |
   */
-  commands: [() => import('@adonisjs/core/commands')],
+  commands: [() => import('@adonisjs/core/commands'), () => import('@adonisjs/lucid/commands')],
 
   /*
   |--------------------------------------------------------------------------
@@ -30,7 +30,10 @@ export default defineConfig({
     },
     () => import('@foadonis/osmos/provider'),
     () => import('@adonisjs/core/providers/vinejs_provider'),
-    () => import('@adonisjs/vite/vite_provider')
+    () => import('@adonisjs/vite/vite_provider'),
+    () => import('@adonisjs/lucid/database_provider'),
+    () => import('@adonisjs/auth/auth_provider'),
+    () => import('@adonisjs/session/session_provider')
   ],
 
   /*
@@ -71,12 +74,14 @@ export default defineConfig({
     ],
     forceExit: false,
   },
-  metaFiles: [{
-    pattern: 'public/**',
-    reloadServer: false,
-  }],
+  metaFiles: [
+    {
+      pattern: 'public/**',
+      reloadServer: false,
+    },
+  ],
   hooks: {
-    onBuildStarting: [() => import('@adonisjs/vite/build_hook')]
+    onBuildStarting: [() => import('@adonisjs/vite/build_hook')],
   },
-    assetsBundler: false
+  assetsBundler: false,
 })

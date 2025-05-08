@@ -1,53 +1,111 @@
 import { VineValidator } from '@vinejs/vine'
-import { Infer, InferInput } from '@vinejs/vine/types'
-import { ref } from '../ref.js'
+import type { Infer, InferInput } from '@vinejs/vine/types'
+import { Synthetizable } from '../contracts/synthetizable.js'
+
+export type FormInstance<TObject extends Object> = {
+  validate(): Promise<TObject>
+  error(key: keyof TObject): ValidationError | undefined
+}
 
 export type FormNormalized<T extends Object> = {
   [key in keyof T]: T[key]
+} & FormInstance<T>
+
+type ValidationError = {
+  message: string
+  rule: string
+  field: string
+  meta?: Record<string, any>
 }
 
-export type FormInstance<T extends Object> = {
-  [key in keyof T]: T[key]
-}
+class FormImpl<
+  TValidator extends VineValidator<any, any>,
+  TObject extends object = InferInput<TValidator>,
+> implements Synthetizable
+{
+  $validator: TValidator
 
-export interface FormClass<T extends Object> {
-  new (...args: any[]): FormInstance<T>
-}
+  $errors: ValidationError[] = []
+  $initial: Infer<TValidator> = {}
+  $raw: InferInput<TValidator> = {}
+  $data?: Infer<TValidator>
 
-export function BaseForm<TValidator extends VineValidator<any, any>>(schema: TValidator) {
-  return class BaseFormImpl {
-    validator = schema
+  constructor(schema: TValidator, initialValues?: InferInput<TValidator>) {
+    this.$validator = schema
+    this.$initial = initialValues
+    this.$raw = initialValues
+  }
 
-    $initial?: InferInput<TValidator>
-    $raw?: InferInput<TValidator>
-    $data?: Infer<TValidator>
+  /**
+   * Validates the form using the provided validator.
+   */
+  async validate(): Promise<Infer<TValidator>> {
+    const [error, data] = await this.$validator.tryValidate(this.$raw)
 
-    constructor(initialValues?: InferInput<TValidator>) {
-      this.$initial = initialValues
-      return propertyAccessProxy(this) as unknown
+    if (error) {
+      this.$errors = error.messages
+      return
     }
 
-    $boot() {}
+    this.$data = data
+    return data
+  }
 
-    async validate(): Promise<TValidator> {
-      const data = await this.validator.validate(this.$raw)
-      this.$data = data
-      return data
-    }
+  /**
+   * Resets the form with initial values.
+   */
+  reset() {
+    this.$raw = this.$initial
+    this.$data = undefined
+  }
 
-    reset() {
-      this.$raw = undefined
-      this.$data = undefined
-    }
-  } as unknown as FormClass<Infer<TValidator>>
+  synthetize(): Record<string, any> {
+    return this.$raw || this.$initial || {}
+  }
+
+  /**
+   * Gets a form validation error.
+   * Must call `validate()` first.
+   */
+  error(field: keyof TObject): ValidationError | undefined {
+    return this.$errors.find((error) => {
+      return error.field === field
+    })
+  }
 }
 
-function propertyAccessProxy(target: Object) {
-  return new Proxy(target, {
-    get(t, p, r) {
-      if (typeof p === 'symbol') throw new Error('Cannot be used with symbol')
+export function Form<TValidator extends VineValidator<any, any>>(
+  schema: TValidator,
+  initialValues?: InferInput<TValidator>
+) {
+  const form = new FormImpl(schema, initialValues)
 
-      return ref(p, t.$initial[p])
-    },
-  })
+  return new Proxy(form, proxyHandler) as FormNormalized<InferInput<TValidator>>
+}
+
+const proxyHandler = {
+  get(target: any, key: string | symbol) {
+    if (typeof key === 'symbol' || target[key]) {
+      return target[key]
+    }
+
+    if (target.$raw[key]) {
+      return target.$raw[key]
+    }
+
+    if (target.$initial) {
+      return target.$initial[key]
+    }
+
+    return undefined
+  },
+  set(target: any, key: string | symbol, value: any) {
+    if (typeof key === 'symbol' || key.startsWith('$')) {
+      target[key] = value
+      return true
+    }
+
+    target.$raw[key] = value
+    return true
+  },
 }

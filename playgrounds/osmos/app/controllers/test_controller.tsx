@@ -1,46 +1,37 @@
-import { Link } from '@foadonis/osmos'
+import { Head, Link } from '@foadonis/osmos'
 import { CounterComponent } from '../osmos/components/counter.js'
-import vite from '@adonisjs/vite/services/main'
+import CreatePostForm from '#osmos/components/create_post_form'
 
 export default class TestController {
   async index() {
-    const tags = await vite.generateEntryPointsTags([
-      'resources/js/app.js',
-      'resources/css/app.css',
-    ])
-
     return (
-      <html>
-        <head>
-          <script type="module" src="/@vite/client"></script>
-          {tags.map((tag) => tag.toString())}
-        </head>
-        <body x-data>
-          <div>
-            <button x-test>Test</button>
-            <h1>Home page</h1>
-            <Link href="/">Home</Link>
-            <Link href="/test">Test</Link>
-            <Test />
-          </div>
-        </body>
-      </html>
+      <div>
+        <button x-test>Test</button>
+        <h1>Home page</h1>
+        <div>
+          <Head>
+            <title>Home</title>
+          </Head>
+        </div>
+        <Link href="/">Home</Link>
+        <Link href="/test">Test</Link>
+        <Test />
+        <CreatePostForm />
+      </div>
     )
   }
 
   async test() {
     return (
-      <html>
-        <head></head>
-        <body x-data>
-          <div>
-            <h1>Test page</h1>
-            <Link href="/">Home</Link>
-            <Link href="/test">Test</Link>
-            <Test />
-          </div>
-        </body>
-      </html>
+      <div>
+        <h1>Test page</h1>
+        <Link href="/">Home</Link>
+        <Link href="/test">Test</Link>
+        <Test />
+        <Head>
+          <title>Test</title>
+        </Head>
+      </div>
     )
   }
 }

@@ -22,12 +22,12 @@ export default class OsmosController {
   async update({ request }: HttpContext) {
     const { component } = await schema.validate(request.body())
 
-    return osmos.mount({
+    return osmos.updateComponent({
       id: component.id,
       component: component.component,
       data: component.data,
       actions: component.actions,
       children: component.children,
-    }) // TODO: Validate children
+    })
   }
 }

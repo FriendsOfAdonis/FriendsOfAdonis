@@ -1,0 +1,20 @@
+---
+title: renderToString
+description: Render JSX into string
+---
+
+The `renderToString` is used to transform Osmos tree to an HTML string.
+
+```tsx
+import { renderToString } from '@foadonis/osmos/jsx-runtime'
+
+router.get('/', () => {
+  return renderToString(<div>Hello world</div>)
+})
+```
+
+<Callout>
+
+`renderToString` does not support streaming. See [`renderToReadableStream`](./renderToReadableStream) for streaming content.
+
+</Callout>

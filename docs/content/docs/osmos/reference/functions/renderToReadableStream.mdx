@@ -1,0 +1,17 @@
+---
+title: renderToReadableStream
+description: Render JSX to a Readable Web Stream
+---
+
+The `renderToReadableStream` is used to transform Osmos tree into a Readable Web Stream.
+
+```tsx twoslash
+// @noErrors
+import { renderToReadableStream } from '@foadonis/osmos/jsx-runtime'
+
+router.get('/', ({ response }: HttpContext) => {
+  const readable = renderToReadableStream(<div>Hello world</div>)
+
+  response.stream(Readable.fromWeb(readable))
+})
+```

@@ -1,2 +1,5 @@
 export const REF_SYMBOL = Symbol('osmos.ref')
-export const VNODE_SYMBOL = Symbol('osmos.symbol')
+export const VNODE_SYMBOL = Symbol('osmos.vnode')
+export const VNODE_FRAGMENT_SYMBOL = Symbol('osmos.vnode.fragment')
+export const VNODE_HEAD_SYMBOL = Symbol('osmos.vnode.head')
+export const VNODE_HTML_TAG = Symbol('osmos.vnode.html')

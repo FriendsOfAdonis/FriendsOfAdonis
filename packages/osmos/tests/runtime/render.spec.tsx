@@ -1,8 +1,8 @@
 import { test } from '@japa/runner'
 import { renderToString } from '../../src/runtime/render.js'
-import { ComponentsRegistry } from '../../src/component/registry.js'
+import { ComponentsRegistry } from '../../src/components/registry.js'
 import { AssertionError } from 'node:assert'
-import { BaseComponent } from '../../src/component/main.js'
+import { Component } from '../../src/components/main.js'
 
 const registry = new ComponentsRegistry()
 
@@ -38,7 +38,16 @@ test.group('renderToString', () => {
     await assertRender(<div>Hello you</div>, '<div>Hello you</div>')
     await assertRender(<p />, '<p></p>')
     await assertRender(<br />, '<br />')
-    await assertRender(<div class="hello"></div>, '<div class="hello"></div>')
+    await assertRender(<div className="hello"></div>, '<div class="hello"></div>')
+  })
+
+  test('Nested', async () => {
+    await assertRender(
+      <div>
+        <h1>Hello</h1>World
+      </div>,
+      '<div><h1>Hello</h1>World</div>'
+    )
   })
 
   test('FC', async () => {
@@ -49,7 +58,7 @@ test.group('renderToString', () => {
     await assertRender(<TestComponent>Hello</TestComponent>, '<div>Hello</div>')
 
     TestComponent = ({ children, ...props }: any) => <div {...props}>{children}</div>
-    await assertRender(<TestComponent class="test" />, '<div class="test"></div>')
+    await assertRender(<TestComponent className="test" />, '<div class="test"></div>')
   })
 
   test('FC async', async () => {
@@ -58,7 +67,7 @@ test.group('renderToString', () => {
   })
 
   test('BaseComponent', async () => {
-    class TestComponent<P = {}> extends BaseComponent<P> {
+    class TestComponent<P = {}> extends Component<P> {
       $id = 'instance_id'
       static get $id(): string {
         return 'component_id'
@@ -71,18 +80,18 @@ test.group('renderToString', () => {
 
     await assertRender(
       <TestComponent />,
-      '<osmos-component osmos:data="{}" osmos:id="instance_id" osmos:component="component_id"><div>Hello</div></osmos-component>'
+      '<osmos-component x-data="{}" osmos:id="instance_id" osmos:component="component_id"><div>Hello</div></osmos-component>'
     )
 
     class TestComponentWithProps extends TestComponent<{ title: string }> {
       render() {
-        return <div>{this.props.title}</div>
+        return <div>{this.$props.title}</div>
       }
     }
 
     await assertRender(
       <TestComponentWithProps title="Test" />,
-      '<osmos-component osmos:data="{}" osmos:id="instance_id" osmos:component="component_id"><div>Test</div></osmos-component>'
+      '<osmos-component x-data="{}" osmos:id="instance_id" osmos:component="component_id"><div>Test</div></osmos-component>'
     )
   })
 })

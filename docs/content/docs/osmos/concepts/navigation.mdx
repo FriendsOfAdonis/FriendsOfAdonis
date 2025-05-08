@@ -1,0 +1,56 @@
+---
+title: Navigation
+---
+
+With Osmos you can create "Single-page applications" that will hydrate the page with the new content without reloading the page.
+
+This avoid full-page reload, avoid refretching JS and CSS and make the application feel more responsive.
+
+## `Link` component
+
+The `Link` component can be used to navigate between pages without performing a full reload.
+
+```tsx
+import { Link } from '@foadonis/osmos'
+
+export const Navbar = () => (
+  <nav>
+    <Link href="/">Home</Link>
+    <Link href="/users">Users</Link>
+    <Link href="/posts">Posts</Link>
+  </nav>
+)
+```
+
+## Redirecting
+
+In [Class components](./concepts/components#class-components) It is possible to redirect the user on a different page directly from the backend using `redirect()`. For example when performing an action.
+
+```tsx
+import { Component } from '@foadonis/osmos'
+
+export default class CreateUser extends Component {
+  name = ''
+
+  render(that: RefAccessor<CreateUser>) {
+    return (
+      <form onSubmit={that.create}>
+        <input type="text" $model={that.name} />
+        <button type="submit">Create</button>
+      </form>
+    )
+  }
+
+  async create() {
+    const user = await User.create(this.name)
+    // [!code highlight:1]
+    return this.redirect(`/users/${user.id}`)
+  }
+}
+```
+
+<Callout>
+
+`this.redirect()` returns a custom "309" status code that will be handled by Osmos to perform a client-side navigation.
+
+</Callout>

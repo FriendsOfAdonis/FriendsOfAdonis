@@ -1,21 +1,32 @@
-import { Renderable } from './contracts/renderable.js'
+import { FC, jsx, OsmosElement, OsmosNode } from '@foadonis/osmos/jsx-runtime'
+import { renderToReadableStream, renderToString } from './runtime/render.js'
+import { ComponentsRegistry } from './components/registry.js'
 
 export class Renderer {
-  #component: Renderable
-  #layout?: (children: any) => any
+  #registry: ComponentsRegistry
+  #layout?: FC<{ children: OsmosNode }>
 
-  constructor(component: Renderable) {
-    this.#component = component
+  constructor(registry: ComponentsRegistry) {
+    this.#registry = registry
   }
 
-  layout(layout: (children: any) => any) {
+  layout(layout: FC<{ children: OsmosNode }>) {
     this.#layout = layout
     return this
   }
 
-  async toResponse(): Promise<Response> {
-    if (!this.#layout) throw new Error('No layout')
+  render(component: OsmosElement) {
+    const root = this.#layout ? jsx(this.#layout, { children: component }) : component
 
-    return this.#layout(await this.#component.render())
+    return {
+      toReadableStream: () => {
+        return renderToReadableStream(root, {
+          registry: this.#registry,
+        })
+      },
+      toString: () => {
+        return renderToString(root, { registry: this.#registry })
+      },
+    }
   }
 }

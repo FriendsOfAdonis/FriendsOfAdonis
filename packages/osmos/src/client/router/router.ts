@@ -58,8 +58,13 @@ export class Router extends TypedEventTarget<RouterEvents> {
 
     const doc = new DOMParser().parseFromString(html, 'text/html')
     const body = doc.querySelector('body')
+    const head = doc.querySelector('head')
 
     if (!body) throw new Error('The page does not return a body')
+
+    if (head) {
+      Alpine.morph(document.head, head, {})
+    }
 
     Alpine.morph(document.body, body, {})
   }

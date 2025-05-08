@@ -49,9 +49,30 @@ To resume, actions are a way to map user interactivity to server-side functions.
 
 Osmos provide different event listeners allowing you to call actions when user interact with your application:
 
-- `$click`: When the user click on an element
-- `$submit` When the user submit a form
-- `$keydown` When the user press a key
-- `$keyup` When the user release a key
+| Attribute     | Description                        |
+| ------------- | ---------------------------------- |
+| `$click`      | When the user click on the element |
+| `$submit`     | When the user submit the form      |
+| `$keydown`    | When the user press a key          |
+| `$keyup`      | When the user release a key        |
+| `$mouseenter` | When the mouse enter the element   |
+| `$mouseleave` | When the mouse leave the element   |
+
+In fact, you can use any event name prefixed with `$` to listen to any event, even custom ones.
+
+## Event modifiers
+
+Event modifiers are a way to modify the behavior of an event listener.
+
+For example, you can use the `prevent` to call `preventDefault()` on the event.
+
+```tsx
+<form $submit={["console.log('Hello')", { prevent: true }]}></form>
+```
+
+<AutoTypeTable
+  path="../packages/osmos/src/runtime/types/alpine.ts"
+  name="AlpineEventGlobalOptions"
+/>
 
 ## Calling actions from Alpine

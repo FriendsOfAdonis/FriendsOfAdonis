@@ -1,4 +1,5 @@
 import Alpine from 'alpinejs'
+import { setPropertyFromAccessor } from '../../utils/properties.js'
 
 type Action = [string, any[]]
 
@@ -37,6 +38,10 @@ export class HTMLComponentElement extends HTMLElement {
     return this.hasAttribute('osmos:lazy')
   }
 
+  get data() {
+    return Alpine.$data(this)
+  }
+
   async connectedCallback() {
     this.#bootParent()
     this.#refreshData()
@@ -71,16 +76,10 @@ export class HTMLComponentElement extends HTMLElement {
   }
 
   async refresh() {
-    const res = await fetch('/_osmos/update', {
-      method: 'POST',
-      body: JSON.stringify({
-        component: {
-          ...this.toJSON(),
-          actions: this.#actions,
-        },
-      }),
-      headers: {
-        'Content-Type': 'application/json',
+    const res = await Osmos.http.post('/_osmos/update', {
+      component: {
+        ...this.toJSON(),
+        actions: this.#actions,
       },
     })
 
@@ -97,7 +96,8 @@ export class HTMLComponentElement extends HTMLElement {
     if (!event.target) throw new Error('Event passed to $wire.model does not have an element')
     if (!('value' in event.target)) throw new Error('Event target does not have a value key')
 
-    this.#data[name] = event.target.value
+    setPropertyFromAccessor(name, event.target.value, this.#data)
+
     await this.refresh()
   }
 
@@ -105,7 +105,7 @@ export class HTMLComponentElement extends HTMLElement {
     return {
       id: this.componentId,
       component: this.component,
-      data: this.#data,
+      data: this.data,
       children: this.fragments.map((fragment) => fragment.toJSON()),
     }
   }

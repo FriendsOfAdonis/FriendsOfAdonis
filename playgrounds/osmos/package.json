@@ -26,6 +26,7 @@
     "#providers/*": "./providers/*.js",
     "#policies/*": "./app/policies/*.js",
     "#abilities/*": "./app/abilities/*.js",
+    "#osmos/*": "./app/osmos/*.js",
     "#database/*": "./database/*.js",
     "#start/*": "./start/*.js",
     "#tests/*": "./tests/*.js",
@@ -40,6 +41,7 @@
     "@japa/plugin-adonisjs": "^4.0.0",
     "@japa/runner": "^4.2.0",
     "@swc/core": "1.11.22",
+    "@types/luxon": "^3.6.2",
     "eslint": "^9.25.1",
     "hot-hook": "^0.4.0",
     "pino-pretty": "^13.0.0",
@@ -49,11 +51,17 @@
     "vite": "^6.3.4"
   },
   "dependencies": {
+    "@adonisjs/auth": "^9.4.0",
     "@adonisjs/core": "^6.17.2",
+    "@adonisjs/lucid": "^21.6.1",
+    "@adonisjs/session": "^7.5.1",
     "@adonisjs/vite": "^4.0.0",
     "@foadonis/osmos": "workspace:*",
     "@tailwindcss/vite": "^4.1.5",
     "@vinejs/vine": "^3.0.1",
+    "better-sqlite3": "^11.9.1",
+    "class-variance-authority": "^0.7.1",
+    "luxon": "^3.6.1",
     "reflect-metadata": "^0.2.2",
     "tailwindcss": "^4.1.5"
   },
