@@ -4,6 +4,7 @@
     "shopkeeper",
     "openapi",
     "graphql",
+    "notifier",
     "actions",
     "maintenance",
     "crypt",

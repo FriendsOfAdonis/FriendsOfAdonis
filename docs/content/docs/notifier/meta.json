@@ -1,0 +1,19 @@
+{
+  "title": "Notifier",
+  "description": "Send notifications to your users",
+  "root": true,
+  "icon": "BellDot",
+  "pages": [
+    "index",
+    "getting_started",
+    "---Guides---",
+    "guides/filtering-channels",
+    "guides/testing",
+    "---Channels---",
+    "channels/mail",
+    "channels/pinpoint-sms",
+    "channels/firebase-messaging",
+    "channels/whatsapp",
+    "channels/custom"
+  ]
+}

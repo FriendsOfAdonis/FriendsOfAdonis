@@ -13,8 +13,7 @@ export default defineConfig({
   commands: [
     () => import('@adonisjs/core/commands'),
     () => import('@adonisjs/lucid/commands'),
-    () => import('@adonisjs/bouncer/commands'),
-    () => import('@foadonis/crypt/commands'),
+    () => import('@adonisjs/mail/commands'),
   ],
 
   /*
@@ -33,12 +32,16 @@ export default defineConfig({
       file: () => import('@adonisjs/core/providers/repl_provider'),
       environment: ['repl', 'test'],
     },
-    () => import('@adonisjs/lucid/database_provider'),
-    () => import('@adonisjs/auth/auth_provider'),
-    () => import('@adonisjs/session/session_provider'),
-    () => import('@adonisjs/bouncer/bouncer_provider'),
     () => import('@adonisjs/core/providers/vinejs_provider'),
-    () => import('@foadonis/openapi/openapi_provider'),
+    () => import('@adonisjs/core/providers/edge_provider'),
+    () => import('@adonisjs/session/session_provider'),
+    () => import('@adonisjs/vite/vite_provider'),
+    () => import('@adonisjs/shield/shield_provider'),
+    () => import('@adonisjs/static/static_provider'),
+    () => import('@foadonis/notifier/notifier_provider'),
+    () => import('@adonisjs/auth/auth_provider'),
+    () => import('@adonisjs/lucid/database_provider'),
+    () => import('@adonisjs/mail/mail_provider'),
   ],
 
   /*
@@ -74,5 +77,21 @@ export default defineConfig({
       },
     ],
     forceExit: false,
+  },
+
+  metaFiles: [
+    {
+      pattern: 'resources/views/**/*.edge',
+      reloadServer: false,
+    },
+    {
+      pattern: 'public/**',
+      reloadServer: false,
+    },
+  ],
+
+  assetsBundler: false,
+  hooks: {
+    onBuildStarting: [() => import('@adonisjs/vite/build_hook')],
   },
 })

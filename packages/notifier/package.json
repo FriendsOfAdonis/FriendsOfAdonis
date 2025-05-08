@@ -1,7 +1,7 @@
 {
-  "name": "@foadonis/lucid-parser",
-  "description": "Library to parse Lucid models from AST tree",
-  "version": "0.0.1",
+  "name": "@foadonis/notifier",
+  "description": "Adonis library to safely store your secrets in your repository",
+  "version": "0.0.2",
   "engines": {
     "node": ">=20.6.0"
   },
@@ -13,6 +13,9 @@
   ],
   "exports": {
     ".": "./build/index.js",
+    "./notifier_provider": "./build/providers/notifier_provider.js",
+    "./services/main": "./build/services/main.js",
+    "./commands": "./build/commands/main.js",
     "./types": "./build/src/types.js"
   },
   "scripts": {
@@ -31,7 +34,10 @@
   },
   "keywords": [
     "adonis",
-    "lucid"
+    "adonisjs",
+    "secrets",
+    "dotenv",
+    "credentials"
   ],
   "author": {
     "name": "Martin Paucot",
@@ -40,38 +46,47 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/FriendsOfAdonis/FriendsOfAdonis",
-    "directory": "packages/lucid-parser"
+    "directory": "packages/crypt"
   },
   "bugs": {
     "url": "https://github.com/FriendsOfAdonis/FriendsOfAdonis/issues"
   },
-  "homepage": "https://friendsofadonis.com/docs/lucid-parser",
+  "homepage": "https://friendsofadonis.com/docs/crypt",
   "license": "MIT",
   "devDependencies": {
     "@adonisjs/assembler": "^7.8.2",
     "@adonisjs/core": "^6.17.2",
     "@adonisjs/lucid": "^21.6.1",
+    "@adonisjs/mail": "^9.2.2",
+    "@aws-sdk/client-pinpoint": "^3.749.0",
     "@foadonis/eslint-config": "workspace:*",
     "@japa/assert": "^4.0.1",
+    "@japa/expect": "^3.0.3",
     "@japa/expect-type": "^2.0.3",
     "@japa/file-system": "^2.3.2",
     "@japa/plugin-adonisjs": "^4.0.0",
     "@japa/runner": "^4.2.0",
     "@swc/core": "1.11.22",
-    "@types/luxon": "^3.6.2",
     "@types/node": "^22.14.1",
     "c8": "^10.1.3",
     "copyfiles": "^2.4.1",
     "del-cli": "^6.0.0",
-    "globby": "^14.1.0",
-    "luxon": "^3.6.1",
+    "edge.js": "^6.2.1",
+    "mailhog": "^4.16.0",
     "prettier": "^3.5.3",
     "reflect-metadata": "^0.2.2",
+    "testcontainers": "^10.24.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   },
   "peerDependencies": {
-    "@adonisjs/lucid": "^21.6.1"
+    "@adonisjs/core": "^6.2.0",
+    "@adonisjs/lucid": "^21.6.0"
+  },
+  "optionalDependencies": {
+    "@adonisjs/mail": "^9.2.2",
+    "@aws-sdk/client-pinpoint": "^3.749.0",
+    "firebase-admin": "^13.1.0"
   },
   "publishConfig": {
     "access": "public",
@@ -87,8 +102,8 @@
     ]
   },
   "dependencies": {
-    "@babel/parser": "^7.27.0",
-    "@babel/types": "^7.27.0",
-    "recast": "^0.23.11"
+    "@poppinss/macroable": "^1.0.4",
+    "@vinejs/vine": "^3.0.1",
+    "ky": "^1.7.5"
   }
 }

@@ -43,5 +43,8 @@
     "playgrounds/*",
     "packages/*",
     "tooling/*"
-  ]
+  ],
+  "dependencies": {
+    "node-gyp": "^11.2.0"
+  }
 }
