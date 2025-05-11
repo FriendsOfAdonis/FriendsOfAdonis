@@ -1,6 +1,6 @@
 {{{
   exports({
-    to: app.sparkPath('layouts/root_layout.ts')
+    to: app.makePath('app/spark/layouts/root_layout.tsx')
   })
 }}}
 import { Vite } from '@foadonis/spark'

@@ -1,9 +1,9 @@
 <div align="center">
 <br/>
 
-## @foadonis/actions
+## @foadonis/spark
 
-### Create actions runnable as Commands, Controllers and Listeners
+### The fastest way to build reactive UIs using AdonisJS
 
 <br/>
 </div>
@@ -21,7 +21,7 @@
 
 <!-- automd:coverage -->
 
-![Coverage](https://img.shields.io/badge/coverage-0%25-red)
+![Coverage](https://img.shields.io/badge/coverage-60%25-orange)
 
 <!-- /automd -->
 

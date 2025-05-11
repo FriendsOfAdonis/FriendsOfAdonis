@@ -44,6 +44,7 @@ async function makeStubs(codemods: Codemods) {
   await codemods.makeUsingStub(stubsRoot, 'config/spark.stub', {})
   await codemods.makeUsingStub(stubsRoot, 'components/root_layout.stub', {})
   await codemods.makeUsingStub(stubsRoot, 'resources/js/app.stub', {})
+  await codemods.makeUsingStub(stubsRoot, 'controllers/welcome_controller.stub', {})
 }
 
 async function updateRcFile(codemods: Codemods) {

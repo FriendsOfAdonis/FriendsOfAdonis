@@ -1,7 +1,7 @@
 import Alpine from 'alpinejs'
 import { setPropertyFromAccessor } from '../../utils/properties.js'
 
-type Action = [string, any[]]
+type Action = { method: string; params: any[] }
 
 type ComponentJSON = {
   id: string
@@ -70,8 +70,12 @@ export class HTMLComponentElement extends HTMLElement {
 
   async update() {}
 
-  async action(name: string, args: any[] = []) {
-    this.#actions.push([name, args])
+  async action(name: string, params: any[] = []) {
+    this.#actions.push({
+      method: name,
+      params,
+    })
+
     await this.refresh()
   }
 

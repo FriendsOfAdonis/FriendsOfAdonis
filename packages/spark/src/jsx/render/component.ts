@@ -1,9 +1,19 @@
-import * as devalue from 'devalue'
 import { Component } from '../../components/main.js'
-import { createRefProxyAccessor } from '../../ref.js'
-import { ComponentContext } from '../../types.js'
 import { RenderContext } from './main.js'
 import { renderHTMLElement } from './html_element.js'
+import { devalue } from '../../utils/devalue.js'
+import { createRefProxyAccessor } from '../../ref.js'
+import { ComponentContext } from '../../types.js'
+
+export async function renderComponentClass(
+  componentClass: new (...args: any[]) => Component<any>,
+  props: any,
+  context: RenderContext
+): Promise<void> {
+  const component = await context.manager.mount(componentClass as any, props)
+
+  return renderComponent(component, props, context)
+}
 
 export async function renderComponent(
   component: Component<any>,
@@ -12,8 +22,7 @@ export async function renderComponent(
 ): Promise<void> {
   const { $lazy, ...rest } = props
 
-  // @ts-expect-error -- Readonly is for user only
-  component.$props = rest
+  Reflect.set(component, '$props', rest)
 
   const proxy = createRefProxyAccessor(component)
 
@@ -25,14 +34,12 @@ export async function renderComponent(
 
   const result = await component.render(proxy)
 
-  context.registry.register(component.constructor as any)
-
   const data = component.$data()
 
   const attributes: Record<string, any> = {
-    'x-data': devalue.uneval(data).replaceAll('\"', "'"),
+    'x-data': devalue(data),
     'spark:id': component.$id,
-    'spark:component': (component.constructor as any).$id,
+    'spark:component': (component.constructor as any).$name,
     'children': result,
   }
 

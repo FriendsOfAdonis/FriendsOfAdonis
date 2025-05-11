@@ -1,8 +1,9 @@
 import { HttpContext } from '@adonisjs/core/http'
 import spark from '../../services/main.js'
 import vine from '@vinejs/vine'
+import { renderToString } from '../jsx/render/main.js'
 
-const ActionSchema = vine.tuple([vine.string(), vine.array(vine.any())])
+const ActionSchema = vine.object({ method: vine.string(), params: vine.array(vine.any()) })
 
 const ComponentSchema = vine.object({
   id: vine.string(),
@@ -22,12 +23,19 @@ export default class SparkController {
   async update({ request }: HttpContext) {
     const { component } = await schema.validate(request.body())
 
-    return spark.updateComponent({
-      id: component.id,
-      component: component.component,
-      data: component.data,
-      actions: component.actions,
-      children: component.children,
-    })
+    const result = await spark.components.update(
+      {
+        memo: {
+          id: component.id,
+          name: component.component,
+        },
+        data: component.data,
+      },
+      component.actions
+    )
+
+    const html = await renderToString(result, { manager: spark.components })
+
+    return html
   }
 }

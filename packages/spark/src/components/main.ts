@@ -7,9 +7,12 @@ import { SparkNode } from '../jsx/types/jsx.js'
 
 export interface Component {
   constructor(...args: any[]): any
+
+  mount?(): Promise<void> | void
 }
+
 export abstract class Component<P = {}> {
-  private static id?: string
+  private static name?: string
 
   declare readonly $props: P
 
@@ -17,11 +20,11 @@ export abstract class Component<P = {}> {
   $childrenData: ComponentContext[] = []
   $hydrated = false
 
-  static get $id() {
-    if (!this.id) {
-      this.id = `${this.name}:${randomId()}`
+  static get $name() {
+    if (!this.name) {
+      this.name = `${this.name}:${randomId()}`
     }
-    return this.id
+    return this.name
   }
 
   abstract render(that: RefAccessor<unknown>): SparkNode

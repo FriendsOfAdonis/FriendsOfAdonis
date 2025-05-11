@@ -1,14 +1,14 @@
 import { renderToReadableStream, renderToString } from './jsx/render/main.js'
 import { jsx } from './jsx/runtime/jsx.js'
-import { ComponentsRegistry } from './components/registry.js'
 import { FC, SparkElement, SparkNode } from './jsx/types/jsx.js'
+import { ComponentsManager } from './components/manager.js'
 
 export class Renderer {
-  #registry: ComponentsRegistry
+  #manager: ComponentsManager
   #layout?: FC<{ children: SparkNode }>
 
-  constructor(registry: ComponentsRegistry) {
-    this.#registry = registry
+  constructor(manager: ComponentsManager) {
+    this.#manager = manager
   }
 
   layout(layout: FC<{ children: SparkNode }>) {
@@ -22,11 +22,11 @@ export class Renderer {
     return {
       toReadableStream: () => {
         return renderToReadableStream(root, {
-          registry: this.#registry,
+          manager: this.#manager,
         })
       },
       toString: () => {
-        return renderToString(root, { registry: this.#registry })
+        return renderToString(root, { manager: this.#manager })
       },
     }
   }

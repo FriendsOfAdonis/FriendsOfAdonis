@@ -34,3 +34,19 @@ type ObjectPropertyAccessor<T> = {
 
 export type RefAccessor<T = unknown> =
   IsReferencable<T> extends true ? Ref<T> : ObjectPropertyAccessor<T>
+
+export interface Resolver {
+  resolve<T>(constructor: new (...args: any[]) => T): Promise<T>
+}
+
+export type ComponentSnapshot = {
+  data: Record<string, any>
+  memo: {
+    name: string
+    id: string
+  }
+}
+
+export type ComponentUpdates = Record<string, any>
+
+export type ComponentCall = { method: string; params?: any[] }

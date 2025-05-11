@@ -1,5 +1,5 @@
 import { cn } from '#spark/utils/cn'
-import { ComponentProps } from '@foadonis/spark/jsx-runtime'
+import { ComponentProps } from '@foadonis/spark/jsx'
 
 export const Input = ({ className, ...props }: ComponentProps<'input'>) => (
   <input

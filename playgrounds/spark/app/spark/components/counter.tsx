@@ -1,7 +1,7 @@
 import { Component } from '@foadonis/spark'
 import { Button } from './ui/button.js'
 import { RefAccessor } from '@foadonis/spark/types'
-import { html } from '@foadonis/spark/jsx-runtime'
+import { html } from '@foadonis/spark/jsx'
 
 export class CounterComponent extends Component {
   count = 0

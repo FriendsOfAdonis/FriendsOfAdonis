@@ -2,5 +2,5 @@
   "reporter": ["text", "json-summary"],
   "all": true,
   "include": ["src", "commands", "index.ts", "configure.ts"],
-  "exclude": ["src/runtime/types", "src/types"]
+  "exclude": ["src/jsx/types", "src/types"]
 }

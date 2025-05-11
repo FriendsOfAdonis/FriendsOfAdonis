@@ -1,6 +1,6 @@
 {
   "name": "@foadonis/spark",
-  "description": "Adonis Package for creating reusable actions",
+  "description": "The fastest way to build reactive UIs using AdonisJS.",
   "version": "0.0.1",
   "engines": {
     "node": ">=20.6.0"

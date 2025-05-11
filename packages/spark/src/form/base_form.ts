@@ -1,10 +1,15 @@
-import { VineValidator } from '@vinejs/vine'
+import { errors, VineValidator } from '@vinejs/vine'
 import type { Infer, InferInput } from '@vinejs/vine/types'
 import { Synthetizable } from '../contracts/synthetizable.js'
 
 export type FormInstance<TObject extends Object> = {
   validate(): Promise<TObject>
+
   error(key: keyof TObject): ValidationError | undefined
+
+  reset(): void
+
+  isDirty(): boolean
 }
 
 export type FormNormalized<T extends Object> = {
@@ -19,48 +24,52 @@ type ValidationError = {
 }
 
 class FormImpl<
-  TValidator extends VineValidator<any, any>,
-  TObject extends object = InferInput<TValidator>,
-> implements Synthetizable
+    TValidator extends VineValidator<any, any>,
+    TObject extends object = InferInput<TValidator>,
+  >
+  implements Synthetizable, FormInstance<TObject>
 {
   $validator: TValidator
 
   $errors: ValidationError[] = []
   $initial: Infer<TValidator> = {}
-  $raw: InferInput<TValidator> = {}
+
+  $dirty: InferInput<TValidator> = {}
   $data?: Infer<TValidator>
 
   constructor(schema: TValidator, initialValues?: InferInput<TValidator>) {
     this.$validator = schema
     this.$initial = initialValues
-    this.$raw = initialValues
   }
 
   /**
    * Validates the form using the provided validator.
    */
   async validate(): Promise<Infer<TValidator>> {
-    const [error, data] = await this.$validator.tryValidate(this.$raw)
+    try {
+      const data = await this.$validator.validate(this.$dirty)
+      this.$dirty = {}
+      this.$data = data
+      return data
+    } catch (error) {
+      if (error instanceof errors.E_VALIDATION_ERROR) {
+        this.$errors = error.messages
+      }
 
-    if (error) {
-      this.$errors = error.messages
-      return
+      throw error
     }
-
-    this.$data = data
-    return data
   }
 
   /**
    * Resets the form with initial values.
    */
   reset() {
-    this.$raw = this.$initial
+    this.$dirty = {}
     this.$data = undefined
   }
 
   synthetize(): Record<string, any> {
-    return this.$raw || this.$initial || {}
+    return this.$dirty || this.$initial || {}
   }
 
   /**
@@ -71,6 +80,22 @@ class FormImpl<
     return this.$errors.find((error) => {
       return error.field === field
     })
+  }
+
+  /**
+   * Returns if the form is dirty.
+   *
+   * TODO: Currently this is more a `isTouched`. Instead we should compare values to initialValues.
+   */
+  isDirty(): boolean {
+    return Object.keys(this.$dirty).length > 0
+  }
+
+  /**
+   * Returns if the form has been touched.
+   */
+  isTouched(): boolean {
+    return Object.keys(this.$dirty).length > 0
   }
 }
 
@@ -86,26 +111,28 @@ export function Form<TValidator extends VineValidator<any, any>>(
 const proxyHandler = {
   get(target: any, key: string | symbol) {
     if (typeof key === 'symbol' || target[key]) {
-      return target[key]
+      return Reflect.get(target, key)
     }
 
-    if (target.$raw[key]) {
-      return target.$raw[key]
+    if (target.$data) {
+      return Reflect.get(target.$data, key)
+    }
+
+    if (target.$dirty[key]) {
+      return Reflect.get(target.$dirty, key)
     }
 
     if (target.$initial) {
-      return target.$initial[key]
+      return Reflect.get(target.$initial, key)
     }
 
     return undefined
   },
   set(target: any, key: string | symbol, value: any) {
     if (typeof key === 'symbol' || key.startsWith('$')) {
-      target[key] = value
-      return true
+      return Reflect.set(target, key, value)
     }
 
-    target.$raw[key] = value
-    return true
+    return Reflect.set(target.$dirty, key, value)
   },
 }

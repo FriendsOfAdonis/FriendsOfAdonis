@@ -1,6 +1,6 @@
 import { cn } from '#spark/utils/cn'
 import { Slot } from '@foadonis/spark'
-import { ComponentProps } from '@foadonis/spark/jsx-runtime'
+import { ComponentProps } from '@foadonis/spark/jsx'
 import { cva, type VariantProps } from 'class-variance-authority'
 
 const buttonVariants = cva(

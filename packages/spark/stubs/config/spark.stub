@@ -3,7 +3,7 @@
     to: app.configPath('spark.ts')
   })
 }}}
-import { defineConfig } from "@foadonis/shopkeeper";
+import { defineConfig } from "@foadonis/spark";
 
 export default defineConfig({
   layout: () => import('#spark/layouts/root_layout'),

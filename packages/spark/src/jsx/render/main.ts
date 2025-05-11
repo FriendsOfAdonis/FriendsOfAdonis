@@ -1,4 +1,3 @@
-import { ComponentsRegistry } from '../../components/registry.js'
 import { ComponentContext } from '../../types.js'
 import { SparkElement, SparkNode } from '../types/jsx.js'
 import { ReadableStream } from 'node:stream/web'
@@ -8,9 +7,10 @@ import { isRef } from '../../ref.js'
 import { isJSXElement, renderJSXElement } from './jsx_element.js'
 import is from '@sindresorhus/is'
 import { renderComponent } from './component.js'
+import { ComponentsManager } from '../../components/manager.js'
 
 export type RenderContext = {
-  registry: ComponentsRegistry
+  manager: ComponentsManager
   functions: Map<string, Function>
   head?: SparkElement[]
   children?: ComponentContext[]
@@ -25,12 +25,12 @@ const encoder = new TextEncoder()
  */
 export async function renderToString(
   node: SparkNode,
-  context: { registry: ComponentsRegistry }
+  context: { manager: ComponentsManager }
 ): Promise<string> {
   let output = ''
 
   await render(node, {
-    registry: context.registry,
+    manager: context.manager,
     functions: new Map(),
     write: (chunk) => {
       output += chunk
@@ -48,7 +48,7 @@ export async function renderToString(
  */
 export function renderToReadableStream(
   node: SparkNode,
-  context: { registry: ComponentsRegistry }
+  context: { manager: ComponentsManager }
 ): ReadableStream {
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -56,22 +56,13 @@ export function renderToReadableStream(
       const functions = new Map()
 
       await render(node, {
-        registry: context.registry,
+        manager: context.manager,
         functions,
         write,
         onError: (err) => {
           console.warn(err)
         },
       })
-
-      write(`<script>`)
-      write(`const __spark_events = {}\n`)
-
-      functions.forEach((value, key) => {
-        write(`__spark_events["${key}"] = "${value}"\n`)
-      })
-
-      write(`</script>`)
 
       controller.close()
     },

@@ -1,14 +1,16 @@
 import { test } from '@japa/runner'
-import { renderToString } from '../../src/jsx/render/main.js'
-import { ComponentsRegistry } from '../../src/components/registry.js'
 import { AssertionError } from 'node:assert'
-import { Component } from '../../src/components/main.js'
+import { renderToString } from '../../../src/jsx/render/main.js'
+import { Component } from '../../../src/components/main.js'
+import { ComponentsManager } from '../../../src/components/manager.js'
 
-const registry = new ComponentsRegistry()
+const manager = new ComponentsManager({
+  resolve: async (constructor) => new constructor(),
+})
 
 async function assertRender(element: Parameters<typeof renderToString>[0], expected: string) {
   const result = await renderToString(element, {
-    registry,
+    manager,
   })
 
   if (result !== expected) {

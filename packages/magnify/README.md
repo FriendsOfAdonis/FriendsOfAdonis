@@ -21,7 +21,7 @@
 
 <!-- automd:coverage -->
 
-![Coverage](https://img.shields.io/badge/coverage-81%25-brightgreen)
+<!-- ⚠️  (coverage) ENOENT: no such file or directory, open '/home/mpaucot/workspace/friendsofadonis/packages/magnify/coverage/coverage-summary.json' -->
 
 <!-- /automd -->
 

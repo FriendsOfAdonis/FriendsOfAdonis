@@ -5,7 +5,7 @@ import { SparkElement, SparkNode } from '../types/jsx.js'
 import { render, RenderContext } from './main.js'
 import { inspect } from 'node:util'
 import { renderHTMLElement } from './html_element.js'
-import { renderComponent } from './component.js'
+import { renderComponentClass } from './component.js'
 
 /**
  * Returns if a value is a JSX.Element
@@ -52,8 +52,7 @@ export async function renderJSXElement(node: SparkElement, context: RenderContex
   }
 
   if (is.class(node.type)) {
-    const component = new node.type()
-    return renderComponent(component, node.props, context)
+    return renderComponentClass(node.type, node.props, context)
   }
 
   if (is.function(node.type)) {

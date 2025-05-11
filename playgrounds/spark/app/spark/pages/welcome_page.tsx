@@ -1,38 +1,10 @@
-import { Component, Head } from '@foadonis/spark'
-import { html, SparkNode } from '@foadonis/spark/jsx'
-import { RefAccessor } from '@foadonis/spark/types'
+import { Component } from '@foadonis/spark'
+import { SparkNode } from '@foadonis/spark/jsx'
 
 export default class WelcomePage extends Component {
-  render(that: RefAccessor<unknown>): SparkNode {
+  render(): SparkNode {
     return (
       <>
-        <head>
-          <title>AdonisJS x Spark</title>
-          <link rel="preconnect" href="https://fonts.bunny.net" />
-          <link
-            href="https://fonts.bunny.net/css?family=instrument-sans:400,400i,500,500i,600,600i,700,700i"
-            rel="stylesheet"
-          />
-          <style>
-            {html`
-              :root { --sand-1: #fdfdfc; --sand-2: #f9f9f8; --sand-3: #f1f0ef; --sand-4: #e9e8e6;
-              --sand-5: #e2e1de; --sand-6: #dad9d6; --sand-7: #cfceca; --sand-8: #bcbbb5; --sand-9:
-              #8d8d86; --sand-10: #82827c; --sand-11: #63635e; --sand-12: #21201c; }
-            `}
-          </style>
-          <script src="https://cdn.tailwindcss.com"></script>
-          <script>
-            {html`
-              tailwind.config = { theme: { extend: { fontFamily: { sans: ['Instrument Sans',
-              'sans-serif'], }, colors: { primary: { DEFAULT: '#5A45FF', }, sand: { 1:
-              'var(--sand-1)', 2: 'var(--sand-2)', 3: 'var(--sand-3)', 4: 'var(--sand-4)', 5:
-              'var(--sand-5)', 6: 'var(--sand-6)', 7: 'var(--sand-7)', 8: 'var(--sand-8)', 9:
-              'var(--sand-9)', 10: 'var(--sand-10)', 11: 'var(--sand-11)', 12: 'var(--sand-12)', },
-              }, }, }, }
-            `}
-          </script>
-        </head>
-
         <div className="fixed xl:absolute left-8 right-8 top-0 bottom-0 xl:inset-0 max-w-screen-xl mx-auto before:content-[''] before:[background:repeating-linear-gradient(0deg,var(--sand-5)_0_4px,transparent_0_8px)] before:absolute before:top-0 before:left-0 before:h-full before:w-px after:content-[''] after:[background:repeating-linear-gradient(0deg,var(--sand-5)_0_4px,transparent_0_8px)] after:absolute after:top-0 after:right-0 after:h-full after:w-px"></div>
 
         <div className="pt-4 h-full flex flex-col">
