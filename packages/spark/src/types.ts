@@ -1,4 +1,4 @@
-import { FC, SparkNode } from './runtime/types/jsx.js'
+import { FC, SparkNode } from './jsx/types/jsx.js'
 import { ComponentsRegistry } from './components/registry.js'
 import { Ref } from './ref.js'
 

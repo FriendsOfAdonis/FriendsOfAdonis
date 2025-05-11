@@ -1,4 +1,4 @@
-import { VNODE_HTML_TAG, VNODE_SYMBOL } from '../symbols.js'
+import { VNODE_HTML_TAG, VNODE_SYMBOL } from './symbols.js'
 import { SparkElement } from './types/jsx.js'
 
 /**

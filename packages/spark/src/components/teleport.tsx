@@ -1,4 +1,4 @@
-import type { ComponentProps } from '../runtime/index.js'
+import type { ComponentProps } from '../jsx/types/jsx.js'
 
 /**
  * Teleports its content into an other place in the page.

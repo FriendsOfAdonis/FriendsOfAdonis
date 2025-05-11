@@ -1,6 +1,6 @@
-import { ComponentProps, FC, SparkElement, SparkNode } from '@foadonis/spark/jsx-runtime'
+import { ComponentProps, FC, SparkElement, SparkNode } from '../../src/jsx/types/jsx.js'
 import { test } from '@japa/runner'
-import { HTML } from '../../src/runtime/types/html.js'
+import { HTML } from '../../src/jsx/types/html.js'
 import { Component } from '../../src/components/main.js'
 
 test('JSX.Element', ({ expectTypeOf }) => {

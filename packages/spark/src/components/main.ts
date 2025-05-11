@@ -3,7 +3,7 @@ import { randomId } from '../utils/random.js'
 import { synthetizeObject } from '../synthetize.js'
 import { hydrateObject } from '../utils/properties.js'
 import { ComponentContext, RefAccessor } from '../types.js'
-import { SparkNode } from '../runtime/types/jsx.js'
+import { SparkNode } from '../jsx/types/jsx.js'
 
 export interface Component {
   constructor(...args: any[]): any

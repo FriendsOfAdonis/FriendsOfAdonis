@@ -10,10 +10,9 @@
 import router from '@adonisjs/core/services/router'
 
 const AuthController = () => import('#controllers/auth_controller')
-const TestController = () => import('#controllers/test_controller')
+const WelcomeController = () => import('#controllers/welcome_controller')
 
-router.get('/', [TestController, 'index'])
-router.get('/test', [TestController, 'test'])
+router.get('/', [WelcomeController, 'index'])
 
 router
   .group(() => {

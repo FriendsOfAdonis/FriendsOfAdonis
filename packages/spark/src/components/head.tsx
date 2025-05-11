@@ -1,7 +1,7 @@
-import { SparkElement } from '@foadonis/spark/jsx-runtime'
-import { VNODE_HEAD_SYMBOL } from '../symbols.js'
+import { VNODE_HEAD_SYMBOL } from '../jsx/symbols.js'
+import { SparkNode } from '../jsx/types/jsx.js'
 
-export function Head(_props: { children?: SparkElement }) {
+export function Head(_props: { children?: SparkNode }) {
   return null
   // return {
   //   $$typeof: VNODE_HEAD_SYMBOL,

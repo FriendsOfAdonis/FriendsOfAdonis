@@ -1,7 +1,7 @@
 import { renderToReadableStream, renderToString } from './jsx/render/main.js'
 import { jsx } from './jsx/runtime/jsx.js'
 import { ComponentsRegistry } from './components/registry.js'
-import { FC, SparkElement, SparkNode } from './runtime/types/jsx.js'
+import { FC, SparkElement, SparkNode } from './jsx/types/jsx.js'
 
 export class Renderer {
   #registry: ComponentsRegistry

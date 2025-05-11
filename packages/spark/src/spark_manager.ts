@@ -1,4 +1,4 @@
-import { jsx } from './runtime/jsx.js'
+import { jsx } from './jsx/runtime/jsx.js'
 import { ComponentsRegistry } from './components/registry.js'
 import { renderToReadableStream, renderToString } from './jsx/render/main.js'
 import { ComponentContext, SparkConfig } from './types.js'

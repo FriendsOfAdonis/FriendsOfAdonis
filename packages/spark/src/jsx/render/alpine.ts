@@ -1,5 +1,5 @@
-import { Ref } from '../ref.js'
-import { AlpineEventAttributeValue, AlpineEventOptions } from './types/alpine.js'
+import { Ref } from '../../ref.js'
+import { AlpineEventAttributeValue, AlpineEventOptions } from '../types/alpine.js'
 
 const ALPINE_EVENT_MAPPING: Record<
   string,

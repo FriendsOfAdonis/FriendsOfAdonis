@@ -1,5 +1,5 @@
 import { test } from '@japa/runner'
-import { toAlpineEventAttribute, toAlpineEventAttributeKey } from '../../src/runtime/alpine.js'
+import { toAlpineEventAttribute, toAlpineEventAttributeKey } from '../../src/jsx/render/alpine.js'
 import { ref } from '../../src/ref.js'
 
 test.group('toAlpineEventAttributeKey', () => {

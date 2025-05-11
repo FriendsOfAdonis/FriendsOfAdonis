@@ -1,0 +1,8 @@
+{{{
+  exports({
+    to: app.makePath('resources/js/app.js')
+  })
+}}}
+import Spark from '@foadonis/spark/client'
+
+Spark.start()
