@@ -1,9 +1,0 @@
-{
-  "extends": "@adonisjs/tsconfig/tsconfig.app.json",
-  "compilerOptions": {
-    "rootDir": "./",
-    "outDir": "./build",
-    "jsx": "react-jsx",
-    "jsxImportSource": "@foadonis/osmos"
-  }
-}
