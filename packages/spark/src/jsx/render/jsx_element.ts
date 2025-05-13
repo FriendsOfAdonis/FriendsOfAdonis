@@ -49,6 +49,10 @@ export async function renderJSXElement(node: SparkElement, context: RenderContex
 
       return render(node.props.children as SparkNode, context)
     }
+
+    return context.onError(
+      new JSXRenderError(`renderJSXElement does not handle Symbol ${inspect(node.type)}`)
+    )
   }
 
   if (is.class(node.type)) {
