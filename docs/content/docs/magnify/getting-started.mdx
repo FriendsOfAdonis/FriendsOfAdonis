@@ -1,7 +1,9 @@
 ---
-title: "Getting Started"
+title: 'Getting Started'
 icon: Rocket
 ---
+
+<div className='fd-steps [&_h2]:fd-step'>
 
 ## Installation
 
@@ -11,12 +13,7 @@ Install and configure the package using the following command :
 node ace add @foadonis/magnify
 ```
 
-<ConfigurationSteps
-  pkg="@foadonis/magnify"
-  providers={["magnify"]}
-  commands
-  config="magnify"
-/>
+<ConfigurationSteps pkg="@foadonis/magnify" providers={['magnify']} commands config="magnify" />
 
 ## Configure your Model
 
@@ -24,28 +21,24 @@ Magnify tries to be as easy as possible to configure. To accomplish that, it bri
 
 A `Searchable` model will be automatically synchronized with your Search engine.
 
-```ts title="app/models/post.ts"
-import { compose } from "@adonisjs/core/helpers";
-import { BaseModel, column } from "@adonisjs/lucid/orm";
-import { Searchable } from "@foadonis/magnify";
+```ts title="app/models/post.ts" twoslash
+import { compose } from '@adonisjs/core/helpers'
+import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { Searchable } from '@foadonis/magnify'
 
 export default class Post extends compose(BaseModel, Searchable) {
   @column({ isPrimary: true })
-  declare id: string;
+  declare id: string
 
   @column()
-  declare title: string;
+  declare title: string
 }
 ```
 
 ## Configure your Search Engine
 
 <Cards>
-  <Card
-    href="./engines/algolia"
-    title="Algolia"
-    description="A closed-source Search Engine"
-  />
+  <Card href="./engines/algolia" title="Algolia" description="A closed-source Search Engine" />
   <Card
     href="./engines/typesense"
     title="Typesense"
@@ -62,3 +55,5 @@ export default class Post extends compose(BaseModel, Searchable) {
     description="Use a custom Search Engine"
   />
 </Cards>
+
+</div>

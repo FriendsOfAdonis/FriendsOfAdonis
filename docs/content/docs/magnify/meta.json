@@ -4,16 +4,13 @@
   "root": true,
   "icon": "Search",
   "pages": [
-    "---Guide---",
     "index",
-    "getting_started",
+    "getting-started",
     "engines",
+    "---Guide---",
+    "(guides)/searching",
+    "(guides)/custom-search-engine",
     "---References---",
-    "(references)/commands",
-    "(references)/magnify",
-    "(references)/engine",
-    "(references)/searchable",
-    "---Advanced---",
-    "(advanced)/custom-search-engine"
+    "(references)/commands"
   ]
 }

@@ -2,12 +2,9 @@ import 'reflect-metadata'
 import { assert } from '@japa/assert'
 import { expectTypeOf } from '@japa/expect-type'
 import { processCLIArgs, configure, run } from '@japa/runner'
-import { createApp } from '../tests/integration/app.js'
 import { fileSystem } from '@japa/file-system'
-import app from '@adonisjs/core/services/app'
-import { ApplicationService } from '@adonisjs/core/types'
+import { BASE_URL } from '../tests/helpers.js'
 
-let testApp: ApplicationService
 processCLIArgs(process.argv.slice(2))
 configure({
   suites: [
@@ -24,18 +21,7 @@ configure({
       files: ['tests/functional/**/*.spec.(js|ts)'],
     },
   ],
-  plugins: [assert(), expectTypeOf(), fileSystem()],
-  setup: [
-    async () => {
-      testApp = await createApp()
-    },
-  ],
-  teardown: [
-    async () => {
-      await app.terminate()
-      await testApp.terminate()
-    },
-  ],
+  plugins: [assert(), expectTypeOf(), fileSystem({ basePath: BASE_URL, autoClean: false })],
 })
 
 /*

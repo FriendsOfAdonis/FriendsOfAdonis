@@ -2318,7 +2318,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@foadonis/magnify@workspace:packages/magnify":
+"@foadonis/magnify@workspace:*, @foadonis/magnify@workspace:packages/magnify":
   version: 0.0.0-use.local
   resolution: "@foadonis/magnify@workspace:packages/magnify"
   dependencies:
@@ -9732,6 +9732,7 @@ __metadata:
     "@adonisjs/core": "npm:^6.17.2"
     "@foadonis/actions": "workspace:*"
     "@foadonis/eslint-config": "workspace:*"
+    "@foadonis/magnify": "workspace:*"
     "@foadonis/maintenance": "workspace:*"
     "@foadonis/openapi": "workspace:*"
     "@fumadocs/mdx-remote": "npm:^1.3.0"
