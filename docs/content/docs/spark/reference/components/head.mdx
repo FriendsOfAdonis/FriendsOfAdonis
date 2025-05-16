@@ -1,0 +1,28 @@
+---
+title: Head
+description: Render elements in the <head/> from anywhere
+---
+
+The `<Head />` component allows you to push elements in your document `head` from anywhere.
+This is useful when you want to change the "title" of a page for example.
+
+```tsx
+export function UsersPage() {
+  return (
+    <>
+      <Head>
+        <title>Users</title>
+      </Head>
+      <div>
+        <UsersList />
+      </div>
+    </>
+  )
+}
+```
+
+<Callout type="warn">
+
+As of today there is no duplication prevention which means that you can end up with multiple titles and meta rendered in your `<head/>`
+
+</Callout>

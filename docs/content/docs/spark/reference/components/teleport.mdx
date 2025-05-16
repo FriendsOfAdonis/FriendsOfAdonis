@@ -1,0 +1,24 @@
+---
+title: Teleport
+description: Teleport elements elsewhere in the page
+---
+
+The `<Teleport />` component allows you to teleport elements elsewhere in the page by using the [Alpine `x-teleport` attribute](https://alpinejs.dev/directives/teleport).
+
+```tsx
+export const MySuperModal = () => {
+  return (
+    <Teleport to="body">
+      <div>
+        <h1>Hello World</h1>
+      </div>
+    </Teleport>
+  )
+}
+```
+
+<Callout>
+
+Teleportation is only done client side.
+
+</Callout>

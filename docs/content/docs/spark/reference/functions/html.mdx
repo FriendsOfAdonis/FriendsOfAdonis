@@ -1,0 +1,26 @@
+---
+title: html
+description: Render raw unsafe HTML
+---
+
+The `html` tag allows you to render raw unsafe HTML. It is similar to `dangerouselySetInnerHTML` prop in React.
+
+<Callout type="warn">
+
+**Be careful when using this**. As this renders raw HTML it is subject to [XSS](https://developer.mozilla.org/en-US/docs/Web/Security/Attacks/XSS) attacks.
+
+</Callout>
+
+```tsx
+export const PostContent = ({ content }: { content: string }) => {
+  return <article className="prose">{html`${content}`}</article>
+}
+```
+
+You can also use it to render Javascript.
+
+```tsx
+export const RandomScript = () => {
+  return <script>{html`console.log("Hello world")`}</script>
+}
+```

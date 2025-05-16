@@ -1,5 +1,7 @@
 import { getPageTreePeers } from 'fumadocs-core/server'
 import { Popup, PopupContent, PopupTrigger } from 'fumadocs-twoslash/ui'
+import { createGenerator } from 'fumadocs-typescript'
+import { AutoTypeTable } from 'fumadocs-typescript/ui'
 import { Accordion, Accordions } from 'fumadocs-ui/components/accordion'
 import { Callout } from 'fumadocs-ui/components/callout'
 import { Card, Cards } from 'fumadocs-ui/components/card'
@@ -16,6 +18,8 @@ import { createMetadata } from '@/utils/metadata'
 import { metadataImage } from '@/utils/metadata-image'
 
 export const revalidate = false
+
+const generator = createGenerator()
 
 export default async function Page(props: {
   readonly params: Promise<{ slug: string[] }>
@@ -65,6 +69,9 @@ export default async function Page(props: {
             Folder,
             Files,
             blockquote: Callout as unknown as FC<ComponentProps<'blockquote'>>,
+
+            // eslint-disable-next-line react/no-unstable-nested-components
+            AutoTypeTable: (props) => <AutoTypeTable {...props} generator={generator} />,
           }}
         />
         {page.data.index ? <DocsCategory url={page.url} /> : null}

@@ -1,0 +1,20 @@
+---
+title: renderToString
+description: Render JSX into string
+---
+
+The `renderToString` is used to transform Spark tree to an HTML string.
+
+```tsx
+import { renderToString } from '@foadonis/spark/jsx-runtime'
+
+router.get('/', () => {
+  return renderToString(<div>Hello world</div>)
+})
+```
+
+<Callout>
+
+`renderToString` does not support streaming. See [`renderToReadableStream`](./renderToReadableStream) for streaming content.
+
+</Callout>

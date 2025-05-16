@@ -1,0 +1,6 @@
+{
+  "reporter": ["text", "json-summary"],
+  "all": true,
+  "include": ["src", "commands", "index.ts", "configure.ts"],
+  "exclude": ["src/jsx/types", "src/types"]
+}

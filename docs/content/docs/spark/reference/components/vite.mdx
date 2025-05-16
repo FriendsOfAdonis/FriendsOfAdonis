@@ -1,0 +1,21 @@
+---
+title: Vite
+description: Load Vite assets in your application
+---
+
+The `<Vite />` component is similar to the `@Vite` tag in [Edge](https://edgejs.dev/).
+
+It will generate the scripts tags to load your client-side Javascript aswell as the Vite client for automatic refresh.
+
+```tsx title="root_layout.tsx"
+export default function RootLayout({ children }: { children: VNode }) {
+  return (
+    <html>
+      <head>
+        <Vite entryPoints={['resources/js/app.js']} />
+      </head>
+      <body>{children}</body>
+    </html>
+  )
+}
+```

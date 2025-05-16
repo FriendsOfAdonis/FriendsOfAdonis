@@ -29,6 +29,7 @@
 | @foadonis/maintenance | [![npm version](https://img.shields.io/npm/v/@foadonis/maintenance?color=brightgreen)](https://npmjs.com/package/@foadonis/maintenance) | Put your Adonis application in maintenance mode | [Source](https://github.com/FriendsOfAdonis/FriendsOfAdonis/tree/main/packages/maintenance) | [Documentation](https://friendsofadonis.com/docs/maintenance) |
 | @foadonis/openapi | [![npm version](https://img.shields.io/npm/v/@foadonis/openapi?color=brightgreen)](https://npmjs.com/package/@foadonis/openapi) | Generate OpenAPI specifications on Adonis | [Source](https://github.com/FriendsOfAdonis/FriendsOfAdonis/tree/main/packages/openapi) | [Documentation](https://friendsofadonis.com/docs/openapi) |
 | @foadonis/shopkeeper | [![npm version](https://img.shields.io/npm/v/@foadonis/shopkeeper?color=brightgreen)](https://npmjs.com/package/@foadonis/shopkeeper) | An expressive and fluent interface to Stripe's subscription billing services. | [Source](https://github.com/FriendsOfAdonis/FriendsOfAdonis/tree/main/packages/shopkeeper) | [Documentation](https://friendsofadonis.com/docs/shopkeeper) |
+| @foadonis/spark | [![npm version](https://img.shields.io/npm/v/@foadonis/spark?color=brightgreen)](https://npmjs.com/package/@foadonis/spark) | The fastest way to build reactive UIs using AdonisJS. | [Source](https://github.com/FriendsOfAdonis/FriendsOfAdonis/tree/main/packages/spark) | [Documentation](https://friendsofadonis.com/docs/actions) |
 
 <!-- /automd -->
 
