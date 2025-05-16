@@ -31,12 +31,16 @@ test.group('Configure', () => {
     const ace = await app.container.make('ace')
 
     const command = await ace.create(Configure, ['../../index.js'])
+
+    command.prompt.trap('shouldInstallPackages').reject()
+
     await command.exec()
 
     command.assertSucceeded()
 
     await assert.fileExists('config/graphql.ts')
     await assert.fileContains('config/graphql.ts', 'defineConfig')
+
     await assert.fileContains('package.json', '#graphql')
 
     await assert.fileExists('adonisrc.ts')

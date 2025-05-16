@@ -21,9 +21,30 @@ export async function configure(command: ConfigureCommand) {
 
   await codemods.updateRcFile((rcFile) => {
     rcFile.addProvider('@foadonis/graphql/graphql_provider')
+    rcFile.addPreloadFile('#start/graphql')
   })
 
   await codemods.makeUsingStub(stubsRoot, 'config/graphql.stub', {})
+  await codemods.makeUsingStub(stubsRoot, 'start/graphql.stub', {})
+  await codemods.makeUsingStub(stubsRoot, 'resolvers/demo_resolver.stub', {})
+
+  const shouldInstallPackages = await command.prompt.confirm(
+    `Do you want to install additional packages required by "@foadonis/graphql"?`,
+    { name: 'shouldInstallPackages' }
+  )
+
+  if (shouldInstallPackages) {
+    await codemods.installPackages([
+      {
+        name: 'graphql',
+        isDevDependency: false,
+      },
+      {
+        name: 'graphql-scalars',
+        isDevDependency: false,
+      },
+    ])
+  }
 
   await updatePackageJson(command)
 }
