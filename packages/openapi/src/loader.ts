@@ -3,15 +3,18 @@ import { HttpRouterService } from '@adonisjs/core/types'
 import { RouteJSON } from '@adonisjs/core/types/http'
 import { OperationMetadataStorage } from 'openapi-metadata/metadata'
 import { isConstructor } from './utils.js'
+import { OpenAPIConfig } from './types.js'
 import stringHelpers from '@adonisjs/core/helpers/string'
 
 export class RouterLoader {
   #router: HttpRouterService
   #logger: Logger
+  #config: OpenAPIConfig
 
-  constructor(router: HttpRouterService, logger: Logger) {
+  constructor(config: OpenAPIConfig, router: HttpRouterService, logger: Logger) {
     this.#router = router
     this.#logger = logger
+    this.#config = config
   }
 
   async importRouterController(route: RouteJSON): Promise<[Function, string] | undefined> {
@@ -50,7 +53,7 @@ export class RouterLoader {
       {
         path: route.pattern,
         methods: route.methods.filter((m) => m !== 'HEAD').map((r) => r.toLowerCase()) as any,
-        tags: [name],
+        tags: (this.#config.generateTags === undefined || this.#config.generateTags) ? [name] : [],
       },
       propertyKey
     )
