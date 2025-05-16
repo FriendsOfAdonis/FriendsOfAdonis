@@ -1,5 +1,4 @@
 import { args, BaseCommand } from '@adonisjs/core/ace'
-import { Codemods } from '@adonisjs/core/ace/codemods'
 import stringHelpers from '@adonisjs/core/helpers/string'
 import {
   configureEnvValidations,
