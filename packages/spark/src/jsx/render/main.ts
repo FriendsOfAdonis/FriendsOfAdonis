@@ -7,10 +7,10 @@ import { isRef } from '../../ref.js'
 import { isJSXElement, renderJSXElement } from './jsx_element.js'
 import is from '@sindresorhus/is'
 import { renderComponent } from './component.js'
-import { ComponentsManager } from '../../components/manager.js'
+import { SparkInstance } from '../../spark_instance.js'
 
 export type RenderContext = {
-  manager: ComponentsManager
+  spark: SparkInstance
   functions: Map<string, Function>
   head?: SparkElement[]
   children?: ComponentContext[]
@@ -23,14 +23,11 @@ const encoder = new TextEncoder()
 /**
  * Renders Spark tree to an HTML string.
  */
-export async function renderToString(
-  node: SparkNode,
-  context: { manager: ComponentsManager }
-): Promise<string> {
+export async function renderToString(node: SparkNode, spark: SparkInstance): Promise<string> {
   let output = ''
 
   await render(node, {
-    manager: context.manager,
+    spark,
     functions: new Map(),
     write: (chunk) => {
       output += chunk
@@ -46,17 +43,14 @@ export async function renderToString(
 /**
  * Renders Spark tree to a Readable Node Stream.
  */
-export function renderToReadableStream(
-  node: SparkNode,
-  context: { manager: ComponentsManager }
-): ReadableStream {
+export function renderToReadableStream(node: SparkNode, spark: SparkInstance): ReadableStream {
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       const write = (chunk: string) => controller.enqueue(encoder.encode(chunk))
       const functions = new Map()
 
       await render(node, {
-        manager: context.manager,
+        spark,
         functions,
         write,
         onError: (err) => {

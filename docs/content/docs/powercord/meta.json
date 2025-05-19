@@ -1,0 +1,14 @@
+{
+  "title": "Powercord",
+  "description": "Broadcast actions to your clients",
+  "root": true,
+  "icon": "Cable",
+  "pages": [
+    "index",
+    "---Guides---",
+    "guides/sending-messages",
+    "guides/custom-messages",
+    "---References---",
+    "references/messages"
+  ]
+}

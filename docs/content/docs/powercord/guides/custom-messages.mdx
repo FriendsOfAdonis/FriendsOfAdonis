@@ -1,0 +1,77 @@
+---
+title: Custom Messages
+---
+
+## Introduction
+
+It is possible to create custom messages allowing you to perform custom actions.
+
+In the following example we will create a message that open a dialog by using a [HTMLDialogElement](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/dialog) element.
+
+## Server
+
+Let's start by creating a route that render an HTML document containing our dialog.
+
+```tsx title="start/routes.tsx"
+import router from '@adonisjs/core/services/router'
+
+router.get('/', () => {
+  return (
+    <html>
+      <body>
+        <dialog id="hello">Hello world</dialog>
+      </body>
+    </html>
+  )
+})
+```
+
+<Callout>
+
+This example assumes that you are using [@foadonis/spark](/docs/spark) but you can also render HTML with a different templating engine or simply plain text.
+
+</Callout>
+
+Messages does not have any logic on the server. You simply have to add your new event type by extending the `PowercordMessages`.
+
+```ts title="types.ts"
+declare module '@foadonis/powercord/types' {
+  export interface PowercordMessages {
+    dialog: { id: string }
+  }
+}
+```
+
+Now that your message is typed, let's create a route allowing us to open the `dialog#hello` modal on every connected browser.
+
+```tsx title="start/routes.tsx"
+import router from '@adonisjs/core/services/router'
+import powercord from '@foadonis/powercord/services/main'
+
+router.post('/hello', () => {
+  powercord.broadcast('dialog', {
+    id: 'hello',
+  })
+})
+```
+
+## Client
+
+It is now time to handle our newly created `dialog` message on the client-side.
+
+To achieve this we will listen to the message using `.on` method with a callback that receive the event and its payload (the id of the dialog that we want to open).
+
+```js title="resources/js/app.js"
+import Powercord from '@foadonis/powercord'
+
+const powercord = Powercord.start()
+
+powercord.on('dialog', ({ details }) => {
+  const element = document.querySelector(`dialog#${details.id}`)
+  if (!element) return
+
+  element.showModal()
+})
+```
+
+Now everytime we perform a `POST /hello`, every connected client will see a dialog showing on their screen!

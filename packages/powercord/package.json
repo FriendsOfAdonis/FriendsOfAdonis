@@ -1,0 +1,98 @@
+{
+  "name": "@foadonis/powercord",
+  "description": "Adonis Package for creating reusable actions",
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=20.6.0"
+  },
+  "type": "module",
+  "files": [
+    "build",
+    "!build/bin",
+    "!build/tests"
+  ],
+  "exports": {
+    ".": "./build/index.js",
+    "./powercord_provider": "./build/providers/powercord_provider.js",
+    "./services/main": "./build/services/main.js",
+    "./client": "./build/src/client/index.js",
+    "./types": "./build/src/types.js"
+  },
+  "scripts": {
+    "clean": "del-cli build",
+    "copy:templates": "copyfiles \"stubs/**/*.stub\" build",
+    "index:commands": "adonis-kit index build/commands",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "quick:test": "node --import=./tsnode.esm.js --enable-source-maps bin/test.ts",
+    "test": "c8 yarn quick:test",
+    "prebuild": "yarn clean",
+    "build": "tsc && yarn copy:templates && yarn index:commands",
+    "dev": "tsc --watch",
+    "version": "yarn build"
+  },
+  "keywords": [
+    "adonis",
+    "adonisjs",
+    "actions"
+  ],
+  "author": {
+    "name": "Martin Paucot",
+    "email": "contact@martin-paucot.fr"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FriendsOfAdonis/FriendsOfAdonis",
+    "directory": "packages/actions"
+  },
+  "bugs": {
+    "url": "https://github.com/FriendsOfAdonis/FriendsOfAdonis/issues"
+  },
+  "homepage": "https://friendsofadonis.com/docs/actions",
+  "license": "MIT",
+  "devDependencies": {
+    "@adonisjs/assembler": "^7.8.2",
+    "@adonisjs/core": "^6.17.2",
+    "@foadonis/eslint-config": "workspace:*",
+    "@japa/assert": "^4.0.1",
+    "@japa/expect-type": "^2.0.3",
+    "@japa/file-system": "^2.3.2",
+    "@japa/plugin-adonisjs": "^4.0.0",
+    "@japa/runner": "^4.2.0",
+    "@swc/core": "1.11.22",
+    "@types/node": "^22.14.1",
+    "@types/ws": "^8",
+    "c8": "^10.1.3",
+    "copyfiles": "^2.4.1",
+    "del-cli": "^6.0.0",
+    "edge.js": "^6.2.1",
+    "prettier": "^3.5.3",
+    "reflect-metadata": "^0.2.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
+  "peerDependencies": {
+    "@adonisjs/core": "^6.2.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "latest"
+  },
+  "c8": {
+    "reporter": [
+      "text",
+      "html"
+    ],
+    "exclude": [
+      "tests/**"
+    ]
+  },
+  "dependencies": {
+    "@adonisjs/transmit": "^2.0.2",
+    "@adonisjs/transmit-client": "^1.0.0",
+    "@poppinss/hooks": "^7.2.5",
+    "@poppinss/utils": "^6.9.2",
+    "ws": "^8.18.2"
+  }
+}

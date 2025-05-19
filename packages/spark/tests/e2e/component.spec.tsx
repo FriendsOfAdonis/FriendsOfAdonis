@@ -1,8 +1,5 @@
 import { test } from '@japa/runner'
-import { setupApp, setupHttpServer, setupSparkApp } from '../helpers.js'
-import { Component } from '../../src/components/main.js'
-import { SparkNode } from '../../src/jsx/index.js'
-import { RefAccessor } from '../../src/types.js'
+import { setupSparkApp } from '../helpers.js'
 import { Counter } from '../fixtures/components/counter.js'
 
 test.group('component', () => {

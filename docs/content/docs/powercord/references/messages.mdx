@@ -1,0 +1,42 @@
+---
+title: Built-in Messages
+---
+
+### `alert`
+
+Performs an `alert`.
+
+```ts
+powercord.broadcast('alert', {
+  message: 'Alert sent by server',
+})
+```
+
+### `log`
+
+Logs a message in the browser console.
+
+```ts
+powercord.broadcast('log', {
+  level: 'debug',
+  message: 'Hello from the server',
+})
+```
+
+### `navigate`
+
+Changes `window.location.href` to a new url.
+
+```ts
+powercord.broadcast('navigate', {
+  url: 'https://adonisjs.com/docs',
+})
+```
+
+### `reload`
+
+Performs a `window.location.reload()` to reload the user current page.
+
+```ts
+powercord.broadcast('reload', {})
+```

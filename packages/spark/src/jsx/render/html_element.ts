@@ -1,6 +1,8 @@
 import escapeHTML from 'escape-html'
 import { toAlpineEventAttributes } from './alpine.js'
 import { render, RenderContext } from './main.js'
+import { jsx } from '../runtime/jsx.js'
+import { html } from '../tags.js'
 
 const selfClosingTags = new Set(
   'area,base,br,col,embed,hr,img,input,keygen,link,meta,param,source,track,wbr'.split(',')
@@ -25,7 +27,11 @@ export async function renderHTMLElement(
 
   if (tag === 'head') {
     // TODO: This will fail if single children
-    children = [...(children ?? []), ...(context.head ?? [])].flat()
+    const idScript = jsx('script', {
+      children: html`window.__spark_id = "${context.spark.id}"`,
+    })
+
+    children = [...(children ? [children] : []).flat(), ...(context.head ?? []), idScript].flat()
   }
 
   let buffer = `<${tag}`

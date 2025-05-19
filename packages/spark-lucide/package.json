@@ -1,0 +1,76 @@
+{
+  "name": "@foadonis/spark-lucide",
+  "description": "Lucide Icons for Adonis Spark",
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=20.6.0"
+  },
+  "type": "module",
+  "files": [
+    "build",
+    "!build/bin"
+  ],
+  "exports": {
+    ".": "./build/index.js",
+    "./types": "./build/src/types.js"
+  },
+  "scripts": {
+    "clean": "del-cli build",
+    "copy:templates": "copyfiles \"stubs/**/*.stub\" build",
+    "index:commands": "adonis-kit index build/commands",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "prebuild": "yarn clean",
+    "build": "tsc && yarn copy:templates && yarn index:commands",
+    "build:icons": "build-icons --output=./src --templateSrc=./scripts/exportTemplate.mjs --renderUniqueKey --withAliases --withDynamicImports --separateAliasesFile --aliasesFileExtension=.ts --iconFileExtension=.ts --exportFileName=index.ts && yarn format",
+    "dev": "tsc --watch",
+    "version": "yarn build"
+  },
+  "keywords": [
+    "adonis",
+    "adonisjs",
+    "actions"
+  ],
+  "author": {
+    "name": "Martin Paucot",
+    "email": "contact@martin-paucot.fr"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FriendsOfAdonis/FriendsOfAdonis",
+    "directory": "packages/actions"
+  },
+  "bugs": {
+    "url": "https://github.com/FriendsOfAdonis/FriendsOfAdonis/issues"
+  },
+  "homepage": "https://friendsofadonis.com/docs/actions",
+  "license": "MIT",
+  "devDependencies": {
+    "@foadonis/eslint-config": "workspace:*",
+    "@lucide/build-icons": "workspace:*",
+    "@swc/core": "1.11.22",
+    "@types/node": "^22.14.1",
+    "copyfiles": "^2.4.1",
+    "del-cli": "^6.0.0",
+    "prettier": "^3.5.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
+  "peerDependencies": {
+    "@foadonis/spark": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "latest"
+  },
+  "c8": {
+    "reporter": [
+      "text",
+      "html"
+    ],
+    "exclude": [
+      "tests/**"
+    ]
+  }
+}

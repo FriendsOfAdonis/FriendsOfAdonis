@@ -118,6 +118,8 @@ export namespace HTML {
     rel?: string
     target?: Target
     type?: string
+
+    $link?: true
   }
 
   interface ImgAttributes<T extends EventTarget>

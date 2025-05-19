@@ -1,7 +1,6 @@
 import { Component } from '../../components/main.js'
 import { RenderContext } from './main.js'
 import { renderHTMLElement } from './html_element.js'
-import { devalue } from '../../utils/devalue.js'
 import { createRefProxyAccessor } from '../../ref.js'
 import { ComponentContext } from '../../types.js'
 
@@ -10,8 +9,7 @@ export async function renderComponentClass(
   props: any,
   context: RenderContext
 ): Promise<void> {
-  const component = await context.manager.mount(componentClass as any, props)
-
+  const component = await context.spark.mount(componentClass as any, props)
   return renderComponent(component, props, context)
 }
 
@@ -22,7 +20,9 @@ export async function renderComponent(
 ): Promise<void> {
   const { $lazy, ...rest } = props
 
-  Reflect.set(component, '$props', rest)
+  if (!('$props' in component)) {
+    Reflect.set(component, '$props', rest)
+  }
 
   const proxy = createRefProxyAccessor(component)
 
@@ -34,12 +34,8 @@ export async function renderComponent(
 
   const result = await component.render(proxy)
 
-  const data = component.$data()
-
   const attributes: Record<string, any> = {
-    'x-data': devalue(data),
     'spark:id': component.$id,
-    'spark:component': (component.constructor as any).$name,
     'children': result,
   }
 

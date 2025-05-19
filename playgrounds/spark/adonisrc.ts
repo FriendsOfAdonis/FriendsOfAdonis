@@ -34,6 +34,9 @@ export default defineConfig({
     () => import('@adonisjs/lucid/database_provider'),
     () => import('@adonisjs/auth/auth_provider'),
     () => import('@adonisjs/session/session_provider'),
+    () => import('@foadonis/powercord/powercord_provider'),
+    () => import('@foadonis/cockpit/cockpit_provider'),
+    () => import('@adonisjs/transmit/transmit_provider')
   ],
 
   /*

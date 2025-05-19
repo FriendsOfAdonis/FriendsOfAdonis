@@ -1,0 +1,63 @@
+---
+title: Sending messages
+---
+
+## Broadcasting
+
+Broadcasting messages allows you to perform client-side action on all connected clients. It is done by using the `broadcast` method on the `PowercordServer`.
+
+In the following example we have a HTTP endpoint that redirect all connected users to the homepage.
+
+```ts title="start/routes.ts"
+import router from '@adonisjs/core/services/router'
+import powercord from '@foadonis/powercord/services/main'
+
+router.post('/test', () => {
+  powercord.broadcast('navigate', {
+    url: '/',
+  })
+})
+```
+
+## Message specific client
+
+You can send a message to a specific client using its id.
+
+```ts
+import router from '@adonisjs/core/services/router'
+import powercord from '@foadonis/powercord/services/main'
+
+router.post('/alert/:id', ({ request }) => {
+  const id = request.param('id')
+
+  powercord.send(id, 'alert', {
+    message: 'Alert from server',
+  })
+})
+```
+
+Powercord automatically provide to the `HttpContext` the corresponding `Powercord` using the `x-powercord-id` header that you must provide yourself.
+
+```ts title="start/routes.ts"
+import router from '@adonisjs/core/services/router'
+
+router.post('/debug', ({ powercord }) => {
+  powercord?.send(id, 'log', {
+    level: 'debug',
+    message: 'Debug log from server',
+  })
+})
+```
+
+```tsx title="resources/js/app.js"
+import Powercord from '@foadonis/powercord'
+
+const powercord = await Powercord.start()
+
+fetch('/debug', {
+  method: 'POST',
+  headers: {
+    'x-powercord-id': powercord.id,
+  },
+})
+```

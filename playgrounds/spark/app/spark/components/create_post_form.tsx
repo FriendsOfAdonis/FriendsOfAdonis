@@ -21,6 +21,7 @@ export default class CreatePostForm extends Component {
       <div>
         <form $submit={that.create}>
           <input type="text" $model={that.form.title} />
+          {this.form.title}
           {this.form.error('title')?.message}
           <Button type="submit">Submit</Button>
         </form>
@@ -29,6 +30,8 @@ export default class CreatePostForm extends Component {
   }
 
   async create() {
-    await this.form.validate()
+    console.log('NOOOOOP')
+    this.redirect('/test')
+    // await this.form.validate()
   }
 }

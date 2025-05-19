@@ -1,9 +1,10 @@
-import { HttpContext } from '@adonisjs/core/http'
 import { randomId } from '../utils/random.js'
 import { synthetizeObject } from '../synthetize.js'
 import { hydrateObject } from '../utils/properties.js'
 import { ComponentContext, RefAccessor } from '../types.js'
 import { SparkNode } from '../jsx/types/jsx.js'
+import { Powercord } from '@foadonis/powercord'
+import { HttpContext } from '@adonisjs/core/http'
 
 export interface Component {
   constructor(...args: any[]): any
@@ -15,6 +16,7 @@ export abstract class Component<P = {}> {
   private static name?: string
 
   declare readonly $props: P
+  declare powercord: Powercord
 
   $id = randomId()
   $childrenData: ComponentContext[] = []
@@ -27,19 +29,9 @@ export abstract class Component<P = {}> {
     return this.name
   }
 
-  abstract render(that: RefAccessor<unknown>): SparkNode
+  abstract render(that: RefAccessor<unknown>): SparkNode | Promise<SparkNode>
 
-  get ctx() {
-    return HttpContext.getOrFail()
-  }
-
-  get response() {
-    return this.ctx.response
-  }
-
-  get request() {
-    return this.ctx.request
-  }
+  error?(error: unknown): SparkNode
 
   /**
    * Returns this component name.
@@ -48,14 +40,15 @@ export abstract class Component<P = {}> {
     return this.constructor.name
   }
 
+  get ctx() {
+    return HttpContext.getOrFail()
+  }
+
   /**
    * Redirects the user to a different route.
-   *
-   * For security reasons browsers does not allow manual redirect handling.
-   * This mean we have to use a custom status code.
    */
   redirect(path: string) {
-    this.response.status(309).header('Location', path)
+    this.powercord.send('navigate', { url: path })
   }
 
   /**

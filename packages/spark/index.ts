@@ -2,6 +2,9 @@ export { configure } from './configure.js'
 export { Component } from './src/components/main.js'
 export { Form } from './src/form/base_form.js'
 export { ref } from './src/ref.js'
+export type { Ref } from './src/ref.js'
+
+export { getPropertyFromAccessor } from './src/utils/properties.js'
 
 export { Link } from './src/components/link.js'
 export { Vite } from './src/components/vite.js'

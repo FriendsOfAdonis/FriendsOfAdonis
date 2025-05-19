@@ -1,0 +1,10 @@
+@import 'tailwindcss' source('../..');
+
+@source "../../../../packages/cockpit/src";
+
+@plugin "daisyui" {
+  themes:
+    light --default,
+    dark --prefersdark,
+    forest;
+}

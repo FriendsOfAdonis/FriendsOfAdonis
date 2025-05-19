@@ -53,7 +53,11 @@ export class Router extends TypedEventTarget<RouterEvents> {
   }
 
   async #replacePage(path: string | URL) {
-    const page = await Spark.http.get(path)
+    const page = await fetch(path, {
+      headers: {
+        'X-Powercord-Id': Spark.powercord.id,
+      },
+    })
     const html = await page.text()
 
     const doc = new DOMParser().parseFromString(html, 'text/html')

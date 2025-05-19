@@ -1,11 +1,12 @@
 import { FC, SparkNode } from './jsx/types/jsx.js'
 import { ComponentsRegistry } from './components/registry.js'
 import { Ref } from './ref.js'
+import { HttpContext } from '@adonisjs/core/http'
 
 export type LazyImport<T> = () => Promise<T>
 
 export interface SparkConfig {
-  layout: LazyImport<{ default: FC<{ children: SparkNode }> }>
+  layout: (ctx: HttpContext) => LazyImport<{ default: FC<{ children: SparkNode }> }>
 }
 
 export type ComponentContext = {
@@ -41,6 +42,7 @@ export interface Resolver {
 
 export type ComponentSnapshot = {
   data: Record<string, any>
+  props: Record<string, any>
   memo: {
     name: string
     id: string
@@ -50,3 +52,29 @@ export type ComponentSnapshot = {
 export type ComponentUpdates = Record<string, any>
 
 export type ComponentCall = { method: string; params?: any[] }
+
+// Messages
+export type SparkMessage = {
+  componentId: string
+  events: (SparkActionMessage | SparkUpdatesMessage)[]
+}
+
+export type SparkActionMessage = {
+  name: 'action'
+  payload: {
+    method: string
+  }
+}
+
+export type SparkUpdatesMessage = {
+  name: 'updates'
+  payload: {
+    data: Record<string, any>
+  }
+}
+
+declare module '@foadonis/powercord/types' {
+  export interface PowercordMessages {
+    'spark:morph': { componentId: string; html: string }
+  }
+}

@@ -8,6 +8,23 @@ import { assertSearchResults } from './utils.js'
 import env from '../env.js'
 import Import from '../../commands/import.js'
 import Flush from '../../commands/flush.js'
+import { GenericContainer, StartedTestContainer, Wait } from 'testcontainers'
+
+test.group('MyGroup', async (group) => {
+  let redis: StartedTestContainer
+  group.setup(async () => {
+    redis = await new GenericContainer('redis:5.0.3-alpine')
+      .withExposedPorts(6379)
+      .withWaitStrategy(Wait.forLogMessage('Ready to accept connections'))
+      .start()
+  })
+
+  group.teardown(async () => {
+    await redis.stop()
+  })
+
+  test('do your testing', () => {})
+})
 
 test.group('Algolia', async (group) => {
   group.setup(async () => {

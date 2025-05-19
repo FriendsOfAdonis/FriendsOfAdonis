@@ -15,8 +15,12 @@ const ALPINE_EVENT_MAPPING: Record<
     },
   },
   $model: {
-    toKey: () => `x-model`,
+    toKey: () => `spark:model`,
     toHandler: (r) => r.path,
+  },
+  $link: {
+    toKey: () => `spark:link`,
+    toHandler: () => '',
   },
 }
 
@@ -31,6 +35,7 @@ export function toAlpineEventAttributes(props: Record<string, any>): Record<stri
       m?.toKey,
       m?.defaultOptions
     )
+
     props[k] = undefined
     props[nk] = nv
   }

@@ -5,6 +5,7 @@ import SparkMiddleware from '../src/middleware.js'
 import { SparkManager } from '../src/spark_manager.js'
 import { SparkNode } from '../src/jsx/index.js'
 import { awaitStream } from './helpers.js'
+import { Logger } from '@adonisjs/core/logger'
 
 test.group('middleware', () => {
   const factory = new HttpContextFactory()
@@ -13,8 +14,9 @@ test.group('middleware', () => {
     {
       resolve: async (constructor) => new constructor(),
     },
+    new Logger({}),
     {
-      layout: async () => ({ default: ({ children }: { children: SparkNode }) => children }),
+      layout: () => async () => ({ default: ({ children }: { children: SparkNode }) => children }),
     }
   )
 

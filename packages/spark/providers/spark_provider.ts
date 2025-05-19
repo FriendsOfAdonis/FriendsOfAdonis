@@ -1,18 +1,27 @@
 import { ApplicationService } from '@adonisjs/core/types'
 import { SparkManager } from '../src/spark_manager.js'
 import { SparkConfig } from '../src/types.js'
+import { PowercordServer } from '@foadonis/powercord'
 import { HttpContext } from '@adonisjs/core/http'
+import { SparkInstance } from '../src/spark_instance.js'
 
 export default class SparkProvider {
   constructor(private app: ApplicationService) {}
 
   register() {
-    this.app.container.singleton(SparkManager, (container) => {
+    this.app.container.singleton(SparkManager, async (container) => {
       const config = this.app.config.get<SparkConfig>('spark')
+      const logger = await container.make('logger')
+      const powercord = await container.make(PowercordServer)
+      const router = await container.make('router')
+
       return new SparkManager(
+        powercord,
+        router,
         {
           resolve: (constructor) => container.make(constructor),
         },
+        logger,
         config
       )
     })
@@ -22,23 +31,11 @@ export default class SparkProvider {
 
   async boot() {
     const spark = await this.app.container.make('spark')
-    const router = await this.app.container.make('router')
-    const SparkController = () => import('../src/controllers/spark_controller.js')
-
-    router
-      .group(() => {
-        router.post('/update', [SparkController, 'update']).as('update')
-      })
-      .prefix('/_spark')
-      .as('spark')
-
-    HttpContext.getter(
-      'spark',
-      function (this: HttpContext) {
-        return spark.createRenderer()
-      },
-      true
-    )
+    HttpContext.getter('spark', function (this: HttpContext) {
+      const id = this.request.header('x-powercord-id')
+      if (!id) return
+      return spark.getInstance(id)
+    })
   }
 }
 
@@ -50,6 +47,6 @@ declare module '@adonisjs/core/types' {
 
 declare module '@adonisjs/core/http' {
   interface HttpContext {
-    spark: ReturnType<SparkManager['createRenderer']>
+    spark: SparkInstance | undefined
   }
 }

@@ -1,6 +1,5 @@
 import { HttpContext } from '@adonisjs/core/http'
 import { NextFn } from '@adonisjs/core/types/http'
-import { Readable } from 'node:stream'
 import { isJSXElement } from './jsx/render/jsx_element.js'
 import { SparkManager } from './spark_manager.js'
 import { inject } from '@adonisjs/core'
@@ -9,27 +8,32 @@ import { inject } from '@adonisjs/core'
 export default class SparkMiddleware {
   constructor(private readonly spark: SparkManager) {}
 
-  async handle({ response }: HttpContext, next: NextFn) {
+  async handle(ctx: HttpContext, next: NextFn) {
     await next()
 
-    if (response.hasContent && response.content?.length) {
-      const content = response.content[0]
+    if (ctx.response.hasContent && ctx.response.content?.length) {
+      const content = ctx.response.content[0]
 
       if (isJSXElement(content)) {
-        const layout = await this.spark.config.layout().then((m) => m.default)
+        const instance = ctx.spark ?? this.spark.createInstance()
 
-        const readable = this.spark
-          .createRenderer()
+        const layout = await this.spark.config
+          .layout(ctx)()
+          .then((m) => m.default)
+
+        // TODO: Handle streaming once error handling is done properly
+        const html = await this.spark
+          .createRenderer(instance)
           .layout(layout)
           .render(content)
-          .toReadableStream()
+          .toString()
 
-        const stream = Readable.fromWeb(readable)
-
-        // @adonisjs/http-server renders first check for body content
-        response.lazyBody.content = undefined
-
-        response.status(200).stream(stream)
+        // const stream = Readable.fromWeb(readable)
+        //
+        // // @adonisjs/http-server renders first check for body content
+        // ctx.response.lazyBody.content = undefined
+        //
+        ctx.response.status(200).send(html)
       }
     }
   }

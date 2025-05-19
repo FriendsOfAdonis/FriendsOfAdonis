@@ -1,0 +1,23 @@
+import { createLucideIcon } from '../icon.js'
+import { IconNode } from '../types.js'
+
+export const __iconNode: IconNode = [
+  ['path', { d: 'M12.8 19.6A2 2 0 1 0 14 16H2', key: '148xed' }],
+  ['path', { d: 'M17.5 8a2.5 2.5 0 1 1 2 4H2', key: '1u4tom' }],
+  ['path', { d: 'M9.8 4.4A2 2 0 1 1 11 8H2', key: '75valh' }],
+]
+
+/**
+ * @component @name Wind
+ * @description Lucide SVG icon component, renders SVG Element with children.
+ *
+ * @preview ![img](data:image/svg+xml;base64,PHN2ZyAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIgogIHdpZHRoPSIyNCIKICBoZWlnaHQ9IjI0IgogIHZpZXdCb3g9IjAgMCAyNCAyNCIKICBmaWxsPSJub25lIgogIHN0cm9rZT0iIzAwMCIgc3R5bGU9ImJhY2tncm91bmQtY29sb3I6ICNmZmY7IGJvcmRlci1yYWRpdXM6IDJweCIKICBzdHJva2Utd2lkdGg9IjIiCiAgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIgogIHN0cm9rZS1saW5lam9pbj0icm91bmQiCj4KICA8cGF0aCBkPSJNMTIuOCAxOS42QTIgMiAwIDEgMCAxNCAxNkgyIiAvPgogIDxwYXRoIGQ9Ik0xNy41IDhhMi41IDIuNSAwIDEgMSAyIDRIMiIgLz4KICA8cGF0aCBkPSJNOS44IDQuNEEyIDIgMCAxIDEgMTEgOEgyIiAvPgo8L3N2Zz4K) - https://lucide.dev/icons/wind
+ * @see https://lucide.dev/guide/packages/lucide-react - Documentation
+ *
+ * @param {Object} props - Lucide icons props and any valid SVG attribute
+ * @returns {JSX.Element} JSX Element
+ *
+ */
+const Wind = createLucideIcon('wind', __iconNode)
+
+export default Wind

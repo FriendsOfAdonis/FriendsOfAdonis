@@ -8,6 +8,7 @@
 */
 
 import router from '@adonisjs/core/services/router'
+import spark from '@foadonis/spark/services/main'
 
 const AuthController = () => import('#controllers/auth_controller')
 const TestController = () => import('#controllers/test_controller')
@@ -21,3 +22,5 @@ router
     router.get('/signup', [AuthController, 'signup']).as('signup')
   })
   .as('auth')
+
+spark.registerRoutes()

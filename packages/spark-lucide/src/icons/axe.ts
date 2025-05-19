@@ -1,0 +1,28 @@
+import { createLucideIcon } from '../icon.js'
+import { IconNode } from '../types.js'
+
+export const __iconNode: IconNode = [
+  ['path', { d: 'm14 12-8.381 8.38a1 1 0 0 1-3.001-3L11 9', key: '5z9253' }],
+  [
+    'path',
+    {
+      d: 'M15 15.5a.5.5 0 0 0 .5.5A6.5 6.5 0 0 0 22 9.5a.5.5 0 0 0-.5-.5h-1.672a2 2 0 0 1-1.414-.586l-5.062-5.062a1.205 1.205 0 0 0-1.704 0L9.352 5.648a1.205 1.205 0 0 0 0 1.704l5.062 5.062A2 2 0 0 1 15 13.828z',
+      key: '19zklq',
+    },
+  ],
+]
+
+/**
+ * @component @name Axe
+ * @description Lucide SVG icon component, renders SVG Element with children.
+ *
+ * @preview ![img](data:image/svg+xml;base64,PHN2ZyAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIgogIHdpZHRoPSIyNCIKICBoZWlnaHQ9IjI0IgogIHZpZXdCb3g9IjAgMCAyNCAyNCIKICBmaWxsPSJub25lIgogIHN0cm9rZT0iIzAwMCIgc3R5bGU9ImJhY2tncm91bmQtY29sb3I6ICNmZmY7IGJvcmRlci1yYWRpdXM6IDJweCIKICBzdHJva2Utd2lkdGg9IjIiCiAgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIgogIHN0cm9rZS1saW5lam9pbj0icm91bmQiCj4KICA8cGF0aCBkPSJtMTQgMTItOC4zODEgOC4zOGExIDEgMCAwIDEtMy4wMDEtM0wxMSA5IiAvPgogIDxwYXRoIGQ9Ik0xNSAxNS41YS41LjUgMCAwIDAgLjUuNUE2LjUgNi41IDAgMCAwIDIyIDkuNWEuNS41IDAgMCAwLS41LS41aC0xLjY3MmEyIDIgMCAwIDEtMS40MTQtLjU4NmwtNS4wNjItNS4wNjJhMS4yMDUgMS4yMDUgMCAwIDAtMS43MDQgMEw5LjM1MiA1LjY0OGExLjIwNSAxLjIwNSAwIDAgMCAwIDEuNzA0bDUuMDYyIDUuMDYyQTIgMiAwIDAgMSAxNSAxMy44Mjh6IiAvPgo8L3N2Zz4K) - https://lucide.dev/icons/axe
+ * @see https://lucide.dev/guide/packages/lucide-react - Documentation
+ *
+ * @param {Object} props - Lucide icons props and any valid SVG attribute
+ * @returns {JSX.Element} JSX Element
+ *
+ */
+const Axe = createLucideIcon('axe', __iconNode)
+
+export default Axe
