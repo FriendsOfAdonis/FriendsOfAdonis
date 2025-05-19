@@ -11,29 +11,25 @@ export const E_NOT_INITIALIZED_ERROR = createError(
 export const E_INVALID_PRIVATE_KEY = class InvalidPrivateKeyException extends Exception {
   static code = 'E_INVALID_PRIVATE_KEY'
 
-  constructor(key: string, privateKeyName: string, privateKeyValue?: string) {
-    super(
-      `Could not decrypt "${key}" using private key "${privateKeyName}=${truncate(privateKeyValue ?? '')}"`
-    )
+  constructor(privateKeyName: string, privateKeyValue?: string) {
+    super(`Invalid private key "${privateKeyName}=${truncate(privateKeyValue ?? '')}"`)
   }
 }
 
 export const E_MALFORMED_ENCRYPTED_DATA = class MalformedEncryptedDataException extends Exception {
   static code = 'E_MALFORMED_ENCRYPTED_DATA'
 
-  constructor(key: string) {
-    super(`Could not decrypt "${key}" because encrypted data appears malformed`)
+  constructor() {
+    super(`Could not decrypt because encrypted data appears malformed`)
   }
 }
 
 export const E_PRIVATE_KEY_NOT_FOUND = class PrivateKeyNotFoundException extends Exception {
   static code = 'E_PRIVATE_KEY_NOT_FOUND'
 
-  constructor(key?: string) {
+  constructor() {
     super(
-      key
-        ? `"${key}" is encrypted but you do not have any private key provided. Environment variables checked: ${keynames('private')}`
-        : `You do not have any private key provided. Environment variables checked: ${keynames('private')}`
+      `You do not have any private key provided. Environment variables checked: ${keynames('private')}`
     )
   }
 }
