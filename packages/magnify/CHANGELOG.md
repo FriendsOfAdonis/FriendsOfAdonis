@@ -1,5 +1,15 @@
 # @foadonis/magnify
 
+## 0.2.7
+
+### Patch Changes
+
+- [#53](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/53) [`a315cd6`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/a315cd65528d6bdd35b47c33d243e85a75ca6725) Thanks [@kerwanp](https://github.com/kerwanp)! - perf: Remove Typesense index creation on search
+
+- [#53](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/53) [`a315cd6`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/a315cd65528d6bdd35b47c33d243e85a75ca6725) Thanks [@kerwanp](https://github.com/kerwanp)! - feat: Improve shouldBeSearchable behavior
+
+- [#53](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/53) [`a315cd6`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/a315cd65528d6bdd35b47c33d243e85a75ca6725) Thanks [@kerwanp](https://github.com/kerwanp)! - chore: Overall testing improvements
+
 ## 0.2.6
 
 ### Patch Changes
