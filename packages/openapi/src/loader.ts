@@ -48,7 +48,7 @@ export class RouterLoader {
     OperationMetadataStorage.defineMetadata(
       target.prototype,
       {
-        path: route.pattern,
+        path: route.pattern.replaceAll(/:([^/]+)/g, '{$1}'),
         methods: route.methods.filter((m) => m !== 'HEAD').map((r) => r.toLowerCase()) as any,
         tags: [name],
       },

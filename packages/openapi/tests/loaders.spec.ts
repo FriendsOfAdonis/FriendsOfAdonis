@@ -5,6 +5,11 @@ import { DateTime } from 'luxon'
 import { LuxonTypeLoader } from '../src/loaders/luxon.js'
 import vine from '@vinejs/vine'
 import { validatorToSchema, VineTypeLoader } from '../src/loaders/vine.js'
+import { HttpRouterService } from '@adonisjs/core/types'
+import { RouteJSON } from '@adonisjs/core/types/http'
+import { OperationMetadataStorage } from 'openapi-metadata/metadata'
+import { RouterLoader } from '../src/loader.js'
+import app from '@adonisjs/core/services/app'
 
 test.group('Luxon', () => {
   test('DateTime', async ({ assert }) => {
@@ -176,5 +181,71 @@ test.group('Vine', () => {
         required: ['string', 'number'],
       }
     )
+  })
+})
+
+test.group('RouterLoader', (group) => {
+  let routerService: HttpRouterService
+  let logger: any
+
+  group.setup(async () => {
+    await app.boot()
+    routerService = await app.container.make('router')
+    logger = { warn: () => {}, info: () => {}, error: () => {} } // Mock logger
+  })
+
+  test('should correctly format path parameters', async ({ assert }) => {
+    const loader = new RouterLoader(routerService, logger as any)
+
+    // Mock a controller
+    class UsersController {
+      handle() {}
+      show() {}
+      showSubscription() {}
+      showAll() {}
+    }
+
+    const routes: Partial<RouteJSON>[] = [
+      {
+        pattern: '/api/users/:id',
+        // @ts-expect-error For testing purposes, we only need the reference
+        handler: { reference: [UsersController, 'show'] },
+        methods: ['GET'],
+      },
+      {
+        pattern: '/api/users/:userId/subscriptions/:subscriptionId',
+        // @ts-expect-error For testing purposes, we only need the reference
+        handler: { reference: [UsersController, 'showSubscription'] },
+        methods: ['GET'],
+      },
+      {
+        pattern: '/api/users/*',
+        // @ts-expect-error For testing purposes, we only need the reference
+        handler: { reference: [UsersController, 'showAll'] },
+        methods: ['GET'],
+      },
+    ]
+
+    for (const route of routes) {
+      await loader.loadRouteController(route as RouteJSON)
+    }
+
+    const metadataShow = OperationMetadataStorage.getMetadata(UsersController.prototype, 'show')
+    assert.deepEqual(metadataShow?.path, '/api/users/{id}')
+
+    const metadataShowSubscription = OperationMetadataStorage.getMetadata(
+      UsersController.prototype,
+      'showSubscription'
+    )
+    assert.deepEqual(
+      metadataShowSubscription?.path,
+      '/api/users/{userId}/subscriptions/{subscriptionId}'
+    )
+
+    const metadataShowAll = OperationMetadataStorage.getMetadata(
+      UsersController.prototype,
+      'showAll'
+    )
+    assert.deepEqual(metadataShowAll?.path, '/api/users/*') // Wildcard should remain as is
   })
 })
