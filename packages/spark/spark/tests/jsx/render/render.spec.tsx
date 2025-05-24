@@ -2,16 +2,11 @@ import { test } from '@japa/runner'
 import { AssertionError } from 'node:assert'
 import { renderToString } from '../../../src/jsx/render/main.js'
 import { Component } from '../../../src/components/main.js'
-import { ComponentsManager } from '../../../src/components/manager.js'
-
-const manager = new ComponentsManager({
-  resolve: async (constructor) => new constructor(),
-})
+import { SparkFactory } from '../../../factories/spark_factory.js'
 
 async function assertRender(element: Parameters<typeof renderToString>[0], expected: string) {
-  const result = await renderToString(element, {
-    manager,
-  })
+  const spark = await new SparkFactory().create()
+  const result = await renderToString(element, spark.createInstance())
 
   if (result !== expected) {
     throw new AssertionError({

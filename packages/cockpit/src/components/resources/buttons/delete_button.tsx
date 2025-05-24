@@ -10,7 +10,7 @@ import { cn } from '../../../utils/cn.js'
 export class DeleteButton extends Component<
   { resource: BaseResource; record: any } & ComponentProps<typeof Button>
 > {
-  render(that: RefAccessor<unknown>): SparkNode | Promise<SparkNode> {
+  render(_that: RefAccessor<unknown>): SparkNode | Promise<SparkNode> {
     const { resource, record, className, ...props } = this.$props
 
     return (
@@ -18,7 +18,7 @@ export class DeleteButton extends Component<
         <Button
           {...props}
           className={cn('btn-error', className)}
-          onclick={`${this.$id}.showModal()`}
+          onClick={`${this.$id}.showModal()`}
         >
           <Trash className="size-4" />
         </Button>

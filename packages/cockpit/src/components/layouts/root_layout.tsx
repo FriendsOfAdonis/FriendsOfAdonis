@@ -1,5 +1,5 @@
 import { Vite } from '@foadonis/spark'
-import { FC, html, SparkNode } from '@foadonis/spark/jsx'
+import { html, SparkNode } from '@foadonis/spark/jsx'
 import AppSidebar from '../app_sidebar.js'
 
 export default function RootLayout({ children }: { children?: SparkNode }) {

@@ -5,7 +5,7 @@ import { SimplePaginatorContract } from '@adonisjs/lucid/types/querybuilder'
 import { RecordId, ResourceListParams } from '../types.js'
 import { ComponentProps, FC } from '@foadonis/spark/jsx'
 
-export abstract class BaseResource<TRecord extends Record<string, any> = any> {
+export abstract class BaseResource<TRecord = any> {
   abstract get icon(): FC<ComponentProps<'i'>>
 
   /**
@@ -21,7 +21,7 @@ export abstract class BaseResource<TRecord extends Record<string, any> = any> {
    * @example "id"
    * @default this.model.primaryKey
    */
-  abstract get idKey(): keyof TRecord
+  abstract get idKey(): string
 
   /**
    * The title key of this resource.
@@ -29,7 +29,7 @@ export abstract class BaseResource<TRecord extends Record<string, any> = any> {
    * @example "email"
    * @default this.idKey
    */
-  get titleKey(): keyof TRecord {
+  get titleKey(): string {
     return this.idKey
   }
 
@@ -54,16 +54,12 @@ export abstract class BaseResource<TRecord extends Record<string, any> = any> {
   /**
    * Retrieves the title of a record.
    */
-  title(record: TRecord): string {
-    return record[this.titleKey]
-  }
+  abstract title(record: TRecord): string
 
   /**
    * Retrieves the id of a record.
    */
-  id(record: TRecord): string {
-    return record[this.idKey]
-  }
+  abstract id(record: TRecord): any
 
   /**
    * The fields configuration for this resource.

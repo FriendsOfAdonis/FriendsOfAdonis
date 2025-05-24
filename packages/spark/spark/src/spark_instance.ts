@@ -100,6 +100,6 @@ export class SparkInstance {
   }
 
   async #handleAction(component: Component, { payload }: SparkActionMessage) {
-    await component.$call(payload.method)
+    await component.$call(payload.method as any)
   }
 }

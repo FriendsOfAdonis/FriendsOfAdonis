@@ -1,7 +1,6 @@
 import { randomId } from '../utils/random.js'
-import { synthetizeObject } from '../synthetize.js'
 import { hydrateObject } from '../utils/properties.js'
-import { ComponentContext, RefAccessor } from '../types.js'
+import { ComponentActions, ComponentContext, RefAccessor } from '../types.js'
 import { SparkNode } from '../jsx/types/jsx.js'
 import { HttpContext } from '@adonisjs/core/http'
 import { SparkInstance } from '../spark_instance.js'
@@ -13,21 +12,13 @@ export interface Component {
 }
 
 export abstract class Component<P = {}> {
-  private static name?: string
-
   declare readonly $props: P
   declare readonly spark: SparkInstance
 
-  $id = randomId()
+  $id = `${this.constructor.name}_${randomId()}`
+
   $childrenData: ComponentContext[] = []
   $hydrated = false
-
-  static get $name() {
-    if (!this.name) {
-      this.name = `${this.name}:${randomId()}`
-    }
-    return this.name
-  }
 
   abstract render(that: RefAccessor<unknown>): SparkNode | Promise<SparkNode>
 
@@ -66,7 +57,7 @@ export abstract class Component<P = {}> {
   /**
    * Call a component method.
    */
-  $call(action: string, ...args: any[]) {
+  $call(action: ComponentActions<this>, ...args: any[]) {
     if (!(action in this)) {
       throw new Error(`Component ${this.$name} does not have a method ${action}`)
     }
@@ -78,9 +69,5 @@ export abstract class Component<P = {}> {
     }
 
     return fn.apply(this, args)
-  }
-
-  $data() {
-    return synthetizeObject(this)
   }
 }

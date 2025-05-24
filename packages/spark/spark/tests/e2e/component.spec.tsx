@@ -1,6 +1,4 @@
 import { test } from '@japa/runner'
-import { setupSparkApp } from '../helpers.js'
-import { Counter } from '../fixtures/components/counter.js'
 
 test.group('component', () => {
   // test('$click', async ({ visit }) => {
@@ -57,12 +55,4 @@ test.group('component', () => {
   //   await page.assertTextContains('#parent > .count', 'Count 1')
   //   await page.assertTextContains('#children > .count', 'Count 1')
   // })
-
-  test('test', async () => {
-    const { app, spark } = await setupSparkApp()
-
-    const component = spark.test(Counter, { id: 'hello' })
-
-    await app.terminate()
-  })
 })

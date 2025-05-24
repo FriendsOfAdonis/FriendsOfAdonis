@@ -104,6 +104,8 @@ export namespace HTML {
     inert?: boolean
 
     children?: SparkNode | undefined
+
+    onClick?: string
   }
 
   interface HtmlAttributes<T extends EventTarget> extends GlobalAttributes<T> {}

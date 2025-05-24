@@ -1,10 +1,19 @@
 import { FC, SparkNode } from './jsx/types/jsx.js'
-import { ComponentsRegistry } from './components/registry.js'
 import { Ref } from './ref.js'
 import { HttpContext } from '@adonisjs/core/http'
 import { Component } from './components/main.js'
 
 export type LazyImport<T> = () => Promise<T>
+
+export type ClassMethods<T> = {
+  [key in keyof T]: T[key] extends (...args: any[]) => any
+    ? key extends string
+      ? key
+      : never
+    : never
+}[keyof T]
+
+// ----
 
 export interface SparkConfig {
   layout: (ctx: HttpContext) => LazyImport<{ default: FC<{ children: SparkNode }> }>
@@ -14,11 +23,6 @@ export type ComponentContext = {
   id: string
   component: string
   data: Record<string, any>
-  children: ComponentContext[]
-}
-
-export type RenderContext = {
-  registry: ComponentsRegistry
   children: ComponentContext[]
 }
 
@@ -37,9 +41,13 @@ type ObjectPropertyAccessor<T> = {
 export type RefAccessor<T = unknown> =
   IsReferencable<T> extends true ? Ref<T> : ObjectPropertyAccessor<T>
 
-export type ComponentActions<T extends Component<any>> = {
-  [key in keyof T]: T[key] extends (...args: any[]) => any ? key : never
-}[keyof T]
+/**
+ * Retrieves list of component action names by filtering component keys.
+ */
+export type ComponentActions<T extends Component<any>> = Exclude<
+  ClassMethods<T>,
+  'render' | 'redirect' | 'constructor' | '$hydrate' | '$call' | '$props'
+>
 
 export interface Resolver {
   resolve<T>(constructor: new (...args: any[]) => T): Promise<T>

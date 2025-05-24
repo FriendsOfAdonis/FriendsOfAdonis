@@ -5,7 +5,6 @@ import { BaseResource } from '../../resources/base.js'
 import { FieldsBuilder } from '../../fields/builder.js'
 import { Button } from '../ui/button.js'
 import { Fieldset } from '../ui/fieldset.js'
-import { Icon } from '../ui/icon.js'
 import { DeleteButton } from './buttons/delete_button.js'
 import { Trash } from '@foadonis/spark-lucide'
 
