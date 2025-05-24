@@ -2,8 +2,6 @@
 title: Custom Messages
 ---
 
-## Introduction
-
 It is possible to create custom messages allowing you to perform custom actions.
 
 In the following example we will create a message that open a dialog by using a [HTMLDialogElement](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/dialog) element.
@@ -64,14 +62,35 @@ To achieve this we will listen to the message using `.on` method with a callback
 ```js title="resources/js/app.js"
 import Powercord from '@foadonis/powercord'
 
-const powercord = Powercord.start()
-
-powercord.on('dialog', ({ details }) => {
+Powercord.on('dialog', ({ details }) => {
   const element = document.querySelector(`dialog#${details.id}`)
   if (!element) return
 
   element.showModal()
 })
+
+Powercord.start()
 ```
 
 Now everytime we perform a `POST /hello`, every connected client will see a dialog showing on their screen!
+
+## Overriding Built-in Messages
+
+Built-in messages can be overwritten allowing you to further extend Powercord by using `event.preventDefault()`
+
+In this example the `log` message now uses [consola](https://github.com/unjs/consola) to log messages.
+
+```js title="resources/js/app.js"
+import { consola } from 'consola'
+import Powercord from '@foadonis/powercord'
+
+Powercord.on('dialog', (event) => {
+  event.preventDefault()
+
+  const { level, message } = event.details
+
+  consola[level](message)
+})
+
+Powercord.start()
+```

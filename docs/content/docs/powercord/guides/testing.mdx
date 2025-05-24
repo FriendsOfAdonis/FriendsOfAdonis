@@ -1,0 +1,111 @@
+---
+title: Testing
+---
+
+Testing allows you to ensure that certain messages has been sent properly to clients.
+
+## Your first test
+
+Testing is done by swapping the transporter by a fake one that store sent messages.
+
+```ts
+import { test } from '@japa/runner'
+import powercord from '@foadonis/powercord/services/main'
+
+test('create a new post', async ({ client, route }) => {
+  /**
+   * Enable fake mode.
+   */
+  const messages = powercord.fake()
+
+  /**
+   * Make an API call.
+   */
+  await client.post(route('posts.store')).send({ email: 'contact@friendsofadonis.com' })
+
+  /**
+   * Asserts that a 'toast' message has been sent.
+   */
+  messages.assertSent('toast')
+
+  /**
+   * Disable fake mode.
+   */
+  powercord.restore()
+})
+```
+
+## Assertions
+
+### `assertSent`
+
+The `assertSent` method allows you to ensure that a specific message has been sent at least once.
+
+```ts
+const messages = powercord.fake()
+
+/**
+ * Asserts that a 'log' message has been sent
+ */
+messages.assertSent('log')
+```
+
+You can provide a filtering function to assert the message payload.
+
+```ts
+const messages = powercord.fake()
+
+/**
+ * Asserts that a 'log' with level 'error' has been sent
+ */
+messages.assertSent('log', (message) => message.payload.level === 'error')
+```
+
+### `assertCount`
+
+The `assertCount` method allows you to asserts how many messages has been sent.
+
+```ts
+const messages = powercord.fake()
+
+/**
+ * Asserts that at exactly two messages has been sent
+ */
+messages.assertCount(2)
+```
+
+You can provide a filtering function allowing you to count specific messages.
+
+```ts
+const messages = powercord.fake()
+
+/**
+ * Asserts that at exactly two 'log' messages has been sent
+ */
+messages.assertCount(2, (message) => message.name === 'log')
+```
+
+## Clear messages
+
+It is possible to clear stored sent messages to make testing easier using `messages.clear()`.
+
+```ts
+test('create a new post', async ({ client, route }) => {
+  const messages = powercord.fake()
+
+  /**
+   * Test post creation.
+   */
+  const post = await PostsService.create({ slug: 'powercord' })
+  messages.assertCount(1)
+  messages.clear()
+
+  /**
+   * Test post deletion.
+   */
+  await PostsService.delete(post.id)
+  messages.assertCount(1)
+
+  powercord.restore()
+})
+```

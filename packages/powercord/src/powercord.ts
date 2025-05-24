@@ -1,18 +1,16 @@
-import { PowercordMessages, TransmitService } from './types.js'
+import { TransportContract } from './transports/tranport.js'
+import { PowercordMessages } from './types.js'
 
 export class Powercord {
   readonly id: string
-  readonly transmit: TransmitService
+  readonly transport: TransportContract
 
-  constructor(transmit: TransmitService, id: string) {
+  constructor(transport: TransportContract, id: string) {
     this.id = id
-    this.transmit = transmit
+    this.transport = transport
   }
 
   send<T extends keyof PowercordMessages>(name: T, payload: PowercordMessages[T]) {
-    this.transmit.broadcast(`/powercord/${this.id}`, {
-      event: name,
-      payload,
-    })
+    this.transport.send(this.id, name, payload)
   }
 }

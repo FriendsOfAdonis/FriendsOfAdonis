@@ -2512,6 +2512,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@faker-js/faker@npm:^9.8.0":
+  version: 9.8.0
+  resolution: "@faker-js/faker@npm:9.8.0"
+  checksum: 10c0/f5db1125c1ea0115b9142fb4d4cb37cac2da4cd12ed02afb1cabf3b9600bd365bf480386250975a4fb200d77c00e8364dc8f61ac273a9dcdd2f2f42c3b29b0ec
+  languageName: node
+  linkType: hard
+
 "@fastify/busboy@npm:^2.0.0":
   version: 2.1.1
   resolution: "@fastify/busboy@npm:2.1.1"
@@ -2940,9 +2947,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@foadonis/spark-lucide@workspace:*, @foadonis/spark-lucide@workspace:packages/spark-lucide":
+"@foadonis/spark-lucide@workspace:*, @foadonis/spark-lucide@workspace:packages/spark/lucide":
   version: 0.0.0-use.local
-  resolution: "@foadonis/spark-lucide@workspace:packages/spark-lucide"
+  resolution: "@foadonis/spark-lucide@workspace:packages/spark/lucide"
   dependencies:
     "@foadonis/eslint-config": "workspace:*"
     "@lucide/build-icons": "workspace:*"
@@ -2958,9 +2965,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@foadonis/spark@workspace:*, @foadonis/spark@workspace:packages/spark":
+"@foadonis/spark@workspace:*, @foadonis/spark@workspace:packages/spark/spark":
   version: 0.0.0-use.local
-  resolution: "@foadonis/spark@workspace:packages/spark"
+  resolution: "@foadonis/spark@workspace:packages/spark/spark"
   dependencies:
     "@adonisjs/assembler": "npm:^7.8.2"
     "@adonisjs/core": "npm:^6.17.2"
@@ -18752,6 +18759,7 @@ __metadata:
     "@adonisjs/transmit": "npm:^2.0.2"
     "@adonisjs/tsconfig": "npm:^1.4.0"
     "@adonisjs/vite": "npm:^4.0.0"
+    "@faker-js/faker": "npm:^9.8.0"
     "@foadonis/cockpit": "workspace:*"
     "@foadonis/powercord": "workspace:*"
     "@foadonis/spark": "workspace:*"

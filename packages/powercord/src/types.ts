@@ -1,7 +1,20 @@
+import { ApplicationService } from '@adonisjs/core/types'
 import transmit from '@adonisjs/transmit/services/main'
+import { TransportContract } from './transports/tranport.js'
 
 export type PowercordConfig = {
-  path: string
+  transport: TransportConfigProvider<() => TransportContract>
+}
+
+export type ResolvedConfig = {
+  transport: () => TransportContract
+}
+
+export type TransportFactory = () => TransportContract
+
+export type TransportConfigProvider<Factory extends TransportFactory> = {
+  type: 'provider'
+  resolver: (app: ApplicationService) => Promise<Factory>
 }
 
 export interface PowercordMessages {

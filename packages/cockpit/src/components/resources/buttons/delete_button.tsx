@@ -3,24 +3,26 @@ import { BaseResource } from '../../../resources/base.js'
 import { ComponentProps, SparkNode } from '@foadonis/spark/jsx'
 import { RefAccessor } from '@foadonis/spark/types'
 import { Button } from '../../ui/button.js'
+import { DeleteModal } from '../modals/delete_modal.js'
+import { Trash } from '@foadonis/spark-lucide'
+import { cn } from '../../../utils/cn.js'
 
 export class DeleteButton extends Component<
   { resource: BaseResource; record: any } & ComponentProps<typeof Button>
 > {
   render(that: RefAccessor<unknown>): SparkNode | Promise<SparkNode> {
-    const { resource, record, ...props } = this.$props
+    const { resource, record, className, ...props } = this.$props
 
     return (
       <>
-        <Button {...props} onclick={`${this.$id}.showModal()`}>
-          Delete
+        <Button
+          {...props}
+          className={cn('btn-error', className)}
+          onclick={`${this.$id}.showModal()`}
+        >
+          <Trash className="size-4" />
         </Button>
-        <dialog id={this.$id} className="modal">
-          <div className="modal-box">
-            <h3 className="text-lg font-bold">Delete {resource.label}</h3>
-            <p className="py-4">Are you sure you want to do this? This action is irreversible!</p>
-          </div>
-        </dialog>
+        <DeleteModal id={this.$id} resource={resource} />
       </>
     )
   }

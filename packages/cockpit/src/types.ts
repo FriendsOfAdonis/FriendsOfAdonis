@@ -19,3 +19,9 @@ export type ResolvedConfig = {
 export type RecordId = string | number
 
 export type ResourceNameOrClass = string | (new (...args: any[]) => BaseResource)
+
+export type ResourceListParams = {
+  page: number
+  perPage: number
+  query?: string
+}

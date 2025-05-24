@@ -11,6 +11,8 @@ import { SparkMessage } from '../types.js'
 customElements.define('spark-component', HTMLSparkComponentElement)
 customElements.define('spark-error', HTMLErrorElement)
 
+export type SparkPlugin = (spark: SparkInstance) => void
+
 export type SparkEvents = {
   'initialized': {}
   'element:init': { element: HTMLElement }
@@ -36,6 +38,8 @@ export class SparkInstance extends TypedEventTarget<SparkEvents> {
     id: window.__spark_id,
   })
 
+  plugins: SparkPlugin[] = []
+
   start() {
     window.Alpine = Alpine
     window.Spark = this
@@ -59,12 +63,18 @@ export class SparkInstance extends TypedEventTarget<SparkEvents> {
       this.router.push(event.detail.url)
     })
 
+    this.plugins.forEach((plugin) => plugin(this))
+
     Alpine.plugin(AlpinePlugin(this))
 
     Alpine.start()
 
     this.powercord.start()
     this.emit('initialized', {})
+  }
+
+  plugin(plugin: SparkPlugin) {
+    this.plugins.push(plugin)
   }
 
   send(messages: SparkMessage[]) {

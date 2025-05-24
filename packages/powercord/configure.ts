@@ -13,30 +13,18 @@
 */
 
 import ConfigureCommand from '@adonisjs/core/commands/configure'
-import { readFile, writeFile } from 'node:fs/promises'
+import { stubsRoot } from './stubs/main.js'
 
 export async function configure(command: ConfigureCommand) {
   const codemods = await command.createCodemods()
 
   await codemods.updateRcFile((rcFile) => {
-    rcFile.addCommand('@foadonis/crypt/commands')
+    rcFile.addProvider('@foadonis/powercord/powercord_provider')
   })
 
-  await updateEnvFile(command)
+  await codemods.makeUsingStub(stubsRoot, 'config/powercord.stub', {})
 
   logSuccess(command)
-}
-
-async function updateEnvFile(command: ConfigureCommand) {
-  try {
-    const path = command.app.startPath('env.ts')
-    const content = await readFile(command.app.startPath('env.ts')).then((r) => r.toString())
-    await writeFile(path, `import '@foadonis/crypt'\n${content}`)
-  } catch (e) {
-    command.logger.warning(
-      'An error occured when injecting crypt in `start/env.ts`. You might have to do it manually.'
-    )
-  }
 }
 
 function logSuccess(command: ConfigureCommand) {
@@ -48,11 +36,10 @@ function logSuccess(command: ConfigureCommand) {
   command.logger.log(c.green(`│ ${foadonis} | ${name} │`))
   command.logger.log(c.green('╰─────────────────────────────────────╯'))
   command.logger.log('╭')
-  command.logger.log('│ Welcome to @foadonis/crypt!')
+  command.logger.log('│ Welcome to @foadonis/powercord!')
   command.logger.log('│ ')
   command.logger.log('│ Get started')
-  command.logger.log('│ ↪  Docs: https://friendsofadonis.com/docs/crypt')
-  command.logger.log('│ ↪  Start: node ace crypt:init')
+  command.logger.log('│ ↪  Docs: https://friendsofadonis.com/docs/powercord')
   command.logger.log('│ ')
   command.logger.log(
     `│ ${c.yellow('⭐ Give a star: https://github.com/FriendsOfAdonis/FriendsOfAdonis')}`

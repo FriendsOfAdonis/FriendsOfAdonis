@@ -1,7 +1,7 @@
 import app from '@adonisjs/core/services/app'
-import { PowercordServer } from '../src/server.js'
+import { PowercordManager } from '../src/manager.js'
 
-let powercord: PowercordServer
+let powercord: PowercordManager
 
 await app.booted(async () => {
   powercord = await app.container.make('powercord')

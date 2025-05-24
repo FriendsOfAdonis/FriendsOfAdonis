@@ -8,6 +8,9 @@
     "---Guides---",
     "guides/sending-messages",
     "guides/custom-messages",
+    "guides/testing",
+    "---Transports---",
+    "transports/transmit",
     "---References---",
     "references/messages"
   ]

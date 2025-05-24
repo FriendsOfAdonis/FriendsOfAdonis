@@ -1,8 +1,10 @@
-import { HttpContextFactory } from '@adonisjs/core/factories/http'
+import { HttpContextFactory, RouterFactory } from '@adonisjs/core/factories/http'
 import { HttpContext } from '@adonisjs/core/http'
-import { SparkManager } from '../src/spark_manager.js'
 import { AppFactory } from '@adonisjs/core/factories/app'
 import { ApplicationService } from '@adonisjs/core/types'
+import { PowercordFactory } from '@foadonis/powercord/factories/powercord'
+import { SparkManager } from '../src/spark_manager.js'
+import { Logger } from '@adonisjs/core/logger'
 
 type SparkFactoryParameters = {
   ctx: HttpContext
@@ -25,13 +27,18 @@ export class SparkFactory {
   async create() {
     const app = this.#getApp()
 
+    const powercord = new PowercordFactory().create().powercord
+    const router = new RouterFactory().create()
+    const logger = new Logger({})
+
     return new SparkManager(
+      powercord,
+      router,
       {
-        resolve: async (c) => app.container.make(c),
+        resolve: async (c) => new c(),
       },
-      {
-        layout: null as any,
-      }
+      logger,
+      {} as any
     )
   }
 }

@@ -1,6 +1,8 @@
 import { Logger } from '@adonisjs/core/logger'
 import { PowercordMessages, TransmitService } from './types.js'
 import { Powercord } from './powercord.js'
+import { TransportContract } from './transports/tranport.js'
+import { FakeTransport } from './transports/fake_transport.js'
 
 export type PowercordServerOptions = {
   path: string
@@ -8,39 +10,23 @@ export type PowercordServerOptions = {
   transmit: TransmitService
 }
 
-export class PowercordServer {
-  transmit: TransmitService
-  logger: Logger
+export class PowercordManager {
+  transport: TransportContract
 
   clients = new Map<string, Powercord>()
 
-  constructor(options: PowercordServerOptions) {
-    this.logger = options.logger
-    this.transmit = options.transmit
+  #fakeTransport?: FakeTransport
+
+  constructor(transport: TransportContract) {
+    this.transport = transport
   }
 
-  listen() {
-    this.transmit.on('subscribe', ({ uid, channel }) => {
-      if (!channel.startsWith('/spark')) return
-      this.create(uid)
-    })
-
-    this.transmit.on('unsubscribe', ({ uid, channel }) => {
-      if (!channel.startsWith('/spark')) return
-      this.stop(uid)
-    })
-
-    this.transmit.on('disconnect', ({ uid }) => {
-      this.stop(uid)
-    })
-  }
-
-  registerRoutes() {
-    this.transmit.registerRoutes()
+  async boot() {
+    await this.transport.boot(this)
   }
 
   create(id: string) {
-    const powercord = new Powercord(this.transmit, id)
+    const powercord = new Powercord(this.#fakeTransport ? this.#fakeTransport : this.transport, id)
     this.clients.set(id, powercord)
 
     powercord.send('log', { level: 'debug', message: '[powercord] connected.' })
@@ -76,5 +62,20 @@ export class PowercordServer {
     if (!client) return
 
     client.send(name, payload)
+  }
+
+  /**
+   * Turns on fake mode.
+   */
+  fake() {
+    this.#fakeTransport = new FakeTransport()
+    return this.#fakeTransport
+  }
+
+  /**
+   * Disables fake mode.
+   */
+  restore() {
+    this.#fakeTransport = undefined
   }
 }

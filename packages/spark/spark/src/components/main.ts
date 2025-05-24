@@ -3,8 +3,8 @@ import { synthetizeObject } from '../synthetize.js'
 import { hydrateObject } from '../utils/properties.js'
 import { ComponentContext, RefAccessor } from '../types.js'
 import { SparkNode } from '../jsx/types/jsx.js'
-import { Powercord } from '@foadonis/powercord'
 import { HttpContext } from '@adonisjs/core/http'
+import { SparkInstance } from '../spark_instance.js'
 
 export interface Component {
   constructor(...args: any[]): any
@@ -16,7 +16,7 @@ export abstract class Component<P = {}> {
   private static name?: string
 
   declare readonly $props: P
-  declare powercord: Powercord
+  declare readonly spark: SparkInstance
 
   $id = randomId()
   $childrenData: ComponentContext[] = []
@@ -48,7 +48,7 @@ export abstract class Component<P = {}> {
    * Redirects the user to a different route.
    */
   redirect(path: string) {
-    this.powercord.send('navigate', { url: path })
+    this.spark.powercord.send('navigate', { url: path })
   }
 
   /**

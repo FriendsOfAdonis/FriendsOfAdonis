@@ -2,6 +2,7 @@ import { FC, SparkNode } from './jsx/types/jsx.js'
 import { ComponentsRegistry } from './components/registry.js'
 import { Ref } from './ref.js'
 import { HttpContext } from '@adonisjs/core/http'
+import { Component } from './components/main.js'
 
 export type LazyImport<T> = () => Promise<T>
 
@@ -35,6 +36,10 @@ type ObjectPropertyAccessor<T> = {
 
 export type RefAccessor<T = unknown> =
   IsReferencable<T> extends true ? Ref<T> : ObjectPropertyAccessor<T>
+
+export type ComponentActions<T extends Component<any>> = {
+  [key in keyof T]: T[key] extends (...args: any[]) => any ? key : never
+}[keyof T]
 
 export interface Resolver {
   resolve<T>(constructor: new (...args: any[]) => T): Promise<T>

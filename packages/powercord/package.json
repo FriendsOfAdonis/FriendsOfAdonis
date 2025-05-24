@@ -15,6 +15,7 @@
     ".": "./build/index.js",
     "./powercord_provider": "./build/providers/powercord_provider.js",
     "./services/main": "./build/services/main.js",
+    "./factories/powercord": "./build/factories/powercord_factory.js",
     "./client": "./build/src/client/index.js",
     "./types": "./build/src/types.js"
   },

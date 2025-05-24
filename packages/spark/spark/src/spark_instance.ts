@@ -4,8 +4,7 @@ import { Component } from './components/main.js'
 import { Powercord } from '@foadonis/powercord'
 import { renderToString } from './jsx/render/main.js'
 import { setPropertyFromAccessor } from './utils/properties.js'
-
-type ComponentClass = new (...args: any[]) => Component
+import { HttpContext } from '@adonisjs/core/http'
 
 export type SparkInstanceOptions = {
   id: string
@@ -22,6 +21,7 @@ export class SparkInstance {
   readonly powercord: Powercord
 
   components = new Map<string, Component>()
+  ctx?: HttpContext
 
   constructor(options: SparkInstanceOptions) {
     this.id = options.id
@@ -30,10 +30,20 @@ export class SparkInstance {
     this.#resolver = options.resolver
   }
 
-  async mount(constructor: typeof Component, props: Record<string, any>) {
-    const component = await this.resolve(constructor, props)
+  setCtx(ctx: HttpContext) {
+    this.ctx = ctx
+  }
 
-    component.powercord = this.powercord
+  getCtxOrFail() {
+    if (!this.ctx) throw new Error('NO CTX') // TODO: Ctx not found
+    return this.ctx
+  }
+
+  async mount<C extends Component<any>>(
+    constructor: new (...args: any[]) => C,
+    props: C['$props']
+  ): Promise<C> {
+    const component = await this.resolve(constructor, props)
 
     if (component.mount) {
       await component.mount()
@@ -42,10 +52,14 @@ export class SparkInstance {
     return component
   }
 
-  async resolve(constructor: typeof Component, props: Record<string, any>) {
-    const component = await this.#resolver.resolve(constructor as unknown as ComponentClass)
+  async resolve<C extends Component<any>>(
+    constructor: new (...args: any[]) => C,
+    props: C['$props']
+  ): Promise<C> {
+    const component = await this.#resolver.resolve(constructor)
 
     Reflect.set(component, '$props', props)
+    Reflect.set(component, 'spark', this)
 
     this.components.set(component.$id, component)
 

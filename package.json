@@ -43,6 +43,7 @@
     "docs",
     "playgrounds/*",
     "packages/*",
+    "packages/spark/*",
     "tooling/*",
     "tooling/lucide/*"
   ],

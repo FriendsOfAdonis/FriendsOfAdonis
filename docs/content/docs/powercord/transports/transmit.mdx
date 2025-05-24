@@ -1,0 +1,46 @@
+---
+title: Transmit
+---
+
+The `TransmitTransport` uses [@adonisjs/transmit](https://docs.adonisjs.com/guides/digging-deeper/transmit) to send messages to clients using [Server-sent events](https://en.wikipedia.org/wiki/Server-sent_events). It is the default transport.
+
+## Setup
+
+To get started you must have [@adonisjs/transmit](https://docs.adonisjs.com/guides/digging-deeper/transmit) configured in your app. You can follow the [Official documentation](https://docs.adonisjs.com/guides/digging-deeper/transmit).
+
+<Callout>
+
+The Powercord configuration automatically install and configure Transmit for you.
+
+</Callout>
+
+## Configuration
+
+You can configure the `TransmitTranport` in `config/powercord.ts`.
+
+```ts title="config/powercord.ts"
+import { defineConfig, transports } from '@foadonis/powercord'
+
+export default defineConfig({
+  transport: transports.transmit({
+    path: '/powercord',
+  }),
+})
+```
+
+## Client setup (optional)
+
+As Powercord uses Transmit by default a Transmit client is automatically created when starting Powercord. This step is useful only if you want to reuse an existing instance.
+
+```ts title="resources/js/app.js"
+import Powercord from '@foadonis/powercord/client'
+import { Transmit } from '@adonisjs/transmit-client'
+
+const transmit = new Transmit({
+  baseUrl: window.location.origin,
+})
+
+Powercord.start({
+  transmit,
+})
+```

@@ -5,7 +5,7 @@ icon: Album
 
 Powercord allows you to emit client-side events directly from your backend.
 
-It works by creating a "cord" between your server and your clients using either [SSE](https://en.wikipedia.org/wiki/Server-sent_events) with [@adonisjs/transmit](https://docs.adonisjs.com/guides/digging-deeper/transmit).
+It works by creating a "cord" between your server and your clients using either.
 
 ```tsx title="server.ts"
 import powercord from '@foadonis/powercord'
@@ -35,4 +35,15 @@ Powercord.on('toast', ({ detail }) => {
 Powercord.on('log', ({ detail }) => {
   console[detail.level](detail.message)
 })
+
+Powercord.start()
 ```
+
+## Features
+
+✔ Execute client-actions from the server  
+✔ Broadcast messages to all connected clients  
+✔ Send messages to specific client from HttpContext  
+✔ Fully typesafe  
+✔ Supports custom actions  
+✔ Supports custom transports

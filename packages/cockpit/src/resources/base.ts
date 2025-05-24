@@ -2,7 +2,7 @@ import string from '@adonisjs/core/helpers/string'
 import { FieldsBuilder } from '../fields/builder.js'
 import { BaseField } from '../fields/base.js'
 import { SimplePaginatorContract } from '@adonisjs/lucid/types/querybuilder'
-import { RecordId } from '../types.js'
+import { RecordId, ResourceListParams } from '../types.js'
 import { ComponentProps, FC } from '@foadonis/spark/jsx'
 
 export abstract class BaseResource<TRecord extends Record<string, any> = any> {
@@ -83,7 +83,7 @@ export abstract class BaseResource<TRecord extends Record<string, any> = any> {
   /**
    * Operation for querying the resource records.
    */
-  abstract list(): Promise<SimplePaginatorContract<TRecord>>
+  abstract list(params: ResourceListParams): Promise<SimplePaginatorContract<TRecord>>
 
   /**
    * Operation for querying a single resource record.

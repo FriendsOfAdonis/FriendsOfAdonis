@@ -8,6 +8,7 @@
 */
 
 import router from '@adonisjs/core/services/router'
+import transmit from '@adonisjs/transmit/services/main'
 import spark from '@foadonis/spark/services/main'
 
 const AuthController = () => import('#controllers/auth_controller')
@@ -23,4 +24,5 @@ router
   })
   .as('auth')
 
+transmit.registerRoutes()
 spark.registerRoutes()

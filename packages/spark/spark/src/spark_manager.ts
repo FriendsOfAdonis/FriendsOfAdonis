@@ -5,6 +5,8 @@ import { SparkInstance } from './spark_instance.js'
 import { PowercordServer } from '@foadonis/powercord'
 import { randomId } from './utils/random.js'
 import { HttpRouterService } from '@adonisjs/core/types'
+import { Component } from './components/main.js'
+import { TestableComponent } from './tests/testable_component.js'
 
 const SparkController = () => import('./controllers/spark_controller.js')
 
@@ -63,12 +65,14 @@ export class SparkManager {
 
   registerRoutes() {
     this.#router.post('/__spark', [SparkController, 'update'])
-    this.powercord.registerRoutes()
   }
 
-  // test<P = {}>(componentClass: new (...args: any) => Component<P>, props: P) {
-  //   this.components.register(componentClass as unknown as typeof Component)
-  //
-  //   return
-  // }
+  async test<C extends Component<any>>(
+    componentClass: new (...args: any[]) => C,
+    props: C['$props']
+  ) {
+    const instance = this.createInstance()
+    const component = await instance.mount(componentClass, props)
+    return new TestableComponent(component)
+  }
 }
