@@ -62,6 +62,7 @@
     "@adonisjs/assembler": "^7.8.2",
     "@adonisjs/core": "^6.17.2",
     "@foadonis/eslint-config": "workspace:*",
+    "@foadonis/powercord": "workspace:*",
     "@japa/assert": "^4.0.1",
     "@japa/browser-client": "^2.1.1",
     "@japa/expect": "^3.0.3",

@@ -2974,6 +2974,7 @@ __metadata:
     "@adonisjs/vite": "npm:^4.0.0"
     "@alpinejs/morph": "npm:^3.14.9"
     "@foadonis/eslint-config": "workspace:*"
+    "@foadonis/powercord": "workspace:*"
     "@japa/assert": "npm:^4.0.1"
     "@japa/browser-client": "npm:^2.1.1"
     "@japa/expect": "npm:^3.0.3"
