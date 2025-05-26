@@ -2,7 +2,7 @@ import { Logger } from '@adonisjs/core/logger'
 import { HttpRouterService } from '@adonisjs/core/types'
 import { RouteJSON } from '@adonisjs/core/types/http'
 import { OperationMetadataStorage } from 'openapi-metadata/metadata'
-import { isConstructor } from './utils.js'
+import { isConstructor, convertRoutePatternToOpenApiPath } from './utils.js'
 import stringHelpers from '@adonisjs/core/helpers/string'
 
 export class RouterLoader {
@@ -48,7 +48,7 @@ export class RouterLoader {
     OperationMetadataStorage.defineMetadata(
       target.prototype,
       {
-        path: route.pattern.replaceAll(/:([^/]+)/g, '{$1}'),
+        path: convertRoutePatternToOpenApiPath(route.pattern),
         methods: route.methods.filter((m) => m !== 'HEAD').map((r) => r.toLowerCase()) as any,
         tags: [name],
       },
