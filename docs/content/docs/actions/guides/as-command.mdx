@@ -1,0 +1,50 @@
+---
+title: Action as command
+---
+
+Your Actions can be ran as [Commands](https://docs.adonisjs.com/guides/ace/creating-commands) making them available using `node ace <action>`.
+
+## Implementing `AsCommand`
+
+```ts [title="app/actions/users/delete_user_action.ts"] twoslash
+// @noErrors
+import User from '#models/user'
+import { BaseAction, AsCommand } from '@foadonis/actions'
+import { BaseCommand } from '@adonisjs/core/ace'
+
+export default class DeleteUserAction extends BaseAction implements AsCommand {
+  async handle(user: User) {
+    await user.delete()
+  }
+
+  async asCommand({ prompt, logger }: BaseCommand) {
+    const email = await prompt.ask('User email')
+    const user = await User.findByOrFail({ email })
+
+    await this.handle(user)
+
+    logger.success(`User ${user.id} has been deleted successfully`)
+  }
+}
+```
+
+## Configure command
+
+By default the package will automatically generate a name and a description for your command.
+
+You can change this by setting the properties `commandName` and `description`.
+
+```ts [title="app/actions/users/delete_user_action.ts"] twoslash
+// @noErrors
+import User from '#models/user'
+import { BaseAction, AsCommand } from '@foadonis/actions'
+import { BaseCommand } from '@adonisjs/core/ace'
+
+export default class DeleteUserAction extends BaseAction implements AsCommand {
+  static commandName = 'users:delete' // [!code ++]
+  static description = 'Delete a user from the database' // [!code ++]
+
+  handle() {}
+  asCommand(command: BaseCommand) {}
+}
+```

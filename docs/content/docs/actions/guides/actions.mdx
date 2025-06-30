@@ -1,0 +1,55 @@
+---
+title: Working with Actions
+---
+
+An Action is a self-contained class responsible for performing a single, clearly-defined task within your application.
+This promotes modularity, maintainability, and consistency across your AdonisJS project.
+
+## The simplest action
+
+An Action is simply a class with a `handle` method.
+
+```ts [title="app/actions/charge_user_action.ts"] twoslash
+// @noErrors
+import User from '#models/user'
+import { AsAction } from '@foadonis/actions'
+
+export default class ChargeUserAction implements AsAction {
+  handle(user: User) {
+    // Your business logic
+  }
+}
+```
+
+## Running your action
+
+Actions can be ran easily within your application using `actions.run()`.
+
+```ts twoslash
+// @noErrors
+import actions from '@foadonis/actions/services/main'
+import ChargeUserAction from '#actions/charge_user_action'
+
+await actions.run(ChargeUserAction, user)
+```
+
+## Dependency Injection
+
+As your actions are resolved from the Container you can use [Dependency Injection](https://docs.adonisjs.com/guides/concepts/dependency-injection).
+
+```ts [title="app/actions/charge_user_action.ts"] twoslash
+// @noErrors
+import { AsAction } from '@foadonis/actions'
+import { inject } from '@adonisjs/core'
+import User from '#models/user'
+import StripeService from '#services/stripe_service'
+
+@inject()
+export default class ChargeUserAction implements AsAction {
+  constructor(private stripe: StripeService) {}
+
+  handle(user: User, amount: number) {
+    await this.stripe.chargeCustomer(user.stripeId, amount)
+  }
+}
+```

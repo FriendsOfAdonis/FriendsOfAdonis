@@ -1,0 +1,36 @@
+---
+title: Best practices
+---
+
+To keep consistency in your application organization we recommend following a few set of best practices when working with actions.
+
+## Start with a verb
+
+Name your action classes as concise, explicit phrases starting with a verb. For instance, an action responsible for sending a password reset email to the user could be named SendResetPasswordEmail.
+
+Following this practice, your folder structure naturally becomes a clear catalog of all the features your application offers. This leads us to the next recommended convention.
+
+## Categegorize you actions
+
+When your application start getting bigger you might end up with a really large actions folder.
+Don't be scared to categorize them in subfolders, autoloading will still work.
+
+<Files>
+  <Folder name="app" defaultOpen>
+    <Folder name="actions" defaultOpen>
+      <Folder name="auth" defaultOpen>
+        <File name="login_user.ts" />
+        <File name="register_user.ts" />
+        <File name="reset_user_password.ts" />
+      </Folder>
+      <Folder name="billing" defaultOpen>
+        <File name="create_checkout_session.ts" />
+        <File name="update_payment_method.ts" />
+      </Folder>
+      <Folder name="users" defaultOpen>
+        <File name="create_user.ts" />
+        <File name="delete_user.ts" />
+      </Folder>
+    </Folder>
+  </Folder>
+</Files>

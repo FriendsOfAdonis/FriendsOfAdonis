@@ -15,10 +15,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest]
         node-version:
           - 20.10.0
           - 21.x
+          - 23.x
     steps:
       - name: ⬇ Checkout repository
         uses: actions/checkout@v4

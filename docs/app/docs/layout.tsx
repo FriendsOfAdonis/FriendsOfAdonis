@@ -1,18 +1,19 @@
-import { Slot } from "@radix-ui/react-slot";
-import type { DocsLayoutProps } from "fumadocs-ui/layouts/docs";
-import { DocsLayout } from "fumadocs-ui/layouts/docs";
-import type { ReactNode } from "react";
-import { baseOptions } from "@/app/layout.config";
-import { source } from "@/lib/source";
+import { Slot } from '@radix-ui/react-slot'
+import type { DocsLayoutProps } from 'fumadocs-ui/layouts/docs'
+import { DocsLayout } from 'fumadocs-ui/layouts/notebook'
+import type { ReactNode } from 'react'
+import { baseOptions } from '@/app/layout.config'
+import { source } from '@/lib/source'
 
 const docsOptions: DocsLayoutProps = {
   ...baseOptions,
+  links: [...(baseOptions.links?.slice(1) ?? [])],
   tree: source.pageTree,
   sidebar: {
     tabs: {
       transform(option, node) {
-        const meta = source.getNodeMeta(node);
-        if (!meta) return option;
+        const meta = source.getNodeMeta(node)
+        if (!meta) return option
 
         return {
           ...option,
@@ -27,12 +28,12 @@ const docsOptions: DocsLayoutProps = {
               {node.icon}
             </Slot>
           ),
-        };
+        }
       },
     },
   },
-};
+}
 
 export default function Layout({ children }: { readonly children: ReactNode }) {
-  return <DocsLayout {...docsOptions}>{children}</DocsLayout>;
+  return <DocsLayout {...docsOptions}>{children}</DocsLayout>
 }

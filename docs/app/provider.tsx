@@ -1,21 +1,18 @@
-"use client";
+'use client'
 
-import { RootProvider } from "fumadocs-ui/provider";
-import type { ReactNode } from "react";
-import CustomSearchDialog from "@/components/search";
+import { TooltipProvider } from '@radix-ui/react-tooltip'
+import { RootProvider } from 'fumadocs-ui/provider'
+import type { ReactNode } from 'react'
+import CustomSearchDialog from '@/components/search'
 
-export function Provider({
-  children,
-}: {
-  readonly children: ReactNode;
-}): React.ReactElement {
+export function Provider({ children }: { readonly children: ReactNode }): React.ReactElement {
   return (
     <RootProvider
       search={{
         SearchDialog: CustomSearchDialog,
       }}
     >
-      {children}
+      <TooltipProvider>{children}</TooltipProvider>
     </RootProvider>
-  );
+  )
 }

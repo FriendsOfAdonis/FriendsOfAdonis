@@ -1,22 +1,26 @@
 export const TAGS = [
   {
-    name: "Cockpit",
-    value: "cockpit",
+    name: 'GraphQL',
+    value: 'graphql',
   },
   {
-    name: "GraphQL",
-    value: "graphql",
+    name: 'OpenAPI',
+    value: 'openapi',
   },
   {
-    name: "OpenAPI",
-    value: "openapi",
+    name: 'Shopkeeper',
+    value: 'shopkeeper',
   },
   {
-    name: "Shopkeeper",
-    value: "shopkeeper",
+    name: 'Magnify',
+    value: 'magnify',
   },
   {
-    name: "Magnify",
-    value: "magnify",
+    name: 'Maintenance',
+    value: 'maintenance',
   },
-];
+  {
+    name: 'Crypt',
+    value: 'crypt',
+  },
+]

@@ -153,10 +153,13 @@ import router from '@adonisjs/core/services/router'
 router
   .get('/billing', ({ auth, response }) => {
     const user = auth.getUserOrFail()
-    const billingPortalUrl = await user.billingPortalUrl(route('dashboard'))
+    const billingPortalUrl = await user.billingPortalUrl(
+      // TODO: change the prefixUrl value to your own domain or environment variable
+      router.builder().prefixUrl('http://localhost:3333').make('dashboard')
+    )
 
     response.redirect().toPath(billingPortalUrl)
   })
   .middleware(middleware.auth())
-  .name('billing')
+  .as('billing')
 ```

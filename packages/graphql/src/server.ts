@@ -12,7 +12,7 @@ import { LuxonDateTimeScalar } from './scalars/luxon_datetime.js'
 import { ApolloServerPluginLandingPageDisabled } from '@apollo/server/plugin/disabled'
 import { Server } from 'node:http'
 import { WebSocketServer } from 'ws'
-import { useServer } from 'graphql-ws/lib/use/ws'
+import { useServer } from 'graphql-ws/use/ws'
 import { GraphQLSchema } from 'graphql'
 
 export default class GraphQLServer {

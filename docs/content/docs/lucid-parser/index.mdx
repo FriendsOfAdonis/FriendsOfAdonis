@@ -1,0 +1,94 @@
+---
+title: Lucid Parser
+icon: Database
+description: Parse Lucid models to retrieve properties types information
+---
+
+Lucid Parser is a tool to retrieve Lucid models properties information by parsing the AST Tree.
+
+This become usefull when types information provided by Typescript metadatas are not sufficient as Lucid Parser is able to retrieve type information for nullable, optional and array properties.
+
+## Installation
+
+```package-install
+npm install @foadonis/lucid-parser
+```
+
+## Usage
+
+<Tabs items={["Usage", "Model", "Result"]}>
+  <Tab value="Usage">
+
+```ts
+import { parseModel } from '@foadonis/lucid-parser'
+
+const { columns, computed } = parseModel(import.meta.resolve('#models/user'))
+```
+
+  </Tab>
+
+  <Tab value="Model">
+
+```ts title="app/models/user.ts"
+import { BaseModel, column, computed } from '@adonisjs/lucid/orm'
+
+export default class User extends BaseModel {
+  @column({ isPrimary: true })
+  declare id: number
+
+  @column()
+  declare title: string | null
+
+  @column()
+  declare roles: string[]
+
+  @computed()
+  get isAdmin(): boolean {
+    return roles.includes('admin')
+  }
+}
+```
+
+  </Tab>
+
+  <Tab value="Result">
+
+```json
+{
+  "columns": [
+    {
+      "key": "id",
+      "type": "number",
+      "isOptional": false,
+      "isNullable": false,
+      "isArray": false
+    },
+    {
+      "key": "title",
+      "type": "string",
+      "isOptional": false,
+      "isNullable": true,
+      "isArray": false
+    },
+    {
+      "key": "roles",
+      "type": "string",
+      "isOptional": false,
+      "isNullable": false,
+      "isArray": true
+    }
+  ],
+  "computed": [
+    {
+      "key": "isAdmin",
+      "type": "boolean",
+      "isOptional": false,
+      "isNullable": false
+      "isArray": false
+    }
+  ]
+}
+```
+
+  </Tab>
+</Tabs>

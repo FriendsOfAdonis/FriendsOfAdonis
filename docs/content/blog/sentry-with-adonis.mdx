@@ -1,0 +1,184 @@
+---
+title: Configure Sentry on AdonisJS
+description: Track errors and performance issues in your Adonis app
+thumbnail: /images/blog/sentry-with-adonis/thumbnail.png
+date: 2025-04-02
+author: Martin PAUCOT
+---
+
+## Introduction
+
+Once you deploy in production your application, it becomes a black box. Errors and performance issues might occur and you will never know unless you actively monitor logs or receive emails from your users complaining.
+
+That's where [Sentry](https://sentry.io) comes in.
+
+## What is Sentry
+
+[Sentry](https://sentry.io) is a SaaS platform that helps track errors and performance issues in your app. It catches crashes, logs API errors, and monitors slow requests, making debugging easier.
+
+It integrates nicely with [Github](https://github.com), [Slack](https://slack.com) and [Linear](https://linear.app) and it became a must have on all of my projects.
+
+![Sentry Issues](/images/blog/sentry-with-adonis/issues.png)
+
+<Callout>
+  Did you know that [Sentry](https://sentry.io) is Open-Source? You can even [self-host the platform
+  for free](https://develop.sentry.dev/self-hosted/).
+</Callout>
+
+## Getting Started
+
+### Install the Sentry SDK
+
+Run the following command with your favorite package manager to add the Sentry Node SDK to your application:
+
+```package-install
+npm install @sentry/node
+```
+
+### Configure Sentry
+
+Sentry has a feature called "auto-instrumentation" that will automatically enable and configure integrations based on your imports. For this to work it has to be the initialized at the very start of your application.
+
+Let's create a file called `instrument.ts` at the root of our project and initialize Sentry SDK in it:
+
+```ts [title="instrument.ts"] twoslash
+import * as Sentry from '@sentry/node'
+
+Sentry.init({
+  dsn: '<your-dsn>',
+  tracesSampleRate: 1.0, // You might want to reduce this value in production
+})
+```
+
+<Callout>
+  You get your [Sentry DSN](https://docs.sentry.io/concepts/key-terms/dsn-explainer/) when creating
+  a new project or in the settings of an existing one.
+</Callout>
+
+#### Configure Knex integration (optional)
+
+[Knex](https://knexjs.org/) is the underlying library used by [Lucid ORM](https://lucid.adonisjs.com/) to interact with your database. Which means we can use the [Knex integration](https://docs.sentry.io/platforms/javascript/guides/node/configuration/integrations/knex/) to monitor our database queries!
+
+```ts [title="instrument.ts"] twoslash
+import * as Sentry from '@sentry/node'
+
+Sentry.init({
+  dsn: '<your-dsn>',
+  integrations: [Sentry.knexIntegration()], // [!code ++]
+  tracesSampleRate: 1.0,
+})
+```
+
+#### Initialize Sentry
+
+Let's now import our `instrument.ts` file at the start of our application. To make sure "auto-instrumentation" works correctly we will do it directly inside our `bin/server.ts` file.
+
+```ts [title="bin/server.ts"]
+import '../instrument.js' // [!code focus]
+import 'reflect-metadata'
+import { Ignitor, prettyPrintError } from '@adonisjs/core'
+
+/**
+ * URL to the application root. AdonisJS need it to resolve
+ * paths to file and directories for scaffolding commands
+ */
+const APP_ROOT = new URL('../', import.meta.url)
+```
+
+### Capture exceptions
+
+Let's send our first exception to Sentry. After hitting the route `/` you should see a new issue appearing in your dashboard.
+
+```ts [title="start/routes.ts"] twoslash
+import router from '@adonisjs/core/services/router'
+import * as Sentry from '@sentry/node'
+
+router.get('/', async () => {
+  Sentry.captureException(new Error('Hello from Adonis'))
+  return 'It works!'
+})
+```
+
+This is not great as we have to manually capture the exception. Let's change this by directly throwing an error.
+
+```ts [title="start/routes.ts"] twoslash
+import router from '@adonisjs/core/services/router'
+import * as Sentry from '@sentry/node'
+
+router.get('/', async () => {
+  Sentry.captureException(new Error('Hello from Adonis')) // [!code --]
+  throw new Error('Hello again from Adonis') // [!code ++]
+  return 'It works!'
+})
+```
+
+If you hit the route again, you will not see any issue appearing on your dashboard. This is because Adonis automatically handles exceptions for us.
+Luckily, we can use the `report` method on the `HttpExceptionHandler` to capture exceptions.
+
+```ts [title="app/exceptions/handler.ts"] twoslash
+// @noErrors
+import app from '@adonisjs/core/services/app'
+import { HttpContext, ExceptionHandler } from '@adonisjs/core/http'
+import * as Sentry from '@sentry/node'
+
+export default class HttpExceptionHandler extends ExceptionHandler {
+  async report(error: unknown, ctx: HttpContext) {
+    Sentry.captureException(error) // [!code ++]
+    return super.report(error, ctx)
+  }
+}
+```
+
+Now errors thrown in your routes will be automatically captured and sent to Sentry!
+
+### Adding User context (optional)
+
+There are a lot of reasons why you would want to attach errors to users. For example, prioritizing issues based on the amount of affected users.
+
+To do this we will create a `SilentAuthMiddleware` that will authenticate our users even if an auth guard is not configured.
+
+<Callout>Depending on your starter kit, this middleware might already exist.</Callout>
+
+```ts [title="app/middleware/silent_auth_middleware.ts"] twoslash
+// @noErrors
+import type { HttpContext } from '@adonisjs/core/http'
+import type { NextFn } from '@adonisjs/core/types/http'
+import * as Sentry from '@sentry/node'
+
+export default class SilentAuthMiddleware {
+  async handle(ctx: HttpContext, next: NextFn) {
+    await ctx.auth.check()
+
+    if (ctx.auth.user) {
+      const user = ctx.auth.user
+      Sentry.setUser({
+        id: user.id,
+        email: user.email,
+      })
+    }
+
+    return next()
+  }
+}
+```
+
+Let's now configure our middleware in `start/kernel.ts`. Make sure that it is added after the `initialize_auth_middleware`.
+
+```ts [title="start/kernel.ts"]
+router.use([
+  () => import('@adonisjs/core/bodyparser_middleware'),
+  () => import('@adonisjs/auth/initialize_auth_middleware'),
+  () => import('#middleware/silent_auth_middleware'), // [!code ++]
+  () => import('#middleware/initialize_bouncer_middleware'),
+])
+```
+
+## Conclusion
+
+Setting up Sentry in your AdonisJS app takes few minutes and can save you a ton of time:
+
+- Monitor errors happening in your application and prioritize them
+- Track performance issues and identify the source of the problem
+- Identify slow database queries thanks to the Knex integration
+
+Now, you’ll always have visibility into what’s happening in production. 🚀

@@ -3,6 +3,7 @@
 }}}
 import env from '#start/env'
 import { defineConfig, engines } from '@foadonis/magnify'
+import type { InferEngines } from '@foadonis/magnify/types'
 
 const magnifyConfig = defineConfig({
   default: 'algolia',
@@ -17,7 +18,7 @@ const magnifyConfig = defineConfig({
 export default magnifyConfig
 
 /**
- * Inferring types for the list of hashers you have configured
+ * Inferring types for the list of engines you have configured
  * in your application.
  */
 declare module '@foadonis/magnify/types' {

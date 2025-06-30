@@ -1,5 +1,19 @@
 # @foadonis/graphql
 
+## 0.0.8
+
+### Patch Changes
+
+- [#59](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/59) [`77a8b95`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/77a8b953bf07d1a580c48b0df9149a3a74ce0148) Thanks [@kerwanp](https://github.com/kerwanp)! - feat: Propose to install required dependencies during configuration
+
+## 0.0.7
+
+### Patch Changes
+
+- [#43](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/43) [`b11da2f`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/b11da2fa8a393adaf54b794eb793d816c5ff602c) Thanks [@kerwanp](https://github.com/kerwanp)! - Upgrade dependencies
+
+- [#47](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/47) [`28dedde`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/28dedded66376e57bbd76bfc1c02210ff619b044) Thanks [@kerwanp](https://github.com/kerwanp)! - bump versions
+
 ## 0.0.6
 
 ### Patch Changes

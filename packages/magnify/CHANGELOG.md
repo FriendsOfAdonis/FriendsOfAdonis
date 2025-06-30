@@ -1,5 +1,23 @@
 # @foadonis/magnify
 
+## 0.2.7
+
+### Patch Changes
+
+- [#53](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/53) [`a315cd6`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/a315cd65528d6bdd35b47c33d243e85a75ca6725) Thanks [@kerwanp](https://github.com/kerwanp)! - perf: Remove Typesense index creation on search
+
+- [#53](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/53) [`a315cd6`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/a315cd65528d6bdd35b47c33d243e85a75ca6725) Thanks [@kerwanp](https://github.com/kerwanp)! - feat: Improve shouldBeSearchable behavior
+
+- [#53](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/53) [`a315cd6`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/a315cd65528d6bdd35b47c33d243e85a75ca6725) Thanks [@kerwanp](https://github.com/kerwanp)! - chore: Overall testing improvements
+
+## 0.2.6
+
+### Patch Changes
+
+- [#43](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/43) [`b11da2f`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/b11da2fa8a393adaf54b794eb793d816c5ff602c) Thanks [@kerwanp](https://github.com/kerwanp)! - Upgrade dependencies
+
+- [#47](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/47) [`28dedde`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/28dedded66376e57bbd76bfc1c02210ff619b044) Thanks [@kerwanp](https://github.com/kerwanp)! - bump versions
+
 ## 0.2.5
 
 ### Patch Changes

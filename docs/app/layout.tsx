@@ -9,8 +9,8 @@ import { Provider } from './provider'
 
 export const metadata = createMetadata({
   title: {
-    template: '%s',
-    default: 'FriendsOfAdonis',
+    template: '%s | Friends Of Adonis',
+    default: 'Friends Of Adonis',
   },
   description: 'Well-crafted and battle-tested Adonis packages made with ♥ by the community',
   metadataBase: baseUrl,
