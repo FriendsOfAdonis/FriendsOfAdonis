@@ -1,12 +1,18 @@
 import Stripe from 'stripe'
+import type { HttpRouterService } from '@adonisjs/core/types'
+import type { Route } from '@adonisjs/core/http'
+import app from '@adonisjs/core/services/app'
 import { ShopkeeperConfig } from './types.js'
 import { WithBillable } from './mixins/billable.js'
 import { NormalizeConstructor } from '@poppinss/utils/types'
 import Subscription from './models/subscription.js'
 import SubscriptionItem from './models/subscription_item.js'
+import { handleWebhook } from '../src/handlers/handle_webhooks.js'
+import { InvalidConfigurationError } from '../src/errors/invalid_configuration.js'
 
 export class Shopkeeper {
   readonly #config: ShopkeeperConfig
+  readonly #router: HttpRouterService
   readonly #stripe: Stripe
   #customerModel: WithBillable
   #subscriptionModel: NormalizeConstructor<typeof Subscription>
@@ -14,11 +20,13 @@ export class Shopkeeper {
 
   constructor(
     config: ShopkeeperConfig,
+    router: HttpRouterService,
     customerModel: WithBillable,
     subscriptionModel: NormalizeConstructor<typeof Subscription>,
     subscriptionItemModel: NormalizeConstructor<typeof SubscriptionItem>
   ) {
     this.#config = config
+    this.#router = router
     this.#customerModel = customerModel
     this.#subscriptionModel = subscriptionModel
     this.#subscriptionItemModel = subscriptionItemModel
@@ -32,6 +40,26 @@ export class Shopkeeper {
 
   public get config(): ShopkeeperConfig {
     return this.#config
+  }
+
+  public registerRoutes(routeHandlerModifier?: (route: Route) => void) {
+    const webhookRoute = this.#router
+      .post('/stripe/webhook', (ctx) => handleWebhook(ctx))
+      .as('shopkeeper.webhook')
+
+    if (this.#config.webhook.secret) {
+      const middlewares = this.#router.named({
+        stripeWebhook: () => import('../src/middlewares/stripe_webhook_middleware.js'),
+      })
+
+      webhookRoute.middleware(middlewares.stripeWebhook())
+    } else if (app.inProduction) {
+      throw InvalidConfigurationError.webhookSecretInProduction()
+    }
+
+    if (routeHandlerModifier) {
+      routeHandlerModifier(webhookRoute)
+    }
   }
 
   /**

@@ -99,11 +99,6 @@ export type ShopkeeperConfig = {
   keepPastDueSubscriptionsActive: boolean
 
   /**
-   * Enables the routes registration like the webhook handler.
-   */
-  registerRoutes: boolean
-
-  /**
    * Defines the configuration used to create the Stripe SDK Instance.
    */
   stripe?: Stripe.StripeConfig

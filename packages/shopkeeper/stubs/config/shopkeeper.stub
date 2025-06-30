@@ -29,6 +29,4 @@ export default defineConfig({
 
   keepIncompleteSubscriptionsActive: false,
   keepPastDueSubscriptionsActive: false,
-
-  registerRoutes: true,
 });
