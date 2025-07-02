@@ -1,6 +1,6 @@
 import { EnvParser } from '@adonisjs/core/env'
 import { quotes as _quotes } from './quotes.js'
-import { escapeDollarSigns, escapeForRegex } from './escape.js'
+import { escapeDollarSigns } from './escape.js'
 
 export async function replace(src: string, key: string, replaceValue: string) {
   let output
@@ -12,25 +12,23 @@ export async function replace(src: string, key: string, replaceValue: string) {
     const quote = quotes[key]
     newPart += `${key}=${quote}${replaceValue}${quote}`
 
-    const originalValue = parsed[key]
-    const escapedOriginalValue = escapeForRegex(originalValue)
+    // === You can remove this if you want to apply the changes from this contribution ===
+    // const originalValue = parsed[key]
+    // const escapedOriginalValue = escapeForRegex(originalValue)
 
     // conditionally enforce end of line
-    let enforceEndOfLine = ''
-    if (escapedOriginalValue === '') {
-      enforceEndOfLine = '$' // EMPTY scenario
-    }
+    // let enforceEndOfLine = ''
+    // if (escapedOriginalValue === '') {
+    //   enforceEndOfLine = '$' // EMPTY scenario
+    // }
 
     const currentPart = new RegExp(
       '^' + // start of line
         '(\\s*)?' + // spaces
         '(export\\s+)?' + // export
         key + // KEY
-        '\\s*=\\s*' + // spaces (KEY = value)
-        '["\'`]?' + // open quote
-        escapedOriginalValue + // escaped value
-        '["\'`]?' + // close quote
-        enforceEndOfLine,
+        '\\s*=\\s*["\']?.*?["\']?' + // spaces (KEY = value)
+        '$',
       'gm' // (g)lobal (m)ultiline
     )
 
