@@ -23,9 +23,21 @@ You can run the migration with:
 node ace migration:run
 ```
 
-Lastly, to ensure Shopkeeper properly handles all Stripe events, remember to [configure Shopkeeper's webhook handling](./webhooks).
-
 ## Configuration
+
+### Webhooks
+
+In order for Shopkeeper to properly handle all Stripe events, we need to configure Shopkeeper's webhook handling. This involves adding the following to your application routes:
+
+```ts title="start/routes.ts"
+import shopkeeper from '@foadonis/shopkeeper/services/shopkeeper'
+
+shopkeeper.registerRoutes()
+```
+
+In order for Shopkeeper to work correctly, you must have the [bodyparser middleware](https://docs.adonisjs.com/guides/basics/body-parser) correctly installed and configured.
+
+To configured Stripe to use webhooks, use the `node ace shopkeeper:webhook` command, and see the [documentation on webhooks](./webhooks) for more information.
 
 ### Billable Model
 
