@@ -47,16 +47,6 @@ export class Shopkeeper {
       .post('/stripe/webhook', (ctx) => handleWebhook(ctx))
       .as('shopkeeper.webhook')
 
-    if (this.#config.webhook.secret) {
-      const middlewares = this.#router.named({
-        stripeWebhook: () => import('../src/middlewares/stripe_webhook_middleware.js'),
-      })
-
-      webhookRoute.middleware(middlewares.stripeWebhook())
-    } else if (app.inProduction) {
-      throw InvalidConfigurationError.webhookSecretInProduction()
-    }
-
     if (routeHandlerModifier) {
       routeHandlerModifier(webhookRoute)
     }
