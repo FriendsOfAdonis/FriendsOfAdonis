@@ -12,16 +12,6 @@ export async function replace(src: string, key: string, replaceValue: string) {
     const quote = quotes[key]
     newPart += `${key}=${quote}${replaceValue}${quote}`
 
-    // === You can remove this if you want to apply the changes from this contribution ===
-    // const originalValue = parsed[key]
-    // const escapedOriginalValue = escapeForRegex(originalValue)
-
-    // conditionally enforce end of line
-    // let enforceEndOfLine = ''
-    // if (escapedOriginalValue === '') {
-    //   enforceEndOfLine = '$' // EMPTY scenario
-    // }
-
     const currentPart = new RegExp(
       '^' + // start of line
         '(\\s*)?' + // spaces
