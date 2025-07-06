@@ -2,4 +2,4 @@
 "@foadonis/crypt": patch
 ---
 
-Crypt: Regex failure when generating DB_PASSWORD
+Crypt: Fixing parsing issue when generating database password
