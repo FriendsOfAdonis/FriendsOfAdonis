@@ -5,6 +5,7 @@ import { SearchableModel } from '../src/types.js'
 export default class Import extends BaseCommand {
   static commandName = 'magnify:import'
   static description = 'Import the given model into the search index'
+  static options = { startApp: true }
 
   @args.string({ required: true })
   declare modelPath: string
