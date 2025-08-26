@@ -48,9 +48,12 @@ export class RouterLoader {
     // Transform Adonis-style path parameters to OpenAPI-compliant format
     const openAPIPath = toOpenAPIPath(route.pattern)
 
+    const existing = OperationMetadataStorage.getMetadata(target.prototype, propertyKey, true)
+
     OperationMetadataStorage.defineMetadata(
       target.prototype,
       {
+        ...existing,
         path: openAPIPath,
         methods: route.methods.filter((m) => m !== 'HEAD').map((r) => r.toLowerCase()) as any,
         tags: [name],
