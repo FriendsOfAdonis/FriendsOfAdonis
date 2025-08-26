@@ -1,0 +1,98 @@
+name: ✨ Feature Request
+description: Suggest an idea for this project
+title: '[Feature]: '
+labels: ['enhancement', 'needs-triage']
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to suggest a new feature!
+
+        Please make sure to search for existing feature requests before creating a new one.
+
+  - type: input
+    id: package
+    attributes:
+      label: Package
+      description: Which package would this feature be for?
+      placeholder: e.g., @foadonis/actions, @foadonis/graphql, or general
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Feature Description
+      description: A clear and concise description of the feature you'd like to see implemented
+      placeholder: Describe the feature you're requesting...
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: A clear and concise description of what problem this feature would solve
+      placeholder: "I'm always frustrated when [...]"
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: A clear and concise description of what you want to happen
+      placeholder: Describe your proposed solution...
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternative Solutions
+      description: A clear and concise description of any alternative solutions or features you've considered
+      placeholder: Describe any alternatives you've considered...
+    validations:
+      required: false
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case
+      description: Describe a specific use case where this feature would be beneficial
+      placeholder: Describe when and how this feature would be used...
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Add any other context, screenshots, or examples about the feature request here
+      placeholder: |
+        - Screenshots or mockups
+        - Code examples
+        - Related features in other libraries
+        - Any other relevant information
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      description: Please confirm the following
+      options:
+        - label: I have searched for existing issues
+        - label: I am willing to contribute for this issue
+
+  - type: input
+    id: related
+    attributes:
+      label: Related Issues
+      description: Link any related issues or pull requests here
+      placeholder: e.g., #123, #456
+    validations:
+      required: false
+

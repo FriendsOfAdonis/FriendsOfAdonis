@@ -1,0 +1,129 @@
+name: 🐛 Bug Report
+description: Create a report to help us improve
+title: '[Bug]: '
+labels: ['bug', 'needs-triage']
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+
+        Please make sure to search for existing issues before creating a new one.
+
+  - type: input
+    id: package
+    attributes:
+      label: Package
+      description: Which package is affected?
+      placeholder: e.g., @foadonis/actions, @foadonis/graphql
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: What version of the package are you using?
+      placeholder: e.g., 1.0.0
+    validations:
+      required: true
+
+  - type: input
+    id: node-version
+    attributes:
+      label: Node.js Version
+      description: What version of Node.js are you using?
+      placeholder: e.g., 18.17.0
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating System
+      description: What operating system are you using?
+      placeholder: e.g., macOS 13.0, Ubuntu 22.04, Windows 11
+    validations:
+      required: true
+
+  - type: input
+    id: adonis-version
+    attributes:
+      label: Adonis.js Version
+      description: What version of Adonis.js are you using?
+      placeholder: e.g., 6.0.0
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is
+      placeholder: Describe the bug you encountered...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: A clear and concise description of what you expected to happen
+      placeholder: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: A clear and concise description of what actually happened
+      placeholder: What actually happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Clone and start '...'
+        2. Navigate to '....'
+        3. Run the command '....'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context about the problem here
+      placeholder: |
+        - Error messages or stack traces
+        - Screenshots if applicable
+        - Related issues or pull requests
+        - Code snippets that might help
+    validations:
+      required: false
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Possible Solution
+      description: If you have suggestions on a fix for the bug, please describe it here
+      placeholder: Describe any solutions you've considered...
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Requirements
+      description: Check the boxes that apply
+      options:
+        - label: I have searched for existing issues
+        - label: I have provided a minimal reproduction of the issue
+        - label: I am willing to contribute for this issue

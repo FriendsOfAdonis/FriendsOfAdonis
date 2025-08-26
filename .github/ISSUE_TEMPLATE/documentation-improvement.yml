@@ -1,0 +1,105 @@
+name: 📚 Documentation Improvement
+description: Suggest improvements to our documentation
+title: '[Docs]: '
+labels: ['documentation', 'needs-triage']
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to help improve our documentation!
+
+        Please make sure to search for existing documentation issues before creating a new one.
+
+  - type: input
+    id: package
+    attributes:
+      label: Package
+      description: Which package's documentation needs improvement?
+      placeholder: e.g., @foadonis/actions, @foadonis/graphql, or general
+    validations:
+      required: true
+
+  - type: input
+    id: section
+    attributes:
+      label: Documentation Section
+      description: Which section of the documentation needs improvement?
+      placeholder: e.g., Getting Started, API Reference, Examples, Troubleshooting
+    validations:
+      required: true
+
+  - type: input
+    id: url
+    attributes:
+      label: Documentation URL
+      description: If applicable, provide the URL of the documentation page
+      placeholder: e.g., https://friendsofadonis.com/docs/actions
+    validations:
+      required: false
+
+  - type: textarea
+    id: issue
+    attributes:
+      label: Documentation Issue
+      description: A clear and concise description of what documentation needs improvement
+      placeholder: Describe what needs to be improved...
+    validations:
+      required: true
+
+  - type: textarea
+    id: current-state
+    attributes:
+      label: Current State
+      description: Describe what the current documentation says or shows
+      placeholder: Describe what the documentation currently contains...
+    validations:
+      required: true
+
+  - type: textarea
+    id: desired-state
+    attributes:
+      label: Desired State
+      description: Describe what the documentation should say or show instead
+      placeholder: Describe what the documentation should contain...
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: improvements
+    attributes:
+      label: Suggested Improvements
+      description: What type of improvements are needed?
+      options:
+        - label: Add missing examples
+        - label: Clarify confusing explanations
+        - label: Fix outdated information
+        - label: Add code snippets
+        - label: Improve structure/organization
+        - label: Add troubleshooting section
+        - label: Fix typos or grammar
+        - label: Add missing API documentation
+        - label: Other (describe below)
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Add any other context about the documentation issue here
+      placeholder: |
+        - Screenshots of the current documentation
+        - Examples of what you'd like to see
+        - Related issues or discussions
+        - Specific suggestions for improvement
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Requirements
+      description: Check the boxes that apply
+      options:
+        - label: I have searched for existing issues
+        - label: I am willing to contribute for this issue
+
