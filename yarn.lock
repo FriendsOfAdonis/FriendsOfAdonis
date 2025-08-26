@@ -2419,12 +2419,13 @@ __metadata:
     copyfiles: "npm:^2.4.1"
     del-cli: "npm:^6.0.0"
     luxon: "npm:^3.6.1"
-    openapi-metadata: "npm:^0.2.0"
+    openapi-metadata: "npm:^0.2.2"
     openapi-types: "npm:^12.1.3"
     prettier: "npm:^3.5.3"
     reflect-metadata: "npm:^0.2.2"
     ts-node: "npm:^10.9.2"
     typescript: "npm:^5.8.3"
+    yaml: "npm:^2.8.1"
   peerDependencies:
     "@adonisjs/core": ^6.2.0
     "@adonisjs/lucid": ^21.2.0
@@ -16216,16 +16217,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openapi-metadata@npm:^0.2.0":
-  version: 0.2.0
-  resolution: "openapi-metadata@npm:0.2.0"
+"openapi-metadata@npm:^0.2.2":
+  version: 0.2.2
+  resolution: "openapi-metadata@npm:0.2.2"
   dependencies:
     deepmerge: "npm:^4.3.1"
     openapi-types: "npm:^12.1.3"
-    type-fest: "npm:^4.31.0"
+    type-fest: "npm:^4.40.1"
   peerDependencies:
     reflect-metadata: ^0.2.2
-  checksum: 10c0/6f9fd90f52852c618d90bc73569c8387e63d7b363f8ced240b84e8042be22cdea380d1deda6f2f175c3e8e3ddd880fe32b813b0d60153dcbbd4bf0b8da7c8f98
+  checksum: 10c0/869064ff3085966118c72b5748a54af62b347facc2a8fa84cd3668c8b57218b5f5e2056549cabdb3735ea8b22d89f79f7e069736cd6fcb2313a069be1b1f8ff7
   languageName: node
   linkType: hard
 
@@ -20130,6 +20131,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"type-fest@npm:^4.40.1":
+  version: 4.41.0
+  resolution: "type-fest@npm:4.41.0"
+  checksum: 10c0/f5ca697797ed5e88d33ac8f1fec21921839871f808dc59345c9cf67345bfb958ce41bd821165dbf3ae591cedec2bf6fe8882098dfdd8dc54320b859711a2c1e4
+  languageName: node
+  linkType: hard
+
 "type-fest@npm:^4.6.0, type-fest@npm:^4.7.1":
   version: 4.32.0
   resolution: "type-fest@npm:4.32.0"
@@ -21126,6 +21134,15 @@ __metadata:
   bin:
     yaml: bin.mjs
   checksum: 10c0/886a7d2abbd70704b79f1d2d05fe9fb0aa63aefb86e1cb9991837dced65193d300f5554747a872b4b10ae9a12bc5d5327e4d04205f70336e863e35e89d8f4ea9
+  languageName: node
+  linkType: hard
+
+"yaml@npm:^2.8.1":
+  version: 2.8.1
+  resolution: "yaml@npm:2.8.1"
+  bin:
+    yaml: bin.mjs
+  checksum: 10c0/7c587be00d9303d2ae1566e03bc5bc7fe978ba0d9bf39cc418c3139d37929dfcb93a230d9749f2cb578b6aa5d9ebebc322415e4b653cb83acd8bc0bc321707f3
   languageName: node
   linkType: hard
 

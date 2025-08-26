@@ -2,4 +2,5 @@
 '@foadonis/openapi': patch
 ---
 
-Automatically convert AdoniJS paths to OpenAPI complient paths
+Automatically convert AdonisJS paths to OpenAPI compliant paths
+For example `/users/:id` become `/users/{id}`.

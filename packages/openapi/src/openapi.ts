@@ -1,4 +1,3 @@
-import { Route } from '@adonisjs/core/http'
 import { OpenAPIConfig } from './types.js'
 import { HttpRouterService } from '@adonisjs/core/types'
 import { generateDocument, OpenAPIDocument } from 'openapi-metadata'
@@ -31,6 +30,11 @@ export class OpenAPI {
     this.#config = config
   }
 
+  /**
+   * Builds the OpenAPIDocument.
+   *
+   * @returns OpenAPI compliant document.
+   */
   async buildDocument() {
     if (this.#document && this.#isProduction) {
       return this.#document
@@ -50,6 +54,10 @@ export class OpenAPI {
 
   /**
    * Generates HTML do display the OpenAPI documentation UI.
+   *
+   * @param path - path or url to the api documentation.
+   *
+   * @returns the html content for displaying the documentation UI.
    */
   generateUi(path = '/api'): string {
     const ui = this.#config.ui
@@ -65,16 +73,28 @@ export class OpenAPI {
 
   /**
    * Registers Json, Yaml and UI OpenAPI routes.
-   *
    * - /api
    * - /api.json
    * - /api.yaml
+   *
+   * @param path - endpoint for accesing the specs.
+   * @param routeHandlerModifier - modifier to apply middlewares, etc.
+   *
+   * @returns the routes group.
+   *
+   * @example
+   * openapi.registerRoutes()
+   * openapi.registerRoutes("/api", (route) => route.use(middlewares.auth()))
    */
-  registerRoutes(path = '/api', routeHandlerModifier?: (route: Route) => void) {
-    const route = this.#router.get(path, [OpenAPIController])
+  registerRoutes(path = '/api') {
+    const group = this.#router
+      .group(() => {
+        this.#router.get(path, [OpenAPIController, 'html']).as('html')
+        this.#router.get(`${path}.json`, [OpenAPIController, 'json']).as('json')
+        this.#router.get(`${path}.yaml`, [OpenAPIController, 'yaml']).as('yaml')
+      })
+      .as('openapi')
 
-    if (routeHandlerModifier) {
-      routeHandlerModifier(route)
-    }
+    return group
   }
 }
