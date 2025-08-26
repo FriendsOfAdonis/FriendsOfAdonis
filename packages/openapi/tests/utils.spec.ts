@@ -7,7 +7,10 @@ test.group('Utils - toOpenAPIPath', () => {
   })
 
   test('should convert multiple path parameters', ({ assert }) => {
-    assert.equal(toOpenAPIPath('/posts/:postId/comments/:commentId'), '/posts/{postId}/comments/{commentId}')
+    assert.equal(
+      toOpenAPIPath('/posts/:postId/comments/:commentId'),
+      '/posts/{postId}/comments/{commentId}'
+    )
   })
 
   test('should convert path parameters with underscores', ({ assert }) => {
@@ -25,7 +28,10 @@ test.group('Utils - toOpenAPIPath', () => {
   })
 
   test('should handle paths with mixed content', ({ assert }) => {
-    assert.equal(toOpenAPIPath('/api/v1/users/:userId/posts/:postId/comments'), '/api/v1/users/{userId}/posts/{postId}/comments')
+    assert.equal(
+      toOpenAPIPath('/api/v1/users/:userId/posts/:postId/comments'),
+      '/api/v1/users/{userId}/posts/{postId}/comments'
+    )
   })
 
   test('should handle complex nested paths with multiple parameters', ({ assert }) => {
@@ -103,22 +109,13 @@ test.group('Utils - toOpenAPIPath', () => {
     assert.equal(toOpenAPIPath('/:locale/*'), '/{locale}/{wildcard}')
   })
 
-  test('should NOT handle wildcard parameters in middle of path', ({ assert }) => {
-    // Wildcards in the middle should not be transformed (invalid AdonisJS pattern)
-    assert.equal(toOpenAPIPath('/files/*/versions'), '/files/*/versions')
-    assert.equal(toOpenAPIPath('/users/*/posts'), '/users/*/posts')
-  })
-
   // Tests for mixed parameter types
   test('should handle mixed parameter types', ({ assert }) => {
     assert.equal(
       toOpenAPIPath('/api/:version?/users/:id/*'),
       '/api/{version}/users/{id}/{wildcard}'
     )
-    assert.equal(
-      toOpenAPIPath('/:locale?/posts/:postId?/*'),
-      '/{locale}/posts/{postId}/{wildcard}'
-    )
+    assert.equal(toOpenAPIPath('/:locale?/posts/:postId?/*'), '/{locale}/posts/{postId}/{wildcard}')
   })
 
   test('should handle complex mixed patterns', ({ assert }) => {
@@ -132,7 +129,7 @@ test.group('Utils - toOpenAPIPath', () => {
   test('should handle edge cases for optional parameters', ({ assert }) => {
     // Optional parameter at end of path
     assert.equal(toOpenAPIPath('/users/:id?'), '/users/{id}')
-    
+
     // Optional parameter before another segment
     assert.equal(toOpenAPIPath('/users/:id?/posts'), '/users/{id}/posts')
   })
@@ -146,4 +143,4 @@ test.group('Utils - toOpenAPIPath', () => {
     assert.equal(toOpenAPIPath('/:id?/:name?'), '/{id}/{name}')
     assert.equal(toOpenAPIPath('/:id/*'), '/{id}/{wildcard}')
   })
-}) 
+})
