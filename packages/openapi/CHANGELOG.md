@@ -1,5 +1,26 @@
 # @foadonis/openapi
 
+## 0.4.0
+
+### Minor Changes
+
+- [#77](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/77) [`d1dfe1a`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/d1dfe1ad0cca085256a14ca363710949da65c645) Thanks [@kerwanp](https://github.com/kerwanp)! - Remove content negotiation in favor of file extensions for documentation format.
+
+  When registering OpenAPI routes you will now have 3 registered routes:
+
+  - /api - returns the OpenAPI documentation UI
+  - /api.json - returns the OpenAPI documentation in JSON format
+  - /api.yaml - returns the OpenAPI documentation in YAML format
+
+  The routes are named `openapi.html`, `openapi.json` and `openapi.yaml`.
+
+### Patch Changes
+
+- [#77](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/77) [`d1dfe1a`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/d1dfe1ad0cca085256a14ca363710949da65c645) Thanks [@kerwanp](https://github.com/kerwanp)! - Avoid overriding existing operations documentation by merging with existing metadata.
+
+- [#77](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/77) [`d1dfe1a`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/d1dfe1ad0cca085256a14ca363710949da65c645) Thanks [@kerwanp](https://github.com/kerwanp)! - Automatically convert AdonisJS paths to OpenAPI compliant paths
+  For example `/users/:id` become `/users/{id}`.
+
 ## 0.3.5
 
 ### Patch Changes
