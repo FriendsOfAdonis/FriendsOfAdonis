@@ -14,20 +14,23 @@ Thanks for being willing to contribute! 🙏
 ### Setup Instructions
 
 1. **Fork and clone the repository**
+
    ```bash
    git clone https://github.com/YOUR_USERNAME/FriendsOfAdonis.git
    cd FriendsOfAdonis
    ```
 
 2. **Install dependencies**
+
    ```bash
    yarn install
    ```
 
 3. **Verify the setup**
+
    ```bash
    # Run lint, typecheck and build
-   yarn lint typecheck build
+   yarn lint format build typecheck
    ```
 
 ### Development Workflow
@@ -42,8 +45,9 @@ This project uses **Turborepo** for managing the monorepo. Here are the key comm
 - `yarn format` - Format code with Prettier
 
 **Playground Development:**
+
 - `yarn play:graphql` - Start GraphQL playground
-- `yarn play:openapi` - Start OpenAPI playground  
+- `yarn play:openapi` - Start OpenAPI playground
 - `yarn play:actions` - Start Actions playground
 
 ## 📋 Open Issues
@@ -81,7 +85,7 @@ Each package must be following this structure:
 
 ```
 /
-├── bin       # Binaries (e.g test.ts) 
+├── bin       # Binaries (e.g test.ts)
 ├── commands  # AdonisJS commands
 ├── providers # AdonisJS providers
 ├── src       # The actual code
@@ -111,19 +115,21 @@ yarn changeset
 **Must showcase the actual changes**
 
 ❌ Not showcasing the changes
+
 ```md
 Added `toOpenAPIPath` method to utils.
 Use `toOpenAPIPath` in loader for path conversion.
 ```
 
 ✅ Showcase the changes
+
 ```md
 Automatically convert Adonis paths to complient OpenAPI paths.
 ```
 
 **Must include migration description when breaking changes**
-````md
 
+````md
 Removed automatic routes registration in favor of manual routes registration.
 This allows you to modify routes behavior (prefix, path, middleware, etc).
 

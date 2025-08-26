@@ -33,7 +33,7 @@ jobs:
       - name: 🅝 Setup node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: ${{ matrix.node-version }}
           cache: 'yarn'
       - name: 📦 Install Node dependencies
         run: yarn install

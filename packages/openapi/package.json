@@ -90,7 +90,8 @@
     "luxon": "^3.5.0"
   },
   "dependencies": {
-    "openapi-metadata": "^0.2.0"
+    "openapi-metadata": "^0.2.2",
+    "yaml": "^2.8.1"
   },
   "publishConfig": {
     "access": "public",
