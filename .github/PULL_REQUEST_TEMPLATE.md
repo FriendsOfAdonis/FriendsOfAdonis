@@ -44,7 +44,7 @@
 
 ## 💡 Additional Notes
 
-<!-- Add any other context about the pull request here. --> 
+<!-- Add any other context about the pull request here. -->
 
 ## 🔄 Breaking Changes
 

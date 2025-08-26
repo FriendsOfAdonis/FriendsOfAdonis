@@ -58,4 +58,4 @@ For security-related questions or concerns:
 - **Security Email**: [contact@martin.xyz](mailto:contact@martin.xyz)
 - **GitHub Security Tab**: [Security Advisories](https://github.com/FriendsOfAdonis/FriendsOfAdonis/security/advisories)
 
-Thank you for helping keep FriendsOfAdonis secure! 
+Thank you for helping keep FriendsOfAdonis secure!
