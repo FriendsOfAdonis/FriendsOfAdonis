@@ -34,6 +34,7 @@
     "automd": "^0.4.0",
     "eslint": "^9.25.1",
     "mdbox": "^0.1.1",
+    "node-gyp": "^11.2.0",
     "prettier": "^3.5.3",
     "turbo": "^2.5.1",
     "typescript": "^5.8.3"
