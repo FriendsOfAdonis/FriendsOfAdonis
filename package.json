@@ -28,7 +28,7 @@
   "devDependencies": {
     "@adonisjs/prettier-config": "^1.4.5",
     "@changesets/changelog-github": "^0.5.1",
-    "@changesets/cli": "^2.29.2",
+    "@changesets/cli": "^2.29.6",
     "@foadonis/typescript-config": "workspace:*",
     "@manypkg/cli": "^0.25.0",
     "automd": "^0.4.0",

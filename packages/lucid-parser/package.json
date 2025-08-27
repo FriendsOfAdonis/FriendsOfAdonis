@@ -85,8 +85,8 @@
     ]
   },
   "dependencies": {
-    "@babel/parser": "^7.27.0",
-    "@babel/types": "^7.27.0",
+    "@babel/parser": "^7.28.3",
+    "@babel/types": "^7.28.2",
     "recast": "^0.23.11"
   }
 }

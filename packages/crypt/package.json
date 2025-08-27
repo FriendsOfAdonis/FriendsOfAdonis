@@ -87,7 +87,7 @@
     ]
   },
   "dependencies": {
-    "@poppinss/validator-lite": "^2.1.0",
+    "@poppinss/validator-lite": "^2.1.2",
     "eciesjs": "^0.4.15"
   }
 }
