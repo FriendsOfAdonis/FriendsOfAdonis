@@ -25,8 +25,7 @@
     "format": "prettier --write .",
     "quick:test": "node --import=./tsnode.esm.js --enable-source-maps bin/test.ts",
     "test": "c8 yarn quick:test",
-    "prebuild": "yarn clean",
-    "build": "tsc && yarn copy:templates && yarn index:commands",
+    "build": "yarn clean && tsc && yarn copy:templates && yarn index:commands",
     "dev": "tsc --watch",
     "version": "yarn build"
   },
@@ -66,7 +65,7 @@
     "copyfiles": "^2.4.1",
     "del-cli": "^6.0.0",
     "edge.js": "^6.2.1",
-    "prettier": "^3.5.3",
+    "prettier": "^3.6.2",
     "reflect-metadata": "^0.2.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"

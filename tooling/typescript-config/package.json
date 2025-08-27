@@ -7,6 +7,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@adonisjs/tsconfig": "^1.4.0"
+    "@adonisjs/tsconfig": "^1.4.1"
   }
 }
