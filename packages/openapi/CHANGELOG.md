@@ -1,5 +1,11 @@
 # @foadonis/openapi
 
+## 0.4.1
+
+### Patch Changes
+
+- [#80](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/80) [`e0edafe`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/e0edafeff25a38cc61c02806004510718def0524) Thanks [@kerwanp](https://github.com/kerwanp)! - Bump dependencies
+
 ## 0.4.0
 
 ### Minor Changes
@@ -7,7 +13,6 @@
 - [#77](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/77) [`d1dfe1a`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/d1dfe1ad0cca085256a14ca363710949da65c645) Thanks [@kerwanp](https://github.com/kerwanp)! - Remove content negotiation in favor of file extensions for documentation format.
 
   When registering OpenAPI routes you will now have 3 registered routes:
-
   - /api - returns the OpenAPI documentation UI
   - /api.json - returns the OpenAPI documentation in JSON format
   - /api.yaml - returns the OpenAPI documentation in YAML format

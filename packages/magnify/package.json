@@ -1,7 +1,7 @@
 {
   "name": "@foadonis/magnify",
   "description": "Plug and play full-text search for your Adonis application.",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "engines": {
     "node": ">=20.6.0"
   },
