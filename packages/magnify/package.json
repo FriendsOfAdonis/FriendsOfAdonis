@@ -55,7 +55,7 @@
   "license": "MIT",
   "devDependencies": {
     "@adonisjs/assembler": "^7.8.2",
-    "@adonisjs/core": "^6.17.2",
+    "@adonisjs/core": "^6.19.0",
     "@adonisjs/lucid": "^21.6.1",
     "@foadonis/eslint-config": "workspace:*",
     "@japa/assert": "^4.1.1",
@@ -63,7 +63,7 @@
     "@japa/file-system": "^2.3.2",
     "@japa/plugin-adonisjs": "^4.0.0",
     "@japa/runner": "^4.4.0",
-    "@swc/core": "1.11.22",
+    "@swc/core": "1.13.5",
     "@types/luxon": "^3.6.2",
     "@types/node": "^22.14.1",
     "@types/sinon": "^17.0.4",
