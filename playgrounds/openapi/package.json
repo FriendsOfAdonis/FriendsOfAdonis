@@ -54,7 +54,7 @@
     "@foadonis/crypt": "workspace:*",
     "@foadonis/openapi": "workspace:*",
     "@vinejs/vine": "^3.0.1",
-    "better-sqlite3": "^11.9.1",
+    "better-sqlite3": "^12.2.0",
     "class-validator": "^0.14.1",
     "graphql": "^16.11.0",
     "graphql-scalars": "^1.24.2",
