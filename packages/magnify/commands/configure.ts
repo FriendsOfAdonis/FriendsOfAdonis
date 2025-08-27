@@ -11,6 +11,7 @@ import {
 export default class ConfigureCommand extends BaseCommand {
   static commandName = 'magnify:configure'
   static description = 'Configure a Search Engine'
+  static options = { startApp: true }
 
   @args.string({ required: false })
   declare engine?: string

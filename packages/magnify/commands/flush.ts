@@ -5,6 +5,7 @@ import { SearchableModel } from '../src/types.js'
 export default class Flush extends BaseCommand {
   static commandName = 'magnify:flush'
   static description = "Flush all of the model's records from the index"
+  static options = { startApp: true }
 
   @args.string({ required: true })
   declare modelPath: string
