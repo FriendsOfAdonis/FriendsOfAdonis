@@ -90,7 +90,7 @@
     "luxon": "^3.5.0"
   },
   "dependencies": {
-    "@apollo/server": "^4.12.0",
+    "@apollo/server": "^5.0.0",
     "@npmcli/package-json": "^6.1.1",
     "graphql-ws": "^6.0.5",
     "pkg-types": "^2.1.0",
