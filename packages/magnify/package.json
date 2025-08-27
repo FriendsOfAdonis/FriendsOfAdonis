@@ -77,7 +77,7 @@
     "prettier": "^3.6.2",
     "reflect-metadata": "^0.2.2",
     "sinon": "^20.0.0",
-    "testcontainers": "^10.24.2",
+    "testcontainers": "^11.5.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3",
     "typesense": "^2.1.0"
