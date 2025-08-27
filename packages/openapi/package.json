@@ -68,7 +68,7 @@
     "@japa/plugin-adonisjs": "^4.0.0",
     "@japa/runner": "^4.4.0",
     "@swc/core": "1.13.5",
-    "@types/luxon": "^3.6.2",
+    "@types/luxon": "^3.7.1",
     "@types/node": "^22.14.1",
     "@types/sinon": "^17.0.4",
     "@vinejs/vine": "^3.0.1",
