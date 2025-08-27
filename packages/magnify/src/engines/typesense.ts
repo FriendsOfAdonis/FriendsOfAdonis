@@ -96,7 +96,7 @@ export class TypesenseEngine implements MagnifyEngine {
     return this.map(builder, await this.search(builder))
   }
 
-  async #performSearch(builder: SearchBuilder, params: SearchParams) {
+  async #performSearch(builder: SearchBuilder, params: SearchParams<Record<string, any>>) {
     const collection = await this.#getCollectionFromModel(builder.$model)
     return collection.documents().search(params)
   }
@@ -118,7 +118,7 @@ export class TypesenseEngine implements MagnifyEngine {
   }
 
   #buildSearchParameters(builder: SearchBuilder, page = 1, perPage = 250) {
-    const parameters: SearchParams = {
+    const parameters: SearchParams<Record<string, any>> = {
       q: builder.$query,
       query_by: this.#config.collectionSettings[builder.$model.$searchIndex].queryBy ?? '',
       filter_by: this.#filters(builder),
