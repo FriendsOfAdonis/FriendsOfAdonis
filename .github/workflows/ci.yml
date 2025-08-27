@@ -17,8 +17,9 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         node-version:
-          - 20.10.0
+          - 20.x
           - 21.x
+          - 22.x
           - 23.x
     steps:
       - name: ⬇ Checkout repository

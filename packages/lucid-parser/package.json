@@ -24,8 +24,7 @@
     "format": "prettier --write .",
     "quick:test": "node --import=./tsnode.esm.js --enable-source-maps bin/test.ts",
     "test": "c8 yarn quick:test",
-    "prebuild": "yarn clean",
-    "build": "tsc && yarn copy:templates && yarn index:commands",
+    "build": "yarn clean && tsc && yarn copy:templates && yarn index:commands",
     "dev": "tsc --watch",
     "version": "yarn build"
   },
@@ -49,22 +48,22 @@
   "license": "MIT",
   "devDependencies": {
     "@adonisjs/assembler": "^7.8.2",
-    "@adonisjs/core": "^6.17.2",
+    "@adonisjs/core": "^6.19.0",
     "@foadonis/eslint-config": "workspace:*",
-    "@japa/assert": "^4.0.1",
+    "@japa/assert": "^4.1.1",
     "@japa/expect-type": "^2.0.3",
     "@japa/file-system": "^2.3.2",
     "@japa/plugin-adonisjs": "^4.0.0",
-    "@japa/runner": "^4.2.0",
-    "@swc/core": "1.11.22",
-    "@types/luxon": "^3.6.2",
+    "@japa/runner": "^4.4.0",
+    "@swc/core": "1.13.5",
+    "@types/luxon": "^3.7.1",
     "@types/node": "^22.14.1",
     "c8": "^10.1.3",
     "copyfiles": "^2.4.1",
     "del-cli": "^6.0.0",
     "globby": "^14.1.0",
-    "luxon": "^3.6.1",
-    "prettier": "^3.5.3",
+    "luxon": "^3.7.1",
+    "prettier": "^3.6.2",
     "reflect-metadata": "^0.2.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
@@ -86,8 +85,8 @@
     ]
   },
   "dependencies": {
-    "@babel/parser": "^7.27.0",
-    "@babel/types": "^7.27.0",
+    "@babel/parser": "^7.28.3",
+    "@babel/types": "^7.28.2",
     "recast": "^0.23.11"
   }
 }
