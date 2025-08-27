@@ -1,5 +1,11 @@
 # @foadonis/lucid-parser
 
+## 0.0.2
+
+### Patch Changes
+
+- [#80](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/80) [`e0edafe`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/e0edafeff25a38cc61c02806004510718def0524) Thanks [@kerwanp](https://github.com/kerwanp)! - Bump dependencies
+
 ## 0.0.1
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @foadonis/magnify
 
+## 0.2.8
+
+### Patch Changes
+
+- [#76](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/76) [`455dc41`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/455dc417699714b0cae04677aa96609c1993f4e3) Thanks [@BackThePortal](https://github.com/BackThePortal)! - Make commands boot the app so that the container 'magnify' is resolved
+
+- [#80](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/80) [`e0edafe`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/e0edafeff25a38cc61c02806004510718def0524) Thanks [@kerwanp](https://github.com/kerwanp)! - Bump dependencies
+
 ## 0.2.7
 
 ### Patch Changes
