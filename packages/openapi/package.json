@@ -1,7 +1,7 @@
 {
   "name": "@foadonis/openapi",
   "description": "Generate OpenAPI specifications on Adonis",
-  "version": "0.3.5",
+  "version": "0.4.0",
   "engines": {
     "node": ">=20.6.0"
   },
@@ -90,7 +90,8 @@
     "luxon": "^3.5.0"
   },
   "dependencies": {
-    "openapi-metadata": "^0.2.0"
+    "openapi-metadata": "^0.2.2",
+    "yaml": "^2.8.1"
   },
   "publishConfig": {
     "access": "public",
