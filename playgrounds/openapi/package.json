@@ -55,7 +55,7 @@
     "@foadonis/openapi": "workspace:*",
     "@vinejs/vine": "^3.0.1",
     "better-sqlite3": "^12.2.0",
-    "class-validator": "^0.14.1",
+    "class-validator": "^0.14.2",
     "graphql": "^16.11.0",
     "graphql-scalars": "^1.24.2",
     "luxon": "^3.6.1",

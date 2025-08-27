@@ -1727,12 +1727,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ecies/ciphers@npm:^0.2.2":
-  version: 0.2.2
-  resolution: "@ecies/ciphers@npm:0.2.2"
+"@ecies/ciphers@npm:^0.2.3":
+  version: 0.2.4
+  resolution: "@ecies/ciphers@npm:0.2.4"
   peerDependencies:
     "@noble/ciphers": ^1.0.0
-  checksum: 10c0/a1f17cfbc0c2c6426d97baaaed1277278f05f441521b097444108d08cbd33674191b2b31b0cbfbf941ba8ed6eb1c4a1356ba5c981d607647d3848ac73cbd6fdb
+  checksum: 10c0/fc9a1be681b3509e6a828269d8c08dfe156276b5378a1f5fe85cd389fe43c46d6efad0438219b08a99951e918c32a9e07ce7b6d72adfd71b42dcae92a613286b
   languageName: node
   linkType: hard
 
@@ -1792,15 +1792,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@envelop/core@npm:^5.2.3":
-  version: 5.2.3
-  resolution: "@envelop/core@npm:5.2.3"
+"@envelop/core@npm:^5.3.0":
+  version: 5.3.0
+  resolution: "@envelop/core@npm:5.3.0"
   dependencies:
     "@envelop/instrumentation": "npm:^1.0.0"
     "@envelop/types": "npm:^5.2.1"
     "@whatwg-node/promise-helpers": "npm:^1.2.4"
     tslib: "npm:^2.5.0"
-  checksum: 10c0/77ba5807ddee5d08d6a4f47b2787735f0ad5aef71dcd809d51f5004f937de4c6a0b9a32651f2c6b81a0b9ef0510a917af408813c485e93da151c91d33b453061
+  checksum: 10c0/002aacab9089c18a6b7d55c96d2cfc71fd1c6077d2f5dbbc81a317b594664b809b64cf2c017c3c0d3f4425c441c1f19a45127666da1aadcc63727f900201ee6b
   languageName: node
   linkType: hard
 
@@ -2217,7 +2217,7 @@ __metadata:
     c8: "npm:^10.1.3"
     copyfiles: "npm:^2.4.1"
     del-cli: "npm:^6.0.0"
-    edge.js: "npm:^6.2.1"
+    edge.js: "npm:^6.3.0"
     prettier: "npm:^3.6.2"
     reflect-metadata: "npm:^0.2.2"
     ts-node: "npm:^10.9.2"
@@ -2245,8 +2245,8 @@ __metadata:
     c8: "npm:^10.1.3"
     copyfiles: "npm:^2.4.1"
     del-cli: "npm:^6.0.0"
-    eciesjs: "npm:^0.4.14"
-    edge.js: "npm:^6.2.1"
+    eciesjs: "npm:^0.4.15"
+    edge.js: "npm:^6.3.0"
     prettier: "npm:^3.6.2"
     reflect-metadata: "npm:^0.2.2"
     ts-node: "npm:^10.9.2"
@@ -2300,7 +2300,7 @@ __metadata:
     copyfiles: "npm:^2.4.1"
     del-cli: "npm:^6.0.0"
     graphql: "npm:^16.11.0"
-    graphql-ws: "npm:^6.0.5"
+    graphql-ws: "npm:^6.0.6"
     luxon: "npm:^3.6.1"
     pkg-types: "npm:^2.1.0"
     prettier: "npm:^3.6.2"
@@ -2419,7 +2419,7 @@ __metadata:
     c8: "npm:^10.1.3"
     copyfiles: "npm:^2.4.1"
     del-cli: "npm:^6.0.0"
-    edge.js: "npm:^6.2.1"
+    edge.js: "npm:^6.3.0"
     prettier: "npm:^3.6.2"
     reflect-metadata: "npm:^0.2.2"
     ts-node: "npm:^10.9.2"
@@ -3516,23 +3516,30 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@noble/ciphers@npm:^1.0.0":
-  version: 1.2.0
-  resolution: "@noble/ciphers@npm:1.2.0"
-  checksum: 10c0/b841f67c2bf58ab93b2d6efc954fdc9d2a91d463183d32df4c6d14135f462638b3586fbcfb0e63b5b89ec416f54f2843ee0e017ff8b853356669eaa728f2d5bf
+"@noble/ciphers@npm:^1.3.0":
+  version: 1.3.0
+  resolution: "@noble/ciphers@npm:1.3.0"
+  checksum: 10c0/3ba6da645ce45e2f35e3b2e5c87ceba86b21dfa62b9466ede9edfb397f8116dae284f06652c0cd81d99445a2262b606632e868103d54ecc99fd946ae1af8cd37
   languageName: node
   linkType: hard
 
-"@noble/curves@npm:^1.6.0":
-  version: 1.8.0
-  resolution: "@noble/curves@npm:1.8.0"
+"@noble/curves@npm:^1.9.1":
+  version: 1.9.7
+  resolution: "@noble/curves@npm:1.9.7"
   dependencies:
-    "@noble/hashes": "npm:1.7.0"
-  checksum: 10c0/3ebb1795f3f7d74c879bc6262a3444061585a2cab90b7b637dc57d931063dd0c95be858a4c2389e932651825dbc461c215dbcf43984a232de3bd6b2d326ba555
+    "@noble/hashes": "npm:1.8.0"
+  checksum: 10c0/150014751ebe8ca06a8654ca2525108452ea9ee0be23430332769f06808cddabfe84f248b6dbf836916bc869c27c2092957eec62c7506d68a1ed0a624017c2a3
   languageName: node
   linkType: hard
 
-"@noble/hashes@npm:1.7.0, @noble/hashes@npm:^1.1.5, @noble/hashes@npm:^1.5.0":
+"@noble/hashes@npm:1.8.0, @noble/hashes@npm:^1.8.0":
+  version: 1.8.0
+  resolution: "@noble/hashes@npm:1.8.0"
+  checksum: 10c0/06a0b52c81a6fa7f04d67762e08b2c476a00285858150caeaaff4037356dd5e119f45b2a530f638b77a5eeca013168ec1b655db41bae3236cb2e9d511484fc77
+  languageName: node
+  linkType: hard
+
+"@noble/hashes@npm:^1.1.5":
   version: 1.7.0
   resolution: "@noble/hashes@npm:1.7.0"
   checksum: 10c0/1ef0c985ebdb5a1bd921ea6d959c90ba826af3ae05b40b459a703e2a5e9b259f190c6e92d6220fb3800e2385521e4159e238415ad3f6b79c52f91dd615e491dc
@@ -8760,14 +8767,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"class-validator@npm:^0.14.1":
-  version: 0.14.1
-  resolution: "class-validator@npm:0.14.1"
+"class-validator@npm:^0.14.2":
+  version: 0.14.2
+  resolution: "class-validator@npm:0.14.2"
   dependencies:
     "@types/validator": "npm:^13.11.8"
-    libphonenumber-js: "npm:^1.10.53"
+    libphonenumber-js: "npm:^1.11.1"
     validator: "npm:^13.9.0"
-  checksum: 10c0/946e914e47548b5081449c720ea6a4877bac63dc960e14fca4b990b56e64efe3802d12f07ec22d6420c290245b72ea2d646939239f2a3b597794e6c4c2a4f2ae
+  checksum: 10c0/5bb67389d38fa23d342dffdd8e2dcee8235e1906e59799df5b2050278a6d89292fcaa88167f0215e3ddd684f47dcd51b004efa7be32d8aded91ee06cb317b3b8
   languageName: node
   linkType: hard
 
@@ -9742,14 +9749,14 @@ __metadata:
     fumadocs-twoslash: "npm:^3.1.1"
     fumadocs-typescript: "npm:^4.0.3"
     fumadocs-ui: "npm:15.2.10"
-    geist: "npm:^1.3.1"
+    geist: "npm:^1.4.2"
     lucide-react: "npm:^0.503.0"
     next: "npm:15.3.1"
     postcss: "npm:^8.5.3"
     react: "npm:^19.1.1"
     react-dom: "npm:^19.1.1"
-    tailwind-merge: "npm:^3.2.0"
-    tailwindcss: "npm:^4.1.4"
+    tailwind-merge: "npm:^3.3.1"
+    tailwindcss: "npm:^4.1.12"
     tailwindcss-animate: "npm:^1.0.7"
     typescript: "npm:^5.8.3"
     zod: "npm:^3.24.3"
@@ -9820,15 +9827,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eciesjs@npm:^0.4.14":
-  version: 0.4.14
-  resolution: "eciesjs@npm:0.4.14"
+"eciesjs@npm:^0.4.15":
+  version: 0.4.15
+  resolution: "eciesjs@npm:0.4.15"
   dependencies:
-    "@ecies/ciphers": "npm:^0.2.2"
-    "@noble/ciphers": "npm:^1.0.0"
-    "@noble/curves": "npm:^1.6.0"
-    "@noble/hashes": "npm:^1.5.0"
-  checksum: 10c0/a6f7f829bb097aca1d322c677eb900991070698b0fa658686c88f34104a0b41712aad85c1c2baea14b5f2006beb5c78f17f5ca865818df2c684ca43aa1a8edf7
+    "@ecies/ciphers": "npm:^0.2.3"
+    "@noble/ciphers": "npm:^1.3.0"
+    "@noble/curves": "npm:^1.9.1"
+    "@noble/hashes": "npm:^1.8.0"
+  checksum: 10c0/b5fc236810ff50e02f4d3155ab07f3a5d817ed7611fc63acef348e796a198a10bedf4adb152f512bcdc6ec90eb04a6f66606776bd56078d6d20bf3815bdc3f1c
   languageName: node
   linkType: hard
 
@@ -9861,9 +9868,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"edge.js@npm:^6.2.1":
-  version: 6.2.1
-  resolution: "edge.js@npm:6.2.1"
+"edge.js@npm:^6.3.0":
+  version: 6.3.0
+  resolution: "edge.js@npm:6.3.0"
   dependencies:
     "@poppinss/inspect": "npm:^1.0.1"
     "@poppinss/macroable": "npm:^1.0.4"
@@ -9877,7 +9884,7 @@ __metadata:
     js-stringify: "npm:^1.0.2"
     property-information: "npm:^6.5.0"
     stringify-attributes: "npm:^4.0.0"
-  checksum: 10c0/cbff34431450ba7c139a6b0c9509ae30d5d04c0abcd3ad6242d3b305a0ce106d4be1cad5f79335a61a9efa5be53fbc937fc9cbb52bee43b541f534bacd5f3543
+  checksum: 10c0/bd619ec24e54fe9520740e759135b925a2f8d9990d791dd7eb2478638a3ad84a4c1f1002fcaa036f26c86ce85c64aa02a6c4ee71bd53cd2b13deaca0c3d2a5cb
   languageName: node
   linkType: hard
 
@@ -12182,12 +12189,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"geist@npm:^1.3.1":
-  version: 1.3.1
-  resolution: "geist@npm:1.3.1"
+"geist@npm:^1.4.2":
+  version: 1.4.2
+  resolution: "geist@npm:1.4.2"
   peerDependencies:
     next: ">=13.2.0"
-  checksum: 10c0/cb282224d0228656b74bd5df3e49132c87b099d5cfaee7304d28acc53941116a452954bc64ed921b6b2810a9e299f9738ee68a3667f5b9f3f6c7c4df967b3a42
+  checksum: 10c0/597fc5052fcf7f9ab37334cf1333e67d9e02b176bde5314d328e7fe318dd0a18a322885d999c45cc39bdd2d0b85884ac3ebf8442dabfb4cc8bde256d433696be
   languageName: node
   linkType: hard
 
@@ -12562,9 +12569,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql-ws@npm:^6.0.5":
-  version: 6.0.5
-  resolution: "graphql-ws@npm:6.0.5"
+"graphql-ws@npm:^6.0.6":
+  version: 6.0.6
+  resolution: "graphql-ws@npm:6.0.6"
   peerDependencies:
     "@fastify/websocket": ^10 || ^11
     crossws: ~0.3
@@ -12580,15 +12587,15 @@ __metadata:
       optional: true
     ws:
       optional: true
-  checksum: 10c0/7b882a4f47be2c67e8ae2357fb84ac7026ed8d6152eebb164aed53b8d1234f123a9a6d036fd53c8aea97a6197c7f748861205dc289ff418666cd0446571635e9
+  checksum: 10c0/4d1f18245fd2c56670156d910bc45a6fd456291b6e9b96d98e3d7fd464e1b406cfb4e68b4aafeb875c366d63d8f204b488b57729d622cd8d97e0387d0cd38dcf
   languageName: node
   linkType: hard
 
-"graphql-yoga@npm:^5.13.4":
-  version: 5.13.4
-  resolution: "graphql-yoga@npm:5.13.4"
+"graphql-yoga@npm:^5.15.1":
+  version: 5.15.1
+  resolution: "graphql-yoga@npm:5.15.1"
   dependencies:
-    "@envelop/core": "npm:^5.2.3"
+    "@envelop/core": "npm:^5.3.0"
     "@envelop/instrumentation": "npm:^1.0.0"
     "@graphql-tools/executor": "npm:^1.4.0"
     "@graphql-tools/schema": "npm:^10.0.11"
@@ -12603,7 +12610,7 @@ __metadata:
     tslib: "npm:^2.8.1"
   peerDependencies:
     graphql: ^15.2.0 || ^16.0.0
-  checksum: 10c0/b49085b3878d392436c848b8da075d70ebfe9ec147620a0c614d3075af68ee5f388426d8ee1af875c1bd7807f643261b76cfa3b898184bdcc0ea06af54b0deba
+  checksum: 10c0/60c27e5da20de8a148f34ca1ef63b068547b126618518ab8449c45a6595ed41fd2287cf5996bfb7310cdd5434e46cc603b4ecdc6bb0947ec4d2fd20096f17e6b
   languageName: node
   linkType: hard
 
@@ -14108,10 +14115,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"libphonenumber-js@npm:^1.10.53":
-  version: 1.11.17
-  resolution: "libphonenumber-js@npm:1.11.17"
-  checksum: 10c0/102bc66f82b4fb86983f3c68d7b8eafd5e5f82be48bcd87c4c3a723b08e62d2deffa78a5d646698f2ba163f4e0d5722d99661ba9ec36f12b5a108fcdf8731059
+"libphonenumber-js@npm:^1.11.1":
+  version: 1.12.14
+  resolution: "libphonenumber-js@npm:1.12.14"
+  checksum: 10c0/1e2317965156abc24af74c13ffdb1f260de61b2c8635a4d11203a038ce419aedd0040b009884427e8ffe6bd33b4b02f407f27f09c4f1f8e56bcc089378685b2e
   languageName: node
   linkType: hard
 
@@ -16840,10 +16847,10 @@ __metadata:
     "@types/luxon": "npm:^3.6.2"
     "@types/node": "npm:^22.14.1"
     better-sqlite3: "npm:^12.2.0"
-    class-validator: "npm:^0.14.1"
+    class-validator: "npm:^0.14.2"
     graphql: "npm:^16.11.0"
     graphql-scalars: "npm:^1.24.2"
-    graphql-yoga: "npm:^5.13.4"
+    graphql-yoga: "npm:^5.15.1"
     hot-hook: "npm:^0.4.0"
     luxon: "npm:^3.6.1"
     pino-pretty: "npm:^13.0.0"
@@ -16875,7 +16882,7 @@ __metadata:
     "@types/node": "npm:^22.14.1"
     "@vinejs/vine": "npm:^3.0.1"
     better-sqlite3: "npm:^12.2.0"
-    class-validator: "npm:^0.14.1"
+    class-validator: "npm:^0.14.2"
     graphql: "npm:^16.11.0"
     graphql-scalars: "npm:^1.24.2"
     hot-hook: "npm:^0.4.0"
@@ -19378,6 +19385,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tailwind-merge@npm:^3.3.1":
+  version: 3.3.1
+  resolution: "tailwind-merge@npm:3.3.1"
+  checksum: 10c0/b84c6a78d4669fa12bf5ab8f0cdc4400a3ce0a7c006511af4af4be70bb664a27466dbe13ee9e3b31f50ddf6c51d380e8192ce0ec9effce23ca729d71a9f63818
+  languageName: node
+  linkType: hard
+
 "tailwindcss-animate@npm:^1.0.7":
   version: 1.0.7
   resolution: "tailwindcss-animate@npm:1.0.7"
@@ -19387,10 +19401,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tailwindcss@npm:4.1.4, tailwindcss@npm:^4.1.4":
+"tailwindcss@npm:4.1.4":
   version: 4.1.4
   resolution: "tailwindcss@npm:4.1.4"
   checksum: 10c0/4927653b740861f0279b6b465c87e188652d3c0e311c633b4efe5d72bbb4dce12b9dddc674a386a3d0454ef4dd4951aac6fd7346dcd9b2b2b06952e431c1835d
+  languageName: node
+  linkType: hard
+
+"tailwindcss@npm:^4.1.12":
+  version: 4.1.12
+  resolution: "tailwindcss@npm:4.1.12"
+  checksum: 10c0/0e43375d8de91e1c97a60ed7855f1bf02d5cac61a909439afd54462604862ee71706d812c0447a639f2ef98051a8817840b3df6847c7a1ed015f7a910240ffef
   languageName: node
   linkType: hard
 
