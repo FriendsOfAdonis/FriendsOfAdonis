@@ -76,7 +76,7 @@
     "copyfiles": "^2.4.1",
     "del-cli": "^6.0.0",
     "graphql": "^16.11.0",
-    "luxon": "^3.6.1",
+    "luxon": "^3.7.1",
     "prettier": "^3.6.2",
     "reflect-metadata": "^0.2.2",
     "ts-node": "^10.9.2",
@@ -93,9 +93,9 @@
     "@apollo/server": "^5.0.0",
     "@npmcli/package-json": "^6.2.0",
     "graphql-ws": "^6.0.6",
-    "pkg-types": "^2.1.0",
+    "pkg-types": "^2.3.0",
     "type-graphql": "2.0.0-rc.2",
-    "ws": "^8.18.2"
+    "ws": "^8.18.3"
   },
   "optionalDependencies": {
     "@adonisjs/auth": "^9.4.2",
