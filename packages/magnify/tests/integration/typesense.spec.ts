@@ -198,4 +198,43 @@ test.group('Typesense', (group) => {
     const results = await User.search('').get()
     assert.lengthOf(results, 0)
   })
+
+  test('sync index settings', async ({ assert }) => {
+    const engine = new TypesenseEngine({
+      apiKey: 'superrandomkey',
+      nodes: [{ url: `http://${container.getHost()}:${container.getFirstMappedPort()}` }],
+      collectionSettings: {
+        users: {
+          queryBy: ['name'],
+          fields: [
+            {
+              name: 'name',
+              type: 'string',
+            },
+            {
+              name: 'isAdmin',
+              type: 'bool',
+            },
+            {
+              name: 'updatedAt',
+              type: 'string',
+            },
+            {
+              name: 'newField',
+              type: 'bool',
+              optional: true,
+            },
+          ],
+        },
+      },
+    })
+
+    await engine.syncIndexSettings()
+
+    const remoteSchema = await engine.client.collections('users').retrieve()
+
+    assert.isTrue(remoteSchema.fields.some((x) => x.name === 'newField'))
+    assert.isTrue(remoteSchema.fields.find((x) => x.name === 'isAdmin')?.optional === false)
+    assert.isTrue(remoteSchema.fields.every((x) => x.name !== 'createdAt'))
+  })
 })
