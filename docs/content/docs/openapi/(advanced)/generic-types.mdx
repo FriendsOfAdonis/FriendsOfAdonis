@@ -108,6 +108,8 @@ export default function PaginatedResponse<TItem extends object>(
     @ApiProperty({ type: [Item] })
     declare items: TItem[]
   }
+
+  return Pagination
 }
 ```
 
