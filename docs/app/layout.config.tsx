@@ -1,5 +1,5 @@
 import type { BaseLayoutProps, LinkItemType } from 'fumadocs-ui/layouts/shared'
-import { AlbumIcon, CircleDollarSign, Plus, Search, Server, Vault } from 'lucide-react'
+import { AlbumIcon, Braces, CircleDollarSign, Plus, Search, Server, Vault } from 'lucide-react'
 import Image from 'next/image'
 import { GithubInfo } from '@/components/github-info'
 
@@ -30,7 +30,7 @@ export const baseOptions: BaseLayoutProps = {
           url: '/docs/openapi',
         },
         {
-          icon: <Server />,
+          icon: <Braces />,
           text: 'GraphQL',
           description: 'Create GraphQL APIs using AdonisJS',
           url: '/docs/graphql',
