@@ -28,7 +28,7 @@ jobs:
           node-version: 22
       - name: 📦 Install Node dependencies
         run: yarn install --frozen-lockfile
-      - run: yarn build --filter="./packages/*"
+      - run: yarn build --filter="./packages/*" --filter=!@foadonis/shopkeeper
       - uses: changesets/action@v1
         with:
           version: yarn changeset version
