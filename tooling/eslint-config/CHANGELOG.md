@@ -1,5 +1,11 @@
 # @foadonis/eslint-config
 
+## 0.1.0
+
+### Minor Changes
+
+- [#92](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/92) [`ae03e93`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/ae03e931698333bb891956853559bcf0c482fc9e) Thanks [@kerwanp](https://github.com/kerwanp)! - Bump dependencies
+
 ## 0.0.2
 
 ### Patch Changes
