@@ -30,7 +30,7 @@
     "@changesets/changelog-github": "^0.5.2",
     "@changesets/cli": "^2.29.8",
     "@foadonis/typescript-config": "workspace:*",
-    "@manypkg/cli": "^0.25.0",
+    "@manypkg/cli": "^0.25.1",
     "automd": "^0.4.0",
     "eslint": "^9.34.0",
     "mdbox": "^0.1.1",

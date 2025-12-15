@@ -57,16 +57,16 @@
   "license": "MIT",
   "devDependencies": {
     "@adonisjs/assembler": "^7.8.2",
-    "@adonisjs/auth": "^9.4.2",
-    "@adonisjs/core": "^6.19.0",
-    "@adonisjs/lucid": "^21.6.1",
+    "@adonisjs/auth": "^9.5.1",
+    "@adonisjs/core": "^6.19.1",
+    "@adonisjs/lucid": "^21.8.1",
     "@foadonis/eslint-config": "workspace:*",
     "@japa/assert": "^4.1.1",
     "@japa/expect": "^3.0.6",
     "@japa/expect-type": "^2.0.3",
     "@japa/file-system": "^2.3.2",
     "@japa/plugin-adonisjs": "^4.0.0",
-    "@japa/runner": "^4.4.0",
+    "@japa/runner": "^5.0.0",
     "@swc/core": "1.13.5",
     "@types/luxon": "^3.7.1",
     "@types/node": "^22.14.1",
@@ -98,7 +98,7 @@
     "ws": "^8.18.3"
   },
   "optionalDependencies": {
-    "@adonisjs/auth": "^9.4.2",
+    "@adonisjs/auth": "^9.5.1",
     "@adonisjs/bouncer": "^3.1.6"
   },
   "publishConfig": {

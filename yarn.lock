@@ -12,9 +12,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@adonisjs/ace@npm:^13.3.0":
-  version: 13.3.0
-  resolution: "@adonisjs/ace@npm:13.3.0"
+"@adonisjs/ace@npm:^13.4.0":
+  version: 13.4.0
+  resolution: "@adonisjs/ace@npm:13.4.0"
   dependencies:
     "@poppinss/cliui": "npm:^6.4.1"
     "@poppinss/hooks": "npm:^7.2.4"
@@ -27,11 +27,11 @@ __metadata:
     yargs-parser: "npm:^21.1.1"
     youch: "npm:^3.3.4"
     youch-terminal: "npm:^2.2.3"
-  checksum: 10c0/4eb28745098a44e248c4ea17beff55db1671daedcec0ab1cd97ecdf8349a24966ae701186f06665167122c1bd346a09f0c8ddd218a6ae364d581d04451992918
+  checksum: 10c0/7319df452ded95b05aa2acbc0ec2d40ef062ecfed6f287122a021a922201de03116eed7c994a675b84ba0508f012de2c1c2f091b75a2edf802685141f671c507
   languageName: node
   linkType: hard
 
-"@adonisjs/application@npm:^8.4.1":
+"@adonisjs/application@npm:^8.4.2":
   version: 8.4.2
   resolution: "@adonisjs/application@npm:8.4.2"
   dependencies:
@@ -73,12 +73,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@adonisjs/auth@npm:^9.4.2":
-  version: 9.4.2
-  resolution: "@adonisjs/auth@npm:9.4.2"
+"@adonisjs/auth@npm:^9.5.1":
+  version: 9.5.1
+  resolution: "@adonisjs/auth@npm:9.5.1"
   dependencies:
     "@adonisjs/presets": "npm:^2.6.4"
-    "@poppinss/utils": "npm:^6.10.0"
+    "@poppinss/utils": "npm:^6.10.1"
     basic-auth: "npm:^2.0.1"
   peerDependencies:
     "@adonisjs/core": ^6.11.0
@@ -98,7 +98,7 @@ __metadata:
       optional: true
     "@japa/plugin-adonisjs":
       optional: true
-  checksum: 10c0/63c76f9cacd317e489be6d0090e60d724991c806f62a4fa71433f13022e7851c337e754a6533d737824e02ef1e4860a92bcc485151c9ea2f93c5bd9443d0002e
+  checksum: 10c0/e939a185216b5a71a034c13cf1fe00019caf8156fcaa4a153c360a247a6996f3c01acf266c52b3e95b42b87b833e59ca40d2efafb5ab55c4cab8a732f9c8fa6e
   languageName: node
   linkType: hard
 
@@ -171,12 +171,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@adonisjs/core@npm:^6.19.0":
-  version: 6.19.0
-  resolution: "@adonisjs/core@npm:6.19.0"
+"@adonisjs/core@npm:^6.19.1":
+  version: 6.19.1
+  resolution: "@adonisjs/core@npm:6.19.1"
   dependencies:
-    "@adonisjs/ace": "npm:^13.3.0"
-    "@adonisjs/application": "npm:^8.4.1"
+    "@adonisjs/ace": "npm:^13.4.0"
+    "@adonisjs/application": "npm:^8.4.2"
     "@adonisjs/bodyparser": "npm:^10.1.0"
     "@adonisjs/config": "npm:^5.0.3"
     "@adonisjs/encryption": "npm:^6.0.2"
@@ -187,14 +187,14 @@ __metadata:
     "@adonisjs/health": "npm:^2.0.0"
     "@adonisjs/http-server": "npm:^7.7.0"
     "@adonisjs/logger": "npm:^6.0.6"
-    "@adonisjs/repl": "npm:^4.1.0"
+    "@adonisjs/repl": "npm:^4.1.2"
     "@antfu/install-pkg": "npm:^1.1.0"
     "@paralleldrive/cuid2": "npm:^2.2.2"
-    "@poppinss/colors": "npm:^4.1.4"
-    "@poppinss/dumper": "npm:^0.6.3"
-    "@poppinss/macroable": "npm:^1.0.4"
-    "@poppinss/utils": "npm:^6.10.0"
-    "@sindresorhus/is": "npm:^7.0.2"
+    "@poppinss/colors": "npm:^4.1.5"
+    "@poppinss/dumper": "npm:^0.6.4"
+    "@poppinss/macroable": "npm:^1.1.0"
+    "@poppinss/utils": "npm:^6.10.1"
+    "@sindresorhus/is": "npm:^7.1.0"
     "@types/he": "npm:^1.2.3"
     error-stack-parser-es: "npm:^1.0.5"
     he: "npm:^1.2.0"
@@ -205,8 +205,8 @@ __metadata:
     youch-terminal: "npm:^2.2.3"
   peerDependencies:
     "@adonisjs/assembler": ^7.8.0
-    "@vinejs/vine": ^2.1.0 || ^3.0.0
-    argon2: ^0.31.2 || ^0.41.0 || ^0.43.0
+    "@vinejs/vine": ^2.1.0 || ^3.0.0 || ^4.0.0
+    argon2: ^0.31.2 || ^0.41.0 || ^0.43.0 || ^0.44.0
     bcrypt: ^5.1.1 || ^6.0.0
     edge.js: ^6.2.0
   peerDependenciesMeta:
@@ -222,7 +222,7 @@ __metadata:
       optional: true
   bin:
     adonis-kit: build/toolkit/main.js
-  checksum: 10c0/433bcfb790c542ab09fcd6c69713876c51c0410d739fb3a5701edc12338ae81725060c0088c2a5be0945bad20f20e7c940289b202a45ed0f78e4ada86aeb5cae
+  checksum: 10c0/40f640452802ade8e281e6b6ee684c594e17501791b713b49f941399290653267a20c245f4cb339dfc5910886db9f6a5cbdc031ebe52d9545913f457ba06deb6
   languageName: node
   linkType: hard
 
@@ -394,15 +394,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@adonisjs/lucid@npm:^21.6.1":
-  version: 21.6.1
-  resolution: "@adonisjs/lucid@npm:21.6.1"
+"@adonisjs/lucid@npm:^21.8.1":
+  version: 21.8.1
+  resolution: "@adonisjs/lucid@npm:21.8.1"
   dependencies:
     "@adonisjs/presets": "npm:^2.6.4"
-    "@faker-js/faker": "npm:^9.6.0"
-    "@poppinss/hooks": "npm:^7.2.5"
-    "@poppinss/macroable": "npm:^1.0.4"
-    "@poppinss/utils": "npm:^6.9.2"
+    "@faker-js/faker": "npm:^9.9.0"
+    "@poppinss/hooks": "npm:^7.3.0"
+    "@poppinss/macroable": "npm:^1.1.0"
+    "@poppinss/utils": "npm:^6.10.1"
     fast-deep-equal: "npm:^3.1.3"
     igniculus: "npm:^1.5.0"
     kleur: "npm:^4.1.5"
@@ -415,7 +415,7 @@ __metadata:
   peerDependencies:
     "@adonisjs/assembler": ^7.7.0
     "@adonisjs/core": ^6.10.1
-    "@vinejs/vine": ^2.0.0 || ^3.0.0
+    "@vinejs/vine": ^2.0.0 || ^3.0.0 || ^4.0.0
     luxon: ^3.4.4
   peerDependenciesMeta:
     "@adonisjs/assembler":
@@ -424,7 +424,7 @@ __metadata:
       optional: true
     luxon:
       optional: true
-  checksum: 10c0/fad93669c2f8c4bbc57da88b9b96cd667ebd82d3a42072ec0b74ab6cd0984921012a787d6f1cd4aadb0abaa383084443d4dd7cb36cb09cd7e11c975137840cbf
+  checksum: 10c0/4814e3284d9052d16ce04d169442554b106d8aaa2d2837161f234434961b757a7fa22cea45d5818e8debc25f39f15d71bec04d9cc371fdcd1435bccdc86a03be
   languageName: node
   linkType: hard
 
@@ -452,24 +452,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@adonisjs/repl@npm:^4.1.0":
-  version: 4.1.0
-  resolution: "@adonisjs/repl@npm:4.1.0"
+"@adonisjs/repl@npm:^4.1.2":
+  version: 4.1.2
+  resolution: "@adonisjs/repl@npm:4.1.2"
   dependencies:
-    "@poppinss/colors": "npm:^4.1.4"
+    "@poppinss/colors": "npm:^4.1.5"
     string-width: "npm:^7.2.0"
-  checksum: 10c0/dcca33ab732b9215f7373b923f5a41bd2d1d0105586df05ff1d08920c60fea5b80985b391f07f102c84134001f2f47f6d22e386fd03e980efc7eb0b8158709aa
+  checksum: 10c0/19aa74bb6b7b38f7af3e5b759eab74e957379b4ccf93dfc50ad8fa0c50e182675716b3e4c284f6dae7729d19a436c69c3d59abace16333ffab655dc8862916ce
   languageName: node
   linkType: hard
 
-"@adonisjs/session@npm:^7.5.1":
-  version: 7.5.1
-  resolution: "@adonisjs/session@npm:7.5.1"
+"@adonisjs/session@npm:^7.6.0":
+  version: 7.6.0
+  resolution: "@adonisjs/session@npm:7.6.0"
   dependencies:
     "@poppinss/macroable": "npm:^1.0.4"
-    "@poppinss/utils": "npm:^6.9.2"
+    "@poppinss/utils": "npm:^6.10.0"
   peerDependencies:
     "@adonisjs/core": ^6.6.0
+    "@adonisjs/lucid": ^21.0.0
     "@adonisjs/redis": ^8.0.1 || ^9.0.0
     "@aws-sdk/client-dynamodb": ^3.658.0
     "@aws-sdk/util-dynamodb": ^3.658.0
@@ -477,6 +478,8 @@ __metadata:
     "@japa/browser-client": ^2.0.3
     edge.js: ^6.0.2
   peerDependenciesMeta:
+    "@adonisjs/lucid":
+      optional: true
     "@adonisjs/redis":
       optional: true
     "@aws-sdk/client-dynamodb":
@@ -489,7 +492,7 @@ __metadata:
       optional: true
     edge.js:
       optional: true
-  checksum: 10c0/536674fa1530db8aa809f786e200c723e3167f56345577edc416d2c68235462bccb12f5f06948683108c91fdf6e6ed4751d55e3484fe7c02bf667cceb15ec4e3
+  checksum: 10c0/ca7457f92e990dcba404e5db92723a8de715ed453e231102c3658c8f9bda093511d5ef99fc3df4d0fc76ac7b9de2592775c5848f974f664e178b155db14183d4
   languageName: node
   linkType: hard
 
@@ -2214,10 +2217,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@faker-js/faker@npm:^9.6.0":
-  version: 9.6.0
-  resolution: "@faker-js/faker@npm:9.6.0"
-  checksum: 10c0/57f76aba8744ac5f588bfcf55e61ab6f1b61664f0d1cd6cc9d9ae5bf9376bdb48d867487ace638bee393de126257b7fe6ebd602c9efd3346e7ee10e8643f1cdc
+"@faker-js/faker@npm:^9.9.0":
+  version: 9.9.0
+  resolution: "@faker-js/faker@npm:9.9.0"
+  checksum: 10c0/02107cb6915217b4831fa4b261603165972eb7f09d2ab2e1d4b75807df2d425a2bac8621cddbfdcc158c2c447c2bce2e14939d51c4a63fbd832df55452e7f73c
   languageName: node
   linkType: hard
 
@@ -2271,13 +2274,13 @@ __metadata:
   resolution: "@foadonis/actions@workspace:packages/actions"
   dependencies:
     "@adonisjs/assembler": "npm:^7.8.2"
-    "@adonisjs/core": "npm:^6.19.0"
+    "@adonisjs/core": "npm:^6.19.1"
     "@foadonis/eslint-config": "workspace:*"
     "@japa/assert": "npm:^4.1.1"
     "@japa/expect-type": "npm:^2.0.3"
     "@japa/file-system": "npm:^2.3.2"
     "@japa/plugin-adonisjs": "npm:^4.0.0"
-    "@japa/runner": "npm:^4.4.0"
+    "@japa/runner": "npm:^5.0.0"
     "@poppinss/utils": "npm:^6.9.2"
     "@swc/core": "npm:1.13.5"
     "@types/node": "npm:^22.14.1"
@@ -2299,13 +2302,13 @@ __metadata:
   resolution: "@foadonis/crypt@workspace:packages/crypt"
   dependencies:
     "@adonisjs/assembler": "npm:^7.8.2"
-    "@adonisjs/core": "npm:^6.19.0"
+    "@adonisjs/core": "npm:^6.19.1"
     "@foadonis/eslint-config": "workspace:*"
     "@japa/assert": "npm:^4.1.1"
     "@japa/expect-type": "npm:^2.0.3"
     "@japa/file-system": "npm:^2.3.2"
     "@japa/plugin-adonisjs": "npm:^4.0.0"
-    "@japa/runner": "npm:^4.4.0"
+    "@japa/runner": "npm:^5.0.0"
     "@poppinss/validator-lite": "npm:^2.1.2"
     "@swc/core": "npm:1.13.5"
     "@types/node": "npm:^22.14.1"
@@ -2345,10 +2348,10 @@ __metadata:
   resolution: "@foadonis/graphql@workspace:packages/graphql"
   dependencies:
     "@adonisjs/assembler": "npm:^7.8.2"
-    "@adonisjs/auth": "npm:^9.4.2"
+    "@adonisjs/auth": "npm:^9.5.1"
     "@adonisjs/bouncer": "npm:^3.1.6"
-    "@adonisjs/core": "npm:^6.19.0"
-    "@adonisjs/lucid": "npm:^21.6.1"
+    "@adonisjs/core": "npm:^6.19.1"
+    "@adonisjs/lucid": "npm:^21.8.1"
     "@apollo/server": "npm:^5.0.0"
     "@foadonis/eslint-config": "workspace:*"
     "@japa/assert": "npm:^4.1.1"
@@ -2356,7 +2359,7 @@ __metadata:
     "@japa/expect-type": "npm:^2.0.3"
     "@japa/file-system": "npm:^2.3.2"
     "@japa/plugin-adonisjs": "npm:^4.0.0"
-    "@japa/runner": "npm:^4.4.0"
+    "@japa/runner": "npm:^5.0.0"
     "@npmcli/package-json": "npm:^6.2.0"
     "@swc/core": "npm:1.13.5"
     "@types/luxon": "npm:^3.7.1"
@@ -2395,7 +2398,7 @@ __metadata:
   resolution: "@foadonis/lucid-parser@workspace:packages/lucid-parser"
   dependencies:
     "@adonisjs/assembler": "npm:^7.8.2"
-    "@adonisjs/core": "npm:^6.19.0"
+    "@adonisjs/core": "npm:^6.19.1"
     "@babel/parser": "npm:^7.28.3"
     "@babel/types": "npm:^7.28.2"
     "@foadonis/eslint-config": "workspace:*"
@@ -2403,7 +2406,7 @@ __metadata:
     "@japa/expect-type": "npm:^2.0.3"
     "@japa/file-system": "npm:^2.3.2"
     "@japa/plugin-adonisjs": "npm:^4.0.0"
-    "@japa/runner": "npm:^4.4.0"
+    "@japa/runner": "npm:^5.0.0"
     "@swc/core": "npm:1.13.5"
     "@types/luxon": "npm:^3.7.1"
     "@types/node": "npm:^22.14.1"
@@ -2427,14 +2430,14 @@ __metadata:
   resolution: "@foadonis/magnify@workspace:packages/magnify"
   dependencies:
     "@adonisjs/assembler": "npm:^7.8.2"
-    "@adonisjs/core": "npm:^6.19.0"
-    "@adonisjs/lucid": "npm:^21.6.1"
+    "@adonisjs/core": "npm:^6.19.1"
+    "@adonisjs/lucid": "npm:^21.8.1"
     "@foadonis/eslint-config": "workspace:*"
     "@japa/assert": "npm:^4.1.1"
     "@japa/expect-type": "npm:^2.0.3"
     "@japa/file-system": "npm:^2.3.2"
     "@japa/plugin-adonisjs": "npm:^4.0.0"
-    "@japa/runner": "npm:^4.4.0"
+    "@japa/runner": "npm:^5.0.0"
     "@swc/core": "npm:1.13.5"
     "@types/luxon": "npm:^3.7.1"
     "@types/node": "npm:^22.14.1"
@@ -2473,14 +2476,14 @@ __metadata:
   dependencies:
     "@adonisjs/assembler": "npm:^7.8.2"
     "@adonisjs/cache": "npm:1.3.0"
-    "@adonisjs/core": "npm:^6.19.0"
-    "@adonisjs/lucid": "npm:^21.6.1"
+    "@adonisjs/core": "npm:^6.19.1"
+    "@adonisjs/lucid": "npm:^21.8.1"
     "@foadonis/eslint-config": "workspace:*"
     "@japa/assert": "npm:^4.1.1"
     "@japa/expect-type": "npm:^2.0.3"
     "@japa/file-system": "npm:^2.3.2"
     "@japa/plugin-adonisjs": "npm:^4.0.0"
-    "@japa/runner": "npm:^4.4.0"
+    "@japa/runner": "npm:^5.0.0"
     "@swc/core": "npm:1.13.5"
     "@types/node": "npm:^22.14.1"
     c8: "npm:^10.1.3"
@@ -2506,14 +2509,14 @@ __metadata:
   resolution: "@foadonis/openapi@workspace:packages/openapi"
   dependencies:
     "@adonisjs/assembler": "npm:^7.8.2"
-    "@adonisjs/core": "npm:^6.19.0"
-    "@adonisjs/lucid": "npm:^21.6.1"
+    "@adonisjs/core": "npm:^6.19.1"
+    "@adonisjs/lucid": "npm:^21.8.1"
     "@foadonis/eslint-config": "workspace:*"
     "@japa/assert": "npm:^4.1.1"
     "@japa/expect-type": "npm:^2.0.3"
     "@japa/file-system": "npm:^2.3.2"
     "@japa/plugin-adonisjs": "npm:^4.0.0"
-    "@japa/runner": "npm:^4.4.0"
+    "@japa/runner": "npm:^5.0.0"
     "@swc/core": "npm:1.13.5"
     "@types/luxon": "npm:^3.7.1"
     "@types/node": "npm:^22.14.1"
@@ -2543,15 +2546,15 @@ __metadata:
   resolution: "@foadonis/shopkeeper@workspace:packages/shopkeeper"
   dependencies:
     "@adonisjs/assembler": "npm:^7.8.2"
-    "@adonisjs/core": "npm:^6.19.0"
-    "@adonisjs/lucid": "npm:^21.6.1"
+    "@adonisjs/core": "npm:^6.19.1"
+    "@adonisjs/lucid": "npm:^21.8.1"
     "@foadonis/eslint-config": "workspace:*"
     "@japa/api-client": "npm:^3.1.0"
     "@japa/assert": "npm:^4.1.1"
     "@japa/expect": "npm:^3.0.6"
     "@japa/file-system": "npm:^2.3.2"
     "@japa/plugin-adonisjs": "npm:^4.0.0"
-    "@japa/runner": "npm:^4.4.0"
+    "@japa/runner": "npm:^5.0.0"
     "@swc/core": "npm:1.13.5"
     "@types/luxon": "npm:^3.7.1"
     "@types/node": "npm:^22.14.1"
@@ -3175,30 +3178,29 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@japa/core@npm:^10.3.0":
-  version: 10.3.0
-  resolution: "@japa/core@npm:10.3.0"
+"@japa/core@npm:^10.4.0":
+  version: 10.4.0
+  resolution: "@japa/core@npm:10.4.0"
   dependencies:
-    "@poppinss/hooks": "npm:^7.2.5"
-    "@poppinss/macroable": "npm:^1.0.4"
-    "@poppinss/string": "npm:^1.2.0"
+    "@poppinss/hooks": "npm:^7.3.0"
+    "@poppinss/macroable": "npm:^1.1.0"
+    "@poppinss/string": "npm:^1.7.1"
     async-retry: "npm:^1.3.3"
-    emittery: "npm:^1.0.3"
-    string-width: "npm:^7.2.0"
-    time-span: "npm:^5.1.0"
-  checksum: 10c0/76c32ee9e8554e5c93650d91547204deb52efdd8490ec938515412bee38cf9202c6e192e86a9856e5f6a5ac05eefc524cc14395cd8792b6ae1458184363df40c
+    emittery: "npm:^1.2.0"
+    string-width: "npm:^8.1.0"
+  checksum: 10c0/a7c4c665d4b726e41484be309b232c85fc422b723f00e1c97b71c06d1f39eaafbdf03e2a073ed398445e7600965a42494222a9ab611d29aa1c6b211db1adb0a7
   languageName: node
   linkType: hard
 
-"@japa/errors-printer@npm:^4.1.3":
-  version: 4.1.3
-  resolution: "@japa/errors-printer@npm:4.1.3"
+"@japa/errors-printer@npm:^4.1.4":
+  version: 4.1.4
+  resolution: "@japa/errors-printer@npm:4.1.4"
   dependencies:
-    "@poppinss/colors": "npm:^4.1.5"
-    jest-diff: "npm:^30.0.4"
-    supports-color: "npm:^10.0.0"
-    youch: "npm:^4.1.0-beta.5"
-  checksum: 10c0/2210e8aeb8e658211990464612773d543377d31f56ea71c6046d3edb0d081a0c6c58280c4749387fa636b721841407888c21fe39d489ec9b766e8e77555e96ae
+    "@poppinss/colors": "npm:^4.1.6"
+    jest-diff: "npm:^30.2.0"
+    supports-color: "npm:^10.2.2"
+    youch: "npm:^4.1.0-beta.13"
+  checksum: 10c0/ed0804dd51fbe649923ba3ddf2b65ed3fdee23db9996e2678c56ca8efef5683223fc221f177140bebf64e5e765252e8ea7039dfafb50076732ec5e7c67596794
   languageName: node
   linkType: hard
 
@@ -3259,24 +3261,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@japa/runner@npm:^4.4.0":
-  version: 4.4.0
-  resolution: "@japa/runner@npm:4.4.0"
+"@japa/runner@npm:^5.0.0":
+  version: 5.0.0
+  resolution: "@japa/runner@npm:5.0.0"
   dependencies:
-    "@japa/core": "npm:^10.3.0"
-    "@japa/errors-printer": "npm:^4.1.3"
-    "@poppinss/colors": "npm:^4.1.5"
-    "@poppinss/hooks": "npm:^7.2.6"
-    "@poppinss/string": "npm:^1.7.0"
+    "@japa/core": "npm:^10.4.0"
+    "@japa/errors-printer": "npm:^4.1.4"
+    "@poppinss/colors": "npm:^4.1.6"
+    "@poppinss/hooks": "npm:^7.3.0"
+    "@poppinss/string": "npm:^1.7.1"
     error-stack-parser-es: "npm:^1.0.5"
-    fast-glob: "npm:^3.3.3"
     find-cache-directory: "npm:^6.0.0"
     getopts: "npm:^2.3.0"
-    ms: "npm:^2.1.3"
-    serialize-error: "npm:^12.0.0"
-    slash: "npm:^5.1.0"
-    supports-color: "npm:^10.1.0"
-  checksum: 10c0/9ef9cdb3c591b8a9ebdd4e0ab5291928a98b3b2250f49b2def82b1f5dc5360750f4219ac1bccb0e24a374f640812258e4df70fa3775a65fd89c690577c41b4dd
+    supports-color: "npm:^10.2.2"
+  checksum: 10c0/ee29d34b4f6395897551ac86c637f499c0e1f5d3225a1252f4c4236c47cbaad15b36026fa551c7099c6cadf5ebfaeab13de195e66c9574cd76e9907d9556515a
   languageName: node
   linkType: hard
 
@@ -3423,9 +3421,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@manypkg/cli@npm:^0.25.0":
-  version: 0.25.0
-  resolution: "@manypkg/cli@npm:0.25.0"
+"@manypkg/cli@npm:^0.25.1":
+  version: 0.25.1
+  resolution: "@manypkg/cli@npm:0.25.1"
   dependencies:
     "@manypkg/get-packages": "npm:^3.1.0"
     detect-indent: "npm:^7.0.1"
@@ -3440,7 +3438,7 @@ __metadata:
     validate-npm-package-name: "npm:^6.0.0"
   bin:
     manypkg: bin.js
-  checksum: 10c0/1a490f07f9bef5231720cba2b41809e54429918fe9145ca2fd43503751ed474520cdd1069457b59c8acd6511139d831ffd2a70620190907c91a648a7e32f7aea
+  checksum: 10c0/9c03e721bb82a0ee5a3409e24c017d02787e33d859dee0deb8410c6b82042f3fba7e21327397830a76cfe19673ea572a5785316a2a44e03258edbd5e28d9539c
   languageName: node
   linkType: hard
 
@@ -4751,14 +4749,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@poppinss/dumper@npm:^0.6.3":
-  version: 0.6.3
-  resolution: "@poppinss/dumper@npm:0.6.3"
+"@poppinss/colors@npm:^4.1.6":
+  version: 4.1.6
+  resolution: "@poppinss/colors@npm:4.1.6"
   dependencies:
-    "@poppinss/colors": "npm:^4.1.4"
-    "@sindresorhus/is": "npm:^7.0.1"
+    kleur: "npm:^4.1.5"
+  checksum: 10c0/5c2cec5393e33294465873002f4c570adf36b5405b9f06551485162a6fb422d01de90ac20cb00800be6ab2f0d93da26e67302e95691dff2e0aa339cf93e5bf7f
+  languageName: node
+  linkType: hard
+
+"@poppinss/dumper@npm:^0.6.4, @poppinss/dumper@npm:^0.6.5":
+  version: 0.6.5
+  resolution: "@poppinss/dumper@npm:0.6.5"
+  dependencies:
+    "@poppinss/colors": "npm:^4.1.5"
+    "@sindresorhus/is": "npm:^7.0.2"
     supports-color: "npm:^10.0.0"
-  checksum: 10c0/26c0addeb39ba0b6ccb0ffd34cdc1214c5a6ea43e8ff2e96d13d8952a0adb1b321d5265855e8cb650a1963f74d398cc5faa0620d1835adac8398d1ff7ec06afc
+  checksum: 10c0/7a0916fe4ce543cac1e61f09218e5c88b903ad0d853301b790686c772b7f5c595a04beccbf13172e0c77dc64b132b27ad438b888816fd7f6128c816290f9dc1f
   languageName: node
   linkType: hard
 
@@ -4776,6 +4783,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@poppinss/exception@npm:^1.2.2":
+  version: 1.2.3
+  resolution: "@poppinss/exception@npm:1.2.3"
+  checksum: 10c0/44e48400c9f2d33a4904bee99321b89239774bb9210049f1c55864725fd524ff55bc78a5a94a13d5edea93b84e13023c229c88ebba8c2dc717fb4b2205e42ac7
+  languageName: node
+  linkType: hard
+
 "@poppinss/hooks@npm:^7.2.3, @poppinss/hooks@npm:^7.2.4, @poppinss/hooks@npm:^7.2.5":
   version: 7.2.5
   resolution: "@poppinss/hooks@npm:7.2.5"
@@ -4783,10 +4797,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@poppinss/hooks@npm:^7.2.6":
-  version: 7.2.6
-  resolution: "@poppinss/hooks@npm:7.2.6"
-  checksum: 10c0/5102ab94a79eafc431f948095a5a9e3a34d82b2805f4d9e1f622129e41f75b2bcae9ba06a33c37fd3171314b4bb9d2f8c03df6d1209de7a2e2a37b5c045bf588
+"@poppinss/hooks@npm:^7.3.0":
+  version: 7.3.0
+  resolution: "@poppinss/hooks@npm:7.3.0"
+  checksum: 10c0/e5c946327ba312139bc17ef32d3fd5cf7dec31f91dee1aa336263615456fbab075e790a3ed9c9038c4bb0d78f33c5788c8fbe0598ede8937bafa9503277e5537
   languageName: node
   linkType: hard
 
@@ -4808,6 +4822,13 @@ __metadata:
   version: 1.0.5
   resolution: "@poppinss/macroable@npm:1.0.5"
   checksum: 10c0/46d8dd29fb59626492a078434f96dd170778dcfd764caa1dd834c822e317ce9e1c04f5043de9b0b17c09a5a80fe3fa44db38ccec4a3ad790b4a06d04852316a8
+  languageName: node
+  linkType: hard
+
+"@poppinss/macroable@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "@poppinss/macroable@npm:1.1.0"
+  checksum: 10c0/fdf2f14bd56293bac78795cac9052530b0dcce535fe3c572766bc9d6524939ef587a7be4170e983f3aa7ee4e9402a5ea18d696d3b07c8d8b9b0fdece10751a0a
   languageName: node
   linkType: hard
 
@@ -4857,7 +4878,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@poppinss/string@npm:^1.1.0, @poppinss/string@npm:^1.2.0":
+"@poppinss/string@npm:^1.1.0":
   version: 1.2.0
   resolution: "@poppinss/string@npm:1.2.0"
   dependencies:
@@ -4873,7 +4894,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@poppinss/string@npm:^1.3.0, @poppinss/string@npm:^1.6.0, @poppinss/string@npm:^1.7.0":
+"@poppinss/string@npm:^1.3.0, @poppinss/string@npm:^1.6.0":
   version: 1.7.0
   resolution: "@poppinss/string@npm:1.7.0"
   dependencies:
@@ -4889,6 +4910,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@poppinss/string@npm:^1.7.1":
+  version: 1.7.1
+  resolution: "@poppinss/string@npm:1.7.1"
+  dependencies:
+    "@types/pluralize": "npm:^0.0.33"
+    case-anything: "npm:^3.1.2"
+    pluralize: "npm:^8.0.0"
+    slugify: "npm:^1.6.6"
+  checksum: 10c0/4ee5b699e3182d1456be6699a7916fb99fb9fd2564cee918097fa88fba39b3e6a17de6943c2dd571fea40a88f82a84d30df503ac9063332a402c8568d8b0aaf5
+  languageName: node
+  linkType: hard
+
 "@poppinss/types@npm:^1.1.0":
   version: 1.1.0
   resolution: "@poppinss/types@npm:1.1.0"
@@ -4896,7 +4929,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@poppinss/utils@npm:^6.10.0, @poppinss/utils@npm:^6.9.3, @poppinss/utils@npm:^6.9.4":
+"@poppinss/utils@npm:^6.10.0, @poppinss/utils@npm:^6.10.1, @poppinss/utils@npm:^6.9.3, @poppinss/utils@npm:^6.9.4":
   version: 6.10.1
   resolution: "@poppinss/utils@npm:6.10.1"
   dependencies:
@@ -6020,17 +6053,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sindresorhus/is@npm:^7.0.1":
-  version: 7.0.1
-  resolution: "@sindresorhus/is@npm:7.0.1"
-  checksum: 10c0/6d43a916d70d9b64066394c272883869b22faf21f4748aaf399c1b691ea704ea607d1668ff2eb5704e5be8809c4a7faafe16be048ce5e1a2ba6e8928b8e3461c
-  languageName: node
-  linkType: hard
-
 "@sindresorhus/is@npm:^7.0.2":
   version: 7.0.2
   resolution: "@sindresorhus/is@npm:7.0.2"
   checksum: 10c0/50881c9b651e189972087de9104e0d259a2a0dc93c604e863b3be1847e31c3dce685e76a41c0ae92198ae02b36d30d07b723a2d72015ce3cf910afc6dc337ff5
+  languageName: node
+  linkType: hard
+
+"@sindresorhus/is@npm:^7.1.0":
+  version: 7.1.1
+  resolution: "@sindresorhus/is@npm:7.1.1"
+  checksum: 10c0/96f021b8c5680e0687ceba5619c2e56fe6b089b190b3149280a1e418e6315c66839e3f1519cf1c89f7a888b5a0017a0ef1db17436d783ee398b7d5a515caa3ef
   languageName: node
   linkType: hard
 
@@ -6077,10 +6110,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@speed-highlight/core@npm:^1.2.7":
-  version: 1.2.7
-  resolution: "@speed-highlight/core@npm:1.2.7"
-  checksum: 10c0/33905da58b7e0f0857f3ec7c60a4d2e7bd7e25573dd8676de2dab555057e9873084fd2bb1d97c4629131a990f7e230cb7068045370a15c77c4412527776791d4
+"@speed-highlight/core@npm:^1.2.9":
+  version: 1.2.12
+  resolution: "@speed-highlight/core@npm:1.2.12"
+  checksum: 10c0/37613c7a031af3b239282cc09211cefc1c9e164df07110520d2116ae7b4741512c1905bf1e011706ee2e652cef24df834f2068c4c4fff71e0257ec22fa655ff2
   languageName: node
   linkType: hard
 
@@ -9681,17 +9714,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"convert-hrtime@npm:^5.0.0":
-  version: 5.0.0
-  resolution: "convert-hrtime@npm:5.0.0"
-  checksum: 10c0/2092e51aab205e1141440e84e2a89f8881e68e47c1f8bc168dfd7c67047d8f1db43bac28044bc05749205651fead4e7910f52c7bb6066213480df99e333e9f47
-  languageName: node
-  linkType: hard
-
 "convert-source-map@npm:^2.0.0":
   version: 2.0.0
   resolution: "convert-source-map@npm:2.0.0"
   checksum: 10c0/8f2f7a27a1a011cc6cc88cc4da2d7d0cfa5ee0369508baae3d98c260bb3ac520691464e5bbe4ae7cdf09860c1d69ecc6f70c63c6e7c7f7e3f18ec08484dc7d9b
+  languageName: node
+  linkType: hard
+
+"cookie-es@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "cookie-es@npm:2.0.0"
+  checksum: 10c0/3b2459030a5ad2bc715aeb27a32f274340670bfc5031ac29e1fba804212517411bb617880d3fe66ace2b64dfb28f3049e2d1ff40d4bec342154ccdd124deaeaa
   languageName: node
   linkType: hard
 
@@ -10307,7 +10340,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "docs@workspace:docs"
   dependencies:
-    "@adonisjs/core": "npm:^6.19.0"
+    "@adonisjs/core": "npm:^6.19.1"
     "@foadonis/actions": "workspace:*"
     "@foadonis/eslint-config": "workspace:*"
     "@foadonis/graphql": "workspace:*"
@@ -10512,6 +10545,13 @@ __metadata:
   version: 1.0.3
   resolution: "emittery@npm:1.0.3"
   checksum: 10c0/91605d044f3891dd1f8ab731aeb94b520488b21e707f7064dcbcf5303bac3b4e7133dfa23c343ede1fc970340bd78a9b1aed522b805bc15104606bba630dd71e
+  languageName: node
+  linkType: hard
+
+"emittery@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "emittery@npm:1.2.0"
+  checksum: 10c0/3b16d67b2cbbc19d44fa124684039956dc94c376cefa8c7b29f4c934d9d370e6819f642cddaa343b83b1fc03fda554a1498e12f5861caf9d6f6394ff4b6e808a
   languageName: node
   linkType: hard
 
@@ -12486,7 +12526,7 @@ __metadata:
     "@changesets/changelog-github": "npm:^0.5.2"
     "@changesets/cli": "npm:^2.29.8"
     "@foadonis/typescript-config": "workspace:*"
-    "@manypkg/cli": "npm:^0.25.0"
+    "@manypkg/cli": "npm:^0.25.1"
     automd: "npm:^0.4.0"
     eslint: "npm:^9.34.0"
     mdbox: "npm:^0.1.1"
@@ -12846,6 +12886,13 @@ __metadata:
   version: 1.3.0
   resolution: "get-east-asian-width@npm:1.3.0"
   checksum: 10c0/1a049ba697e0f9a4d5514c4623781c5246982bdb61082da6b5ae6c33d838e52ce6726407df285cdbb27ec1908b333cf2820989bd3e986e37bb20979437fdf34b
+  languageName: node
+  linkType: hard
+
+"get-east-asian-width@npm:^1.3.0":
+  version: 1.4.0
+  resolution: "get-east-asian-width@npm:1.4.0"
+  checksum: 10c0/4e481d418e5a32061c36fbb90d1b225a254cc5b2df5f0b25da215dcd335a3c111f0c2023ffda43140727a9cafb62dac41d022da82c08f31083ee89f714ee3b83
   languageName: node
   linkType: hard
 
@@ -14333,7 +14380,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jest-diff@npm:30.1.0, jest-diff@npm:^30.0.4":
+"jest-diff@npm:30.1.0":
   version: 30.1.0
   resolution: "jest-diff@npm:30.1.0"
   dependencies:
@@ -14342,6 +14389,18 @@ __metadata:
     chalk: "npm:^4.1.2"
     pretty-format: "npm:30.0.5"
   checksum: 10c0/b7939b204ede584e07d69381cb4f4e2268cae9ef1526e0dd1f144bf09807c4758f915e883fad24dc6eae8605a0082c4c9cf2093eb43b2a387868826f6382345a
+  languageName: node
+  linkType: hard
+
+"jest-diff@npm:^30.2.0":
+  version: 30.2.0
+  resolution: "jest-diff@npm:30.2.0"
+  dependencies:
+    "@jest/diff-sequences": "npm:30.0.1"
+    "@jest/get-type": "npm:30.1.0"
+    chalk: "npm:^4.1.2"
+    pretty-format: "npm:30.2.0"
+  checksum: 10c0/5fac2cd89a10b282c5a68fc6206a95dfff9955ed0b758d24ffb0edcb20fb2f98e1fa5045c5c4205d952712ea864c6a086654f80cdd500cce054a2f5daf5b4419
   languageName: node
   linkType: hard
 
@@ -17577,17 +17636,17 @@ __metadata:
   resolution: "playground-graphql@workspace:playgrounds/graphql"
   dependencies:
     "@adonisjs/assembler": "npm:^7.8.2"
-    "@adonisjs/auth": "npm:^9.4.2"
+    "@adonisjs/auth": "npm:^9.5.1"
     "@adonisjs/bouncer": "npm:^3.1.6"
-    "@adonisjs/core": "npm:^6.19.0"
+    "@adonisjs/core": "npm:^6.19.1"
     "@adonisjs/cors": "npm:^2.2.1"
-    "@adonisjs/session": "npm:^7.5.1"
+    "@adonisjs/session": "npm:^7.6.0"
     "@foadonis/eslint-config": "workspace:*"
     "@foadonis/graphql": "workspace:*"
     "@graphql-yoga/subscription": "npm:^5.0.5"
     "@japa/assert": "npm:^4.1.1"
     "@japa/plugin-adonisjs": "npm:^4.0.0"
-    "@japa/runner": "npm:^4.4.0"
+    "@japa/runner": "npm:^5.0.0"
     "@swc/core": "npm:1.13.5"
     "@types/luxon": "npm:^3.7.1"
     "@types/node": "npm:^22.14.1"
@@ -17612,16 +17671,16 @@ __metadata:
   resolution: "playground-openapi@workspace:playgrounds/openapi"
   dependencies:
     "@adonisjs/assembler": "npm:^7.8.2"
-    "@adonisjs/auth": "npm:^9.4.2"
+    "@adonisjs/auth": "npm:^9.5.1"
     "@adonisjs/bouncer": "npm:^3.1.6"
-    "@adonisjs/core": "npm:^6.19.0"
-    "@adonisjs/session": "npm:^7.5.1"
+    "@adonisjs/core": "npm:^6.19.1"
+    "@adonisjs/session": "npm:^7.6.0"
     "@foadonis/crypt": "workspace:*"
     "@foadonis/eslint-config": "workspace:*"
     "@foadonis/openapi": "workspace:*"
     "@japa/assert": "npm:^4.1.1"
     "@japa/plugin-adonisjs": "npm:^4.0.0"
-    "@japa/runner": "npm:^4.4.0"
+    "@japa/runner": "npm:^5.0.0"
     "@swc/core": "npm:1.13.5"
     "@types/luxon": "npm:^3.7.1"
     "@types/node": "npm:^22.14.1"
@@ -17857,6 +17916,17 @@ __metadata:
     ansi-styles: "npm:^5.2.0"
     react-is: "npm:^18.3.1"
   checksum: 10c0/9f6cf1af5c3169093866c80adbfdad32f69c692b62f24ba3ca8cdec8519336123323f896396f9fa40346a41b197c5f6be15aec4d8620819f12496afaaca93f81
+  languageName: node
+  linkType: hard
+
+"pretty-format@npm:30.2.0":
+  version: 30.2.0
+  resolution: "pretty-format@npm:30.2.0"
+  dependencies:
+    "@jest/schemas": "npm:30.0.5"
+    ansi-styles: "npm:^5.2.0"
+    react-is: "npm:^18.3.1"
+  checksum: 10c0/8fdacfd281aa98124e5df80b2c17223fdcb84433876422b54863a6849381b3059eb42b9806d92d2853826bcb966bcb98d499bea5b1e912d869a3c3107fd38d35
   languageName: node
   linkType: hard
 
@@ -19092,15 +19162,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"serialize-error@npm:^12.0.0":
-  version: 12.0.0
-  resolution: "serialize-error@npm:12.0.0"
-  dependencies:
-    type-fest: "npm:^4.31.0"
-  checksum: 10c0/d8422db262dd28422834e0acdaaa2425ba6735f791417cfbcbceb201ddea0e41ccd2865778afeb9b33c28273f01e89a4503fa670f82c0a387de61e2b0f8d74e4
-  languageName: node
-  linkType: hard
-
 "set-blocking@npm:^2.0.0":
   version: 2.0.0
   resolution: "set-blocking@npm:2.0.0"
@@ -19822,6 +19883,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"string-width@npm:^8.1.0":
+  version: 8.1.0
+  resolution: "string-width@npm:8.1.0"
+  dependencies:
+    get-east-asian-width: "npm:^1.3.0"
+    strip-ansi: "npm:^7.1.0"
+  checksum: 10c0/749b5d0dab2532b4b6b801064230f4da850f57b3891287023117ab63a464ad79dd208f42f793458f48f3ad121fe2e1f01dd525ff27ead957ed9f205e27406593
+  languageName: node
+  linkType: hard
+
 "string.prototype.includes@npm:^2.0.1":
   version: 2.0.1
   resolution: "string.prototype.includes@npm:2.0.1"
@@ -20102,10 +20173,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"supports-color@npm:^10.1.0":
-  version: 10.2.0
-  resolution: "supports-color@npm:10.2.0"
-  checksum: 10c0/a240dbbc52dbdfc9b727a74e30c9a661cb7dd610ee662ae15de332f4993f172f284e57237e03a44abf48587ee142695aa7b25daee73c93a9c356f89dfba7d492
+"supports-color@npm:^10.2.2":
+  version: 10.2.2
+  resolution: "supports-color@npm:10.2.2"
+  checksum: 10c0/fb28dd7e0cdf80afb3f2a41df5e068d60c8b4f97f7140de2eaed5b42e075d82a0e980b20a2c0efd2b6d73cfacb55555285d8cc719fa0472220715aefeaa1da7c
   languageName: node
   linkType: hard
 
@@ -20395,15 +20466,6 @@ __metadata:
   version: 2.0.0
   resolution: "tildify@npm:2.0.0"
   checksum: 10c0/57961810a6915f47bdba7da7fa66a5f12597a0495fa016785de197b02e7ba9994ffebb30569294061bbf6d9395c6b1319d830076221e5a3f49f1318bc749565c
-  languageName: node
-  linkType: hard
-
-"time-span@npm:^5.1.0":
-  version: 5.1.0
-  resolution: "time-span@npm:5.1.0"
-  dependencies:
-    convert-hrtime: "npm:^5.0.0"
-  checksum: 10c0/37b8284c53f4ee320377512ac19e3a034f2b025f5abd6959b8c1d0f69e0f06ab03681df209f2e452d30129e7b1f25bf573fb0f29d57e71f9b4a6b5b99f4c4b9e
   languageName: node
   linkType: hard
 
@@ -20873,13 +20935,6 @@ __metadata:
   version: 3.13.1
   resolution: "type-fest@npm:3.13.1"
   checksum: 10c0/547d22186f73a8c04590b70dcf63baff390078c75ea8acd366bbd510fd0646e348bd1970e47ecf795b7cff0b41d26e9c475c1fedd6ef5c45c82075fbf916b629
-  languageName: node
-  linkType: hard
-
-"type-fest@npm:^4.31.0":
-  version: 4.38.0
-  resolution: "type-fest@npm:4.38.0"
-  checksum: 10c0/db9990d682a08697cf8ae67ac3cdbca734c742c96615e8888401d7d54e376b390e6a5d3be25fe3b4b439e1bb88a7da461da678a614ece8caccd9c0a07dd2e5f4
   languageName: node
   linkType: hard
 
@@ -22016,13 +22071,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"youch-core@npm:^0.3.1":
-  version: 0.3.2
-  resolution: "youch-core@npm:0.3.2"
+"youch-core@npm:^0.3.3":
+  version: 0.3.3
+  resolution: "youch-core@npm:0.3.3"
   dependencies:
-    "@poppinss/exception": "npm:^1.2.0"
+    "@poppinss/exception": "npm:^1.2.2"
     error-stack-parser-es: "npm:^1.0.5"
-  checksum: 10c0/2bc8dc379a1d97c3ad1f6f494ca6e98ae91becf566f0a6ff855c625b5ffce533f2af77890920b97bf087391e2fb60ce4e2eb804e6de78ac9374d283a5cc90027
+  checksum: 10c0/fe101a037a6cfaaa4e80e3d062ff33d4b087b65e3407e65220b453c9b2a66c87ea348a7da0239b61623d929d8fa0a9e139486eaa690ef5605bb49947a2fa82f6
   languageName: node
   linkType: hard
 
@@ -22048,15 +22103,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"youch@npm:^4.1.0-beta.5":
-  version: 4.1.0-beta.6
-  resolution: "youch@npm:4.1.0-beta.6"
+"youch@npm:^4.1.0-beta.13":
+  version: 4.1.0-beta.13
+  resolution: "youch@npm:4.1.0-beta.13"
   dependencies:
-    "@poppinss/dumper": "npm:^0.6.3"
-    "@speed-highlight/core": "npm:^1.2.7"
-    cookie: "npm:^1.0.2"
-    youch-core: "npm:^0.3.1"
-  checksum: 10c0/ff51489d91a34ec74e858b35a1174fbf7562e1f21e24f7fbd7e39f709d61285cf7cbc97c2b54376d9c448888981c4ab9fa1f0879709976ede35680a632709fe9
+    "@poppinss/colors": "npm:^4.1.5"
+    "@poppinss/dumper": "npm:^0.6.5"
+    "@speed-highlight/core": "npm:^1.2.9"
+    cookie-es: "npm:^2.0.0"
+    youch-core: "npm:^0.3.3"
+  checksum: 10c0/bd078f6cc3a0c6d4e22579484522ce194c7af198c50e99dd216ea04301a79261a7c202d91a51d2e0e926bb13aeb9667618577799326ea1d474b2ee8abf31d538
   languageName: node
   linkType: hard
 

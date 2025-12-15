@@ -11,7 +11,7 @@
     "orama:sync": "npx tsx ./scripts/update-orama-index.ts"
   },
   "dependencies": {
-    "@adonisjs/core": "^6.19.0",
+    "@adonisjs/core": "^6.19.1",
     "@foadonis/actions": "workspace:*",
     "@foadonis/graphql": "workspace:*",
     "@foadonis/magnify": "workspace:*",

@@ -36,7 +36,7 @@
     "@foadonis/eslint-config": "workspace:*",
     "@japa/assert": "^4.1.1",
     "@japa/plugin-adonisjs": "^4.0.0",
-    "@japa/runner": "^4.4.0",
+    "@japa/runner": "^5.0.0",
     "@swc/core": "1.13.5",
     "@types/luxon": "^3.7.1",
     "@types/node": "^22.14.1",
@@ -47,10 +47,10 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@adonisjs/auth": "^9.4.2",
+    "@adonisjs/auth": "^9.5.1",
     "@adonisjs/bouncer": "^3.1.6",
-    "@adonisjs/core": "^6.19.0",
-    "@adonisjs/session": "^7.5.1",
+    "@adonisjs/core": "^6.19.1",
+    "@adonisjs/session": "^7.6.0",
     "@foadonis/crypt": "workspace:*",
     "@foadonis/openapi": "workspace:*",
     "@vinejs/vine": "^3.0.1",
