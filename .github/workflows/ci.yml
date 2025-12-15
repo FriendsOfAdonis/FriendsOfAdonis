@@ -38,6 +38,5 @@ jobs:
           cache: 'yarn'
       - name: 📦 Install Node dependencies
         run: yarn install
-      - run: yarn typecheck --filter="./packages/*" --filter=!@foadonis/shopkeeper
-      - run: yarn lint build --filter="./packages/*"
+      - run: yarn lint build typecheck --filter="./packages/*" --filter=!@foadonis/shopkeeper
       - run: yarn test --filter="./packages/*" --filter=!@foadonis/shopkeeper --filter=!@foadonis/magnify
