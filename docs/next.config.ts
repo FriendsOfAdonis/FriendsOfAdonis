@@ -6,7 +6,7 @@ const withMDX = createMDX()
 /** @type {import('next').NextConfig} */
 const config = {
   reactStrictMode: true,
-  serverExternalPackages: ['@shikijs/twoslash', 'twoslash'],
+  serverExternalPackages: ['@shikijs/twoslash', 'twoslash', '@takumi-rs/image-response'],
 }
 
 export default withMDX(config)

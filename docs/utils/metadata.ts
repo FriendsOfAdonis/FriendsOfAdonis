@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import type { Page } from '@/lib/source'
 
 type PackageInfo = {
   description: string
@@ -7,36 +8,46 @@ type PackageInfo = {
 }
 
 export const packages: Record<string, PackageInfo> = {
-  magnify: {
+  'magnify': {
     package: '@foadonis/magnify',
     name: 'Adonis Magnify',
     description: 'Plug and play full-text search for your Adonis application.',
   },
-  openapi: {
+  'openapi': {
     package: '@foadonis/openapi',
     name: 'Adonis OpenAPI',
     description: 'Generate OpenAPI V3 specifications for your Adonis application',
   },
-  graphql: {
+  'graphql': {
     package: '@foadonis/graphql',
     name: 'Adonis GraphQL',
     description: 'Create GraphQL APIs using Adonis and Apollo.',
   },
-  shopkeeper: {
+  'shopkeeper': {
     package: '@foadonis/shopkeeper',
     name: 'Adonis Shopkeeper',
     description:
       "An expressive and fluent interface to Stripe's subscription billing services for Adonis.",
   },
-  maintenance: {
+  'maintenance': {
     package: '@foadonis/maintenance',
     name: 'Adonis Maintenance',
     description: 'Maintenance mode library for Adonis',
   },
-  crypt: {
+  'crypt': {
     package: '@foadonis/crypt',
     name: 'Adonis Crypt',
     description: 'Safely store your secrets in your repository',
+  },
+  'actions': {
+    package: '@foadonis/actions',
+    name: 'Adonis Actions',
+    description: 'Runnable actions that can act as jobs, listeners and commands.',
+  },
+  'lucid-parser': {
+    package: '@foadonis/lucid-parser',
+    name: 'Lucid Parser',
+    description: 'Parse Lucid models using AST tree',
   },
 }
 
@@ -63,5 +74,27 @@ export function createMetadata(override: Metadata): Metadata {
       ...override.twitter,
     },
     metadataBase: baseUrl,
+  }
+}
+
+export function getPageImage(page: Page) {
+  const segments = [...page.slugs, 'image.webp']
+
+  return {
+    segments,
+    url: `/og/${segments.join('/')}`,
+  }
+}
+
+export function withPageImage(page: Page, metadata: Metadata): Metadata {
+  return {
+    ...metadata,
+    openGraph: {
+      images: {
+        url: getPageImage(page).url,
+        width: 1_200,
+        height: 630,
+      },
+    },
   }
 }

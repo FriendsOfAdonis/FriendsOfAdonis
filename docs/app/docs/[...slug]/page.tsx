@@ -1,4 +1,4 @@
-import { getPageTreePeers } from 'fumadocs-core/server'
+import { getPageTreePeers } from 'fumadocs-core/page-tree'
 import { Popup, PopupContent, PopupTrigger } from 'fumadocs-twoslash/ui'
 import { Accordion, Accordions } from 'fumadocs-ui/components/accordion'
 import { Callout } from 'fumadocs-ui/components/callout'
@@ -10,10 +10,11 @@ import { DocsPage, DocsBody, DocsTitle, DocsDescription } from 'fumadocs-ui/page
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { type ComponentProps, type FC, type ReactElement } from 'react'
+import { LLMCopyButton, ViewOptions } from '@/components/ai/page-actions'
 import { ConfigurationSteps } from '@/components/configuration-steps'
+import { NotFound } from '@/components/not-found'
 import { source } from '@/lib/source'
-import { createMetadata } from '@/utils/metadata'
-import { metadataImage } from '@/utils/metadata-image'
+import { createMetadata, withPageImage } from '@/utils/metadata'
 
 export const revalidate = false
 
@@ -23,24 +24,12 @@ export default async function Page(props: {
   const params = await props.params
   const page = source.getPage(params.slug)
 
-  if (!page) notFound()
+  if (!page) return <NotFound getSuggestions={async () => []} />
 
-  const path = `apps/docs/content/docs/${page.file.path}`
-  const { body: Mdx, toc, lastModified } = await page.data.load()
+  const { body: Mdx, toc } = await page.data.load()
 
   return (
     <DocsPage
-      article={{
-        className: 'max-sm:pb-16',
-      }}
-      editOnGithub={{
-        repo: 'FriendsOfAdonis',
-        owner: 'FriendsOfAdonis',
-        sha: 'main',
-        path,
-      }}
-      full={page.data.full}
-      lastUpdate={lastModified}
       tableOfContent={{
         style: 'clerk',
         single: false,
@@ -49,6 +38,13 @@ export default async function Page(props: {
     >
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
+      <div className="flex flex-row flex-wrap gap-2 items-center border-b pb-6">
+        <LLMCopyButton markdownUrl={`${page.url}.mdx`} />
+        <ViewOptions
+          githubUrl={`https://github.com/FriendsOfAdonis/FriendsOfAdonis/blob/main/apps/docs/content/docs/${page.path}`}
+          markdownUrl={`${page.url}.mdx`}
+        />
+      </div>
       <DocsBody className="text-fd-foreground/80">
         <Mdx
           components={{
@@ -91,12 +87,15 @@ export async function generateMetadata(props: {
   const params = await props.params
   const page = source.getPage(params.slug)
 
-  if (!page) notFound()
+  if (!page)
+    return createMetadata({
+      title: 'Not found',
+    })
 
   const description = page.data.description ?? 'The library for building documentation sites'
 
   return createMetadata(
-    metadataImage.withImage(page.slugs, {
+    withPageImage(page, {
       title: page.data.title,
       description,
       openGraph: {

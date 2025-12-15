@@ -4,9 +4,7 @@ import { blog } from '@/lib/source'
 
 export default function Page() {
   const posts = [...blog.getPages()].sort(
-    (a, b) =>
-      new Date(b.data.date ?? b.file.name).getTime() -
-      new Date(a.data.date ?? a.file.name).getTime()
+    (a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime()
   )
 
   return (
@@ -32,7 +30,7 @@ export default function Page() {
                 <p className="text-fd-muted-foreground text-sm">{post.data.description}</p>
               </div>
               <div className="mt-auto text-muted-foreground text-xs">
-                {new Date(post.data.date ?? post.file.name).toDateString()}
+                {new Date(post.data.date).toDateString()}
               </div>
             </div>
           </Link>

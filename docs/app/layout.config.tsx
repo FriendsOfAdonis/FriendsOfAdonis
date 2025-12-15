@@ -5,15 +5,17 @@ import { GithubInfo } from '@/components/github-info'
 
 export const linkItems: LinkItemType[] = []
 
+export const logo = (
+  <div className="flex items-center gap-3 my-2">
+    <Image alt="Friends Of Adonis" height={32} src="/logo.png" width={32} />
+    Friends Of Adonis
+  </div>
+)
+
 export const baseOptions: BaseLayoutProps = {
   nav: {
     url: '/docs',
-    title: (
-      <div className="flex items-center gap-3 my-2">
-        <Image alt="Friends Of Adonis" height={32} src="/logo.png" width={32} />
-        Friends Of Adonis
-      </div>
-    ),
+    title: logo,
   },
   links: [
     {
@@ -28,7 +30,7 @@ export const baseOptions: BaseLayoutProps = {
           url: '/docs/openapi',
         },
         {
-          icon: <Server />,
+          icon: <Braces />,
           text: 'GraphQL',
           description: 'Create GraphQL APIs using AdonisJS',
           url: '/docs/graphql',
