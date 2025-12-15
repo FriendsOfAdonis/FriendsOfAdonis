@@ -6,9 +6,8 @@
     "build": "next build",
     "dev": "next dev",
     "start": "next start",
-    "lint": "next lint",
-    "mdx": "fumadocs-mdx",
-    "orama:sync": "npx tsx ./scripts/update-orama-index.ts"
+    "lint": "eslint .",
+    "mdx": "fumadocs-mdx"
   },
   "dependencies": {
     "@adonisjs/core": "^6.19.1",
