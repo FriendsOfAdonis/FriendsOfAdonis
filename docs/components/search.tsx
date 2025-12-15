@@ -46,7 +46,7 @@ export default function CustomSearchDialog({
     type: 'algolia',
     client,
     indexName: 'document',
-    tag,
+    tag: tag ? tag.replace('root:', '') : undefined,
     locale,
   })
 
@@ -57,7 +57,6 @@ export default function CustomSearchDialog({
 
     const id = pathname.split('/')[2]
     if (tags.some((tag) => tag.value === `root:${id}`)) {
-      console.log('Setting tag')
       setTag(`root:${id}`)
     }
   }, [pathname, tags])
@@ -100,6 +99,8 @@ export default function CustomSearchDialog({
       }
     }
   }, [router, search, searchMap])
+
+  console.log(query.data)
 
   return (
     <SearchDialog isLoading={query.isLoading} onSearchChange={setSearch} search={search} {...props}>

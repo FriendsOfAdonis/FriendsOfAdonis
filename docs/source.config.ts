@@ -1,3 +1,4 @@
+import { remarkStructureDefaultOptions } from 'fumadocs-core/mdx-plugins'
 import {
   defineDocs,
   defineConfig,
@@ -52,9 +53,25 @@ export default defineConfig({
 
     return {
       remarkPlugins: [remarkAdmonition, remarkNpm],
+      remarkStructureOptions: {
+        types: [...remarkStructureDefaultOptions.types, 'code'],
+      },
+      remarkCodeTabOptions: {
+        parseMdx: true,
+      },
+      remarkNpmOptions: {
+        persist: {
+          id: 'package-manager',
+        },
+      },
       rehypeCodeOptions: {
         ...rehypeCodeDefaultOptions,
         langs: ['ts', 'js', 'html', 'tsx', 'mdx'],
+        inline: ['tailing-curly-colon'],
+        themes: {
+          light: 'catppuccin-latte',
+          dark: 'catppuccin-mocha',
+        },
         transformers: [
           ...(rehypeCodeDefaultOptions.transformers ?? []),
           transformerNotationFocus(),
@@ -69,6 +86,6 @@ export default defineConfig({
           }),
         ],
       },
-    }
+    } as any // TODO: Fix type
   },
 })

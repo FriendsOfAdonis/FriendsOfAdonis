@@ -6,7 +6,7 @@ import {
   SidebarFolderContent,
   SidebarFolderTrigger,
   SidebarItem,
-} from 'fumadocs-ui/components/layout/sidebar'
+} from 'fumadocs-ui/components/sidebar/base'
 import { useParams } from 'next/navigation'
 import type { ReactNode } from 'react'
 import { cn } from '@/utils/cn'
@@ -25,17 +25,18 @@ export function Body({ children }: { readonly children: ReactNode }): React.Reac
 export function CustomSidebarFolder({
   children,
   item,
-  level,
 }: {
   readonly children: ReactNode
   readonly item: Folder
-  readonly level: number
 }) {
   if (item.root === true) {
     const firstpage = item.children.find((item) => item.type === 'page')
 
     return (
-      <SidebarItem href={firstpage?.url}>
+      <SidebarItem
+        className="relative flex flex-row items-center gap-2 rounded-lg p-2 text-start text-fd-muted-foreground wrap-anywhere [&_svg]:size-4 [&_svg]:shrink-0 transition-colors hover:bg-fd-accent/50 hover:text-fd-accent-foreground/80 hover:transition-none data-[active=true]:bg-fd-primary/10 data-[active=true]:text-fd-primary data-[active=true]:hover:transition-colors"
+        href={firstpage?.url}
+      >
         {item.icon}
         {item.name}
       </SidebarItem>
@@ -44,7 +45,7 @@ export function CustomSidebarFolder({
 
   return (
     <SidebarFolder>
-      <SidebarFolderTrigger>
+      <SidebarFolderTrigger className="relative flex flex-row items-center gap-2 rounded-lg p-2 text-start text-fd-muted-foreground wrap-anywhere [&_svg]:size-4 [&_svg]:shrink-0 transition-colors hover:bg-fd-accent/50 hover:text-fd-accent-foreground/80 hover:transition-none w-full">
         {item.icon}
         {item.name}
       </SidebarFolderTrigger>
