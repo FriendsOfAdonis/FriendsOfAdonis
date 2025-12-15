@@ -18,9 +18,10 @@ export default function Page() {
             .map(async (page) => {
               const meta = source.getNodeMeta(page)
               if (!meta) return null
+
               return (
                 <Card
-                  href={`/docs/${page.$id}`}
+                  href={`/docs/${page.$id?.replace('root:', '')}`}
                   icon={page.icon}
                   key={page.$id}
                   title={meta.data.title}
