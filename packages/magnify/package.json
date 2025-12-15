@@ -58,9 +58,9 @@
     "@adonisjs/core": "^6.19.1",
     "@adonisjs/lucid": "^21.8.1",
     "@foadonis/eslint-config": "workspace:*",
-    "@japa/assert": "^4.1.1",
-    "@japa/expect-type": "^2.0.3",
-    "@japa/file-system": "^2.3.2",
+    "@japa/assert": "^4.2.0",
+    "@japa/expect-type": "^2.0.4",
+    "@japa/file-system": "^3.0.0",
     "@japa/plugin-adonisjs": "^4.0.0",
     "@japa/runner": "^5.0.0",
     "@swc/core": "1.13.5",
@@ -104,5 +104,8 @@
     "exclude": [
       "tests/**"
     ]
+  },
+  "dependencies": {
+    "@poppinss/hooks": "^7.3.0"
   }
 }

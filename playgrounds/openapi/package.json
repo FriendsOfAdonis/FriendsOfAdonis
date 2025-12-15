@@ -34,7 +34,7 @@
   "devDependencies": {
     "@adonisjs/assembler": "^7.8.2",
     "@foadonis/eslint-config": "workspace:*",
-    "@japa/assert": "^4.1.1",
+    "@japa/assert": "^4.2.0",
     "@japa/plugin-adonisjs": "^4.0.0",
     "@japa/runner": "^5.0.0",
     "@swc/core": "1.13.5",

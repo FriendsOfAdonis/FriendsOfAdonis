@@ -2276,9 +2276,9 @@ __metadata:
     "@adonisjs/assembler": "npm:^7.8.2"
     "@adonisjs/core": "npm:^6.19.1"
     "@foadonis/eslint-config": "workspace:*"
-    "@japa/assert": "npm:^4.1.1"
-    "@japa/expect-type": "npm:^2.0.3"
-    "@japa/file-system": "npm:^2.3.2"
+    "@japa/assert": "npm:^4.2.0"
+    "@japa/expect-type": "npm:^2.0.4"
+    "@japa/file-system": "npm:^3.0.0"
     "@japa/plugin-adonisjs": "npm:^4.0.0"
     "@japa/runner": "npm:^5.0.0"
     "@poppinss/utils": "npm:^6.9.2"
@@ -2304,9 +2304,9 @@ __metadata:
     "@adonisjs/assembler": "npm:^7.8.2"
     "@adonisjs/core": "npm:^6.19.1"
     "@foadonis/eslint-config": "workspace:*"
-    "@japa/assert": "npm:^4.1.1"
-    "@japa/expect-type": "npm:^2.0.3"
-    "@japa/file-system": "npm:^2.3.2"
+    "@japa/assert": "npm:^4.2.0"
+    "@japa/expect-type": "npm:^2.0.4"
+    "@japa/file-system": "npm:^3.0.0"
     "@japa/plugin-adonisjs": "npm:^4.0.0"
     "@japa/runner": "npm:^5.0.0"
     "@poppinss/validator-lite": "npm:^2.1.2"
@@ -2354,10 +2354,10 @@ __metadata:
     "@adonisjs/lucid": "npm:^21.8.1"
     "@apollo/server": "npm:^5.0.0"
     "@foadonis/eslint-config": "workspace:*"
-    "@japa/assert": "npm:^4.1.1"
-    "@japa/expect": "npm:^3.0.6"
-    "@japa/expect-type": "npm:^2.0.3"
-    "@japa/file-system": "npm:^2.3.2"
+    "@japa/assert": "npm:^4.2.0"
+    "@japa/expect": "npm:^3.0.7"
+    "@japa/expect-type": "npm:^2.0.4"
+    "@japa/file-system": "npm:^3.0.0"
     "@japa/plugin-adonisjs": "npm:^4.0.0"
     "@japa/runner": "npm:^5.0.0"
     "@npmcli/package-json": "npm:^6.2.0"
@@ -2402,9 +2402,9 @@ __metadata:
     "@babel/parser": "npm:^7.28.3"
     "@babel/types": "npm:^7.28.2"
     "@foadonis/eslint-config": "workspace:*"
-    "@japa/assert": "npm:^4.1.1"
-    "@japa/expect-type": "npm:^2.0.3"
-    "@japa/file-system": "npm:^2.3.2"
+    "@japa/assert": "npm:^4.2.0"
+    "@japa/expect-type": "npm:^2.0.4"
+    "@japa/file-system": "npm:^3.0.0"
     "@japa/plugin-adonisjs": "npm:^4.0.0"
     "@japa/runner": "npm:^5.0.0"
     "@swc/core": "npm:1.13.5"
@@ -2433,11 +2433,12 @@ __metadata:
     "@adonisjs/core": "npm:^6.19.1"
     "@adonisjs/lucid": "npm:^21.8.1"
     "@foadonis/eslint-config": "workspace:*"
-    "@japa/assert": "npm:^4.1.1"
-    "@japa/expect-type": "npm:^2.0.3"
-    "@japa/file-system": "npm:^2.3.2"
+    "@japa/assert": "npm:^4.2.0"
+    "@japa/expect-type": "npm:^2.0.4"
+    "@japa/file-system": "npm:^3.0.0"
     "@japa/plugin-adonisjs": "npm:^4.0.0"
     "@japa/runner": "npm:^5.0.0"
+    "@poppinss/hooks": "npm:^7.3.0"
     "@swc/core": "npm:1.13.5"
     "@types/luxon": "npm:^3.7.1"
     "@types/node": "npm:^22.14.1"
@@ -2479,9 +2480,9 @@ __metadata:
     "@adonisjs/core": "npm:^6.19.1"
     "@adonisjs/lucid": "npm:^21.8.1"
     "@foadonis/eslint-config": "workspace:*"
-    "@japa/assert": "npm:^4.1.1"
-    "@japa/expect-type": "npm:^2.0.3"
-    "@japa/file-system": "npm:^2.3.2"
+    "@japa/assert": "npm:^4.2.0"
+    "@japa/expect-type": "npm:^2.0.4"
+    "@japa/file-system": "npm:^3.0.0"
     "@japa/plugin-adonisjs": "npm:^4.0.0"
     "@japa/runner": "npm:^5.0.0"
     "@swc/core": "npm:1.13.5"
@@ -2512,9 +2513,9 @@ __metadata:
     "@adonisjs/core": "npm:^6.19.1"
     "@adonisjs/lucid": "npm:^21.8.1"
     "@foadonis/eslint-config": "workspace:*"
-    "@japa/assert": "npm:^4.1.1"
-    "@japa/expect-type": "npm:^2.0.3"
-    "@japa/file-system": "npm:^2.3.2"
+    "@japa/assert": "npm:^4.2.0"
+    "@japa/expect-type": "npm:^2.0.4"
+    "@japa/file-system": "npm:^3.0.0"
     "@japa/plugin-adonisjs": "npm:^4.0.0"
     "@japa/runner": "npm:^5.0.0"
     "@swc/core": "npm:1.13.5"
@@ -2549,10 +2550,10 @@ __metadata:
     "@adonisjs/core": "npm:^6.19.1"
     "@adonisjs/lucid": "npm:^21.8.1"
     "@foadonis/eslint-config": "workspace:*"
-    "@japa/api-client": "npm:^3.1.0"
-    "@japa/assert": "npm:^4.1.1"
-    "@japa/expect": "npm:^3.0.6"
-    "@japa/file-system": "npm:^2.3.2"
+    "@japa/api-client": "npm:^3.1.1"
+    "@japa/assert": "npm:^4.2.0"
+    "@japa/expect": "npm:^3.0.7"
+    "@japa/file-system": "npm:^3.0.0"
     "@japa/plugin-adonisjs": "npm:^4.0.0"
     "@japa/runner": "npm:^5.0.0"
     "@swc/core": "npm:1.13.5"
@@ -3141,40 +3142,41 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@japa/api-client@npm:^3.1.0":
-  version: 3.1.0
-  resolution: "@japa/api-client@npm:3.1.0"
+"@japa/api-client@npm:^3.1.1":
+  version: 3.1.1
+  resolution: "@japa/api-client@npm:3.1.1"
   dependencies:
-    "@poppinss/hooks": "npm:^7.2.5"
-    "@poppinss/macroable": "npm:^1.0.4"
+    "@poppinss/hooks": "npm:^7.3.0"
+    "@poppinss/macroable": "npm:^1.1.0"
+    "@poppinss/qs": "npm:^6.14.0"
     "@types/superagent": "npm:^8.1.9"
-    cookie: "npm:^1.0.2"
-    set-cookie-parser: "npm:^2.7.1"
-    superagent: "npm:^10.2.1"
+    cookie-es: "npm:^2.0.0"
+    set-cookie-parser: "npm:^2.7.2"
+    superagent: "npm:^10.2.3"
   peerDependencies:
     "@japa/assert": ^2.0.0 || ^3.0.0 || ^4.0.0
     "@japa/openapi-assertions": ^0.1.1
-    "@japa/runner": ^3.1.2 || ^4.0.0
+    "@japa/runner": ^3.1.2 || ^4.0.0 || ^5.0.0
   peerDependenciesMeta:
     "@japa/assert":
       optional: true
     "@japa/openapi-assertions":
       optional: true
-  checksum: 10c0/c6908ddddba03ba3d6ead1a34ac163396938c97b0b125374ba485bd43e6663f639ae734220ad496e9c9d179b908df74d274babff60e84f540a1d9bcbbc162233
+  checksum: 10c0/a7882bc964f3400caf0b4919058ef47f5e605d95b247b924612f9f1fda2bb2e1a6ed1ed24d7d425ef9dc434059387926dbb59b9efa77c215658c6f219222f7b7
   languageName: node
   linkType: hard
 
-"@japa/assert@npm:^4.1.1":
-  version: 4.1.1
-  resolution: "@japa/assert@npm:4.1.1"
+"@japa/assert@npm:^4.2.0":
+  version: 4.2.0
+  resolution: "@japa/assert@npm:4.2.0"
   dependencies:
-    "@poppinss/macroable": "npm:^1.0.5"
-    "@types/chai": "npm:^5.2.2"
+    "@poppinss/macroable": "npm:^1.1.0"
+    "@types/chai": "npm:^5.2.3"
     assertion-error: "npm:^2.0.1"
-    chai: "npm:^5.2.1"
+    chai: "npm:^6.2.1"
   peerDependencies:
-    "@japa/runner": ^3.1.2 || ^4.0.0
-  checksum: 10c0/26dfe4e54dec84ef4fa970fa04c296550552c6cfc96803ef6087823e6845502154c998e474e4dab28ea1836034e613cc461e5e822cde9488a5219f5d6584ef3c
+    "@japa/runner": ^3.1.2 || ^4.0.0 || ^5.0.0
+  checksum: 10c0/172c0ae8c3246017081b064fe478e4ac524323fb4a5c49f4e6b3509022a5b09ec5fd3a1523de3a8d7a36897721692faac04599415884649c1b2c4f86b03618eb
   languageName: node
   linkType: hard
 
@@ -3204,40 +3206,38 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@japa/expect-type@npm:^2.0.3":
-  version: 2.0.3
-  resolution: "@japa/expect-type@npm:2.0.3"
+"@japa/expect-type@npm:^2.0.4":
+  version: 2.0.4
+  resolution: "@japa/expect-type@npm:2.0.4"
   dependencies:
-    expect-type: "npm:^1.1.0"
+    expect-type: "npm:^1.3.0"
   peerDependencies:
-    "@japa/runner": ^3.1.2 || ^4.0.0
-  checksum: 10c0/c38df98747aa06a2c096895142494f7f97fc46d0692b66321a06aacc556ef0623310030f4f40339e3fcc3ead17789e68a0b34fa09f61da6c098b8a94af5a3345
+    "@japa/runner": ^3.1.2 || ^4.0.0 || ^5.0.0
+  checksum: 10c0/4b4022c4a231c1c52a94c87a4f474129fa62b3ecf5c3daecdce3bb87cd52ad48ac92dcb316e56a9cb7ed2f107c07d99c996d604c3e693f66029f1a04910f035b
   languageName: node
   linkType: hard
 
-"@japa/expect@npm:^3.0.6":
-  version: 3.0.6
-  resolution: "@japa/expect@npm:3.0.6"
+"@japa/expect@npm:^3.0.7":
+  version: 3.0.7
+  resolution: "@japa/expect@npm:3.0.7"
   dependencies:
-    expect: "npm:^30.0.5"
+    expect: "npm:^30.2.0"
   peerDependencies:
-    "@japa/runner": ^3.0.0 || ^4.0.0
-  checksum: 10c0/c3f39e5a3b046b7f9a21214a00cd38b0cb7e0a497f854b73d2280851996bf2ef4d52074d7e2b3e03936fb4cdd2c2c27b8e358accdfcc88ef7a1e5335516f8867
+    "@japa/runner": ^3.0.0 || ^4.0.0 || ^5.0.0
+  checksum: 10c0/3911ab1b8074b5d29086340a23d6bdc2e1fd8398772758f2bee9b7a0f6723c4c24bfbb66d0db2718e498b093d15884f844014fa5731061b58e4b65ba1bf4e941
   languageName: node
   linkType: hard
 
-"@japa/file-system@npm:^2.3.2":
-  version: 2.3.2
-  resolution: "@japa/file-system@npm:2.3.2"
+"@japa/file-system@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "@japa/file-system@npm:3.0.0"
   dependencies:
-    "@paralleldrive/cuid2": "npm:^2.2.2"
-    "@poppinss/macroable": "npm:^1.0.4"
-    readdirp: "npm:^4.0.2"
+    "@poppinss/macroable": "npm:^1.1.0"
     slash: "npm:^5.1.0"
   peerDependencies:
     "@japa/assert": ^2.0.0 || ^3.0.0 || ^4.0.0
-    "@japa/runner": ^3.0.0 || ^4.0.0
-  checksum: 10c0/038933b178f8b72e1a909f38fddb0083cc69f560cd3c9a8b15d56935fd03756efd4cfff561e2e697653b70fac11fec50f6677abafa77fdf9a9a396d0a2fee0a4
+    "@japa/runner": ^3.0.0 || ^4.0.0 || ^5.0.0
+  checksum: 10c0/f8e366aa94c7266b0c8c4a43ecdb9937c2bc3013f6e6e16b6b888dc126ec02e63d5fa12751f235dbbb806d82ca9c91e3e86d6d553b657c92be96a2c8862b2a66
   languageName: node
   linkType: hard
 
@@ -3285,12 +3285,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jest/expect-utils@npm:30.1.0":
-  version: 30.1.0
-  resolution: "@jest/expect-utils@npm:30.1.0"
+"@jest/expect-utils@npm:30.2.0":
+  version: 30.2.0
+  resolution: "@jest/expect-utils@npm:30.2.0"
   dependencies:
     "@jest/get-type": "npm:30.1.0"
-  checksum: 10c0/d8f91261b43397edda9d016076f6b662dde685509a5286c5b0420bf4ebe7a71d0847d2463290754c5ff0175d4bfea9556c391b18660b3dd6bfce8946fcd12194
+  checksum: 10c0/e25a809ff2ab62292e2569f8d97f89168d27d078903f0306af5f70f1771b7efc62c458eca1dcb491ab1ed96cefedf403bd7acbb050c997105bc29b220fd9d61a
   languageName: node
   linkType: hard
 
@@ -3320,9 +3320,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jest/types@npm:30.0.5":
-  version: 30.0.5
-  resolution: "@jest/types@npm:30.0.5"
+"@jest/types@npm:30.2.0":
+  version: 30.2.0
+  resolution: "@jest/types@npm:30.2.0"
   dependencies:
     "@jest/pattern": "npm:30.0.1"
     "@jest/schemas": "npm:30.0.5"
@@ -3331,7 +3331,7 @@ __metadata:
     "@types/node": "npm:*"
     "@types/yargs": "npm:^17.0.33"
     chalk: "npm:^4.1.2"
-  checksum: 10c0/fd097a390e36edacbd2c92a8378ec0cd67abec5e234bab7a80aec6eb8625568052b0c32acf472388d04c4cf384b8fa2871d0d12a56b4b06eaea93f2c6df0ec6c
+  checksum: 10c0/ae121f6963bd9ed1cd9651db7be91bf14c05bff0d0eec4fca9fecf586bea4005e8f1de8cc9b8ef72e424ea96a309d123bef510b55a6a17a3b4b91a39d775e5cd
   languageName: node
   linkType: hard
 
@@ -4818,13 +4818,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@poppinss/macroable@npm:^1.0.5":
-  version: 1.0.5
-  resolution: "@poppinss/macroable@npm:1.0.5"
-  checksum: 10c0/46d8dd29fb59626492a078434f96dd170778dcfd764caa1dd834c822e317ce9e1c04f5043de9b0b17c09a5a80fe3fa44db38ccec4a3ad790b4a06d04852316a8
-  languageName: node
-  linkType: hard
-
 "@poppinss/macroable@npm:^1.1.0":
   version: 1.1.0
   resolution: "@poppinss/macroable@npm:1.1.0"
@@ -4875,6 +4868,13 @@ __metadata:
     "@poppinss/object-builder": "npm:^1.1.0"
     enquirer: "npm:^2.4.1"
   checksum: 10c0/2488015b41626441f8ffc09322a4091ade1e98dd3c892de3d630615cfb09c1a235647b02a8eee2548764155f609d78bb8cbf817d5ece3edd2f3afabc2ad86edf
+  languageName: node
+  linkType: hard
+
+"@poppinss/qs@npm:^6.14.0":
+  version: 6.15.0
+  resolution: "@poppinss/qs@npm:6.15.0"
+  checksum: 10c0/52d30bee4b968160afd2411e9d57fb4085cf2c043203d3acd9e38cfafa5dc2383d08e63d11c272386274f01cd2ef96d86c50ff495d47ad78dfdae67e4b2707a4
   languageName: node
   linkType: hard
 
@@ -6722,12 +6722,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/chai@npm:^5.2.2":
-  version: 5.2.2
-  resolution: "@types/chai@npm:5.2.2"
+"@types/chai@npm:^5.2.3":
+  version: 5.2.3
+  resolution: "@types/chai@npm:5.2.3"
   dependencies:
     "@types/deep-eql": "npm:*"
-  checksum: 10c0/49282bf0e8246800ebb36f17256f97bd3a8c4fb31f92ad3c0eaa7623518d7e87f1eaad4ad206960fcaf7175854bdff4cb167e4fe96811e0081b4ada83dd533ec
+    assertion-error: "npm:^2.0.1"
+  checksum: 10c0/e0ef1de3b6f8045a5e473e867c8565788c444271409d155588504840ad1a53611011f85072188c2833941189400228c1745d78323dac13fcede9c2b28bacfb2f
   languageName: node
   linkType: hard
 
@@ -9209,16 +9210,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chai@npm:^5.2.1":
-  version: 5.3.3
-  resolution: "chai@npm:5.3.3"
-  dependencies:
-    assertion-error: "npm:^2.0.1"
-    check-error: "npm:^2.1.1"
-    deep-eql: "npm:^5.0.1"
-    loupe: "npm:^3.1.0"
-    pathval: "npm:^2.0.0"
-  checksum: 10c0/b360fd4d38861622e5010c2f709736988b05c7f31042305fa3f4e9911f6adb80ccfb4e302068bf8ed10e835c2e2520cba0f5edc13d878b886987e5aa62483f53
+"chai@npm:^6.2.1":
+  version: 6.2.1
+  resolution: "chai@npm:6.2.1"
+  checksum: 10c0/0c2d84392d7c6d44ca5d14d94204f1760e22af68b83d1f4278b5c4d301dabfc0242da70954dd86b1eda01e438f42950de6cf9d569df2103678538e4014abe50b
   languageName: node
   linkType: hard
 
@@ -9278,13 +9273,6 @@ __metadata:
   version: 3.4.0
   resolution: "check-disk-space@npm:3.4.0"
   checksum: 10c0/cc39c91e1337e974fb5069c2fbd9eb92aceca6e35f3da6863a4eada58f15c1bf6970055bffed1e41c15cde1fd0ad2580bb99bef8275791ed56d69947f8657aa5
-  languageName: node
-  linkType: hard
-
-"check-error@npm:^2.1.1":
-  version: 2.1.1
-  resolution: "check-error@npm:2.1.1"
-  checksum: 10c0/979f13eccab306cf1785fa10941a590b4e7ea9916ea2a4f8c87f0316fc3eab07eabefb6e587424ef0f88cbcd3805791f172ea739863ca3d7ce2afc54641c7f0e
   languageName: node
   linkType: hard
 
@@ -10046,13 +10034,6 @@ __metadata:
     babel-plugin-macros:
       optional: true
   checksum: 10c0/d94bde6e6f780be4da4fd760288fcf755ec368872f4ac5218197200d86430aeb8d90a003a840bff1c20221188e3f23adced0119cb811c6873c70d0ac66d12832
-  languageName: node
-  linkType: hard
-
-"deep-eql@npm:^5.0.1":
-  version: 5.0.2
-  resolution: "deep-eql@npm:5.0.2"
-  checksum: 10c0/7102cf3b7bb719c6b9c0db2e19bf0aa9318d141581befe8c7ce8ccd39af9eaa4346e5e05adef7f9bd7015da0f13a3a25dcfe306ef79dc8668aedbecb658dd247
   languageName: node
   linkType: hard
 
@@ -12092,24 +12073,24 @@ __metadata:
   languageName: node
   linkType: hard
 
-"expect-type@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "expect-type@npm:1.1.0"
-  checksum: 10c0/5af0febbe8fe18da05a6d51e3677adafd75213512285408156b368ca471252565d5ca6e59e4bddab25121f3cfcbbebc6a5489f8cc9db131cc29e69dcdcc7ae15
+"expect-type@npm:^1.3.0":
+  version: 1.3.0
+  resolution: "expect-type@npm:1.3.0"
+  checksum: 10c0/8412b3fe4f392c420ab41dae220b09700e4e47c639a29ba7ba2e83cc6cffd2b4926f7ac9e47d7e277e8f4f02acda76fd6931cb81fd2b382fa9477ef9ada953fd
   languageName: node
   linkType: hard
 
-"expect@npm:^30.0.5":
-  version: 30.1.0
-  resolution: "expect@npm:30.1.0"
+"expect@npm:^30.2.0":
+  version: 30.2.0
+  resolution: "expect@npm:30.2.0"
   dependencies:
-    "@jest/expect-utils": "npm:30.1.0"
+    "@jest/expect-utils": "npm:30.2.0"
     "@jest/get-type": "npm:30.1.0"
-    jest-matcher-utils: "npm:30.1.0"
-    jest-message-util: "npm:30.1.0"
-    jest-mock: "npm:30.0.5"
-    jest-util: "npm:30.0.5"
-  checksum: 10c0/a7ec55701b8aec3b9d5996562cda4a5d29e301fad4e3bf5e434e055cd4911185503a4aba13c9e213c62fa3d9c70bb37598b90d0ace7a1e6cf3270ac0cfab0b82
+    jest-matcher-utils: "npm:30.2.0"
+    jest-message-util: "npm:30.2.0"
+    jest-mock: "npm:30.2.0"
+    jest-util: "npm:30.2.0"
+  checksum: 10c0/fe440b3a036e2de1a3ede84bc6a699925328056e74324fbd2fdd9ce7b7358d03e515ac8db559c33828bcb0b7887b493dbaaece565e67d88748685850da5d9209
   languageName: node
   linkType: hard
 
@@ -14380,19 +14361,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jest-diff@npm:30.1.0":
-  version: 30.1.0
-  resolution: "jest-diff@npm:30.1.0"
-  dependencies:
-    "@jest/diff-sequences": "npm:30.0.1"
-    "@jest/get-type": "npm:30.1.0"
-    chalk: "npm:^4.1.2"
-    pretty-format: "npm:30.0.5"
-  checksum: 10c0/b7939b204ede584e07d69381cb4f4e2268cae9ef1526e0dd1f144bf09807c4758f915e883fad24dc6eae8605a0082c4c9cf2093eb43b2a387868826f6382345a
-  languageName: node
-  linkType: hard
-
-"jest-diff@npm:^30.2.0":
+"jest-diff@npm:30.2.0, jest-diff@npm:^30.2.0":
   version: 30.2.0
   resolution: "jest-diff@npm:30.2.0"
   dependencies:
@@ -14404,43 +14373,43 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jest-matcher-utils@npm:30.1.0":
-  version: 30.1.0
-  resolution: "jest-matcher-utils@npm:30.1.0"
+"jest-matcher-utils@npm:30.2.0":
+  version: 30.2.0
+  resolution: "jest-matcher-utils@npm:30.2.0"
   dependencies:
     "@jest/get-type": "npm:30.1.0"
     chalk: "npm:^4.1.2"
-    jest-diff: "npm:30.1.0"
-    pretty-format: "npm:30.0.5"
-  checksum: 10c0/b003ae0d831e3135dd344a81ee86c6820948b9a4c26d130e588f87fca12516c1d7c4c3224d9ced534936460e319d4dab9724082c015eef4190211a33bed0b553
+    jest-diff: "npm:30.2.0"
+    pretty-format: "npm:30.2.0"
+  checksum: 10c0/f221c8afa04cee693a2be735482c5db4ec6f845f8ca3a04cb419be34c6257f4531dab89c836251f31d1859318c38997e8e9f34bf7b4cdcc8c7be8ae6e2ecb9f2
   languageName: node
   linkType: hard
 
-"jest-message-util@npm:30.1.0":
-  version: 30.1.0
-  resolution: "jest-message-util@npm:30.1.0"
+"jest-message-util@npm:30.2.0":
+  version: 30.2.0
+  resolution: "jest-message-util@npm:30.2.0"
   dependencies:
     "@babel/code-frame": "npm:^7.27.1"
-    "@jest/types": "npm:30.0.5"
+    "@jest/types": "npm:30.2.0"
     "@types/stack-utils": "npm:^2.0.3"
     chalk: "npm:^4.1.2"
     graceful-fs: "npm:^4.2.11"
     micromatch: "npm:^4.0.8"
-    pretty-format: "npm:30.0.5"
+    pretty-format: "npm:30.2.0"
     slash: "npm:^3.0.0"
     stack-utils: "npm:^2.0.6"
-  checksum: 10c0/3884f7e772d64891eca63870f73b89af4e1dce715611c308e1115f7961ed378560bac66c5f9cbee025b06ca530dbd30685362cb8db7b5a48f5f53b75ba79023e
+  checksum: 10c0/9c4aae95f9e73a754e5ecababa06e5c00cf549ff1651bbbf9aadc671ee57e688b01606ef0e9932d9dfe3d4b8f4511b6e8d01e131a49d2f82761c820ab93ae519
   languageName: node
   linkType: hard
 
-"jest-mock@npm:30.0.5":
-  version: 30.0.5
-  resolution: "jest-mock@npm:30.0.5"
+"jest-mock@npm:30.2.0":
+  version: 30.2.0
+  resolution: "jest-mock@npm:30.2.0"
   dependencies:
-    "@jest/types": "npm:30.0.5"
+    "@jest/types": "npm:30.2.0"
     "@types/node": "npm:*"
-    jest-util: "npm:30.0.5"
-  checksum: 10c0/207fd79297f514a8e26ede9b4b5035e70212b8850a2f460b51d3cc58e8e7c9585bd2dbc5df2475a3321c4cd114b90e0b24190f00d6eeb88c8f088a8ed00416d5
+    jest-util: "npm:30.2.0"
+  checksum: 10c0/dfc8eb87f4075242f1b31d9dcac606f945c4f6a245d2bb67273738d266bea6345e10de3afa675076d545361bc96b754f764cffb0ccc2e99767484bece981b2f8
   languageName: node
   linkType: hard
 
@@ -14451,17 +14420,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jest-util@npm:30.0.5":
-  version: 30.0.5
-  resolution: "jest-util@npm:30.0.5"
+"jest-util@npm:30.2.0":
+  version: 30.2.0
+  resolution: "jest-util@npm:30.2.0"
   dependencies:
-    "@jest/types": "npm:30.0.5"
+    "@jest/types": "npm:30.2.0"
     "@types/node": "npm:*"
     chalk: "npm:^4.1.2"
     ci-info: "npm:^4.2.0"
     graceful-fs: "npm:^4.2.11"
     picomatch: "npm:^4.0.2"
-  checksum: 10c0/d3808b5f7720044d0464664c795e2b795ed82edf3b5871db74b8b603c3a0a38107668730348d26f92920ca3b8245a99cbbc2c93e77d0abb1f5e27524079a4ba8
+  checksum: 10c0/896d663554b35258a87ec1a0a0fdd8741fdf4f3239d09fc52fdd88fa5c411a5ece7903bbbbd7d5194743fcb69f62afc3287e90f57736a91e7df95ad421937936
   languageName: node
   linkType: hard
 
@@ -15092,13 +15061,6 @@ __metadata:
   bin:
     loose-envify: cli.js
   checksum: 10c0/655d110220983c1a4b9c0c679a2e8016d4b67f6e9c7b5435ff5979ecdb20d0813f4dec0a08674fcbdd4846a3f07edbb50a36811fd37930b94aaa0d9daceb017e
-  languageName: node
-  linkType: hard
-
-"loupe@npm:^3.1.0":
-  version: 3.1.2
-  resolution: "loupe@npm:3.1.2"
-  checksum: 10c0/b13c02e3ddd6a9d5f8bf84133b3242de556512d824dddeea71cce2dbd6579c8f4d672381c4e742d45cf4423d0701765b4a6e5fbc24701def16bc2b40f8daa96a
   languageName: node
   linkType: hard
 
@@ -17439,13 +17401,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pathval@npm:^2.0.0":
-  version: 2.0.0
-  resolution: "pathval@npm:2.0.0"
-  checksum: 10c0/602e4ee347fba8a599115af2ccd8179836a63c925c23e04bd056d0674a64b39e3a081b643cc7bc0b84390517df2d800a46fcc5598d42c155fe4977095c2f77c5
-  languageName: node
-  linkType: hard
-
 "peek-readable@npm:^7.0.0":
   version: 7.0.0
   resolution: "peek-readable@npm:7.0.0"
@@ -17644,7 +17599,7 @@ __metadata:
     "@foadonis/eslint-config": "workspace:*"
     "@foadonis/graphql": "workspace:*"
     "@graphql-yoga/subscription": "npm:^5.0.5"
-    "@japa/assert": "npm:^4.1.1"
+    "@japa/assert": "npm:^4.2.0"
     "@japa/plugin-adonisjs": "npm:^4.0.0"
     "@japa/runner": "npm:^5.0.0"
     "@swc/core": "npm:1.13.5"
@@ -17678,7 +17633,7 @@ __metadata:
     "@foadonis/crypt": "workspace:*"
     "@foadonis/eslint-config": "workspace:*"
     "@foadonis/openapi": "workspace:*"
-    "@japa/assert": "npm:^4.1.1"
+    "@japa/assert": "npm:^4.2.0"
     "@japa/plugin-adonisjs": "npm:^4.0.0"
     "@japa/runner": "npm:^5.0.0"
     "@swc/core": "npm:1.13.5"
@@ -17905,17 +17860,6 @@ __metadata:
   bin:
     prettier: bin/prettier.cjs
   checksum: 10c0/488cb2f2b99ec13da1e50074912870217c11edaddedeadc649b1244c749d15ba94e846423d062e2c4c9ae683e2d65f754de28889ba06e697ac4f988d44f45812
-  languageName: node
-  linkType: hard
-
-"pretty-format@npm:30.0.5":
-  version: 30.0.5
-  resolution: "pretty-format@npm:30.0.5"
-  dependencies:
-    "@jest/schemas": "npm:30.0.5"
-    ansi-styles: "npm:^5.2.0"
-    react-is: "npm:^18.3.1"
-  checksum: 10c0/9f6cf1af5c3169093866c80adbfdad32f69c692b62f24ba3ca8cdec8519336123323f896396f9fa40346a41b197c5f6be15aec4d8620819f12496afaaca93f81
   languageName: node
   linkType: hard
 
@@ -18432,7 +18376,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"readdirp@npm:^4.0.1, readdirp@npm:^4.0.2":
+"readdirp@npm:^4.0.1":
   version: 4.1.1
   resolution: "readdirp@npm:4.1.1"
   checksum: 10c0/a1afc90d0e57ce4caa28046875519453fd09663ade0d0c29fe0d6a117eca4596cfdf1a9ebb0859ad34cca7b9351d4f0d8d962a4363d40f3f37e57dba51ffb6b6
@@ -19169,10 +19113,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"set-cookie-parser@npm:^2.7.1":
-  version: 2.7.1
-  resolution: "set-cookie-parser@npm:2.7.1"
-  checksum: 10c0/060c198c4c92547ac15988256f445eae523f57f2ceefeccf52d30d75dedf6bff22b9c26f756bd44e8e560d44ff4ab2130b178bd2e52ef5571bf7be3bd7632d9a
+"set-cookie-parser@npm:^2.7.2":
+  version: 2.7.2
+  resolution: "set-cookie-parser@npm:2.7.2"
+  checksum: 10c0/4381a9eb7ee951dfe393fe7aacf76b9a3b4e93a684d2162ab35594fa4053cc82a4d7d7582bf397718012c9adcf839b8cd8f57c6c42901ea9effe33c752da4a45
   languageName: node
   linkType: hard
 
@@ -20149,7 +20093,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"superagent@npm:^10.2.1":
+"superagent@npm:^10.2.3":
   version: 10.2.3
   resolution: "superagent@npm:10.2.3"
   dependencies:
