@@ -7,7 +7,8 @@
     "next.config.mjs",
     "next-sitemap.config.js",
     "postcss.config.js",
-    "automd.config.js"
+    "automd.config.js",
+    "scripts/sync-index.mjs"
   ],
   "exclude": ["node_modules", ".source"]
 }

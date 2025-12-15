@@ -6,12 +6,11 @@
     "build": "next build",
     "dev": "next dev",
     "start": "next start",
-    "lint": "next lint",
-    "mdx": "fumadocs-mdx",
-    "orama:sync": "npx tsx ./scripts/update-orama-index.ts"
+    "lint": "eslint .",
+    "mdx": "fumadocs-mdx"
   },
   "dependencies": {
-    "@adonisjs/core": "^6.19.0",
+    "@adonisjs/core": "^6.19.1",
     "@foadonis/actions": "workspace:*",
     "@foadonis/graphql": "workspace:*",
     "@foadonis/magnify": "workspace:*",
@@ -21,13 +20,13 @@
     "@orama/core": "^1.2.14",
     "@oramacloud/client": "^2.1.4",
     "@radix-ui/react-collapsible": "^1.1.12",
-    "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-tooltip": "^1.2.8",
-    "@sentry/node": "^10.6.0",
+    "@sentry/node": "^10.30.0",
     "@shikijs/transformers": "^3.20.0",
     "@takumi-rs/image-response": "^0.57.5",
-    "algoliasearch": "^5.45.0",
-    "automd": "^0.4.0",
+    "algoliasearch": "^5.46.0",
+    "automd": "^0.4.2",
     "class-variance-authority": "^0.7.1",
     "fumadocs-core": "16.2.5",
     "fumadocs-docgen": "^3.0.4",
@@ -36,7 +35,7 @@
     "fumadocs-typescript": "^4.0.14",
     "fumadocs-ui": "16.2.5",
     "geist": "^1.5.1",
-    "lucide-react": "^0.554.0",
+    "lucide-react": "^0.561.0",
     "next": "16.0.10",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
@@ -46,15 +45,15 @@
   },
   "devDependencies": {
     "@foadonis/eslint-config": "workspace:*",
-    "@tailwindcss/postcss": "^4.1.12",
+    "@tailwindcss/postcss": "^4.1.18",
     "@types/mdx": "^2.0.13",
-    "@types/node": "^22.14.1",
+    "@types/node": "^25.0.2",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
-    "autoprefixer": "^10.4.21",
+    "autoprefixer": "^10.4.23",
     "baseline-browser-mapping": "^2.9.7",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.18",
-    "typescript": "^5.8.3"
+    "typescript": "^5.9.3"
   }
 }

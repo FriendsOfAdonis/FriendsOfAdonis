@@ -81,8 +81,8 @@ export default function CustomSearchDialog({
     if (search.length === 0) return
 
     const normalized = search.toLowerCase()
-    for (const [k, page] of searchMap) {
-      if (!k.startsWith(normalized)) continue
+    for (const [key, page] of searchMap) {
+      if (!key.startsWith(normalized)) continue
 
       return {
         id: 'quick-action',
@@ -135,7 +135,7 @@ export default function CustomSearchDialog({
               <ChevronDown className="size-3.5 text-fd-muted-foreground" />
             </PopoverTrigger>
             <PopoverContent align="start" className="flex flex-col p-1 gap-1">
-              {tags.map((item, i) => {
+              {tags.map((item, index) => {
                 const isSelected = item.value === tag
 
                 return (
@@ -146,7 +146,7 @@ export default function CustomSearchDialog({
                         ? 'text-fd-primary bg-fd-primary/10'
                         : 'hover:text-fd-accent-foreground hover:bg-fd-accent'
                     )}
-                    key={i}
+                    key={index}
                     onClick={() => {
                       setTag(item.value)
                       setOpen(false)
