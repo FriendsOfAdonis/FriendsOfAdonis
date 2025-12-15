@@ -1,7 +1,7 @@
 {
   "name": "@foadonis/graphql",
   "description": "Create GraphQL APIs with your Adonis Application.",
-  "version": "0.0.9",
+  "version": "0.1.0",
   "engines": {
     "node": ">=20.6.0"
   },
