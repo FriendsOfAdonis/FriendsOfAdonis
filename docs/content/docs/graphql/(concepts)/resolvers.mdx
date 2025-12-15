@@ -1,0 +1,284 @@
+---
+title: Resolvers
+---
+
+## Introduction
+
+Resolvers allows you to define Queries, Mutations and Field resolvers like normal class methods similar to REST controllers.
+
+This allows you to define your schema and plug your business-logic in the same place.
+
+## Query and Mutation
+
+### Resolver Class
+
+A Resolver is simply a class decorated with `@Resolver`.
+
+```ts title="app/graphql/resolvers/recipe_resolver.ts" twoslash
+import { Resolver } from '@foadonis/graphql'
+
+@Resolver()
+class RecipeResolver {}
+```
+
+Resolvers must be registered to be taken in account in your GraphQL schema:
+
+```ts title="start/graphql.ts" twoslash
+// @noErrors
+import graphql from '@foadonis/graphql/services/main'
+
+graphql.resolvers([
+  () => import('#graphql/resolvers/recipe_resolver'),
+  () => import('#graphql/resolvers/user_resolver'),
+])
+```
+
+It supports [DI](https://docs.adonisjs.com/guides/concepts/dependency-injection) allowing you to inject services directly into the constructor:
+
+```ts title="app/graphql/resolvers/recipe_resolver.ts" twoslash
+// @noErrors
+import { Resolver } from '@foadonis/graphql'
+
+@Resolver()
+class RecipeResolver {
+  constructor(private recipeService: RecipeService) {}
+}
+```
+
+Resolvers can be created using the `make:resolver` command:
+
+```bash
+node ace make:resolver recipe
+```
+
+### Query
+
+By decorating a class method using `@Query` it will mark it as a query and automatically use it to handle the operations.
+
+```ts tab="Typescript" twoslash
+// @noErrors
+import { Resolver } from '@foadonis/graphql'
+
+@Resolver()
+class RecipeResolver {
+  constructor(private recipeService: RecipeService) {}
+
+  @Query(() => [Recipe])
+  recipes() {
+    return this.recipeService.all()
+  }
+}
+```
+
+```graphql tab="GraphQL"
+type Query {
+  recipes: [Recipe]
+}
+```
+
+<Callout>
+  
+  As `RecipeService.all()` returns a `Promise<Recipe[]>` it is not possible to infer the returned type and must be explicitly defined.
+
+</Callout>
+
+#### Arguments
+
+Usually, queries have arguments allowing the client to perform pagination, search, etc. This can be done in two ways.
+
+The `@Arg` decorator allows you to define each argument directly in your function parameters.
+
+```ts tab="Typescript" twoslash
+// @noErrors
+import { Resolver, Arg } from '@foadonis/graphql'
+
+@Resolver()
+class RecipeResolver {
+  @Query(() => [Recipe])
+  recipes(
+    @Arg('page') page: number
+    @Arg('limit', { defaultValue: 10 }) limit?: number,
+    @Arg('query', { nullable: true }) query?: string,
+  ) {
+    return Recipe.query()
+      .if(limit, (q) => q.limit(limit!))
+      .if(query, (q) => q.whereLike('title', `%${query}%`))
+      .paginate(page)
+  }
+}
+```
+
+```graphql tab="GraphQL"
+type Query {
+  recipes(page: Int!, limit: Int, query: String): [Recipe]
+}
+```
+
+The `@Args` decorator allows you to use a class decorated with `@ArgType` as the arguments.
+
+```ts tab="Typescript" twoslash
+// @noErrors
+import { Resolver, Arg } from '@foadonis/graphql'
+
+@ArgsType()
+class ListeRecipesArgs {
+  @Field()
+  declare page: number
+
+  @Field({ defaultValue: 10 })
+  declare limit: number
+
+  @Field({ nullable: true })
+  declare query?: number
+}
+
+@Resolver()
+class RecipeResolver {
+  @Query(() => [Recipe])
+  recipes(@Args() { page, limit, query }: ListeRecipesArgs) {
+    return Recipe.query()
+      .if(limit, (q) => q.limit(limit!))
+      .if(query, (q) => q.whereLike('title', `%${query}%`))
+      .paginate(page)
+  }
+}
+```
+
+```graphql tab="GraphQL"
+type Query {
+  recipes(page: Int!, limit: Int, query: String): [Recipe]
+}
+```
+
+### Mutation
+
+Mutations are really similar to queries and are defined using the `@Mutation` decorator:
+
+```ts tab="Typescript" twoslash
+// @noErrors
+import { Resolver, Mutation } from '@foadonis/graphql'
+
+@Resolver()
+class RecipeResolver {
+  constructor(private recipeService: RecipeService) {}
+
+  @Mutation(() => Recipe)
+  createRecipe() {
+    return this.recipeService.create()
+  }
+}
+```
+
+```graphql tab="GraphQL"
+type Mutation {
+  createRecipe: Recipe
+}
+```
+
+#### Inputs
+
+In most cases for Mutation we use `InputType` rather than `ArgType`, this can be done using the `@InputType()` decorator
+
+```ts tab="Typescript" twoslash
+// @noErrors
+import { Resolver, Mutation, InputType } from '@foadonis/graphql'
+
+@InputType()
+class CreateRecipeInput {
+  @Field()
+  name: string
+}
+
+@Resolver()
+class RecipeResolver {
+  constructor(private recipeService: RecipeService) {}
+
+  @Mutation(() => Recipe)
+  createRecipe(@Arg('data') data: CreateRecipeInput) {
+    return this.recipeService.create({ name: data.name })
+  }
+}
+```
+
+```graphql tab="GraphQL"
+input CreateRecipeInput {
+  name: String!
+}
+
+type Mutation {
+  createRecipe(data: CreateRecipeInput!): Recipe
+}
+```
+
+### Field Resolver
+
+Queries and Mutations are the root elements of your GraphQL schema and field resolvers allow you to query relations when explicitly asked.
+For example our `Recipe` as an author (`User`) and rather than fetching it every time we fetch a recipe we can do it only when asked by the client.
+
+Field resolvers are really similar to queries. We first have to add our "root" type in `@Resolver()` and decorate our method using `@FieldResolver`.
+
+```ts tab="Typescript" twoslash
+// @noErrors
+import { Resolver, Query, FieldResolver } from '@foadonis/graphql'
+
+@Resolver(() => Recipe)
+class RecipeResolver {
+  constructor(private recipeService: RecipeService) {}
+
+  @Query(() => Recipe)
+  recipe(@Arg('recipeId') recipeId: number) {
+    return this.recipeService.findOrFail(recipeId)
+  }
+
+  @FieldResolver(() => User)
+  author(@Root() root: Recipe) {
+    return root.related('author').query().firstOrFail()
+  }
+}
+```
+
+```graphql tab="GraphQL"
+type User {
+  name: String!
+}
+
+type Recipe {
+  title: String!
+  author: User!
+}
+
+type Query {
+  recipe(recipeId: Int!): Recipe
+}
+```
+
+#### Computed fields
+
+For simpler resolvers you can use the `@Field` property directly on your `ObjectType` similar to computed fields.
+
+However this must be avoided when your logic has side effects (api calls, database queries, etc).
+
+```ts
+@ObjectType()
+class Recipe {
+  @Field()
+  title: string
+
+  @Field(() => [Number])
+  ratings: Rate[]
+
+  @Field({ deprecationReason: 'Use `title` instead' })
+  get name() {
+    return this.title
+  }
+
+  @Field(() => Float, { nullable: true })
+  averageRating(@Arg('since') sinceDate: Date): number | null {
+    const ratings = this.ratings.filter((rate) => rate.date > sinceDate)
+    if (!ratings.length) return null
+
+    const ratingsSum = ratings.reduce((a, b) => a + b, 0)
+    return ratingsSum / ratings.length
+  }
+}
+```

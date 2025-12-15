@@ -1,25 +1,16 @@
 import type { InferMetaType, InferPageType } from 'fumadocs-core/source'
 import { loader } from 'fumadocs-core/source'
-import { createMDXSource } from 'fumadocs-mdx'
-import { icons } from 'lucide-react'
-import { createElement } from 'react'
-import { docs, blog as blogPosts } from '@/.source'
-import { IconContainer } from '@/components/ui/icon'
+import { lucideIconsPlugin } from 'fumadocs-core/source/lucide-icons'
+import { toFumadocsSource } from 'fumadocs-mdx/runtime/server'
+import { docs, blog as blogPosts } from 'fumadocs-mdx:collections/server'
 
-export const source = loader({
+export const source = loader(docs.toFumadocsSource(), {
   baseUrl: '/docs',
-  source: docs.toFumadocsSource(),
-  icon(icon) {
-    if (icon && icon in icons)
-      return createElement(IconContainer, {
-        icon: icons[icon as keyof typeof icons],
-      })
-  },
+  plugins: [lucideIconsPlugin()],
 })
 
-export const blog = loader({
+export const blog = loader(toFumadocsSource(blogPosts, []), {
   baseUrl: '/blog',
-  source: createMDXSource(blogPosts),
 })
 
 export type Page = InferPageType<typeof source>

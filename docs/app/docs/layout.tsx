@@ -1,39 +1,46 @@
-import { Slot } from '@radix-ui/react-slot'
-import type { DocsLayoutProps } from 'fumadocs-ui/layouts/docs'
 import { DocsLayout } from 'fumadocs-ui/layouts/notebook'
 import type { ReactNode } from 'react'
 import { baseOptions } from '@/app/layout.config'
 import { source } from '@/lib/source'
-
-const docsOptions: DocsLayoutProps = {
-  ...baseOptions,
-  links: [...(baseOptions.links?.slice(1) ?? [])],
-  tree: source.pageTree,
-  sidebar: {
-    tabs: {
-      transform(option, node) {
-        const meta = source.getNodeMeta(node)
-        if (!meta) return option
-
-        return {
-          ...option,
-          icon: (
-            <Slot
-              className="bg-gradient-to-t from-fd-background/80 p-1 [&_svg]:size-5"
-              style={{
-                color: `hsl(var(--${meta.file.dirname}-color))`,
-                backgroundColor: `hsl(var(--${meta.file.dirname}-color)/.3)`,
-              }}
-            >
-              {node.icon}
-            </Slot>
-          ),
-        }
-      },
-    },
-  },
-}
+import { CustomSidebarFolder } from '../layout.client'
 
 export default function Layout({ children }: { readonly children: ReactNode }) {
-  return <DocsLayout {...docsOptions}>{children}</DocsLayout>
+  const base = baseOptions
+  return (
+    <DocsLayout
+      {...base}
+      sidebar={{
+        components: {
+          Folder: CustomSidebarFolder,
+        },
+        tabs: {
+          transform(option, node) {
+            const meta = source.getNodeMeta(node)
+            if (!meta || !node.icon) return option
+
+            const color = `var(--${meta.path.split('/')[0]}-color, var(--color-fd-foreground))`
+
+            return {
+              ...option,
+              icon: (
+                <div
+                  className="[&_svg]:size-full rounded-lg size-full text-(--tab-color) max-md:bg-(--tab-color)/10 max-md:border max-md:p-1.5"
+                  style={
+                    {
+                      '--tab-color': color,
+                    } as object
+                  }
+                >
+                  {node.icon}
+                </div>
+              ),
+            }
+          },
+        },
+      }}
+      tree={source.pageTree}
+    >
+      {children}
+    </DocsLayout>
+  )
 }

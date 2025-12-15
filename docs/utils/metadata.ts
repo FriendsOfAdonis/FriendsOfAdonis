@@ -1,4 +1,6 @@
+import { Meta } from 'fumadocs-core/source'
 import type { Metadata } from 'next'
+import type { Page } from '@/lib/source'
 
 type PackageInfo = {
   description: string
@@ -63,5 +65,27 @@ export function createMetadata(override: Metadata): Metadata {
       ...override.twitter,
     },
     metadataBase: baseUrl,
+  }
+}
+
+export function getPageImage(page: Page) {
+  const segments = [...page.slugs, 'image.webp']
+
+  return {
+    segments,
+    url: `/og/${segments.join('/')}`,
+  }
+}
+
+export function withPageImage(page: Page, metadata: Metadata): Metadata {
+  return {
+    ...metadata,
+    openGraph: {
+      images: {
+        url: getPageImage(page).url,
+        width: 1_200,
+        height: 630,
+      },
+    },
   }
 }

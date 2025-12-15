@@ -1,6 +1,3 @@
-import { transformerNotationFocus } from '@shikijs/transformers'
-import { remarkAdmonition, rehypeCodeDefaultOptions } from 'fumadocs-core/mdx-plugins'
-import { remarkInstall } from 'fumadocs-docgen'
 import {
   defineDocs,
   defineConfig,
@@ -8,7 +5,7 @@ import {
   metaSchema,
   frontmatterSchema,
 } from 'fumadocs-mdx/config'
-import { transformerTwoslash } from 'fumadocs-twoslash'
+import lastModified from 'fumadocs-mdx/plugins/last-modified'
 import { ModuleResolutionKind } from 'typescript'
 import { z } from 'zod'
 
@@ -20,6 +17,10 @@ export const docs = defineDocs({
       index: z.boolean().default(false),
       method: z.string().optional(),
     }),
+    postprocess: {
+      includeProcessedMarkdown: true,
+      extractLinkReferences: true,
+    },
   },
   meta: {
     schema: metaSchema.extend({
@@ -40,24 +41,34 @@ export const blog = defineCollections({
 })
 
 export default defineConfig({
-  lastModifiedTime: 'git',
-  mdxOptions: {
-    remarkPlugins: [remarkAdmonition, remarkInstall],
-    rehypeCodeOptions: {
-      ...rehypeCodeDefaultOptions,
-      langs: ['ts', 'js', 'html', 'tsx', 'mdx'],
-      transformers: [
-        ...(rehypeCodeDefaultOptions.transformers ?? []),
-        transformerNotationFocus(),
-        transformerTwoslash({
-          twoslashOptions: {
-            compilerOptions: {
-              experimentalDecorators: true,
-              moduleResolution: ModuleResolutionKind.Bundler,
+  plugins: [lastModified()],
+  mdxOptions: async () => {
+    const { rehypeCodeDefaultOptions } = await import('fumadocs-core/mdx-plugins/rehype-code')
+    const { remarkAdmonition } = await import('fumadocs-core/mdx-plugins/remark-admonition')
+    const { remarkNpm } = await import('fumadocs-core/mdx-plugins/remark-npm')
+    const { transformerTwoslash } = await import('fumadocs-twoslash')
+    const { transformerNotationFocus } = await import('@shikijs/transformers')
+    const { createFileSystemTypesCache } = await import('fumadocs-twoslash/cache-fs')
+
+    return {
+      remarkPlugins: [remarkAdmonition, remarkNpm],
+      rehypeCodeOptions: {
+        ...rehypeCodeDefaultOptions,
+        langs: ['ts', 'js', 'html', 'tsx', 'mdx'],
+        transformers: [
+          ...(rehypeCodeDefaultOptions.transformers ?? []),
+          transformerNotationFocus(),
+          transformerTwoslash({
+            typesCache: createFileSystemTypesCache(),
+            twoslashOptions: {
+              compilerOptions: {
+                experimentalDecorators: true,
+                moduleResolution: ModuleResolutionKind.Bundler,
+              },
             },
-          },
-        }),
-      ],
-    },
+          }),
+        ],
+      },
+    }
   },
 })
