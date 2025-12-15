@@ -31,13 +31,13 @@
     "@changesets/cli": "^2.29.8",
     "@foadonis/typescript-config": "workspace:*",
     "@manypkg/cli": "^0.25.1",
-    "automd": "^0.4.0",
-    "eslint": "^9.34.0",
+    "automd": "^0.4.2",
+    "eslint": "^9.39.2",
     "mdbox": "^0.1.1",
     "node-gyp": "^12.1.0",
-    "prettier": "^3.6.2",
+    "prettier": "^3.7.4",
     "turbo": "^2.6.3",
-    "typescript": "^5.8.3"
+    "typescript": "^5.9.3"
   },
   "workspaces": [
     "docs",
