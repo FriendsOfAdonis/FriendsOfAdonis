@@ -39,6 +39,7 @@ type Notification {
 type Query {
   recipe(id: Float!): Recipe!
   recipes(page: Int! = 1, perPage: Int! = 25): [Recipe!]!
+  test: Boolean!
 }
 
 type Recipe {

@@ -1,14 +1,12 @@
 import { BuildSchemaOptions, ResolverData as BaseResolverData, NextFn } from 'type-graphql'
 import GraphQlServer from './server.js'
-import { ApolloServerOptionsWithSchema, BaseContext } from '@apollo/server'
 import { HttpContext } from '@adonisjs/core/http'
+import { GraphQLSchema } from 'graphql'
+import { LoggersList } from '@adonisjs/core/types'
 
-export type GraphQLConfig = {
-  apollo: Omit<ApolloServerOptionsWithSchema<BaseContext>, 'schema'> & {
-    playground: boolean
-  }
-} & Omit<BuildSchemaOptions, 'resolvers' | 'container'> & {
+export type GraphQLConfig = {} & Omit<BuildSchemaOptions, 'resolvers' | 'container'> & {
     path: string
+    logger?: keyof LoggersList
   }
 
 export interface GraphQlService extends GraphQlServer {}
@@ -22,3 +20,13 @@ export type ResolverData = BaseResolverData<HttpContext>
 export interface GraphQLMiddleware {
   use(action: ResolverData, next: NextFn): Promise<any>
 }
+
+export interface GraphQLDriverContract {
+  start(schema: GraphQLSchema): Promise<void>
+  reload(schema: GraphQLSchema): Promise<void>
+  handle(ctx: HttpContext): Promise<void>
+  stop(): Promise<void>
+  get isReady(): boolean
+}
+
+export type GraphQLDriverFactory = () => GraphQLDriverContract

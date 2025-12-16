@@ -67,7 +67,8 @@
   "hotHook": {
     "boundaries": [
       "./app/controllers/**/*.ts",
-      "./app/middleware/*.ts"
+      "./app/middleware/*.ts",
+      "./app/grpahql/resolvers/*.ts"
     ]
   }
 }

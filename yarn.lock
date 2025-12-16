@@ -2847,6 +2847,35 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@foadonis/autoloader@workspace:*, @foadonis/autoloader@workspace:packages/autoloader":
+  version: 0.0.0-use.local
+  resolution: "@foadonis/autoloader@workspace:packages/autoloader"
+  dependencies:
+    "@foadonis/eslint-config": "workspace:*"
+    "@japa/assert": "npm:^4.2.0"
+    "@japa/expect": "npm:^3.0.7"
+    "@japa/runner": "npm:^4.0.0"
+    "@poppinss/hooks": "npm:^7.3.0"
+    "@swc/core": "npm:1.15.5"
+    "@types/node": "npm:^25.0.2"
+    "@types/picomatch": "npm:^4"
+    c8: "npm:^10.1.3"
+    chokidar: "npm:^5.0.0"
+    copyfiles: "npm:^2.4.1"
+    del-cli: "npm:^7.0.0"
+    fast-glob: "npm:^3.3.3"
+    globby: "npm:^16.0.0"
+    hot-hook: "npm:^0.4.0"
+    picomatch: "npm:^4.0.3"
+    prettier: "npm:^3.7.4"
+    ts-node: "npm:^10.9.2"
+    typescript: "npm:^5.9.3"
+  peerDependencies:
+    "@adonisjs/lucid": ^21.2.0
+    hot-hook: ^4.0.0
+  languageName: unknown
+  linkType: soft
+
 "@foadonis/crypt@workspace:*, @foadonis/crypt@workspace:packages/crypt":
   version: 0.0.0-use.local
   resolution: "@foadonis/crypt@workspace:packages/crypt"
@@ -2904,6 +2933,7 @@ __metadata:
     "@adonisjs/core": "catalog:"
     "@adonisjs/lucid": "catalog:"
     "@apollo/server": "npm:^5.2.0"
+    "@foadonis/autoloader": "workspace:*"
     "@foadonis/eslint-config": "workspace:*"
     "@japa/assert": "npm:^4.2.0"
     "@japa/expect": "npm:^3.0.7"
@@ -2922,6 +2952,7 @@ __metadata:
     graphql: "npm:^16.12.0"
     graphql-scalars: "npm:^1.25.0"
     graphql-ws: "npm:^6.0.6"
+    graphql-yoga: "npm:^5.17.1"
     luxon: "npm:^3.7.2"
     pkg-types: "npm:^2.3.0"
     prettier: "catalog:"
@@ -7898,6 +7929,13 @@ __metadata:
     pg-protocol: "npm:*"
     pg-types: "npm:^2.2.0"
   checksum: 10c0/7f93f83a4da0dc6133918f824d826fa34e78fb8cf86392d28a0e095c836c6910c014ced5d4b364d83e8485a65ce369adeb9663b14ba301241d4c0f80073007f3
+  languageName: node
+  linkType: hard
+
+"@types/picomatch@npm:^4":
+  version: 4.0.2
+  resolution: "@types/picomatch@npm:4.0.2"
+  checksum: 10c0/0f46198c2d1beb5061816745355888e94a80a449a49af1ef69723f50e850c678b50cff299bd461f71e8009d46705e7cdeda8c8ffa23815b2e942c83877f855b9
   languageName: node
   linkType: hard
 
@@ -14889,18 +14927,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"hot-hook@npm:^0.4.1-next.4":
-  version: 0.4.1-next.4
-  resolution: "hot-hook@npm:0.4.1-next.4"
-  dependencies:
-    chokidar: "npm:^5.0.0"
-    fast-glob: "npm:^3.3.3"
-    parse-imports: "npm:^3.0.0"
-    picomatch: "npm:^4.0.3"
-    read-package-up: "npm:^12.0.0"
-  checksum: 10c0/516142ce68f58c7fd842409433ab9fef889022b9953cf576c57a0d219b126c285faf790ed04958b4b53675dec830e6e2bf343e2ffbb9ac91f7bfb1ca1901f113
+"hot-hook@link:/home/mpaucot/workspace/hot-hook/packages/hot_hook::locator=friends-of-adonis%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "hot-hook@link:/home/mpaucot/workspace/hot-hook/packages/hot_hook::locator=friends-of-adonis%40workspace%3A."
   languageName: node
-  linkType: hard
+  linkType: soft
 
 "html-entities@npm:^2.6.0":
   version: 2.6.0
