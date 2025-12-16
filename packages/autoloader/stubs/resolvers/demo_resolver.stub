@@ -1,0 +1,12 @@
+{{{
+  exports({ to: app.makePath('app/graphql/resolvers/demo_resolver.ts') })
+}}}
+import { Query, Resolver } from '@foadonis/graphql'
+
+@Resolver()
+export default class DemoResolver {
+  @Query(() => String)
+  demo() {
+    return "Hello World"
+  }
+}

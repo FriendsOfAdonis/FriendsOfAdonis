@@ -1,65 +1,59 @@
-import { ApolloServer } from '@apollo/server'
-import { GraphQLConfig, LazyImport } from './types.js'
+import { GraphQLConfig, GraphQLDriverContract } from './types.js'
 import { HttpContext } from '@adonisjs/core/http'
 import { buildSchema } from 'type-graphql'
 import { ContainerBindings, HttpRouterService } from '@adonisjs/core/types'
-import { adonisToGraphqlRequest, graphqlToAdonisResponse } from './utils/apollo.js'
 import { ContainerResolver } from '@adonisjs/core/container'
 import { Logger } from '@adonisjs/core/logger'
 import { authChecker } from './auth_checker.js'
 import { DateTime } from 'luxon'
 import { LuxonDateTimeScalar } from './scalars/luxon_datetime.js'
-import { ApolloServerPluginLandingPageDisabled } from '@apollo/server/plugin/disabled'
-import { Server } from 'node:http'
-import { WebSocketServer } from 'ws'
-import { useServer } from 'graphql-ws/use/ws'
 import { GraphQLSchema } from 'graphql'
 
 export default class GraphQLServer {
-  #resolvers: LazyImport<Function>[] = []
+  resolvers = new Map<string, Function>()
+
   #container: ContainerResolver<ContainerBindings>
   #config: GraphQLConfig
   #logger: Logger
-  #apollo?: ApolloServer
+
+  driver: GraphQLDriverContract
 
   constructor(
-    config: GraphQLConfig,
+    config: GraphQLConfig & { driver: GraphQLDriverContract },
     container: ContainerResolver<ContainerBindings>,
     logger: Logger
   ) {
     this.#config = config
+    this.driver = config.driver
     this.#container = container
     this.#logger = logger
   }
 
-  get apollo() {
-    if (!this.#apollo) {
-      throw new Error('ApolloServer has not been configured yet')
+  async resolver(path: string, resolver: Function) {
+    this.resolvers.set(path, resolver)
+  }
+
+  async start() {
+    const schema = await this.#buildSchema()
+    await this.driver.start(schema)
+    this.#logger.info(`started GraphQL server on path ${this.#config.path}`)
+  }
+
+  async reload() {
+    // Driver has not been started yet
+    if (!this.driver.isReady) {
+      return
     }
 
-    return this.#apollo
-  }
-
-  async resolvers(resolvers: LazyImport<Function>[]) {
-    this.#resolvers = resolvers
-  }
-
-  async start(server: Server) {
     const schema = await this.#buildSchema()
-
-    await this.#startApollo(schema)
-    await this.#startWebsocket(schema, server)
+    await this.driver.reload(schema)
   }
 
   async #buildSchema(): Promise<GraphQLSchema> {
-    const resolvers = await Promise.all(this.#resolvers.map((r) => r())).then(
-      (m) => m.map((r) => r.default).filter(Boolean) as Function[]
-    )
-
-    const { apollo, scalarsMap, ...buildSchemaOptions } = this.#config
+    const { scalarsMap, ...buildSchemaOptions } = this.#config
 
     return buildSchema({
-      resolvers: resolvers as any,
+      resolvers: [...this.resolvers.values()] as any,
       container: {
         get: (someClass) => {
           return this.#container.make(someClass)
@@ -71,58 +65,12 @@ export default class GraphQLServer {
     })
   }
 
-  async #startApollo(schema: GraphQLSchema) {
-    const {
-      apollo: { plugins, playground, ...apolloConfig },
-    } = this.#config
-
-    const apollo = new ApolloServer({
-      schema,
-      plugins: [
-        ...(plugins ?? []),
-        ...(!playground ? [ApolloServerPluginLandingPageDisabled()] : []),
-      ],
-      ...apolloConfig,
-    })
-
-    this.#apollo = apollo
-    await apollo.start()
-
-    this.#logger.info('started GraphQL Apollo Server')
-  }
-
-  async #startWebsocket(schema: GraphQLSchema, httpServer: Server) {
-    // We do not start the websocket server if pubsub is not configured
-    if (!this.#config.pubSub) {
-      return
-    }
-
-    const ws = new WebSocketServer({
-      path: '/graphql',
-      server: httpServer,
-    })
-
-    useServer({ schema }, ws)
-  }
-
   async handle(ctx: HttpContext) {
-    const apollo = this.#apollo
-    if (!apollo) {
-      this.#logger.warn('tried to access Apollo Server when not initialized')
-      return
-    }
-
     if ('auth' in ctx) {
       await (ctx.auth as any).check()
     }
 
-    const httpGraphQLRequest = adonisToGraphqlRequest(ctx.request)
-    const httpGraphQLResponse = await apollo.executeHTTPGraphQLRequest({
-      httpGraphQLRequest,
-      context: async () => ctx,
-    })
-
-    return graphqlToAdonisResponse(ctx.response, httpGraphQLResponse)
+    return this.driver.handle(ctx)
   }
 
   registerRoute(router: HttpRouterService) {

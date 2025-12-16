@@ -48,11 +48,7 @@ export default defineConfig({
   | List of modules to import before starting the application.
   |
   */
-  preloads: [
-    () => import('#start/routes'),
-    () => import('#start/kernel'),
-    () => import('#start/graphql'),
-  ],
+  preloads: [() => import('#start/routes'), () => import('#start/kernel')],
 
   /*
   |--------------------------------------------------------------------------
@@ -77,5 +73,9 @@ export default defineConfig({
       },
     ],
     forceExit: false,
+  },
+
+  directories: {
+    resolvers: 'app/graphql/resolvers',
   },
 })

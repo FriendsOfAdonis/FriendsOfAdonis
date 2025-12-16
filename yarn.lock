@@ -988,7 +988,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/code-frame@npm:^7.0.0, @babel/code-frame@npm:^7.21.4, @babel/code-frame@npm:^7.22.13, @babel/code-frame@npm:^7.25.9, @babel/code-frame@npm:^7.26.2":
+"@babel/code-frame@npm:^7.0.0, @babel/code-frame@npm:^7.21.4, @babel/code-frame@npm:^7.25.9, @babel/code-frame@npm:^7.26.2":
   version: 7.26.2
   resolution: "@babel/code-frame@npm:7.26.2"
   dependencies:
@@ -2342,6 +2342,35 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@foadonis/autoloader@workspace:*, @foadonis/autoloader@workspace:packages/autoloader":
+  version: 0.0.0-use.local
+  resolution: "@foadonis/autoloader@workspace:packages/autoloader"
+  dependencies:
+    "@foadonis/eslint-config": "workspace:*"
+    "@japa/assert": "npm:^4.2.0"
+    "@japa/expect": "npm:^3.0.7"
+    "@japa/runner": "npm:^4.0.0"
+    "@poppinss/hooks": "npm:^7.3.0"
+    "@swc/core": "npm:1.15.5"
+    "@types/node": "npm:^25.0.2"
+    "@types/picomatch": "npm:^4"
+    c8: "npm:^10.1.3"
+    chokidar: "npm:^5.0.0"
+    copyfiles: "npm:^2.4.1"
+    del-cli: "npm:^7.0.0"
+    fast-glob: "npm:^3.3.3"
+    globby: "npm:^16.0.0"
+    hot-hook: "npm:^0.4.0"
+    picomatch: "npm:^4.0.3"
+    prettier: "npm:^3.7.4"
+    ts-node: "npm:^10.9.2"
+    typescript: "npm:^5.9.3"
+  peerDependencies:
+    "@adonisjs/lucid": ^21.2.0
+    hot-hook: ^4.0.0
+  languageName: unknown
+  linkType: soft
+
 "@foadonis/crypt@workspace:*, @foadonis/crypt@workspace:packages/crypt":
   version: 0.0.0-use.local
   resolution: "@foadonis/crypt@workspace:packages/crypt"
@@ -2398,6 +2427,7 @@ __metadata:
     "@adonisjs/core": "npm:^6.19.1"
     "@adonisjs/lucid": "npm:^21.8.1"
     "@apollo/server": "npm:^5.2.0"
+    "@foadonis/autoloader": "workspace:*"
     "@foadonis/eslint-config": "workspace:*"
     "@japa/assert": "npm:^4.2.0"
     "@japa/expect": "npm:^3.0.7"
@@ -2416,6 +2446,7 @@ __metadata:
     del-cli: "npm:^7.0.0"
     graphql: "npm:^16.12.0"
     graphql-ws: "npm:^6.0.6"
+    graphql-yoga: "npm:^5.17.1"
     luxon: "npm:^3.7.2"
     pkg-types: "npm:^2.3.0"
     prettier: "npm:^3.7.4"
@@ -7091,7 +7122,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/normalize-package-data@npm:^2.4.0, @types/normalize-package-data@npm:^2.4.3":
+"@types/normalize-package-data@npm:^2.4.0":
   version: 2.4.4
   resolution: "@types/normalize-package-data@npm:2.4.4"
   checksum: 10c0/aef7bb9b015883d6f4119c423dd28c4bdc17b0e8a0ccf112c78b4fe0e91fbc4af7c6204b04bba0e199a57d2f3fbbd5b4a14bf8739bf9d2a39b2a0aad545e0f86
@@ -7126,6 +7157,13 @@ __metadata:
     pg-protocol: "npm:*"
     pg-types: "npm:^2.2.0"
   checksum: 10c0/7f93f83a4da0dc6133918f824d826fa34e78fb8cf86392d28a0e095c836c6910c014ced5d4b364d83e8485a65ce369adeb9663b14ba301241d4c0f80073007f3
+  languageName: node
+  linkType: hard
+
+"@types/picomatch@npm:^4":
+  version: 4.0.2
+  resolution: "@types/picomatch@npm:4.0.2"
+  checksum: 10c0/0f46198c2d1beb5061816745355888e94a80a449a49af1ef69723f50e850c678b50cff299bd461f71e8009d46705e7cdeda8c8ffa23815b2e942c83877f855b9
   languageName: node
   linkType: hard
 
@@ -9593,7 +9631,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chokidar@npm:^4.0.1, chokidar@npm:^4.0.3":
+"chokidar@npm:^4.0.3":
   version: 4.0.3
   resolution: "chokidar@npm:4.0.3"
   dependencies:
@@ -13979,18 +14017,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"hot-hook@npm:^0.4.0":
-  version: 0.4.0
-  resolution: "hot-hook@npm:0.4.0"
-  dependencies:
-    chokidar: "npm:^4.0.1"
-    fast-glob: "npm:^3.3.2"
-    parse-imports: "npm:^2.2.1"
-    picomatch: "npm:^4.0.2"
-    read-package-up: "npm:^11.0.0"
-  checksum: 10c0/f721b86d9a3cb23fcb1a78634819c11666f85654f74578f260a3a449c486a3b4c1710927e6f435ee8820959bff95d6ea8d4b0669df5366b48b1ad25ff24bb765
+"hot-hook@link:/home/mpaucot/workspace/hot-hook/packages/hot_hook::locator=friends-of-adonis%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "hot-hook@link:/home/mpaucot/workspace/hot-hook/packages/hot_hook::locator=friends-of-adonis%40workspace%3A."
   languageName: node
-  linkType: hard
+  linkType: soft
 
 "html-entities@npm:^2.6.0":
   version: 2.6.0
@@ -14208,13 +14239,6 @@ __metadata:
   version: 5.0.0
   resolution: "indent-string@npm:5.0.0"
   checksum: 10c0/8ee77b57d92e71745e133f6f444d6fa3ed503ad0e1bcd7e80c8da08b42375c07117128d670589725ed07b1978065803fa86318c309ba45415b7fe13e7f170220
-  languageName: node
-  linkType: hard
-
-"index-to-position@npm:^0.1.2":
-  version: 0.1.2
-  resolution: "index-to-position@npm:0.1.2"
-  checksum: 10c0/7c91bde8bafc22684b74a7a24915bee4691cba48352ddb4ebe3b20a3a87bc0fa7a05f586137245ca8f92222a11f341f7631ff7f38cd78a523505d2d02dbfa257
   languageName: node
   linkType: hard
 
@@ -17770,17 +17794,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"parse-json@npm:^8.0.0":
-  version: 8.1.0
-  resolution: "parse-json@npm:8.1.0"
-  dependencies:
-    "@babel/code-frame": "npm:^7.22.13"
-    index-to-position: "npm:^0.1.2"
-    type-fest: "npm:^4.7.1"
-  checksum: 10c0/39a49acafc1c41a763df2599a826eb77873a44b098a5f2ba548843229b334a16ff9d613d0381328e58031b0afaabc18ed2a01337a6522911ac7a81828df58bcb
-  languageName: node
-  linkType: hard
-
 "parse-ms@npm:^4.0.0":
   version: 4.0.0
   resolution: "parse-ms@npm:4.0.0"
@@ -18788,17 +18801,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"read-package-up@npm:^11.0.0":
-  version: 11.0.0
-  resolution: "read-package-up@npm:11.0.0"
-  dependencies:
-    find-up-simple: "npm:^1.0.0"
-    read-pkg: "npm:^9.0.0"
-    type-fest: "npm:^4.6.0"
-  checksum: 10c0/ffee09613c2b3c3ff7e7b5e838aa01f33cba5c6dfa14f87bf6f64ed27e32678e5550e712fd7e3f3105a05c43aa774d084af04ee86d3044978edb69f30ee4505a
-  languageName: node
-  linkType: hard
-
 "read-pkg-up@npm:^7.0.1":
   version: 7.0.1
   resolution: "read-pkg-up@npm:7.0.1"
@@ -18819,19 +18821,6 @@ __metadata:
     parse-json: "npm:^5.0.0"
     type-fest: "npm:^0.6.0"
   checksum: 10c0/b51a17d4b51418e777029e3a7694c9bd6c578a5ab99db544764a0b0f2c7c0f58f8a6bc101f86a6fceb8ba6d237d67c89acf6170f6b98695d0420ddc86cf109fb
-  languageName: node
-  linkType: hard
-
-"read-pkg@npm:^9.0.0":
-  version: 9.0.1
-  resolution: "read-pkg@npm:9.0.1"
-  dependencies:
-    "@types/normalize-package-data": "npm:^2.4.3"
-    normalize-package-data: "npm:^6.0.0"
-    parse-json: "npm:^8.0.0"
-    type-fest: "npm:^4.6.0"
-    unicorn-magic: "npm:^0.1.0"
-  checksum: 10c0/f3e27549dcdb18335597f4125a3d093a40ab0a18c16a6929a1575360ed5d8679b709b4a672730d9abf6aa8537a7f02bae0b4b38626f99409255acbd8f72f9964
   languageName: node
   linkType: hard
 
@@ -21446,13 +21435,6 @@ __metadata:
   version: 4.41.0
   resolution: "type-fest@npm:4.41.0"
   checksum: 10c0/f5ca697797ed5e88d33ac8f1fec21921839871f808dc59345c9cf67345bfb958ce41bd821165dbf3ae591cedec2bf6fe8882098dfdd8dc54320b859711a2c1e4
-  languageName: node
-  linkType: hard
-
-"type-fest@npm:^4.6.0, type-fest@npm:^4.7.1":
-  version: 4.32.0
-  resolution: "type-fest@npm:4.32.0"
-  checksum: 10c0/e2e877055487d109eba99afc58211db4a480837ff7b243c7de0b3e2ac29fdce55ab55e201c64cb1a8b2aeffce7e8f60ae3ce3a2f7e6fb68261d62743e54288ba
   languageName: node
   linkType: hard
 
