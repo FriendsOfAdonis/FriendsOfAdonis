@@ -3,9 +3,24 @@ import { Client } from 'typesense'
 import { MagnifyEngine } from './main.js'
 import { SearchBuilder } from '../builder.js'
 import { SimplePaginator } from '@adonisjs/lucid/database'
-import Collection from 'typesense/lib/Typesense/Collection.js'
+import Collection, {
+  CollectionDropFieldSchema,
+  CollectionFieldSchema,
+} from 'typesense/lib/Typesense/Collection.js'
 import { SearchParams, SearchResponse } from 'typesense/lib/Typesense/Documents.js'
 import is from '@adonisjs/core/helpers/is'
+
+export const typesenseDefaultFieldSchema = {
+  facet: false,
+  index: true,
+  infix: false,
+  locale: '',
+  optional: false,
+  sort: false,
+  stem: false,
+  stem_dictionary: '',
+  store: true,
+} as Partial<CollectionFieldSchema>
 
 export class TypesenseEngine implements MagnifyEngine {
   #config: TypesenseConfig
@@ -107,10 +122,68 @@ export class TypesenseEngine implements MagnifyEngine {
       const exists = await collection.exists()
 
       if (exists) {
-        await collection.update(schema)
+        // If the collection exists, retreive the current schema
+        const currentSchema = await collection.retrieve()
+
+        const currentSchemaField = Object.fromEntries(
+          currentSchema.fields?.map((field) => [field.name, field]) ?? []
+        )
+
+        // For each defined field
+        const editedFields = schema.fields.reduce(
+          (patchSchema, field) => {
+            // If the field already exist
+            if (currentSchemaField[field.name]) {
+              // Compute changes against the default schema
+              const changes = Object.entries({
+                ...typesenseDefaultFieldSchema,
+                ...field,
+              }).filter(([key, value]) => currentSchemaField[field.name][key] !== value) as [
+                string,
+                CollectionFieldSchema,
+              ][]
+
+              // If the field shema changed
+              if (changes.length) {
+                // Drop the field
+                patchSchema.push({
+                  name: field.name,
+                  drop: true,
+                })
+                // Create the edited field version
+                patchSchema.push({
+                  ...field,
+                })
+              }
+            } else {
+              // If the field dosen't exist, create it
+              patchSchema.push(field)
+            }
+
+            return patchSchema
+          },
+          [] as (CollectionDropFieldSchema | CollectionFieldSchema)[]
+        )
+
+        // List all field to remove from the existing schema
+        const droppedFields = (currentSchema.fields ?? [])
+          .filter((field) => !schema.fields.find((f) => f.name === field.name))
+          .map<CollectionDropFieldSchema>((field) => ({
+            name: field.name,
+            drop: true,
+          }))
+
+        const patch = [editedFields, droppedFields].flat(1)
+
+        if (patch.length) {
+          await collection.update({
+            fields: patch,
+          })
+        }
       } else {
+        // If the collection dosen't exists, create it
         await this.#client.collections().create({
-          ...schema,
+          fields: schema.fields,
           name,
         })
       }
