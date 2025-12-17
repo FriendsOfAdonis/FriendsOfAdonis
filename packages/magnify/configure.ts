@@ -45,7 +45,7 @@ export const ENGINE_CONFIGURATIONS = [
       {
         name: 'URL to your Meilisearch instance (eg. http://localhost:7700)',
         key: 'MEILISEARCH_HOST',
-        schema: `Env.schema.string({ format: 'host' })`,
+        schema: `Env.schema.string({ format: 'url' })`,
       },
       {
         name: 'API Key to authenticate against Meilisearch',
@@ -61,9 +61,9 @@ export const ENGINE_CONFIGURATIONS = [
     description: 'Open-source Search Engine written in C++',
     variables: [
       {
-        name: 'Host of your Typesense instance',
+        name: 'Host of your Typesense instance (eg. http://localhost:8108)',
         key: 'TYPESENSE_NODE_URL',
-        schema: `Env.schema.string({ format: 'host' })`,
+        schema: `Env.schema.string({ format: 'url' })`,
       },
       {
         name: 'API Key to authenticate against Typesense',

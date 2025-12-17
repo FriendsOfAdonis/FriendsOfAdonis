@@ -25,7 +25,7 @@ Update your environment variables schema and add them to your `.env` file.
 import { Env } from '@adonisjs/core/env'
 
 export default await Env.create(new URL('../', import.meta.url), {
-  MEILISEACH_HOST: Env.schema.string({ format: 'host' }),
+  MEILISEACH_HOST: Env.schema.string({ format: 'url' }),
   MEILISEARCH_API_KEY: Env.schema.string.optional(),
 })
 ```
