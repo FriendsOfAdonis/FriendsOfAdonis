@@ -37,10 +37,12 @@ export default class ShopkeeperProvider {
     if (this.#config.registerRoutes) {
       const router = await this.app.container.make('router')
 
+      const bodyParserConfig = this.app.config.get('bodyparser', null)
       const middleware = new BodyParserMiddleware(
         defineConfig({
           allowedMethods: ['POST'],
           json: {
+            encoding: 'utf-8',
             convertEmptyStringsToNull: true,
             types: [
               'application/json',
@@ -55,7 +57,10 @@ export default class ShopkeeperProvider {
       const route = router
         .post('/stripe/webhook', (ctx) => handleWebhook(ctx))
         .as('shopkeeper.webhook')
-        .use((ctx, next) => middleware.handle(ctx, next))
+
+      if (!bodyParserConfig) {
+        route.use((ctx, next) => middleware.handle(ctx, next))
+      }
 
       if (this.#config.webhook.secret) {
         const middlewares = router.named({
