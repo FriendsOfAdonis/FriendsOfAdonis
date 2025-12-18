@@ -53,6 +53,7 @@
     "@adonisjs/cors": "^2.2.1",
     "@adonisjs/session": "^7.6.0",
     "@foadonis/graphql": "workspace:*",
+    "@graphql-yoga/plugin-disable-introspection": "^2.18.1",
     "@graphql-yoga/subscription": "^5.0.5",
     "better-sqlite3": "^12.5.0",
     "class-validator": "^0.14.3",
@@ -66,7 +67,8 @@
   "hotHook": {
     "boundaries": [
       "./app/controllers/**/*.ts",
-      "./app/middleware/*.ts"
+      "./app/middleware/*.ts",
+      "./app/grpahql/resolvers/*.ts"
     ]
   }
 }

@@ -1,0 +1,34 @@
+{{{
+  exports({ to: app.configPath('graphql.ts') })
+}}}
+import env from '#start/env'
+import { defineConfig } from '@foadonis/graphql'
+
+const isDevelopment = env.get('NODE_ENV') === 'development'
+
+export default defineConfig({
+  /**
+   * Path to the GraphQL endpoint.
+   */
+  path: '/graphql',
+
+  /**
+   * GraphQL server driver (Apollo or Yoga).
+   */
+  driver: drivers.apollo({
+    playground: isDevelopment,
+    introspection: isDevelopment,
+  }),
+
+  /**
+   * Logger name used by the GraphQL server.
+   *
+   * @see {@link https://docs.adonisjs.com/guides/digging-deeper/logger#using-multiple-loggers}
+   */
+  logger: 'app',
+
+  /**
+   * Automatically emit the 'graphql.schema' file.
+   */
+  emitSchemaFile: true,
+})

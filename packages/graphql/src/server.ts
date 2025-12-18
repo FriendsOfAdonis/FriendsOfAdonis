@@ -1,128 +1,137 @@
-import { ApolloServer } from '@apollo/server'
-import { GraphQLConfig, LazyImport } from './types.js'
+import {
+  GraphQLConfig,
+  GraphQLDriverContract,
+  PubSubContract,
+  PubSubPublishArgsByKey,
+} from './types.js'
 import { HttpContext } from '@adonisjs/core/http'
 import { buildSchema } from 'type-graphql'
-import { ContainerBindings, HttpRouterService } from '@adonisjs/core/types'
-import { adonisToGraphqlRequest, graphqlToAdonisResponse } from './utils/apollo.js'
+import { ContainerBindings, HttpRouterService, HttpServerService } from '@adonisjs/core/types'
 import { ContainerResolver } from '@adonisjs/core/container'
 import { Logger } from '@adonisjs/core/logger'
 import { authChecker } from './auth_checker.js'
 import { DateTime } from 'luxon'
 import { LuxonDateTimeScalar } from './scalars/luxon_datetime.js'
-import { ApolloServerPluginLandingPageDisabled } from '@apollo/server/plugin/disabled'
-import { Server } from 'node:http'
+import { GraphQLSchema } from 'graphql'
+import { UnavailableFeatureError } from './errors/unavailable_feature.js'
 import { WebSocketServer } from 'ws'
 import { useServer } from 'graphql-ws/use/ws'
-import { GraphQLSchema } from 'graphql'
+import { Disposable } from 'graphql-ws'
 
-export default class GraphQLServer {
-  #resolvers: LazyImport<Function>[] = []
+export default class GraphQLServer<Events = PubSubPublishArgsByKey> {
+  resolvers = new Map<string, Function>()
+
   #container: ContainerResolver<ContainerBindings>
   #config: GraphQLConfig
   #logger: Logger
-  #apollo?: ApolloServer
+  #httpServer: HttpServerService
+  #pubSub?: PubSubContract<Events>
+  #ws?: WebSocketServer
+  #disposable?: Disposable
+
+  driver: GraphQLDriverContract
 
   constructor(
-    config: GraphQLConfig,
+    config: GraphQLConfig & { driver: GraphQLDriverContract; pubSub?: PubSubContract<Events> },
     container: ContainerResolver<ContainerBindings>,
+    httpServer: HttpServerService,
     logger: Logger
   ) {
     this.#config = config
+    this.driver = config.driver
+    this.#pubSub = config.pubSub
     this.#container = container
+    this.#httpServer = httpServer
     this.#logger = logger
   }
 
-  get apollo() {
-    if (!this.#apollo) {
-      throw new Error('ApolloServer has not been configured yet')
-    }
-
-    return this.#apollo
+  async resolver(path: string, resolver: Function) {
+    this.resolvers.set(path, resolver)
   }
 
-  async resolvers(resolvers: LazyImport<Function>[]) {
-    this.#resolvers = resolvers
-  }
-
-  async start(server: Server) {
+  async start() {
     const schema = await this.#buildSchema()
 
-    await this.#startApollo(schema)
-    await this.#startWebsocket(schema, server)
+    await Promise.all([
+      this.driver.start(schema),
+      this.#pubSub?.start(),
+      this.#startWebsocket(schema),
+    ])
+
+    this.#logger.info(`started GraphQL server on path ${this.#config.path}`)
+  }
+
+  async reload() {
+    // Driver has not been started yet
+    if (!this.driver.isReady) {
+      return
+    }
+
+    const schema = await this.#buildSchema()
+    await this.driver.reload(schema)
+  }
+
+  async stop() {
+    await Promise.all([this.driver.stop(), this.#pubSub?.stop(), this.#disposable?.dispose()])
+    this.#ws?.close()
+  }
+
+  get pubSub() {
+    if (!this.#pubSub)
+      throw new UnavailableFeatureError(
+        "You must configure a PubSub inside 'config/graphql.ts' to use subscriptions"
+      )
+    return this.#pubSub
   }
 
   async #buildSchema(): Promise<GraphQLSchema> {
-    const resolvers = await Promise.all(this.#resolvers.map((r) => r())).then(
-      (m) => m.map((r) => r.default).filter(Boolean) as Function[]
-    )
-
-    const { apollo, scalarsMap, ...buildSchemaOptions } = this.#config
+    const { scalarsMap, ...buildSchemaOptions } = this.#config
 
     return buildSchema({
-      resolvers: resolvers as any,
+      resolvers: [...this.resolvers.values()] as any,
       container: {
-        get: (someClass) => {
+        get: async (someClass) => {
           return this.#container.make(someClass)
         },
       },
       scalarsMap: [{ type: DateTime, scalar: LuxonDateTimeScalar }, ...(scalarsMap ?? [])],
       authChecker: authChecker,
+      pubSub: this.#pubSub,
       ...buildSchemaOptions,
     })
   }
 
-  async #startApollo(schema: GraphQLSchema) {
-    const {
-      apollo: { plugins, playground, ...apolloConfig },
-    } = this.#config
-
-    const apollo = new ApolloServer({
-      schema,
-      plugins: [
-        ...(plugins ?? []),
-        ...(!playground ? [ApolloServerPluginLandingPageDisabled()] : []),
-      ],
-      ...apolloConfig,
-    })
-
-    this.#apollo = apollo
-    await apollo.start()
-
-    this.#logger.info('started GraphQL Apollo Server')
-  }
-
-  async #startWebsocket(schema: GraphQLSchema, httpServer: Server) {
+  async #startWebsocket(schema: GraphQLSchema) {
     // We do not start the websocket server if pubsub is not configured
-    if (!this.#config.pubSub) {
+    if (!this.#pubSub) {
       return
     }
 
-    const ws = new WebSocketServer({
+    const http = this.#httpServer.getNodeServer()
+    if (!http) {
+      return
+    }
+
+    this.#ws = new WebSocketServer({
       path: '/graphql',
-      server: httpServer,
+      server: http,
     })
 
-    useServer({ schema }, ws)
+    this.#disposable = useServer(
+      {
+        schema,
+        ...(this.#config.ws ?? {}),
+      },
+      this.#ws
+    )
   }
 
   async handle(ctx: HttpContext) {
-    const apollo = this.#apollo
-    if (!apollo) {
-      this.#logger.warn('tried to access Apollo Server when not initialized')
-      return
-    }
-
     if ('auth' in ctx) {
       await (ctx.auth as any).check()
     }
 
-    const httpGraphQLRequest = adonisToGraphqlRequest(ctx.request)
-    const httpGraphQLResponse = await apollo.executeHTTPGraphQLRequest({
-      httpGraphQLRequest,
-      context: async () => ctx,
-    })
-
-    return graphqlToAdonisResponse(ctx.response, httpGraphQLResponse)
+    return this.driver.handle(ctx)
   }
 
   registerRoute(router: HttpRouterService) {

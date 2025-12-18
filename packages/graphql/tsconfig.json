@@ -2,6 +2,8 @@
   "extends": "@foadonis/typescript-config/adonis.package.json",
   "compilerOptions": {
     "rootDir": "./",
-    "outDir": "./build"
+    "outDir": "./build",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   }
 }

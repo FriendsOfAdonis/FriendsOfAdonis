@@ -33,6 +33,7 @@ test.group('Configure', () => {
     const command = await ace.create(Configure, ['../../index.js'])
 
     command.prompt.trap('shouldInstallPackages').reject()
+    command.prompt.trap('driver').chooseOption(0)
 
     await command.exec()
 
@@ -45,5 +46,9 @@ test.group('Configure', () => {
 
     await assert.fileExists('adonisrc.ts')
     await assert.fileContains('adonisrc.ts', '@foadonis/graphql/graphql_provider')
+    await assert.fileContains('adonisrc.ts', 'app/graphql/resolvers')
+
+    await assert.fileExists('app/graphql/resolvers/demo_resolver.ts')
+    await assert.fileContains('app/graphql/resolvers/demo_resolver.ts', 'DemoResolver')
   }).timeout(30000)
 })
