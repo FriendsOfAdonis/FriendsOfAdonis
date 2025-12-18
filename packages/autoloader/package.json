@@ -51,6 +51,7 @@
   "homepage": "https://friendsofadonis.com/docs/autoloader",
   "license": "MIT",
   "devDependencies": {
+    "@adonisjs/core": "^6.19.1",
     "@foadonis/eslint-config": "workspace:*",
     "@japa/assert": "^4.2.0",
     "@japa/expect": "^3.0.7",
