@@ -2863,6 +2863,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@foadonis/autoloader@workspace:packages/autoloader"
   dependencies:
+    "@adonisjs/core": "npm:^6.19.1"
     "@foadonis/eslint-config": "workspace:*"
     "@japa/assert": "npm:^4.2.0"
     "@japa/expect": "npm:^3.0.7"
