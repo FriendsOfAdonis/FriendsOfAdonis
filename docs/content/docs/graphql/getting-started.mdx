@@ -13,11 +13,34 @@ node ace add @foadonis/graphql
 
 <ConfigurationSteps pkg="@foadonis/graphql" providers={['graphql']} commands config="graphql" />
 
+### Choosing your Driver
+
+#### Yoga Server
+
+[GraphQL Yoga](https://the-guild.dev/graphql/yoga-server) is a modern, lightweight GraphQL server with excellent subscription support. It's fully open-source.
+
+Choose Yoga if:
+
+- You want a lightweight, modern server
+- You need built-in subscription support
+- You prefer a flexible plugin system
+- You prefer fully open-source solutions
+
+#### Apollo Server
+
+[Apollo Server](https://www.apollographql.com/docs/apollo-server) is the industry-standard GraphQL server with extensive tooling and enterprise features. Some advanced features require Apollo's commercial offerings.
+
+Choose Apollo if:
+
+- You need enterprise features and Apollo Studio integration
+- You're already using Apollo tools in your stack
+- You want the most mature ecosystem
+
 ## Getting Started
 
 To explore the different capabilities of GraphQL we will create a sample GraphQL API for cooking recipes.
 
-Let's start tih the `Recipe` type, which is the foundation of our API.
+Let's start with the `Recipe` type, which is the foundation of our API.
 
 <Callout type="warn">
   We assume that you already know [Adonis](https://adonisjs.com/) and its ORM
@@ -155,19 +178,6 @@ class NewRecipeInput {
   declare ingredients: string[]
 }
 ```
-
-#### Register the Resolver
-
-We must now register our `Resolver` with the GraphQL server:
-
-```ts title="start/graphql.ts" twoslash
-// @noErrors
-import graphql from '@foadonis/graphql/services/main'
-
-graphql.resolvers([() => import('#graphql/resolvers/recipe_resolver')])
-```
-
-<Callout>Only the root resolvers must be registered this way.</Callout>
 
 ## Access the Playground
 

@@ -1,3 +1,5 @@
+import 'reflect-metadata'
+
 import { assert } from '@japa/assert'
 import { fileSystem } from '@japa/file-system'
 import { expect } from '@japa/expect'

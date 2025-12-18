@@ -1,0 +1,53 @@
+---
+title: Yoga Driver
+description: Build GraphQL APIs powered by GraphQL Yoga
+---
+
+[GraphQL Yoga](https://the-guild.dev/graphql/yoga-server) is a **modern, lightweight** GraphQL server. It's fully open-source, optimized for developer experience, and built with flexibility in mind.
+
+## Configuration
+
+The Yoga driver is configured using the `driver` option with `drivers.yoga()` in your GraphQL configuration file. The configuration accepts all [GraphQL Yoga server options](https://the-guild.dev/graphql/yoga-server/docs/configuration) except for `schema` (which is automatically provided).
+
+```ts title="config/graphql.ts"
+import env from '#start/env'
+import { defineConfig, drivers } from '@foadonis/graphql'
+import { useDisableIntrospection } from '@graphql-yoga/plugin-disable-introspection'
+
+const isDevelopment = env.get('NODE_ENV') === 'development'
+
+export default defineConfig({
+  driver: drivers.yoga({
+    // Yoga server configuration
+    graphiql: isDevelopment,
+    plugins: isDevelopment ? [] : [useDisableIntrospection()],
+  }),
+})
+```
+
+<Callout type="warn">
+
+It is highly recommended **to disable the playground and introspection** in production for security reasons as it exposes the available operations of your application.
+
+</Callout>
+
+## Plugins
+
+GraphQL Yoga supports a powerful plugin system that allows you to extend the server's functionality. You can add plugins to handle logging, error reporting, caching, and more.
+
+```ts title="config/graphql.ts"
+import { defineConfig, drivers } from '@foadonis/graphql'
+import { useDisableIntrospection } from '@graphql-yoga/plugin-disable-introspection'
+
+export default defineConfig({
+  driver: drivers.yoga({
+    plugins: [useDisableIntrospection()],
+  }),
+})
+```
+
+<Callout>
+
+You can find more information about GraphQL Yoga plugins in the [official documentation](https://the-guild.dev/graphql/yoga-server/docs/plugins).
+
+</Callout>

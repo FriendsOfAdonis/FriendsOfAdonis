@@ -18,7 +18,7 @@ class Recipe {
 
 By using the provided decorators you can turn your Typescript class into a GraphQL Type:
 
-```ts tab="Typescript"
+```ts tab="Typescript" twoslash
 import { ObjectType, Field } from '@foadonis/graphql'
 
 @ObjectType()
@@ -48,7 +48,7 @@ To generate the GraphQL we heavily rely on Typescript metadata to infer the type
 
 ### Nullable
 
-```ts tab="Typescript"
+```ts tab="Typescript" twoslash
 import { ObjectType, Field } from '@foadonis/graphql'
 
 @ObjectType()
@@ -70,7 +70,7 @@ type Recipe {
 
 ### Array
 
-```ts tab="Typescript"
+```ts tab="Typescript" twoslash
 import { ObjectType, Field } from '@foadonis/graphql'
 
 @ObjectType()
@@ -88,9 +88,9 @@ type Recipe {
 
 ### Scalars
 
-```ts tab="Typescript"
-import { ObjectType, Field, GraphQLBigInt } from '@foadonis/graphql'
-import { GraphQLUUID, GraphQLJSON } from 'graphql-scalars'
+```ts tab="Typescript" twoslash
+import { ObjectType, Field } from '@foadonis/graphql'
+import { GraphQLUUID, GraphQLJSON, GraphQLBigInt } from 'graphql-scalars'
 
 @ObjectType()
 class Recipe {
@@ -111,13 +111,13 @@ type Recipe {
 
 ### Objects
 
-```ts tab="Typescript"
+```ts tab="Typescript" twoslash
 import { ObjectType, Field } from '@foadonis/graphql'
 
 @ObjectType()
 class User {
   @Field()
-  name: string
+  declare name: string
 }
 
 @ObjectType()
@@ -141,7 +141,7 @@ type Recipe {
 
 You can generate GraphQL enums using Typescript enums with the `registerEnumType` function. Due to typescript limitations the name and the type must be explicitly defined.
 
-```ts tab="Typescript"
+```ts tab="Typescript" twoslash
 import { ObjectType, Field, registerEnumType } from '@foadonis/graphql'
 
 enum RecipeStatus {
@@ -179,7 +179,7 @@ For interoperability with databases the **enum value is used**. Meaning that if 
 
 The `description` parameter on `ObjectType` and `Field` allows you to provide documentation to your GraphQL schema that will be shown in the introspection.
 
-```ts tab="Typescript"
+```ts tab="Typescript" twoslash
 import { ObjectType, Field, ID } from '@foadonis/graphql'
 
 @ObjectType({

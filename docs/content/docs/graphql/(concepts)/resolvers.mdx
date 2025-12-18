@@ -21,18 +21,6 @@ import { Resolver } from '@foadonis/graphql'
 class RecipeResolver {}
 ```
 
-Resolvers must be registered to be taken in account in your GraphQL schema:
-
-```ts title="start/graphql.ts" twoslash
-// @noErrors
-import graphql from '@foadonis/graphql/services/main'
-
-graphql.resolvers([
-  () => import('#graphql/resolvers/recipe_resolver'),
-  () => import('#graphql/resolvers/user_resolver'),
-])
-```
-
 It supports [DI](https://docs.adonisjs.com/guides/concepts/dependency-injection) allowing you to inject services directly into the constructor:
 
 ```ts title="app/graphql/resolvers/recipe_resolver.ts" twoslash

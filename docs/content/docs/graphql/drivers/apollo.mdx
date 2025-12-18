@@ -1,0 +1,56 @@
+---
+title: Apollo Driver
+description: Build GraphQL APIs powered by Apollo Server
+---
+
+[Apollo GraphQL](https://www.apollographql.com/docs/apollo-server) is an **enterprise-oriented** GraphQL platform part of a large ecosystem. It is opinionated, feature-rich, optimized for large teams, production observability and schema governance.
+
+## Configuration
+
+The Apollo driver is configured using the `driver` option with `drivers.apollo()` in your GraphQL configuration file. The configuration accepts all [Apollo Server configuration options](https://www.apollographql.com/docs/apollo-server/api/apollo-server#constructor) except for `schema` (which is automatically provided).
+
+```ts title="config/graphql.ts"
+import env from '#start/env'
+import { defineConfig, drivers } from '@foadonis/graphql'
+
+const isDevelopment = env.get('NODE_ENV') === 'development'
+
+export default defineConfig({
+  driver: drivers.apollo({
+    // Apollo server configuration
+    introspection: isDevelopment,
+    playground: isDevelopment,
+  }),
+})
+```
+
+<Callout type="warn">
+
+It is highly recommended **to disable the playground and introspection** in production for security reasons as it exposes the available operations of your application.
+
+</Callout>
+
+## Plugins
+
+Apollo Server supports a powerful plugin system that allows you to extend the server's functionality. You can add plugins to handle logging, error reporting, caching, and more.
+
+```ts title="config/graphql.ts"
+import { defineConfig, drivers } from '@foadonis/graphql'
+import { ApolloServerPluginUsageReporting } from '@apollo/server/plugin/usageReporting'
+
+export default defineConfig({
+  driver: drivers.apollo({
+    plugins: [
+      ApolloServerPluginUsageReporting({
+        sendVariableValues: { all: true },
+      }),
+    ],
+  }),
+})
+```
+
+<Callout>
+
+You can find more information about Apollo Server plugins in the [official documentation](https://www.apollographql.com/docs/apollo-server/integrations/plugins).
+
+</Callout>

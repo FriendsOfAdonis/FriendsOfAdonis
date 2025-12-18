@@ -4,24 +4,33 @@ import type { YogaDriver, YogaDriverConfig } from './drivers/yoga_driver.js'
 import { GraphQLConfig, GraphQLDriverContract } from './types.js'
 import { configProvider } from '@adonisjs/core'
 import { Logger } from '@adonisjs/core/logger'
+import type { RedisPubSub, RedisPubSubConfig } from './pubsub/redis_pubsub.js'
+import type { NativePubSub, NativePubSubConfig } from './pubsub/native_pubsub.js'
+import { PubSub } from 'type-graphql'
 
-type ResolvedConfig<KnownDriver extends GraphQLDriverContract> = {
+type ResolvedConfig<KnownDriver extends GraphQLDriverContract, KnownPubSub extends PubSub> = {
   driver: KnownDriver
+  pubSub?: KnownPubSub
 }
 
-export function defineConfig<KnownDriver extends GraphQLDriverContract>({
+export function defineConfig<
+  KnownDriver extends GraphQLDriverContract,
+  KnownPubSub extends PubSub,
+>({
   driver,
+  pubSub,
   ...config
 }: GraphQLConfig & {
   driver: ConfigProvider<(logger: Logger) => KnownDriver>
-}): ConfigProvider<ResolvedConfig<KnownDriver>> {
+  pubSub?: ConfigProvider<() => KnownPubSub>
+}): ConfigProvider<ResolvedConfig<KnownDriver, KnownPubSub>> {
   return configProvider.create(async (app) => {
     const loggerService = await app.container.make('logger')
     const logger = config.logger ? loggerService.use(config.logger) : loggerService.use()
-    const factory = await driver.resolver(app)
 
     return {
-      driver: factory(logger),
+      driver: await driver.resolver(app).then((factory) => factory(logger)),
+      pubSub: pubSub ? await pubSub.resolver(app).then((factory) => factory()) : undefined,
       ...config,
     }
   })
@@ -41,6 +50,24 @@ export const drivers: {
     return configProvider.create(async () => {
       const { YogaDriver } = await import('./drivers/yoga_driver.js')
       return (logger: Logger) => new YogaDriver(config, logger)
+    })
+  },
+}
+
+export const pubsubs: {
+  native: (config?: NativePubSubConfig) => ConfigProvider<() => NativePubSub>
+  redis: (config?: RedisPubSubConfig) => ConfigProvider<() => RedisPubSub>
+} = {
+  native(config) {
+    return configProvider.create(async () => {
+      const { NativePubSub } = await import('./pubsub/native_pubsub.js')
+      return () => new NativePubSub(config)
+    })
+  },
+  redis(config) {
+    return configProvider.create(async () => {
+      const { RedisPubSub } = await import('./pubsub/redis_pubsub.js')
+      return () => new RedisPubSub(config)
     })
   },
 }
