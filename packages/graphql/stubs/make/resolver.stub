@@ -1,0 +1,18 @@
+{{#var entity = generators.createEntity(name) }}
+{{#var modelName = generators.modelName(entity.name) }}
+{{#var fileName = string(modelName).snakeCase().suffix('_resolver').ext('.ts').toString() }}
+{{#var modelReference = string.camelCase(modelName) }}
+{{{
+  exports({
+    to: app.makePath(app.rcFile.directories.graphql ?? 'app/graphql/resolvers', fileName)
+  })
+}}}
+import { Query, Resolver } from '@foadonis/graphql'
+
+@Resolver()
+export default class {{ modelName }}Resolver {
+  @Query(() => String)
+  {{ modelReference }}() {
+    return "Hello World"
+  }
+}

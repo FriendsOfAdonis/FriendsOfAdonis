@@ -1,4 +1,10 @@
-import { defineConfig, drivers, pubsubs } from '@foadonis/graphql'
+{{{
+  exports({ to: app.configPath('graphql.ts') })
+}}}
+import env from '#start/env'
+import { defineConfig } from '@foadonis/graphql'
+
+const isDevelopment = env.get('NODE_ENV') === 'development'
 
 export default defineConfig({
   /**
@@ -10,8 +16,8 @@ export default defineConfig({
    * GraphQL server driver (Apollo or Yoga).
    */
   driver: drivers.apollo({
-    playground: true,
-    introspection: true,
+    playground: isDevelopment,
+    introspection: isDevelopment,
   }),
 
   /**
@@ -22,12 +28,7 @@ export default defineConfig({
   logger: 'app',
 
   /**
-   * PubSub instance used for subscriptions.
-   */
-  pubSub: pubsubs.redis(),
-
-  /**
-   * Automatically emit the `graphql.schema` file.
+   * Automatically emit the 'graphql.schema' file.
    */
   emitSchemaFile: true,
 })

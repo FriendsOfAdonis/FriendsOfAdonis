@@ -15,7 +15,8 @@ documentation](https://typegraphql.com/docs/authorization.html)
 
 You can secure your queries to only allow authenticated users to use them by using the `@Authorized` decorator.
 
-```ts title="app/graphql/resolvers/recipe_resolver.ts"
+```ts title="app/graphql/resolvers/recipe_resolver.ts" twoslash
+// @noErrors
 import Recipe from '#models/recipe'
 import { Resolver, Query, Mutation, Authorized } from '@foadonis/graphql'
 
@@ -39,7 +40,8 @@ The `Authorized` decorator accepts [Bouncer abilities](https://docs.adonisjs.com
 
 <Tabs items={["app/graphql/resolvers/recipe_resolver.ts", "app/abilities/main.ts"]}>
 
-```ts tab="app/graphql/resolvers/recipe_resolver.ts"
+```ts tab="app/graphql/resolvers/recipe_resolver.ts" twoslash
+// @noErrors
 import Recipe from '#models/recipe'
 import { Resolver, Query, Authorized } from '@foadonis/graphql'
 import abilities from '#abilities/main'
@@ -54,7 +56,8 @@ class RecipeResolver {
 }
 ```
 
-```ts tab="app/abilities/main.ts"
+```ts tab="app/abilities/main.ts" twoslash
+// @noErrors
 import { Bouncer } from '@adonisjs/bouncer'
 
 const abilities = {
@@ -76,7 +79,8 @@ export default abilities
 The `@Authorized` decorator also works on fields allowing you to protect only certain fields.
 With the following example, only authenticated user can access the `fullName` and only admins can access `email`.
 
-```ts title="app/models/user.ts"
+```ts title="app/models/user.ts" twoslash
+// @noErrors
 import { ObjectType, Authorized } from '@foadonis/graphql'
 import abilities from '#abilities/main'
 
@@ -99,7 +103,8 @@ export default class User {
 
 ### Using `@CurrentUser`
 
-```ts title="app/graphql/resolvers/recipe_resolver.ts"
+```ts title="app/graphql/resolvers/recipe_resolver.ts" twoslash
+// @noErrors
 import Recipe from '#models/recipe'
 import { Resolver, Query, CurrentUser } from '@foadonis/graphql'
 
@@ -119,7 +124,8 @@ class RecipeResolver {
 
 ### Using the context
 
-```ts title="app/graphql/resolvers/recipe_resolver.ts"
+```ts title="app/graphql/resolvers/recipe_resolver.ts" twoslash
+// @noErrors
 import Recipe from '#models/recipe'
 import { HttpContext } from '@adonisjs/core/http'
 import { Resolver, Query, Ctx } from '@foadonis/graphql'

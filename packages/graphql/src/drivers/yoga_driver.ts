@@ -12,7 +12,7 @@ export type YogaDriverConfig<
 > = YogaServerOptions<TServerContext, TUserContext>
 
 export class YogaDriver<
-  TServerContext extends HttpContext,
+  TServerContext extends HttpContext = HttpContext,
   TUserContext extends Record<string, any> = any,
 > implements GraphQLDriverContract {
   #config: YogaDriverConfig<TServerContext, TUserContext>
@@ -86,7 +86,7 @@ export class YogaDriver<
     }
   }
 
-  stop(): Promise<void> {
-    throw new Error('Method not implemented.')
+  async stop(): Promise<void> {
+    await this.yoga.dispose()
   }
 }

@@ -1,17 +1,23 @@
 import { HttpContext } from '@adonisjs/core/http'
 import { GraphQLSchema } from 'graphql'
 import { GraphQLDriverContract } from '../types.js'
-import { ApolloServer, ApolloServerOptionsWithSchema } from '@apollo/server'
+import {
+  ApolloServer,
+  ApolloServerOptionsWithSchema,
+  BaseContext,
+  ContextThunk,
+} from '@apollo/server'
 import { ApolloServerPluginLandingPageDisabled } from '@apollo/server/plugin/disabled'
 import { adonisToGraphqlRequest, graphqlToAdonisResponse } from '../utils/apollo.js'
 import { Logger } from '@adonisjs/core/logger'
 
-export type ApolloDriverConfig = Omit<ApolloServerOptionsWithSchema<HttpContext>, 'schema'> & {
+export type ApolloDriverConfig = Omit<ApolloServerOptionsWithSchema<BaseContext>, 'schema'> & {
   playground?: boolean
+  context?: ContextThunk
 }
 
 export class ApolloDriver implements GraphQLDriverContract {
-  #server?: ApolloServer<HttpContext>
+  #server?: ApolloServer<BaseContext>
   #config: ApolloDriverConfig
   #logger: Logger
 
@@ -66,13 +72,13 @@ export class ApolloDriver implements GraphQLDriverContract {
 
     const httpGraphQLResponse = await this.server.executeHTTPGraphQLRequest({
       httpGraphQLRequest,
-      context: async () => ctx,
+      context: this.#config.context ?? (async () => ctx),
     })
 
     return graphqlToAdonisResponse(ctx.response, httpGraphQLResponse)
   }
 
   async stop(): Promise<void> {
-    await this.server.stop()
+    await this.#server?.stop()
   }
 }

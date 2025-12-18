@@ -1,12 +1,13 @@
 import { ApplicationService } from '@adonisjs/core/types'
-import type GraphQlServer from '../src/server.js'
+import GraphQlServer from '../src/server.js'
+import type { GraphQlService } from '../src/types.js'
 import { RuntimeException } from '@adonisjs/core/exceptions'
 import { configProvider } from '@adonisjs/core'
 import { Autoloader } from '@foadonis/autoloader'
 
 declare module '@adonisjs/core/types' {
   export interface ContainerBindings {
-    graphql: GraphQlServer
+    graphql: GraphQlService
   }
 }
 
@@ -14,12 +15,11 @@ export default class GraphQlProvider {
   constructor(protected app: ApplicationService) {}
 
   register() {
-    this.app.container.singleton('graphql', async (resolver) => {
-      const { default: GraphQlServerClass } = await import('../src/server.js')
-
+    this.app.container.singleton(GraphQlServer, async (resolver) => {
       const logger = await this.app.container.make('logger')
       const graphqlConfigProvider = this.app.config.get('graphql', {})
       const config = await configProvider.resolve<any>(this.app, graphqlConfigProvider)
+      const server = await this.app.container.make('server')
 
       if (!config) {
         throw new RuntimeException(
@@ -27,8 +27,10 @@ export default class GraphQlProvider {
         )
       }
 
-      return new GraphQlServerClass(config, resolver, logger)
+      return new GraphQlServer(config, resolver, server, logger)
     })
+
+    this.app.container.alias('graphql', GraphQlServer)
   }
 
   async autoloadResolvers(graphql: GraphQlServer, path: string) {
@@ -51,7 +53,9 @@ export default class GraphQlProvider {
       await graphql.reload()
     })
 
-    await autoloader.watch()
+    if (this.app.getEnvironment() === 'web' && this.app.inDev) {
+      await autoloader.watch()
+    }
   }
 
   async boot() {
@@ -70,6 +74,13 @@ export default class GraphQlProvider {
     if (this.app.getEnvironment() === 'web') {
       const graphql = await this.app.container.make('graphql')
       await graphql.start()
+    }
+  }
+
+  async shutdown() {
+    if (this.app.getEnvironment() === 'web') {
+      const graphql = await this.app.container.make('graphql')
+      await graphql.stop()
     }
   }
 }
