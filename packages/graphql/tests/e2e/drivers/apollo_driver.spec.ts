@@ -6,11 +6,13 @@ import { OperationTypeNode } from 'graphql'
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions'
 import { createClient } from 'graphql-ws'
 import { TestResolver } from '../../fixtures/test_resolver.js'
+import WebSocket from 'ws'
 
 export function setupApolloClient() {
   const wsLink = new GraphQLWsLink(
     createClient({
       url: 'ws://localhost:3333/graphql',
+      webSocketImpl: WebSocket,
     })
   )
 
