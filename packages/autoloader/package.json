@@ -1,7 +1,7 @@
 {
   "name": "@foadonis/autoloader",
   "description": "Autoload modules with HMR support",
-  "version": "0.0.9",
+  "version": "0.0.0",
   "engines": {
     "node": ">=20.6.0"
   },
