@@ -1,0 +1,99 @@
+{
+  "name": "@foadonis/flow",
+  "description": "Fluent workflow engine for AdonisJS",
+  "version": "0.0.9",
+  "engines": {
+    "node": ">=20.6.0"
+  },
+  "type": "module",
+  "files": [
+    "build",
+    "!build/bin",
+    "!build/tests"
+  ],
+  "exports": {
+    ".": "./build/index.js",
+    "./commands": "./build/commands/main.js",
+    "./services/main": "./build/services/main.js",
+    "./flow_provider": "./build/providers/flow_provider.js",
+    "./types": "./build/src/types.js"
+  },
+  "scripts": {
+    "clean": "del-cli build",
+    "copy:templates": "copyfiles \"stubs/**/*.stub\" build",
+    "index:commands": "adonis-kit index build/commands",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "quick:test": "node --import=./tsnode.esm.js --enable-source-maps bin/test.ts",
+    "test": "c8 yarn quick:test",
+    "build": "yarn clean && tsc && yarn copy:templates && yarn index:commands",
+    "dev": "tsc --watch",
+    "version": "yarn build",
+    "prepublishOnly": "yarn build"
+  },
+  "keywords": [
+    "adonis",
+    "adonisjs",
+    "api",
+    "typescript"
+  ],
+  "author": {
+    "name": "Martin Paucot",
+    "email": "contact@martin-paucot.fr"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FriendsOfAdonis/FriendsOfAdonis",
+    "directory": "packages/flow"
+  },
+  "bugs": {
+    "url": "https://github.com/FriendsOfAdonis/FriendsOfAdonis/issues"
+  },
+  "homepage": "https://friendsofadonis.com/docs/flow",
+  "license": "MIT",
+  "devDependencies": {
+    "@adonisjs/assembler": "^7.8.2",
+    "@adonisjs/auth": "^9.5.1",
+    "@adonisjs/core": "^6.19.1",
+    "@adonisjs/lucid": "^21.8.1",
+    "@flowcraft/bullmq-adapter": "^1.4.2",
+    "@foadonis/eslint-config": "workspace:*",
+    "@japa/assert": "^4.2.0",
+    "@japa/expect": "^3.0.7",
+    "@japa/expect-type": "^2.0.4",
+    "@japa/file-system": "^3.0.0",
+    "@japa/runner": "^4.0.0",
+    "@swc/core": "1.15.5",
+    "@types/luxon": "^3.7.1",
+    "@types/node": "^25.0.2",
+    "c8": "^10.1.3",
+    "copyfiles": "^2.4.1",
+    "del-cli": "^7.0.0",
+    "luxon": "^3.7.2",
+    "prettier": "^3.7.4",
+    "reflect-metadata": "^0.2.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "@adonisjs/core": "^6.2.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "latest"
+  },
+  "c8": {
+    "reporter": [
+      "text",
+      "html"
+    ],
+    "exclude": [
+      "tests/**"
+    ]
+  },
+  "dependencies": {
+    "flowcraft": "^2.7.1",
+    "type-fest": "^5.3.1"
+  }
+}

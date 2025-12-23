@@ -52,6 +52,7 @@
     "@adonisjs/core": "^6.19.1",
     "@adonisjs/session": "^7.6.0",
     "@foadonis/crypt": "workspace:*",
+    "@foadonis/flow": "workspace:*",
     "@foadonis/openapi": "workspace:*",
     "@vinejs/vine": "^4.2.0",
     "better-sqlite3": "^12.5.0",
