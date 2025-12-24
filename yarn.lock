@@ -2353,6 +2353,22 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@foadonis/autoloader@npm:0.0.1-next.0":
+  version: 0.0.1-next.0
+  resolution: "@foadonis/autoloader@npm:0.0.1-next.0"
+  dependencies:
+    "@poppinss/hooks": "npm:^7.3.0"
+    chokidar: "npm:^5.0.0"
+    fast-glob: "npm:^3.3.3"
+    globby: "npm:^16.0.0"
+    picomatch: "npm:^4.0.3"
+  peerDependencies:
+    "@adonisjs/lucid": ^21.2.0
+    hot-hook: ^4.0.0
+  checksum: 10c0/9f15c546f5152112e6e942d7941d1065b86a351642903542db4bc518f1403e8ad8b8573513431504fee7ad48d1b5d3e484e93f0cd73d9c54e30813928b4c1379
+  languageName: node
+  linkType: hard
+
 "@foadonis/crypt@workspace:*, @foadonis/crypt@workspace:packages/crypt":
   version: 0.0.0-use.local
   resolution: "@foadonis/crypt@workspace:packages/crypt"
@@ -2408,6 +2424,7 @@ __metadata:
     "@adonisjs/core": "npm:^6.19.1"
     "@adonisjs/lucid": "npm:^21.8.1"
     "@flowcraft/bullmq-adapter": "npm:^1.4.2"
+    "@foadonis/autoloader": "npm:0.0.1-next.0"
     "@foadonis/eslint-config": "workspace:*"
     "@japa/assert": "npm:^4.2.0"
     "@japa/expect": "npm:^3.0.7"
@@ -2417,10 +2434,12 @@ __metadata:
     "@swc/core": "npm:1.15.5"
     "@types/luxon": "npm:^3.7.1"
     "@types/node": "npm:^25.0.2"
+    bullmq: "npm:^5.66.2"
     c8: "npm:^10.1.3"
     copyfiles: "npm:^2.4.1"
     del-cli: "npm:^7.0.0"
     flowcraft: "npm:^2.7.1"
+    ioredis: "npm:^5.8.2"
     luxon: "npm:^3.7.2"
     prettier: "npm:^3.7.4"
     reflect-metadata: "npm:^0.2.2"
@@ -2429,6 +2448,13 @@ __metadata:
     typescript: "npm:^5.9.3"
   peerDependencies:
     "@adonisjs/core": ^6.2.0
+  dependenciesMeta:
+    "@flowcraft/bullmq-adapter":
+      optional: true
+    bullmq:
+      optional: true
+    ioredis:
+      optional: true
   languageName: unknown
   linkType: soft
 
@@ -9354,7 +9380,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bullmq@npm:^5.62.0":
+"bullmq@npm:^5.62.0, bullmq@npm:^5.66.2":
   version: 5.66.2
   resolution: "bullmq@npm:5.66.2"
   dependencies:

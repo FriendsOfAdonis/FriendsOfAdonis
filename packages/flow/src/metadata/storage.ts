@@ -1,8 +1,6 @@
-import { BaseWorkflow } from '../mixins/workflow.js'
-
-export type StepMetadata<T extends BaseWorkflow> = {
+export type StepMetadata = {
   id: string
-  target: BaseWorkflow
+  target: Object
   propertyKey: string
 }
 

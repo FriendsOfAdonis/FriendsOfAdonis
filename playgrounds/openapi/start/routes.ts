@@ -9,9 +9,9 @@ const PostsController = () => import('#controllers/posts_controller')
 router.get('/users', [DemoController, 'index'])
 router.resource('posts', PostsController)
 
-router.get('/', async () => {
+router.get('/', async ({ response }) => {
   await flow.run(TestWorkflow, {
-    greet: 'hello',
+    userId: '123',
   })
 })
 

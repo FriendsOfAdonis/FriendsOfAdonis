@@ -1,75 +1,39 @@
 import { inject } from '@adonisjs/core'
-import { BaseWorkflow, step, WorkflowBuilder } from '@foadonis/flow'
+import { BaseWorkflow, workflow, step, WorkflowBuilder } from '@foadonis/flow'
 import type { Workflow } from '@foadonis/flow/types'
 
 @inject()
-export default class SynchronizeGoogleDriveWorkflow extends BaseWorkflow<{
-  integrationId: string
-}> {
-  constructor(
-    private drive: GoogleDriveService,
-    private elasticsearch: ElasticsearchService
-  ) {
-    super()
-  }
-
+@workflow()
+export default class TestWorkflow extends BaseWorkflow<{ userId: string }> {
   flow(flow: Workflow.Builder): WorkflowBuilder {
     return flow
-      .then(this.fetchFiles)
-      .batch(this.downloadFile)
-      .then(this.indexDocuments)
-      .then(this.notifyUser)
+      .then(this.greet)
+      .then(this.test)
+      .then(this.test)
+      .parallel([this.test, this.test])
+      .then(this.greet)
   }
 
   @step()
-  async fetchFiles() {
-    const integrationId = await this.context.get('integrationId')
-
-    const integration = await Integration.findOrFail(integrationId)
-    const documents = await this.drive.listAllFiles(integration.driveId)
+  async greet(context: Workflow.Context) {
+    console.log('START')
+    // const userId = await context.context.get('userId')
 
     return {
       action: 'noop',
       output: {
-        documents,
+        data: 'hello',
       },
     }
   }
 
   @step()
-  async downloadFile({ input }: Workflow.Context<drive.File>) {
-    const file = await this.drive.downloadFile(input.id)
+  async test(context: Workflow.Context<{ data: string }>) {
+    console.log('Running step1')
+    await new Promise((res) => setTimeout(res, 500))
+    console.log('Finished step1')
     return {
-      output: {
-        ...input,
-        content: Buffer.from(file.content).toString('base64'),
-      },
+      output: {},
     }
-  }
-
-  @step()
-  async indexDocuments({ input }: Workflow.Context<(drive.File & { content: string })[]>) {
-    this.elasticsearch.index(
-      input.map((document) => ({
-        index: 'documents',
-        id: document.id,
-        document,
-      }))
-    )
-    return {}
-  }
-
-  @step()
-  async notifyUser({ input }: Workflow.Context) {
-    const integrationId = await this.context.get('integrationId')
-    const integration = await Integration.findOrFail(integrationId)
-
-    await mail.send((message) => {
-      message
-        .to(integration.user.email)
-        .from('info@example.org')
-        .subject('Synchronization complete')
-        .htmlView('emails/synchronization_completed', { user })
-    })
   }
 }
