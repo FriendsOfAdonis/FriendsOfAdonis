@@ -22,8 +22,6 @@ export type OpenAPIConfig = {
 
   /**
    * Custom type loaders.
-   *
-   * @see https://openapi-ts.pages.dev/openapi-metadata/type-loader
    */
   loaders?: GenerateDocumentParameters['loaders']
 }
