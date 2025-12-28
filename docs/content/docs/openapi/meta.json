@@ -15,6 +15,7 @@
     "(references)/decorators",
     "---Advanced---",
     "(advanced)/generic-types",
-    "(advanced)/mapped-types"
+    "(advanced)/mapped-types",
+    "(advanced)/custom-type-loaders"
   ]
 }
