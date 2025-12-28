@@ -1,3 +1,517 @@
 ---
 title: Decorators
 ---
+
+This page provides a comprehensive reference for all available OpenAPI decorators. Decorators are organized by their usage context: operations (methods), controllers, and models.
+
+## Operation Decorators
+
+These decorators are used on controller methods to describe API operations.
+
+### `@ApiOperation()`
+
+Configures the operation details such as summary, description, and operation ID. This decorator is optional as operations are automatically loaded from the Adonis Router.
+
+**Usage:** Method
+
+```ts title="app/controllers/posts_controller.ts" twoslash
+// @noErrors
+import { ApiOperation } from '@foadonis/openapi/decorators'
+
+export default class PostsController {
+  @ApiOperation({
+    summary: 'List all Posts',
+    description: 'Retrieves a list of all posts in the system',
+    operationId: 'listPosts',
+  })
+  index() {
+    // ...your logic
+  }
+}
+```
+
+**Options:**
+- `summary?: string` - A short summary of what the operation does
+- `description?: string` - A verbose explanation of the operation behavior
+- `operationId?: string` - Unique string used to identify the operation
+- `deprecated?: boolean` - Declares this operation to be deprecated
+- `tags?: string[]` - A list of tags for API documentation control
+
+### `@ApiResponse()`
+
+Describes a possible response from an operation, including status code, description, and schema. You can stack multiple `@ApiResponse` decorators on the same operation for different status codes. Can also be used on the controller to apply to all its operations.
+
+**Usage:** Method / Controller
+
+```ts title="app/controllers/posts_controller.ts" twoslash
+// @noErrors
+import Post from '#models/post'
+import { ApiResponse } from '@foadonis/openapi/decorators'
+
+export default class PostsController {
+  @ApiResponse({
+    status: 200,
+    description: 'List of posts',
+    type: [Post],
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'No posts found',
+  })
+  index() {
+    // ...your logic
+  }
+
+  @ApiResponse({
+    status: 201,
+    description: 'The post has been successfully created.',
+    type: Post,
+  })
+  create() {}
+}
+```
+
+**Options:**
+- `status?: number` - HTTP status code (default: 200)
+- `description?: string` - A description of the response
+- `type?: Type | Type[]` - The response type or array of types
+- `mediaType?: string` - The media type of the response (e.g., 'application/json', 'text/html')
+- `schema?: SchemaObject` - Raw OpenAPI schema object
+
+### `@ApiBody()`
+
+Describes the request body of an operation, including its schema and examples.
+
+**Usage:** Method
+
+```ts title="app/controllers/posts_controller.ts" twoslash
+// @noErrors
+import { createPostValidator } from '#validators/post'
+import { ApiBody } from '@foadonis/openapi/decorators'
+
+export default class PostsController {
+  @ApiBody({
+    type: () => createPostValidator,
+    description: 'Post creation data',
+  })
+  create() {}
+}
+```
+
+**Options:**
+- `type?: Type | (() => Type)` - The request body type (use a function for circular dependencies)
+- `description?: string` - A description of the request body
+- `mediaType?: string` - The media type of the request body (e.g., 'application/json', 'multipart/form-data')
+- `required?: boolean` - Whether the request body is required
+- `schema?: SchemaObject` - Raw OpenAPI schema object
+
+### `@ApiParam()`
+
+Describes a single path parameter for an operation, including its name, location, and schema.
+
+**Usage:** Method
+
+```ts title="app/controllers/posts_controller.ts" twoslash
+// @noErrors
+import { ApiParam } from '@foadonis/openapi/decorators'
+
+export default class PostsController {
+  @ApiParam({
+    name: 'id',
+    description: 'The post identifier',
+    type: Number,
+    required: true,
+  })
+  show() {}
+}
+```
+
+**Options:**
+- `name: string` - The name of the parameter
+- `description?: string` - A description of the parameter
+- `type?: Type` - The parameter type
+- `required?: boolean` - Whether the parameter is required (default: true for path parameters)
+- `schema?: SchemaObject` - Raw OpenAPI schema object
+- `example?: any` - Example value for the parameter
+
+### `@ApiQuery()`
+
+Describes a query parameter for an operation.
+
+**Usage:** Method
+
+```ts title="app/controllers/posts_controller.ts" twoslash
+// @noErrors
+import { ApiQuery } from '@foadonis/openapi/decorators'
+
+export default class PostsController {
+  @ApiQuery({
+    name: 'page',
+    description: 'Page number',
+    type: Number,
+    required: false,
+  })
+  @ApiQuery({
+    name: 'limit',
+    description: 'Number of items per page',
+    type: Number,
+    required: false,
+  })
+  @ApiQuery({
+    name: 'status',
+    enum: ['draft', 'published', 'archived'],
+    required: false,
+  })
+  index() {}
+}
+```
+
+**Options:**
+- `name: string` - The name of the query parameter
+- `description?: string` - A description of the parameter
+- `type?: Type` - The parameter type
+- `required?: boolean` - Whether the parameter is required (default: false)
+- `enum?: string[] | Enum` - Array of allowed values or TypeScript enum
+- `schema?: SchemaObject` - Raw OpenAPI schema object
+- `example?: any` - Example value for the parameter
+
+### `@ApiHeader()`
+
+Describes a header parameter for an operation. Can be applied to specific operations or directly on the controller.
+
+**Usage:** Method / Controller
+
+```ts title="app/controllers/users_controller.ts" twoslash
+// @noErrors
+import { ApiHeader } from '@foadonis/openapi/decorators'
+
+@ApiHeader({
+  name: 'X-Language',
+  description: 'The currently defined language',
+  required: false,
+})
+export default class UsersController {
+  @ApiHeader({
+    name: 'X-Store',
+    description: 'Store identifier',
+    required: true,
+  })
+  index() {}
+}
+```
+
+**Options:**
+- `name: string` - The name of the header
+- `description?: string` - A description of the header
+- `required?: boolean` - Whether the header is required (default: false)
+- `type?: Type` - The header type
+- `schema?: SchemaObject` - Raw OpenAPI schema object
+- `example?: any` - Example value for the header
+
+### `@ApiExcludeEndpoint()`
+
+Excludes an endpoint from the OpenAPI documentation.
+
+**Usage:** Method
+
+```ts title="app/controllers/posts_controller.ts" twoslash
+// @noErrors
+import { ApiExcludeEndpoint } from '@foadonis/openapi/decorators'
+
+export default class PostsController {
+  @ApiExcludeEndpoint()
+  internalMethod() {
+    // This endpoint will not appear in the OpenAPI documentation
+  }
+}
+```
+
+### `@ApiExtension()`
+
+Adds custom extensions to the OpenAPI documentation. Extensions are prefixed with `x-` in the OpenAPI specification.
+
+**Usage:** Method
+
+```ts title="app/controllers/posts_controller.ts" twoslash
+// @noErrors
+import { ApiExtension } from '@foadonis/openapi/decorators'
+
+export default class PostsController {
+  @ApiExtension('x-code-samples', [
+    {
+      lang: 'JavaScript',
+      source: 'fetch("/posts")',
+    },
+  ])
+  index() {}
+}
+```
+
+**Options:**
+- `name: string` - The extension name (without the `x-` prefix)
+- `value: any` - The extension value
+
+## Controller Decorators
+
+These decorators can be applied to controllers or methods to configure behavior across multiple operations.
+
+### `@ApiTags()`
+
+Assigns tags to operations for grouping and categorization in the documentation. Can be applied to specific operations or on the controller.
+
+**Usage:** Method / Controller
+
+```ts title="app/controllers/users_controller.ts" twoslash
+// @noErrors
+import { ApiTags } from '@foadonis/openapi/decorators'
+
+@ApiTags('Users')
+export default class UsersController {
+  @ApiTags('Public', 'Demo')
+  index() {}
+}
+```
+
+**Options:**
+- `...tags: string[]` - One or more tag names
+
+<Callout>Tags will automatically be applied to your controllers using its name.</Callout>
+
+### `@ApiProduces()`
+
+Specifies the MIME types that an operation can produce. Can be applied to specific operations or on the controller.
+
+**Usage:** Method / Controller
+
+```ts title="app/controllers/files_controller.ts" twoslash
+// @noErrors
+import { ApiProduces } from '@foadonis/openapi/decorators'
+
+@ApiProduces('application/json')
+export default class FilesController {
+  @ApiProduces('image/png', 'image/jpeg')
+  download() {}
+}
+```
+
+**Options:**
+- `...mimeTypes: string[]` - One or more MIME types (e.g., 'application/json', 'text/html')
+
+### `@ApiConsumes()`
+
+Specifies the MIME types that an operation can consume. Can be applied to specific operations or on the controller.
+
+**Usage:** Method / Controller
+
+```ts title="app/controllers/files_controller.ts" twoslash
+// @noErrors
+import { ApiConsumes } from '@foadonis/openapi/decorators'
+
+@ApiConsumes('application/json')
+export default class FilesController {
+  @ApiConsumes('multipart/form-data')
+  upload() {}
+}
+```
+
+**Options:**
+- `...mimeTypes: string[]` - One or more MIME types (e.g., 'application/json', 'multipart/form-data')
+
+### `@ApiSecurity()`
+
+Defines security requirements for operations. The security mechanisms must be defined in your OpenAPI configuration.
+
+**Usage:** Method / Controller
+
+```ts title="app/controllers/users_controller.ts" twoslash
+// @noErrors
+import { ApiSecurity } from '@foadonis/openapi/decorators'
+
+@ApiSecurity('bearer')
+export default class UsersController {
+  @ApiSecurity('basic')
+  publicEndpoint() {}
+}
+```
+
+**Options:**
+- `name: string` - The name of the security scheme (must be defined in `config/openapi.ts`)
+
+### `@ApiBearerAuth()`
+
+Indicates that the operation uses Bearer Token authentication. This is a convenience decorator for `@ApiSecurity('bearer')`.
+
+**Usage:** Method / Controller
+
+```ts title="app/controllers/users_controller.ts" twoslash
+// @noErrors
+import { ApiBearerAuth } from '@foadonis/openapi/decorators'
+
+@ApiBearerAuth()
+export default class UsersController {}
+```
+
+**Options:**
+- `name?: string` - Optional name of the bearer auth scheme (default: 'bearer')
+
+### `@ApiBasicAuth()`
+
+Indicates that the operation uses Basic authentication. This is a convenience decorator for `@ApiSecurity('basic')`.
+
+**Usage:** Method / Controller
+
+```ts title="app/controllers/users_controller.ts" twoslash
+// @noErrors
+import { ApiBasicAuth } from '@foadonis/openapi/decorators'
+
+@ApiBasicAuth()
+export default class UsersController {}
+```
+
+**Options:**
+- `name?: string` - Optional name of the basic auth scheme (default: 'basic')
+
+### `@ApiOAuth2()`
+
+Indicates that the operation uses OAuth2 authentication. This is a convenience decorator for `@ApiSecurity('oauth2')`.
+
+**Usage:** Method / Controller
+
+```ts title="app/controllers/users_controller.ts" twoslash
+// @noErrors
+import { ApiOAuth2 } from '@foadonis/openapi/decorators'
+
+@ApiOAuth2('users:read', 'global:read')
+export default class UsersController {}
+```
+
+**Options:**
+- `...scopes: string[]` - One or more OAuth2 scopes required for the operation
+
+### `@ApiExtraModels()`
+
+Registers additional models that are not directly referenced in the operation but are used in the API. This is useful for union types, discriminated unions, or models referenced only in error responses.
+
+**Usage:** Method / Controller
+
+```ts title="app/controllers/posts_controller.ts" twoslash
+// @noErrors
+import { ApiExtraModels, ApiResponse } from '@foadonis/openapi/decorators'
+import ErrorResponse from '#schemas/error_response'
+
+@ApiExtraModels(ErrorResponse)
+export default class PostsController {
+  @ApiResponse({
+    status: 400,
+    type: ErrorResponse,
+  })
+  create() {}
+}
+```
+
+**Options:**
+- `...models: Type[]` - One or more model classes to register
+
+## Model Decorators
+
+These decorators are used on model classes and their properties to define schemas.
+
+### `@ApiProperty()`
+
+Defines a property in a model, specifying its schema and description. The type is automatically inferred from the TypeScript type when possible.
+
+**Usage:** Property
+
+```ts title="app/models/post.ts" twoslash
+// @noErrors
+import { ApiProperty } from '@foadonis/openapi/decorators'
+
+export default class Post {
+  @ApiProperty()
+  declare id: number
+
+  @ApiProperty({
+    minLength: 6,
+    maxLength: 255,
+    example: 'How to create REST APIs with Adonis',
+  })
+  declare title: string
+}
+```
+
+**Options:**
+- `type?: Type | (() => Type)` - Explicit type (use a function for circular dependencies)
+- `description?: string` - A description of the property
+- `required?: boolean` - Whether the property is required (default: true)
+- `example?: any` - Example value
+- `enum?: string[] | Enum` - Array of allowed values or TypeScript enum
+- `schema?: SchemaObject` - Raw OpenAPI schema object
+- All standard OpenAPI Schema properties (e.g., `minLength`, `maxLength`, `minimum`, `maximum`, `format`, etc.)
+
+### `@ApiPropertyOptional()`
+
+Defines an optional property in a model. This is a convenience decorator equivalent to `@ApiProperty({ required: false })`.
+
+**Usage:** Property
+
+```ts title="app/models/post.ts" twoslash
+// @noErrors
+import { ApiProperty, ApiPropertyOptional } from '@foadonis/openapi/decorators'
+
+export default class Post {
+  @ApiProperty()
+  declare id: number
+
+  @ApiProperty()
+  declare title: string
+
+  @ApiPropertyOptional({ type: String })
+  declare content?: string
+}
+```
+
+**Options:**
+- Same as `@ApiProperty()`, but `required` defaults to `false`
+
+### `@ApiHideProperty()`
+
+Hides a property from the OpenAPI documentation. Useful for internal properties that should not be exposed in the API schema.
+
+**Usage:** Property
+
+```ts title="app/models/post.ts" twoslash
+// @noErrors
+import { ApiProperty, ApiHideProperty } from '@foadonis/openapi/decorators'
+
+export default class Post {
+  @ApiProperty()
+  declare id: number
+
+  @ApiHideProperty()
+  declare internalField: string
+}
+```
+
+## Decorator Reference Table
+
+| Decorator                | Usage Level          | Description                                    |
+| ------------------------ | -------------------- | ---------------------------------------------- |
+| `@ApiOperation()`        | Method               | Configures operation details                   |
+| `@ApiResponse()`         | Method / Controller  | Describes possible responses                   |
+| `@ApiBody()`             | Method               | Describes request body                         |
+| `@ApiParam()`            | Method               | Describes path parameters                      |
+| `@ApiQuery()`            | Method               | Describes query parameters                     |
+| `@ApiHeader()`           | Method / Controller  | Describes header parameters                    |
+| `@ApiExcludeEndpoint()`   | Method               | Excludes endpoint from documentation            |
+| `@ApiExtension()`        | Method               | Adds custom extensions                         |
+| `@ApiTags()`             | Method / Controller  | Assigns tags for categorization                |
+| `@ApiProduces()`         | Method / Controller  | Specifies MIME types produced                  |
+| `@ApiConsumes()`         | Method / Controller  | Specifies MIME types consumed                  |
+| `@ApiSecurity()`         | Method / Controller  | Defines security requirements                  |
+| `@ApiBearerAuth()`       | Method / Controller  | Bearer token authentication                    |
+| `@ApiBasicAuth()`        | Method / Controller  | Basic authentication                           |
+| `@ApiOAuth2()`           | Method / Controller  | OAuth2 authentication                          |
+| `@ApiExtraModels()`      | Method / Controller  | Registers additional models                    |
+| `@ApiProperty()`         | Property             | Defines a model property                       |
+| `@ApiPropertyOptional()` | Property             | Defines an optional model property             |
+| `@ApiHideProperty()`     | Property             | Hides a property from documentation            |
