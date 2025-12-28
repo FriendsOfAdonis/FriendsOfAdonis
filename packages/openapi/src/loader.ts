@@ -30,8 +30,6 @@ export class RouterLoader {
     let construct = reference[0] as Function
     const propertyKey = reference[1] ?? 'handle'
 
-    if (propertyKey === 'handle') return
-
     // For lazy imports
     if (!isConstructor(construct)) {
       construct = await construct().then((m: any) => m.default)
