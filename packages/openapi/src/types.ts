@@ -1,4 +1,4 @@
-import { generateDocument } from 'openapi-metadata'
+import { generateDocument } from '@martin.xyz/openapi-decorators'
 
 type GenerateDocumentParameters = Parameters<typeof generateDocument>[0]
 
