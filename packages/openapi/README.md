@@ -3,7 +3,7 @@
 
 ## @foadonis/openapi
 
-### Generate OpenAPI compliant specifications powered by openapi-metadata for you Adonis Application
+### Build OpenAPI compliant APIs with Adonis
 
 <br/>
 </div>

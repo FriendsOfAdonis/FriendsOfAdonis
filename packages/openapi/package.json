@@ -90,7 +90,7 @@
     "luxon": "^3.5.0"
   },
   "dependencies": {
-    "openapi-metadata": "^0.2.2",
+    "@martin.xyz/openapi-decorators": "^0.0.1-next.2",
     "yaml": "^2.8.2"
   },
   "publishConfig": {

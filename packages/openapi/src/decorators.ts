@@ -1,1 +1,1 @@
-export * from 'openapi-metadata/decorators'
+export * from '@martin.xyz/openapi-decorators/decorators'

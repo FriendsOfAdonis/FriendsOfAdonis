@@ -1,11 +1,16 @@
 import { type OpenAPIConfig } from './types.js'
 import { type HttpRouterService } from '@adonisjs/core/types'
-import { generateDocument, type OpenAPIDocument } from 'openapi-metadata'
+import { generateDocument } from '@martin.xyz/openapi-decorators'
 import { RouterLoader } from './loader.js'
 import { type Logger } from '@adonisjs/core/logger'
 import { LuxonTypeLoader } from './loaders/luxon.js'
 import { VineTypeLoader } from './loaders/vine.js'
-import { generateRapidocUI, generateScalarUI, generateSwaggerUI } from 'openapi-metadata/ui'
+import {
+  generateRapidocUI,
+  generateScalarUI,
+  generateSwaggerUI,
+} from '@martin.xyz/openapi-decorators/ui'
+import { type OpenAPIDocument } from '@martin.xyz/openapi-decorators/types'
 
 const OpenAPIController = () => import('./controllers/openapi_controller.js')
 

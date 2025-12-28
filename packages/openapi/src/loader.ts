@@ -1,7 +1,10 @@
 import { type Logger } from '@adonisjs/core/logger'
 import { type HttpRouterService } from '@adonisjs/core/types'
 import { type RouteJSON } from '@adonisjs/core/types/http'
-import { OperationMetadataStorage } from 'openapi-metadata/metadata'
+import {
+  ExcludeMetadataStorage,
+  OperationMetadataStorage,
+} from '@martin.xyz/openapi-decorators/metadata'
 import { isConstructor, toOpenAPIPath } from './utils.js'
 import stringHelpers from '@adonisjs/core/helpers/string'
 
@@ -42,6 +45,9 @@ export class RouterLoader {
     if (!reference) return
 
     const [target, propertyKey] = reference
+
+    // We must manually check for metadata
+    if (ExcludeMetadataStorage.getMetadata(target) === true) return target
 
     const name = stringHelpers.create(target.name).removeSuffix('Controller').toString()
 

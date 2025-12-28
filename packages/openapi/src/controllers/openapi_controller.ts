@@ -1,7 +1,7 @@
 import { HttpContext } from '@adonisjs/core/http'
 import app from '@adonisjs/core/services/app'
 import router from '@adonisjs/core/services/router'
-import { ApiOperation, ApiResponse } from 'openapi-metadata/decorators'
+import { ApiOperation, ApiResponse } from '@martin.xyz/openapi-decorators/decorators'
 import YAML from 'yaml'
 
 export default class OpenAPIController {
