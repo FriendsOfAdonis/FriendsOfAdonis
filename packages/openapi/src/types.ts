@@ -1,3 +1,4 @@
+import { type RouteJSON } from '@adonisjs/core/types/http'
 import { type generateDocument } from '@martin.xyz/openapi-decorators'
 
 type GenerateDocumentParameters = Parameters<typeof generateDocument>[0]
@@ -24,4 +25,18 @@ export type OpenAPIConfig = {
    * Custom type loaders.
    */
   loaders?: GenerateDocumentParameters['loaders']
+
+  /**
+   * Customize controllers auto-tagging.
+   *
+   * @example
+   * (_route, target) => [stringHelpers.create(target.name).removeSuffix('Controller').toString()]
+   */
+  tagger?: OperationTaggerFn
 }
+
+export type OperationTaggerFn = (
+  route: RouteJSON,
+  target: Function,
+  propertyKey: string
+) => string[]

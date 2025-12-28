@@ -11,6 +11,7 @@ import {
   generateSwaggerUI,
 } from '@martin.xyz/openapi-decorators/ui'
 import { type OpenAPIDocument } from '@martin.xyz/openapi-decorators/types'
+import stringHelpers from '@adonisjs/core/helpers/string'
 
 const OpenAPIController = () => import('./controllers/openapi_controller.js')
 
@@ -30,7 +31,12 @@ export class OpenAPI {
   ) {
     this.#router = router
     this.#logger = logger
-    this.#routerLoader = new RouterLoader(router, logger)
+    this.#routerLoader = new RouterLoader(
+      router,
+      logger,
+      config.tagger ??
+        ((_, target) => [stringHelpers.create(target.name).removeSuffix('Controller').toString()])
+    )
     this.#isProduction = isProduction
     this.#config = config
   }
