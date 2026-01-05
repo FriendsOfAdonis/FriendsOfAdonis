@@ -52,13 +52,12 @@
   "homepage": "https://friendsofadonis.com/docs/actions",
   "license": "MIT",
   "devDependencies": {
-    "@adonisjs/assembler": "^7.8.2",
-    "@adonisjs/core": "^6.19.1",
+    "@adonisjs/assembler": "catalog:",
+    "@adonisjs/core": "catalog:",
     "@foadonis/eslint-config": "workspace:*",
     "@japa/assert": "^4.2.0",
     "@japa/expect-type": "^2.0.4",
     "@japa/file-system": "^3.0.0",
-    "@japa/plugin-adonisjs": "^4.0.0",
     "@japa/runner": "^4.0.0",
     "@swc/core": "1.15.5",
     "@types/node": "^25.0.2",
@@ -69,10 +68,11 @@
     "prettier": "^3.7.4",
     "reflect-metadata": "^0.2.2",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "typescript": "catalog:",
+    "youch": "catalog:"
   },
   "peerDependencies": {
-    "@adonisjs/core": "^6.2.0"
+    "@adonisjs/core": "^6.2.0 || ^7.0.0-next.19"
   },
   "publishConfig": {
     "access": "public",

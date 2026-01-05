@@ -36,7 +36,7 @@
     "mdbox": "^0.1.1",
     "node-gyp": "^12.1.0",
     "prettier": "^3.7.4",
-    "turbo": "^2.6.3",
+    "turbo": "^2.7.3",
     "typescript": "^5.9.3"
   },
   "workspaces": [

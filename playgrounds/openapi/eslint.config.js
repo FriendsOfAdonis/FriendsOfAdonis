@@ -1,1 +1,1 @@
-export { default } from '@foadonis/eslint-config/adonis.app.js'
+export { default } from '@adonisjs/eslint-config/adonis.app.js'

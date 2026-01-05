@@ -15,11 +15,12 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-config-turbo": "^2.6.3",
     "eslint-plugin-only-warn": "^1.1.0",
-    "typescript": "^5.9.3"
+    "typescript": "catalog:"
   },
   "dependencies": {
-    "@adonisjs/eslint-config": "^2.1.2",
-    "eslint": "^9.39.2",
-    "eslint-config-neon": "^0.2.9"
+    "@adonisjs/eslint-config": "catalog:",
+    "eslint": "catalog:",
+    "eslint-config-neon": "^0.2.9",
+    "prettier": "catalog:"
   }
 }

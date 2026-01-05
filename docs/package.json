@@ -10,7 +10,7 @@
     "mdx": "fumadocs-mdx"
   },
   "dependencies": {
-    "@adonisjs/core": "^6.19.1",
+    "@adonisjs/core": "catalog:",
     "@foadonis/actions": "workspace:*",
     "@foadonis/graphql": "workspace:*",
     "@foadonis/magnify": "workspace:*",

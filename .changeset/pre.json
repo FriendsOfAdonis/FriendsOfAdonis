@@ -1,0 +1,20 @@
+{
+  "mode": "pre",
+  "tag": "next",
+  "initialVersions": {
+    "docs": "0.0.0",
+    "@foadonis/actions": "0.0.3",
+    "@foadonis/crypt": "0.0.4",
+    "@foadonis/graphql": "0.0.9",
+    "@foadonis/lucid-parser": "0.0.2",
+    "@foadonis/magnify": "0.2.8",
+    "@foadonis/maintenance": "0.0.5",
+    "@foadonis/openapi": "0.4.1",
+    "@foadonis/shopkeeper": "0.1.7",
+    "playground-graphql": "0.0.0",
+    "playground-openapi": "0.0.0",
+    "@foadonis/eslint-config": "0.0.2",
+    "@foadonis/typescript-config": "0.0.0"
+  },
+  "changesets": []
+}
