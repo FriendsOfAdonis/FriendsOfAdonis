@@ -58,14 +58,14 @@
   "homepage": "https://friendsofadonis.com/docs/openapi",
   "license": "MIT",
   "devDependencies": {
-    "@adonisjs/assembler": "^7.8.2",
-    "@adonisjs/core": "^6.19.1",
-    "@adonisjs/lucid": "^21.8.1",
+    "@adonisjs/assembler": "catalog:",
+    "@adonisjs/core": "catalog:",
+    "@adonisjs/lucid": "catalog:",
     "@foadonis/eslint-config": "workspace:*",
     "@japa/assert": "^4.2.0",
     "@japa/expect-type": "^2.0.4",
     "@japa/file-system": "^3.0.0",
-    "@japa/plugin-adonisjs": "^4.0.0",
+    "@japa/plugin-adonisjs": "catalog:",
     "@japa/runner": "^4.0.0",
     "@swc/core": "1.15.5",
     "@types/luxon": "^3.7.1",
@@ -80,12 +80,13 @@
     "prettier": "^3.7.4",
     "reflect-metadata": "^0.2.2",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "typescript": "catalog:",
+    "youch": "catalog:"
   },
   "peerDependencies": {
-    "@adonisjs/core": "^6.2.0",
-    "@adonisjs/lucid": "^21.2.0",
-    "@vinejs/vine": "^3.0.0",
+    "@adonisjs/core": "^6.2.0 || ^7.0.0-next.19",
+    "@adonisjs/lucid": "^21.2.0 || ^22.0.0-next.4",
+    "@vinejs/vine": "^3.0.0 || ^4.0.0",
     "luxon": "^3.5.0"
   },
   "dependencies": {
