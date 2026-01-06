@@ -2,7 +2,7 @@ import { test } from '@japa/runner'
 import { authChecker } from '../src/auth_checker.js'
 import { UnavailableFeatureError } from '../src/errors/unavailable_feature.js'
 import { Bouncer } from '@adonisjs/bouncer'
-import { BouncerAbility } from '@adonisjs/bouncer/types'
+import { type BouncerAbility } from '@adonisjs/bouncer/types'
 
 const checker = authChecker as any
 test.group('AuthChecker', () => {

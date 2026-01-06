@@ -46,7 +46,8 @@ test.group('Configure', () => {
 
     await assert.fileExists('adonisrc.ts')
     await assert.fileContains('adonisrc.ts', '@foadonis/graphql/graphql_provider')
-    await assert.fileContains('adonisrc.ts', 'app/graphql/resolvers')
+    await assert.fileContains('adonisrc.ts', 'indexResolvers()')
+    await assert.fileContains('adonisrc.ts', "import { indexResolvers } from '@foadonis/graphql'")
 
     await assert.fileExists('app/graphql/resolvers/demo_resolver.ts')
     await assert.fileContains('app/graphql/resolvers/demo_resolver.ts', 'DemoResolver')

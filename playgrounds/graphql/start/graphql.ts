@@ -6,7 +6,7 @@
 | DO NOT MODIFY THIS FILE AS IT WILL BE OVERRIDDEN DURING THE BUILD PROCESS
 |
 | It automatically register your resolvers present in `app/graphql/resolvers`.
-| You can disable this behavior by removing the `indexGenerator` from your `adonisrc.ts`.
+| You can disable this behavior by removing the `indexResolvers` from your `adonisrc.ts`.
 |
 */
 

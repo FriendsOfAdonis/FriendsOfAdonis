@@ -1,5 +1,5 @@
 import { IgnitorFactory } from '@adonisjs/core/factories'
-import { ApplicationService } from '@adonisjs/core/types'
+import { type ApplicationService } from '@adonisjs/core/types'
 import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client'
 
 export const BASE_URL = new URL('./tmp/', import.meta.url)

@@ -1,10 +1,10 @@
-import { HttpContext } from '@adonisjs/http-server'
-import { GraphQLSchema } from 'graphql'
-import { GraphQLDriverContract } from '../types.js'
-import { createYoga, YogaServerOptions, YogaServerInstance } from 'graphql-yoga'
+import { type HttpContext } from '@adonisjs/http-server'
+import { type GraphQLSchema } from 'graphql'
+import { type GraphQLDriverContract } from '../types.js'
+import { createYoga, type YogaServerOptions, type YogaServerInstance } from 'graphql-yoga'
 import { Readable } from 'node:stream'
 import { RuntimeException } from '@adonisjs/core/exceptions'
-import { Logger } from '@adonisjs/core/logger'
+import { type Logger } from '@adonisjs/core/logger'
 
 export type YogaDriverConfig<
   TServerContext extends Record<string, any> = any,

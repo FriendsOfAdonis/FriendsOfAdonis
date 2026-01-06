@@ -51,7 +51,9 @@ async function setupYogaApp() {
     (app) => {
       app.booted(async () => {
         const graphql = await app.container.make('graphql')
-        graphql.resolvers.set('test_resolver', TestResolver)
+        const router = await app.container.make('router')
+        graphql.resolvers([() => Promise.resolve({ default: TestResolver })])
+        graphql.registerRoute(router)
       })
     }
   )

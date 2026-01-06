@@ -15,6 +15,8 @@
 import type ConfigureCommand from '@adonisjs/core/commands/configure'
 import { stubsRoot } from './stubs/main.js'
 import { readPackageJSON, writePackageJSON } from 'pkg-types'
+import { type Codemods } from '@adonisjs/core/ace/codemods'
+import { Exception } from '@adonisjs/core/exceptions'
 
 export async function configure(command: ConfigureCommand) {
   const codemods = await command.createCodemods()
@@ -22,6 +24,9 @@ export async function configure(command: ConfigureCommand) {
   await codemods.updateRcFile((rcFile) => {
     rcFile.addProvider('@foadonis/graphql/graphql_provider')
     rcFile.addCommand('@foadonis/graphql/commands')
+
+    rcFile.addImport('@foadonis/graphql', ['indexResolvers'])
+    rcFile.addAssemblerHook('init', 'indexResolvers()', true)
   })
 
   const driver = await command.prompt.choice(
@@ -87,6 +92,7 @@ export async function configure(command: ConfigureCommand) {
   })
 
   await updatePackageJson(command)
+  await registerAssemblerHook(codemods)
 }
 
 async function updatePackageJson(command: ConfigureCommand) {
@@ -101,6 +107,11 @@ async function updatePackageJson(command: ConfigureCommand) {
   await writePackageJSON(path, packageJson)
 
   logSuccess(command)
+}
+
+async function registerAssemblerHook(codemods: Codemods) {
+  const project = await codemods.getTsMorphProject()
+  if (!project) throw new Exception('An error occured while registering assembler hook')
 }
 
 function logSuccess(command: ConfigureCommand) {

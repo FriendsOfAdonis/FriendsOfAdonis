@@ -1,6 +1,6 @@
-import { PubSubEvents } from '../types.js'
+import { type PubSubEvents } from '../types.js'
 import { createRedisEventTarget } from '@graphql-yoga/redis-event-target'
-import { Redis, RedisOptions } from 'ioredis'
+import { Redis, type RedisOptions } from 'ioredis'
 import { NativePubSub } from './native_pubsub.js'
 
 export type RedisPubSubConfig = {

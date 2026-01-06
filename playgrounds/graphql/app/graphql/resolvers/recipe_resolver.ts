@@ -14,6 +14,7 @@ import {
   UseMiddleware,
 } from '@foadonis/graphql'
 import PerformanceLoggerMiddleware from '#graphql/middlewares/performance_logger_middleware'
+import { TestService } from '#services/test_service'
 
 @ArgsType()
 class RecipeArgs {
@@ -45,6 +46,8 @@ class CreateRecipeInput {
 @Resolver(Recipe)
 @inject()
 export default class RecipeResolver {
+  constructor(private test: TestService) {}
+
   @Query(() => Recipe)
   recipe(@Arg('id') id: number) {
     return Recipe.findOrFail(id)
@@ -53,6 +56,7 @@ export default class RecipeResolver {
   @Query(() => [Recipe])
   @UseMiddleware(PerformanceLoggerMiddleware)
   recipes(@Args() { page, perPage }: RecipeArgs) {
+    this.test.greet()
     return Recipe.query().paginate(page, perPage)
   }
 

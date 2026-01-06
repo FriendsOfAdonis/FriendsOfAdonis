@@ -9,13 +9,13 @@ export type ScannedRoutes = {
   GET: {
     'graphql': { paramsTuple?: []; params?: {} }
   }
-  HEAD: {
-    'graphql': { paramsTuple?: []; params?: {} }
-  }
   POST: {
     'graphql': { paramsTuple?: []; params?: {} }
   }
   PATCH: {
+    'graphql': { paramsTuple?: []; params?: {} }
+  }
+  HEAD: {
     'graphql': { paramsTuple?: []; params?: {} }
   }
   OPTIONS: {

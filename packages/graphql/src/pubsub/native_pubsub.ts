@@ -1,12 +1,12 @@
-import { createPubSub, PubSub, Repeater } from '@graphql-yoga/subscription'
+import { createPubSub, type PubSub, type Repeater } from '@graphql-yoga/subscription'
 import {
-  MapToNull,
-  PubSubContract,
-  PubSubEvents,
-  PubSubPublishArgsByKey,
-  PubSubPublishArgsValue,
+  type MapToNull,
+  type PubSubContract,
+  type PubSubEvents,
+  type PubSubPublishArgsByKey,
+  type PubSubPublishArgsValue,
 } from '../types.js'
-import { ChannelPubSubConfig } from '@graphql-yoga/subscription/create-pub-sub'
+import { type ChannelPubSubConfig } from '@graphql-yoga/subscription/create-pub-sub'
 
 export type NativePubSubConfig = ChannelPubSubConfig<PubSubPublishArgsByKey>
 
