@@ -2718,7 +2718,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@foadonis/autoloader@workspace:*, @foadonis/autoloader@workspace:packages/autoloader":
+"@foadonis/autoloader@workspace:packages/autoloader":
   version: 0.0.0-use.local
   resolution: "@foadonis/autoloader@workspace:packages/autoloader"
   dependencies:
@@ -2743,8 +2743,7 @@ __metadata:
     ts-node: "npm:^10.9.2"
     typescript: "npm:^5.9.3"
   peerDependencies:
-    "@adonisjs/lucid": ^21.2.0
-    hot-hook: ^4.0.0
+    hot-hook: 0.4.1-next.4
   languageName: unknown
   linkType: soft
 
@@ -2806,7 +2805,6 @@ __metadata:
     "@adonisjs/lucid": "catalog:"
     "@apollo/client": "npm:^4.0.11"
     "@apollo/server": "npm:^5.2.0"
-    "@foadonis/autoloader": "workspace:*"
     "@foadonis/eslint-config": "workspace:*"
     "@graphql-yoga/apollo-link": "npm:^5.2.1"
     "@graphql-yoga/redis-event-target": "npm:^3.0.3"

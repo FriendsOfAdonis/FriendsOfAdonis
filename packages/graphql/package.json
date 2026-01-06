@@ -100,7 +100,6 @@
     "luxon": "^3.5.0"
   },
   "dependencies": {
-    "@foadonis/autoloader": "workspace:*",
     "@graphql-yoga/subscription": "^5.0.5",
     "@npmcli/package-json": "^7.0.4",
     "graphql-ws": "^6.0.6",

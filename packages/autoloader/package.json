@@ -68,7 +68,6 @@
     "typescript": "^5.9.3"
   },
   "peerDependencies": {
-    "@adonisjs/lucid": "^21.2.0",
     "hot-hook": "^4.0.0"
   },
   "publishConfig": {

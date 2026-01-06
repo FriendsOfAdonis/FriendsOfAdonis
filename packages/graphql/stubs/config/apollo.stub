@@ -2,7 +2,7 @@
   exports({ to: app.configPath('graphql.ts') })
 }}}
 import env from '#start/env'
-import { defineConfig } from '@foadonis/graphql'
+import { defineConfig, drivers } from '@foadonis/graphql'
 
 const isDevelopment = env.get('NODE_ENV') === 'development'
 
@@ -28,7 +28,7 @@ export default defineConfig({
   logger: 'app',
 
   /**
-   * Automatically emit the 'graphql.schema' file.
+   * Automatically emit the "schema.graphql" file.
    */
   emitSchemaFile: true,
 })
