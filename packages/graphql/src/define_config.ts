@@ -1,29 +1,27 @@
-import { ConfigProvider } from '@adonisjs/core/types'
+import { type ConfigProvider } from '@adonisjs/core/types'
 import type { ApolloDriver, ApolloDriverConfig } from './drivers/apollo_driver.js'
 import type { YogaDriver, YogaDriverConfig } from './drivers/yoga_driver.js'
-import { GraphQLConfig, GraphQLDriverContract } from './types.js'
+import {
+  type GraphQLOptions,
+  type GraphQLConfig,
+  type GraphQLDriverContract,
+  type PubSubContract,
+} from './types.js'
 import { configProvider } from '@adonisjs/core'
-import { Logger } from '@adonisjs/core/logger'
+import { type Logger } from '@adonisjs/core/logger'
 import type { RedisPubSub, RedisPubSubConfig } from './pubsub/redis_pubsub.js'
 import type { NativePubSub, NativePubSubConfig } from './pubsub/native_pubsub.js'
-import { PubSub } from 'type-graphql'
-
-type ResolvedConfig<KnownDriver extends GraphQLDriverContract, KnownPubSub extends PubSub> = {
-  driver: KnownDriver
-  pubSub?: KnownPubSub
-}
 
 export function defineConfig<
   KnownDriver extends GraphQLDriverContract,
-  KnownPubSub extends PubSub,
+  KnownPubSub extends PubSubContract,
 >({
   driver,
   pubSub,
   ...config
-}: GraphQLConfig & {
-  driver: ConfigProvider<(logger: Logger) => KnownDriver>
-  pubSub?: ConfigProvider<() => KnownPubSub>
-}): ConfigProvider<ResolvedConfig<KnownDriver, KnownPubSub>> {
+}: GraphQLConfig<KnownDriver, KnownPubSub>): ConfigProvider<
+  GraphQLOptions<KnownDriver, KnownPubSub>
+> {
   return configProvider.create(async (app) => {
     const loggerService = await app.container.make('logger')
     const logger = config.logger ? loggerService.use(config.logger) : loggerService.use()

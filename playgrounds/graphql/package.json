@@ -29,11 +29,13 @@
     "#start/*": "./start/*.js",
     "#tests/*": "./tests/*.js",
     "#config/*": "./config/*.js",
-    "#graphql/*": "./app/graphql/*.js"
+    "#graphql/*": "./app/graphql/*.js",
+    "#generated/*": "./.adonisjs/server/*.js"
   },
   "devDependencies": {
     "@adonisjs/assembler": "catalog:",
     "@foadonis/eslint-config": "workspace:*",
+    "@foadonis/typescript-config": "workspace:*",
     "@japa/assert": "^4.2.0",
     "@japa/plugin-adonisjs": "catalog:",
     "@japa/runner": "^4.0.0",
@@ -56,6 +58,7 @@
     "@foadonis/graphql": "workspace:*",
     "@graphql-yoga/plugin-disable-introspection": "^2.18.1",
     "@graphql-yoga/subscription": "^5.0.5",
+    "@hot-hook/dump-viewer": "^0.4.0",
     "better-sqlite3": "^12.5.0",
     "class-validator": "^0.14.3",
     "graphql": "^16.12.0",
@@ -69,7 +72,11 @@
     "boundaries": [
       "./app/controllers/**/*.ts",
       "./app/middleware/*.ts",
-      "./app/grpahql/resolvers/*.ts"
+      "./app/graphql/resolvers/*.ts"
+    ],
+    "restart": [
+      ".env",
+      ".adonisjs/server/resolvers.ts"
     ]
   }
 }

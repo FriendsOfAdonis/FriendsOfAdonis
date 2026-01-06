@@ -12,7 +12,7 @@
 |
 */
 
-import ConfigureCommand from '@adonisjs/core/commands/configure'
+import type ConfigureCommand from '@adonisjs/core/commands/configure'
 import { stubsRoot } from './stubs/main.js'
 import { readPackageJSON, writePackageJSON } from 'pkg-types'
 
@@ -22,7 +22,6 @@ export async function configure(command: ConfigureCommand) {
   await codemods.updateRcFile((rcFile) => {
     rcFile.addProvider('@foadonis/graphql/graphql_provider')
     rcFile.addCommand('@foadonis/graphql/commands')
-    rcFile.setDirectory('resolvers', 'app/graphql/resolvers')
   })
 
   const driver = await command.prompt.choice(

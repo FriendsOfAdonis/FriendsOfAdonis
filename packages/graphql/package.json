@@ -60,6 +60,7 @@
     "@adonisjs/auth": "catalog:",
     "@adonisjs/core": "catalog:",
     "@adonisjs/lucid": "catalog:",
+    "@apollo/client": "^4.0.11",
     "@foadonis/eslint-config": "workspace:*",
     "@graphql-yoga/apollo-link": "^5.2.1",
     "@graphql-yoga/redis-event-target": "^3.0.3",

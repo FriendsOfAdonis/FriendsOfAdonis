@@ -1,4 +1,6 @@
+import { indexEntities } from '@adonisjs/core'
 import { defineConfig } from '@adonisjs/core/app'
+import { indexResolvers } from '@foadonis/graphql'
 
 export default defineConfig({
   /*
@@ -49,7 +51,11 @@ export default defineConfig({
   | List of modules to import before starting the application.
   |
   */
-  preloads: [() => import('#start/routes'), () => import('#start/kernel')],
+  preloads: [
+    () => import('#start/routes'),
+    () => import('#start/kernel'),
+    () => import('#start/graphql'),
+  ],
 
   /*
   |--------------------------------------------------------------------------
@@ -78,5 +84,14 @@ export default defineConfig({
 
   directories: {
     resolvers: 'app/graphql/resolvers',
+  },
+
+  hooks: {
+    init: [
+      indexEntities({
+        transformers: { enabled: true, withSharedProps: true },
+      }),
+      indexResolvers(),
+    ],
   },
 })

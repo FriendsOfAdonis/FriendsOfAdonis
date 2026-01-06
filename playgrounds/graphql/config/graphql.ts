@@ -24,7 +24,7 @@ export default defineConfig({
   /**
    * PubSub instance used for subscriptions.
    */
-  pubSub: pubsubs.redis(),
+  pubSub: pubsubs.native(),
 
   /**
    * Automatically emit the `graphql.schema` file.

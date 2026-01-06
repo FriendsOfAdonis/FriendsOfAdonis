@@ -4,6 +4,6 @@ import { Query, Resolver } from '@foadonis/graphql'
 export default class TestResolver {
   @Query(() => Boolean)
   test() {
-    return true
+    return false
   }
 }
