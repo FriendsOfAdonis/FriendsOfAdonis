@@ -13699,6 +13699,7 @@ __metadata:
     "@changesets/cli": "npm:^2.29.8"
     "@foadonis/typescript-config": "workspace:*"
     "@manypkg/cli": "npm:^0.25.1"
+    "@poppinss/ts-exec": "npm:^1.4.1"
     automd: "npm:^0.4.2"
     eslint: "npm:^9.39.2"
     mdbox: "npm:^0.1.1"
@@ -13706,6 +13707,7 @@ __metadata:
     prettier: "npm:^3.7.4"
     turbo: "npm:^2.7.3"
     typescript: "npm:^5.9.3"
+    yaml: "npm:^2.8.2"
   languageName: unknown
   linkType: soft
 
