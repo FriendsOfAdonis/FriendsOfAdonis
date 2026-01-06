@@ -2743,7 +2743,7 @@ __metadata:
     ts-node: "npm:^10.9.2"
     typescript: "npm:^5.9.3"
   peerDependencies:
-    hot-hook: 0.4.1-next.4
+    hot-hook: ^4.0.0
   languageName: unknown
   linkType: soft
 
@@ -2876,7 +2876,6 @@ __metadata:
     "@japa/assert": "npm:^4.2.0"
     "@japa/expect-type": "npm:^2.0.4"
     "@japa/file-system": "npm:^3.0.0"
-    "@japa/plugin-adonisjs": "catalog:"
     "@japa/runner": "npm:^4.0.0"
     "@swc/core": "npm:1.15.5"
     "@types/luxon": "npm:^3.7.1"
@@ -2989,7 +2988,6 @@ __metadata:
     "@japa/assert": "npm:^4.2.0"
     "@japa/expect-type": "npm:^2.0.4"
     "@japa/file-system": "npm:^3.0.0"
-    "@japa/plugin-adonisjs": "catalog:"
     "@japa/runner": "npm:^4.0.0"
     "@swc/core": "npm:1.15.5"
     "@types/luxon": "npm:^3.7.1"
@@ -3827,26 +3825,6 @@ __metadata:
     playwright:
       optional: true
   checksum: 10c0/d1c8fa712530d6bbd1942cf819aba9c1e323370b4474c713426c91fb2f7ff6d203199bf503d93dff6af34158d3f4edd9e4268d28aa5a1a4495215d30ca4dca62
-  languageName: node
-  linkType: hard
-
-"@japa/plugin-adonisjs@npm:^5.1.0-next.0":
-  version: 5.1.0-next.0
-  resolution: "@japa/plugin-adonisjs@npm:5.1.0-next.0"
-  peerDependencies:
-    "@adonisjs/core": ^7.0.0-next.15
-    "@japa/api-client": ^3.1.0
-    "@japa/browser-client": ^2.2.0
-    "@japa/runner": ^4.0.0 || ^5.0.0
-    playwright: ^1.57.0
-  peerDependenciesMeta:
-    "@japa/api-client":
-      optional: true
-    "@japa/browser-client":
-      optional: true
-    playwright:
-      optional: true
-  checksum: 10c0/893edd2ad296f9e37259a9daa597bd6272fb4b679440b0bba35dd4229e1ff05407bf5a4fff2fede17b2e9a80af66983a475e2a0b92cb05d556eb0fab774ceefa
   languageName: node
   linkType: hard
 
@@ -19009,9 +18987,6 @@ __metadata:
     "@foadonis/typescript-config": "workspace:*"
     "@graphql-yoga/plugin-disable-introspection": "npm:^2.18.1"
     "@graphql-yoga/subscription": "npm:^5.0.5"
-    "@japa/assert": "npm:^4.2.0"
-    "@japa/plugin-adonisjs": "catalog:"
-    "@japa/runner": "npm:^4.0.0"
     "@swc/core": "npm:1.15.5"
     "@types/luxon": "npm:^3.7.1"
     "@types/node": "catalog:"
@@ -19045,9 +19020,6 @@ __metadata:
     "@foadonis/eslint-config": "workspace:*"
     "@foadonis/openapi": "workspace:*"
     "@foadonis/typescript-config": "workspace:*"
-    "@japa/assert": "npm:^4.2.0"
-    "@japa/plugin-adonisjs": "catalog:"
-    "@japa/runner": "npm:^4.0.0"
     "@poppinss/ts-exec": "catalog:"
     "@swc/core": "npm:1.15.5"
     "@types/luxon": "npm:^3.7.1"

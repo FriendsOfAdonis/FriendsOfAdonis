@@ -27,7 +27,6 @@
     "#abilities/*": "./app/abilities/*.js",
     "#database/*": "./database/*.js",
     "#start/*": "./start/*.js",
-    "#tests/*": "./tests/*.js",
     "#config/*": "./config/*.js",
     "#graphql/*": "./app/graphql/*.js",
     "#generated/*": "./.adonisjs/server/*.js"
@@ -36,9 +35,6 @@
     "@adonisjs/assembler": "catalog:",
     "@foadonis/eslint-config": "workspace:*",
     "@foadonis/typescript-config": "workspace:*",
-    "@japa/assert": "^4.2.0",
-    "@japa/plugin-adonisjs": "catalog:",
-    "@japa/runner": "^4.0.0",
     "@swc/core": "1.15.5",
     "@types/luxon": "^3.7.1",
     "@types/node": "catalog:",
