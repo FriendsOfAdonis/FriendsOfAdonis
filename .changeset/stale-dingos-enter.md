@@ -1,11 +1,12 @@
 ---
-'@foadonis/graphql': minor
+'@foadonis/graphql': major
 ---
 
-Road to GraphQL v1 🚀
+GraphQL v1 🚀
 
 ## New features
 
+- ✨ Support for AdonisJS V7
 - ✨ Support for Yoga and Apollo server
 - ✨ Built-in support for PubSub system (native and redis)
 - ✨ Built-in support for Subscriptions over Websocket
