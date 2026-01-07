@@ -1,6 +1,6 @@
 import { test } from '@japa/runner'
 import { setupApp } from '../../helpers.js'
-import { defineConfig, drivers, pubsubs } from '../../../src/define_config.js'
+import { defineConfig, drivers } from '../../../src/define_config.js'
 import { ApolloClient, ApolloLink, gql, HttpLink, InMemoryCache } from '@apollo/client'
 import { OperationTypeNode } from 'graphql'
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions'
@@ -44,7 +44,8 @@ async function setupApolloApp() {
           graphql: defineConfig({
             path: '/graphql',
             driver: drivers.apollo({}),
-            pubSub: pubsubs.native(),
+            pubSub: drivers.pubsub.native(),
+            subscription: drivers.subscription.websocket({ path: '/graphql' }),
           }),
         },
       }),

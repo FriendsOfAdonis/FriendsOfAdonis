@@ -18,7 +18,6 @@ export default class GraphQlProvider {
       const logger = await this.app.container.make('logger')
       const graphqlConfigProvider = this.app.config.get('graphql', {})
       const config = await configProvider.resolve<any>(this.app, graphqlConfigProvider)
-      const server = await this.app.container.make('server')
 
       if (!config) {
         throw new RuntimeException(
@@ -26,7 +25,7 @@ export default class GraphQlProvider {
         )
       }
 
-      return new GraphQlServer(config, resolver, server, logger)
+      return new GraphQlServer(config, resolver, logger)
     })
 
     this.app.container.alias('graphql', GraphQlServer)

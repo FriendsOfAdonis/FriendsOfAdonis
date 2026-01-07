@@ -5,7 +5,7 @@ import {
   type PubSubEvents,
   type PubSubPublishArgsByKey,
   type PubSubPublishArgsValue,
-} from '../types.js'
+} from '../../types.js'
 import { type ChannelPubSubConfig } from '@graphql-yoga/subscription/create-pub-sub'
 
 export type NativePubSubConfig = ChannelPubSubConfig<PubSubPublishArgsByKey>

@@ -102,6 +102,7 @@
   "dependencies": {
     "@graphql-yoga/subscription": "^5.0.5",
     "@npmcli/package-json": "^7.0.4",
+    "@poppinss/middleware": "^3.2.7",
     "graphql-ws": "^6.0.6",
     "pkg-types": "^2.3.0",
     "type-graphql": "2.0.0-rc.2",

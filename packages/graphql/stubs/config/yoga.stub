@@ -7,7 +7,7 @@ import { useDisableIntrospection } from '@graphql-yoga/plugin-disable-introspect
 
 const isDevelopment = env.get('NODE_ENV') === 'development'
 
-export default defineConfig({
+const graphqlConfig = defineConfig({
   /**
    * Path to the GraphQL endpoint.
    */
@@ -33,3 +33,11 @@ export default defineConfig({
    */
   emitSchemaFile: true,
 })
+
+export default graphqlConfig
+
+declare module '@foadonis/graphql/types' {
+  export interface GraphQLDriver extends InferGraphQLDriver<typeof graphqlConfig> {}
+  export interface PubSubDriver extends InferPubSubDriver<typeof graphqlConfig> {}
+  export interface SubscriptionDriver extends InferSubscriptionDriver<typeof graphqlConfig> {}
+}

@@ -3,13 +3,17 @@ import { Notification } from '#graphql/schemas/notification'
 import { NotificationPayload } from '#graphql/schemas/notification_payload'
 import stringHelpers from '@adonisjs/core/helpers/string'
 import { Ctx, Mutation, Resolver, Root, Subscription } from 'type-graphql'
+import { HttpContext } from '@adonisjs/core/http'
 
 @Resolver()
 export default class SubscriptionResolver {
   @Subscription({
     topics: 'NOTIFICATIONS',
   })
-  newNotification(@Ctx() ctx: any, @Root() notificationPayload: NotificationPayload): Notification {
+  newNotification(
+    @Ctx() ctx: HttpContext,
+    @Root() notificationPayload: NotificationPayload
+  ): Notification {
     return new Notification(new Date(), 'test')
   }
 

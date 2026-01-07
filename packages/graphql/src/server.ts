@@ -2,17 +2,14 @@
 
 import {
   type GraphQLDriverContract,
-  type PubSubContract,
+  type PubSubDriverContract,
   type PubSubPublishArgsByKey,
   type GraphQLOptions,
+  type SubscriptionDriverContract,
 } from './types.js'
 import { type HttpContext } from '@adonisjs/core/http'
 import { buildSchema, type NonEmptyArray } from 'type-graphql'
-import {
-  type ContainerBindings,
-  type HttpRouterService,
-  type HttpServerService,
-} from '@adonisjs/core/types'
+import { type ContainerBindings, type HttpRouterService } from '@adonisjs/core/types'
 import { type ContainerResolver } from '@adonisjs/core/container'
 import { type Logger } from '@adonisjs/core/logger'
 import { authChecker } from './auth_checker.js'
@@ -20,35 +17,35 @@ import { DateTime } from 'luxon'
 import { LuxonDateTimeScalar } from './scalars/luxon_datetime.js'
 import { type GraphQLSchema } from 'graphql'
 import { UnavailableFeatureError } from './errors/unavailable_feature.js'
-import { WebSocketServer } from 'ws'
-import { useServer } from 'graphql-ws/use/ws'
-import { type Disposable } from 'graphql-ws'
 import { isHotHookMessage } from './utils/hmr.ts'
 import { type LazyImport } from '@adonisjs/core/types/common'
 
-export default class GraphQLServer<Events = PubSubPublishArgsByKey> {
+export default class GraphQLServer<
+  Events = PubSubPublishArgsByKey,
+  KnownDriver extends GraphQLDriverContract = GraphQLDriverContract,
+  KnownPubSubDriver extends PubSubDriverContract<Events> = PubSubDriverContract<Events>,
+  KnownSubscriptionDriver extends SubscriptionDriverContract = SubscriptionDriverContract,
+> {
   #resolvers: LazyImport<Function>[] = []
 
   #container: ContainerResolver<ContainerBindings>
   #config: GraphQLOptions
   #logger: Logger
-  #httpServer: HttpServerService
-  #pubSub?: PubSubContract<Events>
-  #ws?: WebSocketServer
-  #disposable?: Disposable
-  #driver: GraphQLDriverContract
+
+  #driver: KnownDriver
+  #pubSub?: KnownPubSubDriver
+  #subscription?: KnownSubscriptionDriver
 
   constructor(
-    config: GraphQLOptions,
+    config: GraphQLOptions<KnownDriver, KnownPubSubDriver, KnownSubscriptionDriver>,
     container: ContainerResolver<ContainerBindings>,
-    httpServer: HttpServerService,
     logger: Logger
   ) {
     this.#config = config
     this.#driver = config.driver
     this.#pubSub = config.pubSub
+    this.#subscription = config.subscription
     this.#container = container
-    this.#httpServer = httpServer
     this.#logger = logger
   }
 
@@ -94,7 +91,7 @@ export default class GraphQLServer<Events = PubSubPublishArgsByKey> {
     await Promise.all([
       this.#driver.start(schema),
       this.#pubSub?.start(),
-      this.#startWebsocket(schema),
+      this.#subscription?.start(schema),
     ])
 
     this.#logger.info(`started GraphQL server on path ${this.#config.path}`)
@@ -121,8 +118,7 @@ export default class GraphQLServer<Events = PubSubPublishArgsByKey> {
    * When configured, also stops the PubSub and websocket server.
    */
   async stop() {
-    await Promise.all([this.#driver.stop(), this.#pubSub?.stop(), this.#disposable?.dispose()])
-    this.#ws?.close()
+    await Promise.all([this.#driver.stop(), this.#pubSub?.stop(), this.#subscription?.stop()])
   }
 
   /**
@@ -133,9 +129,19 @@ export default class GraphQLServer<Events = PubSubPublishArgsByKey> {
   get pubSub() {
     if (!this.#pubSub)
       throw new UnavailableFeatureError(
-        "You must configure a PubSub inside 'config/graphql.ts' to use subscriptions"
+        `You must configure a PubSub inside "config/graphql.ts" to use subscriptions`
       )
     return this.#pubSub
+  }
+
+  get subscription() {
+    if (!this.#subscription) {
+      throw new UnavailableFeatureError(
+        `You must configure a SubscriptionDriver inside "config/graphql.ts" to use subscriptions`
+      )
+    }
+
+    return this.#subscription
   }
 
   /**
@@ -180,31 +186,6 @@ export default class GraphQLServer<Events = PubSubPublishArgsByKey> {
       pubSub: this.#pubSub,
       ...buildSchemaOptions,
     })
-  }
-
-  async #startWebsocket(schema: GraphQLSchema) {
-    // We do not start the websocket server if pubsub is not configured
-    if (!this.#pubSub) {
-      return
-    }
-
-    const http = this.#httpServer.getNodeServer()
-    if (!http) {
-      return
-    }
-
-    this.#ws = new WebSocketServer({
-      path: '/graphql',
-      server: http,
-    })
-
-    this.#disposable = useServer(
-      {
-        schema,
-        ...(this.#config.ws ?? {}),
-      },
-      this.#ws
-    )
   }
 
   async handle(ctx: HttpContext) {

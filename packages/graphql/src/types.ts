@@ -8,12 +8,12 @@ import { type HttpContext } from '@adonisjs/core/http'
 import { type GraphQLSchema } from 'graphql'
 import { type ConfigProvider, type LoggersList } from '@adonisjs/core/types'
 import { type Repeater } from '@graphql-yoga/subscription'
-import { type ServerOptions } from 'graphql-ws'
 import { type Logger } from '@adonisjs/core/logger'
 
 export interface GraphQLConfig<
   KnownDriver extends GraphQLDriverContract,
-  KnownPubSub extends PubSubContract,
+  KnownPubSubDriver extends PubSubDriverContract,
+  KnownSubscriptionDriver extends SubscriptionDriverContract,
 > extends Omit<BuildSchemaOptions, 'resolvers' | 'container' | 'pubSub'> {
   /**
    * Path to the GraphQL endpoint.
@@ -48,28 +48,34 @@ export interface GraphQLConfig<
    *
    * @example
    *
-   * pubSub.native()
+   * drivers.pubSub.native()
    */
-  pubSub?: ConfigProvider<() => KnownPubSub>
+  pubSub?: ConfigProvider<() => KnownPubSubDriver>
 
   /**
-   * Options for graphql-ws `useServer`.
-   * Only relevant when using subscriptions over Websocket.
+   * Subscription driver for handling subscriptions.
+   * Should be configured in addition to a PubSub driver.
    *
-   * @see {@link https://the-guild.dev/graphql/ws/docs/use/ws/functions/useServer}
+   * @example
+   *
+   * drivers.subscription.websocket()
    */
-  ws?: ServerOptions
+  subscription?: ConfigProvider<() => KnownSubscriptionDriver>
 }
 
 export interface GraphQLOptions<
   KnownDriver extends GraphQLDriverContract = GraphQLDriverContract,
-  KnownPubSub extends PubSubContract = PubSubContract,
-> extends Omit<GraphQLConfig<KnownDriver, KnownPubSub>, 'driver' | 'pubSub'> {
+  KnownPubSubContract extends PubSubDriverContract = PubSubDriverContract,
+  KnownSubscriptionDriver extends SubscriptionDriverContract = SubscriptionDriverContract,
+> extends Omit<
+  GraphQLConfig<KnownDriver, KnownPubSubContract, KnownSubscriptionDriver>,
+  'driver' | 'pubSub' | 'subscription'
+> {
   driver: KnownDriver
-  pubSub?: KnownPubSub
+  pubSub?: KnownPubSubContract
+  subscription?: KnownSubscriptionDriver
 }
 
-export interface GraphQlService extends GraphQlServer<PubSubEvents> {}
 export type MapToNull<T> = T extends undefined ? null : T
 
 export type LazyImport<DefaultExport> = () => Promise<{
@@ -90,7 +96,13 @@ export interface GraphQLDriverContract {
   get isReady(): boolean
 }
 
-export interface PubSubContract<Events = {}> {
+export interface SubscriptionDriverContract {
+  start(schema: GraphQLSchema): Promise<void>
+  reload(schema: GraphQLSchema): Promise<void>
+  stop(): Promise<void>
+}
+
+export interface PubSubDriverContract<Events = {}> {
   publish<TKey extends Extract<keyof Events, string>>(
     routingKey: TKey,
     ...args: Events[TKey] extends PubSubPublishArgsValue ? Events[TKey] : never
@@ -126,3 +138,27 @@ export type PubSubPublishArgsByKey = {
 export interface PubSubEvents {}
 
 export type ResolverConfig = LazyImport<Function> | { file: string; import: LazyImport<Function> }
+
+export interface GraphQLDriver {}
+export type InferGraphQLDriver<T extends ConfigProvider<GraphQLOptions>> = Awaited<
+  ReturnType<T['resolver']>
+>['driver']
+
+export interface PubSubDriver {}
+export type InferPubSubDriver<T extends ConfigProvider<GraphQLOptions>> = NonNullable<
+  Awaited<ReturnType<T['resolver']>>['pubSub']
+>
+
+export interface SubscriptionDriver {}
+export type InferSubscriptionDriver<T extends ConfigProvider<GraphQLOptions>> = NonNullable<
+  Awaited<ReturnType<T['resolver']>>['subscription']
+>
+
+export interface GraphQlService extends GraphQlServer<
+  PubSubEvents,
+  GraphQLDriver extends GraphQLDriverContract ? GraphQLDriver : GraphQLDriverContract,
+  PubSubDriver extends PubSubDriverContract ? PubSubDriver : PubSubDriverContract,
+  SubscriptionDriver extends SubscriptionDriverContract
+    ? SubscriptionDriver
+    : SubscriptionDriverContract
+> {}

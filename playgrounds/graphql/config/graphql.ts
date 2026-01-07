@@ -1,6 +1,7 @@
-import { defineConfig, drivers, pubsubs } from '@foadonis/graphql'
+import { defineConfig, drivers } from '@foadonis/graphql'
+import { type InferSubscriptionDriver } from '@foadonis/graphql/types'
 
-export default defineConfig({
+const graphqlConfig = defineConfig({
   /**
    * Path to the GraphQL endpoint.
    */
@@ -24,10 +25,22 @@ export default defineConfig({
   /**
    * PubSub instance used for subscriptions.
    */
-  pubSub: pubsubs.native(),
+  pubSub: drivers.pubsub.native(),
+
+  subscription: drivers.subscription.websocket({
+    path: '/graphql',
+  }),
 
   /**
    * Automatically emit the `graphql.schema` file.
    */
   emitSchemaFile: true,
 })
+
+export default graphqlConfig
+
+declare module '@foadonis/graphql/types' {
+  export interface GraphQLDriver extends InferGraphQLDriver<typeof graphqlConfig> {}
+  export interface PubSubDriver extends InferPubSubDriver<typeof graphqlConfig> {}
+  export interface SubscriptionDriver extends InferSubscriptionDriver<typeof graphqlConfig> {}
+}

@@ -22,13 +22,24 @@ and `pubsub.publish('recipe:created', recipe)` to publish a created recipe.
 
 ## Configuration
 
+First you will need to install the [@graphql-yoga/subscription](https://the-guild.dev/graphql/yoga-server/docs/features/subscriptions) package.
+
+```package-install
+npm i @graphql-yoga/subscription
+```
+
+Then configure both the `PubSubDriver` and `Subscription` driver in `config/graphql.ts`.
+
 ```ts title="config/graphql.ts" twoslash
 // @noErrors
-import { pubsubs } from '@foadonis/graphql'
-import { defineConfig } from '@foadonis/graphql'
+import { defineConfig, drivers } from '@foadonis/graphql'
 
 export default defineConfig({
-  pubSub: pubsubs.native(), // [!code highlight]
+  // [!code highlight:4]
+  pubSub: drivers.pubsub.native(),
+  subscription: drivers.subscription.websocket({
+    path: '/graphql',
+  }),
 })
 ```
 
@@ -205,11 +216,10 @@ npm install @graphql-yoga/redis-event-target ioredis
 ```
 
 ```ts title="config/graphql.ts"
-import { pubsubs } from '@foadonis/graphql'
-import { defineConfig } from '@foadonis/graphql'
+import { defineConfig, drivers } from '@foadonis/graphql'
 
 export default defineConfig({
-  pubSub: pubsubs.redis({
+  pubSub: drivers.pubsub.redis({
     publish: {
       host: env.get('REDIS_HOST'),
       port: env.get('REDIS_PORT'),
@@ -226,83 +236,37 @@ export default defineConfig({
 
 ## Context
 
-When doing Subscriptions over Websocket you need to build your own **Context** as it is not possible to provide an **HttpContext**.
+When doing Subscriptions over Websocket there is no [ServerResponse](https://nodejs.org/api/http.html#class-httpserverresponse) as once the Weboscket handshake has been performed there is no way to write to the response.
 
-```ts title=config/graphql.ts
-import { pubsubs } from '@foadonis/graphql'
-import { defineConfig } from '@foadonis/graphql'
-import { IncomingMessage } from 'node:http'
+We still create an [HttpContext](https://docs.adonisjs.com/guides/concepts/http-context) containing the initial [Request](https://docs.adonisjs.com/guides/basics/request) and a fake [Response](https://docs.adonisjs.com/guides/basics/response) allowing you to access it inside your resolvers.
+**Be aware that you will not be able to use the response.**
 
-export default defineConfig({
-  pubSub: pubsubs.native(),
-  ws: {
-    context: ({ extra }) => {
-      return {
-        request: extra.request,
-      }
-    },
-  },
-})
-
-export type WebsocketContext = {
-  request: IncomingMessage
-}
-```
-
-```ts title="app/graphql/recpie_resolver.ts"
+```ts
 import { Resolver, Subscription, Ctx } from '@foadonis/graphql'
-import { WebsocketContext } from '#config/graphql'
+import { HttpContext } from '@adonisjs/core/http'
 
 export default class RecipesResolver {
   @Subscription({
     topics: ['recipe:created', 'recipe:deleted'],
   })
-  recipe(@Root() payload: RecipeEvent, @Ctx() ctx: WebsocketContext): RecipeEvent {
+  recipe(@Root() payload: RecipeEvent, @Ctx() ctx: HttpContext): RecipeEvent {
+    ctx.request.cookie('my-cookie') // ✅ Works
+    ctx.response.cookie('my-cookie', 'new-value') // ❌ Does not work
+
     return payload
   }
 }
 ```
 
-### Authentication
+### Middlewares & Authentication
 
-When performing [authentication through WebSocket](https://www.apollographql.com/docs/react/data/subscriptions#5-authenticate-over-websocket-optional) your context method will receive the connection params.
+As we re-create an [HttpContext](https://docs.adonisjs.com/guides/concepts/http-context) you can use the same middlewares you would use on the [HttpRouter](https://docs.adonisjs.com/guides/basics/routing) (minus the response capabilities).
 
-```ts title=config/graphql.ts
-import { pubsubs } from '@foadonis/graphql'
-import { defineConfig } from '@foadonis/graphql'
-import { IncomingMessage } from 'node:http'
-import { errors } from '@adonisjs/auth'
-import { Secret } from '@adonisjs/core/helpers'
-import User from '#models/user'
+```ts title=start/kernel.ts
+import graphql from '@foadonis/graphql/services/main'
 
-export default defineConfig({
-  pubSub: pubsubs.native(),
-  ws: {
-    context: ({ extra, connectionParams }) => {
-      const token = ctx.connectionParams?.authToken as string | undefined
-
-      if (!token) {
-        throw new errors.E_INVALID_CREDENTIALS('Missing credentials')
-      }
-
-      const accessToken = await User.accessTokens.verify(new Secret(token))
-
-      if (!accessToken) {
-        throw new errors.E_INVALID_CREDENTIALS('Invalid credentials')
-      }
-
-      const user = await User.findOrFail(access.tokenableId)
-
-      return {
-        request: extra.request,
-        user,
-      }
-    },
-  },
-})
-
-export type WebsocketContext = {
-  request: IncomingMessage
-  user: User
-}
+graphql.subscription.use([
+  () => import('@adonisjs/auth/initialize_auth_middleware'),
+  () => import('#middleware/silent_auth_middleware'),
+])
 ```
