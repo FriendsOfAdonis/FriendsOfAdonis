@@ -11,14 +11,10 @@ export function adonisToGraphqlRequest(request: HttpRequest): HTTPGraphQLRequest
     }
   }
 
-  // Retro-compatibility with AdonisJS v6
-  const search =
-    'search' in request.parsedUrl ? (request.parsedUrl.search as string) : request.parsedUrl.query
-
   return {
     method: request.method().toUpperCase(),
     headers,
-    search,
+    search: request.parsedUrl.query,
     body,
   }
 }

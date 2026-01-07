@@ -23,11 +23,8 @@ export async function configure(command: ConfigureCommand) {
     rcFile.addProvider('@foadonis/graphql/graphql_provider')
     rcFile.addCommand('@foadonis/graphql/commands')
 
-    // Only for @adonisjs/assembler v8
-    if ('addImport' in rcFile && 'addAssemblerHook' in rcFile) {
-      rcFile.addImport('@foadonis/graphql', ['indexResolvers'])
-      rcFile.addAssemblerHook('init', 'indexResolvers()', true)
-    }
+    rcFile.addNamedImport('@foadonis/graphql', ['indexResolvers'])
+    rcFile.addAssemblerHook('init', 'indexResolvers()', true)
   })
 
   const driver = await command.prompt.choice(

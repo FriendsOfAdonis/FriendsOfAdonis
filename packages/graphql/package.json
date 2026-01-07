@@ -93,8 +93,8 @@
     "youch": "catalog:"
   },
   "peerDependencies": {
-    "@adonisjs/core": "^6.2.0 || ^7.0.0-next.19",
-    "@adonisjs/lucid": "^21.2.0 || ^22.0.0-next.4",
+    "@adonisjs/core": "^7.0.0-next.19",
+    "@adonisjs/lucid": "^22.0.0-next.4",
     "graphql": "^16.9.0",
     "graphql-scalars": "^1.24.0",
     "luxon": "^3.5.0"
