@@ -1,8 +1,8 @@
 import { test } from '@japa/runner'
 import { createCustomer } from '../utils.js'
-import Stripe from 'stripe'
+import type Stripe from 'stripe'
 import { checkStripeError } from '../../src/utils/errors.js'
-import { Shopkeeper } from '../../src/shopkeeper.js'
+import { type Shopkeeper } from '../../src/shopkeeper.js'
 import { createApp } from '../app.js'
 
 let product: Stripe.Product

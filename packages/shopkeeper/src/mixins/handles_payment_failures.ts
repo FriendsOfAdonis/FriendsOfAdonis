@@ -1,5 +1,5 @@
-import Stripe from 'stripe'
-import Subscription from '../models/subscription.js'
+import type Stripe from 'stripe'
+import type Subscription from '../models/subscription.js'
 import { IncompletePaymentError } from '../errors/incomplete_payment.js'
 import { checkStripeError } from '../utils/errors.js'
 import { Payment } from '../payment.js'

@@ -1,10 +1,10 @@
 /// <reference types="@adonisjs/core/providers/edge_provider" />
 
-import { HttpContext, Request, Response } from '@adonisjs/core/http'
+import { type HttpContext, type Request, type Response } from '@adonisjs/core/http'
 import app from '@adonisjs/core/services/app'
 import hash from '@adonisjs/core/services/hash'
-import { NextFn } from '@adonisjs/core/types/http'
-import { DownPayload } from '../types.js'
+import { type NextFn } from '@adonisjs/core/types/http'
+import { type DownPayload } from '../types.js'
 
 export default class MaintenanceMiddleare {
   protected cookie = 'adonis_maintenance'

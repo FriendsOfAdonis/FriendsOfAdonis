@@ -1,9 +1,9 @@
-import Stripe from 'stripe'
-import { WithManagesInvoices } from './mixins/manages_invoices.js'
+import type Stripe from 'stripe'
+import { type WithManagesInvoices } from './mixins/manages_invoices.js'
 import { Tax } from './tax.js'
 import { Discount } from './discount.js'
 import { InvalidInvoiceError } from './errors/invalid_invoice.js'
-import { DateTime, Zone } from 'luxon'
+import { DateTime, type Zone } from 'luxon'
 import shopkeeper from '../services/shopkeeper.js'
 import { InvoiceLineItem } from './invoice_line_item.js'
 

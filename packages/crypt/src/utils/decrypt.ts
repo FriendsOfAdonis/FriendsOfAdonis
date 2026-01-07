@@ -4,7 +4,7 @@ import {
   E_MALFORMED_ENCRYPTED_DATA,
   E_UNKOWN_DECRYPTION_ERROR,
 } from '../errors.js'
-import { CryptPrivateKey } from '../private_key.js'
+import { type CryptPrivateKey } from '../private_key.js'
 
 export function decrypt(key: string, value: string, privateKey: CryptPrivateKey) {
   const secret = Buffer.from(privateKey.value, 'hex')

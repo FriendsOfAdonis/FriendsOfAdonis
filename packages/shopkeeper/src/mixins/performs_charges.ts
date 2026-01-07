@@ -1,8 +1,8 @@
-import { NormalizeConstructor } from '@poppinss/utils/types'
+import { type NormalizeConstructor } from '@poppinss/utils/types'
 import { Payment } from '../payment.js'
 import { Checkout } from '../checkout.js'
-import Stripe from 'stripe'
-import { WithManagesCustomer } from './manages_customer.js'
+import type Stripe from 'stripe'
+import { type WithManagesCustomer } from './manages_customer.js'
 import { AllowsCoupon } from './allows_coupons.js'
 import { compose } from '@adonisjs/core/helpers'
 

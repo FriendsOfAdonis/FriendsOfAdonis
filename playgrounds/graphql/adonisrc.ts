@@ -1,4 +1,6 @@
+import { indexEntities } from '@adonisjs/core'
 import { defineConfig } from '@adonisjs/core/app'
+import { indexResolvers } from '@foadonis/graphql'
 
 export default defineConfig({
   /*
@@ -14,6 +16,7 @@ export default defineConfig({
     () => import('@adonisjs/core/commands'),
     () => import('@adonisjs/lucid/commands'),
     () => import('@adonisjs/bouncer/commands'),
+    () => import('@foadonis/graphql/commands'),
   ],
 
   /*
@@ -77,5 +80,18 @@ export default defineConfig({
       },
     ],
     forceExit: false,
+  },
+
+  directories: {
+    resolvers: 'app/graphql/resolvers',
+  },
+
+  hooks: {
+    init: [
+      indexEntities({
+        transformers: { enabled: true, withSharedProps: true },
+      }),
+      indexResolvers(),
+    ],
   },
 })

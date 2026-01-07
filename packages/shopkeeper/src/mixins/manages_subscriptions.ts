@@ -1,9 +1,9 @@
 import { DateTime } from 'luxon'
 import { SubscriptionBuilder } from '../subscription_builder.js'
-import { HasMany } from '@adonisjs/lucid/types/relations'
+import { type HasMany } from '@adonisjs/lucid/types/relations'
 import Subscription from '../models/subscription.js'
-import { WithManagesPaymentMethods } from './manages_payment_methods.js'
-import { NormalizeConstructor } from '@poppinss/utils/types'
+import { type WithManagesPaymentMethods } from './manages_payment_methods.js'
+import { type NormalizeConstructor } from '@poppinss/utils/types'
 import is from '@adonisjs/core/helpers/is'
 
 export interface ManagesSubscriptionsI {

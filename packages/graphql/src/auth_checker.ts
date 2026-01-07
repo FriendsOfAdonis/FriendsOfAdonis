@@ -1,7 +1,7 @@
-import { HttpContext } from '@adonisjs/core/http'
-import { AuthChecker } from 'type-graphql'
-import { Bouncer } from '@adonisjs/bouncer'
-import { BouncerAbility } from '@adonisjs/bouncer/types'
+import { type HttpContext } from '@adonisjs/core/http'
+import { type AuthChecker } from 'type-graphql'
+import { type Bouncer } from '@adonisjs/bouncer'
+import { type BouncerAbility } from '@adonisjs/bouncer/types'
 import { UnavailableFeatureError } from './errors/unavailable_feature.js'
 
 export const authChecker: AuthChecker<HttpContext, BouncerAbility<any>> = async (

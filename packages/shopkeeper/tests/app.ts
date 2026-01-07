@@ -1,8 +1,8 @@
 import { IgnitorFactory } from '@adonisjs/core/factories'
 import appConfig from './app_config.js'
 import { Shopkeeper } from '../src/shopkeeper.js'
-import { ApplicationService } from '@adonisjs/core/types'
-import { Kernel } from '@adonisjs/core/ace'
+import { type ApplicationService } from '@adonisjs/core/types'
+import { type Kernel } from '@adonisjs/core/ace'
 
 export const BASE_URL = new URL('./tmp/', import.meta.url)
 

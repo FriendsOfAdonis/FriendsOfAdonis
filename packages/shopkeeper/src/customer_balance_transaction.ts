@@ -1,6 +1,6 @@
-import Stripe from 'stripe'
-import { Invoice } from './invoice.js'
-import { WithBillable } from './mixins/billable.js'
+import type Stripe from 'stripe'
+import { type Invoice } from './invoice.js'
+import { type WithBillable } from './mixins/billable.js'
 import shopkeeper from '../services/shopkeeper.js'
 
 export class CustomerBalanceTransaction {

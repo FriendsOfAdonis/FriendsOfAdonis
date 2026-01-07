@@ -1,15 +1,46 @@
-import pubsub from '#graphql/pubsub'
-import env from '#start/env'
-import { defineConfig } from '@foadonis/graphql'
+import { defineConfig, drivers } from '@foadonis/graphql'
+import { type InferSubscriptionDriver } from '@foadonis/graphql/types'
 
-const isProduction = env.get('NODE_ENV') === 'production'
-
-export default defineConfig({
+const graphqlConfig = defineConfig({
+  /**
+   * Path to the GraphQL endpoint.
+   */
   path: '/graphql',
-  apollo: {
-    introspection: !isProduction,
-    playground: !isProduction,
-  },
+
+  /**
+   * GraphQL server driver (Apollo or Yoga).
+   */
+  driver: drivers.apollo({
+    playground: true,
+    introspection: true,
+  }),
+
+  /**
+   * Logger name used by the GraphQL server.
+   *
+   * @see {@link https://docs.adonisjs.com/guides/digging-deeper/logger#using-multiple-loggers}
+   */
+  logger: 'app',
+
+  /**
+   * PubSub instance used for subscriptions.
+   */
+  pubSub: drivers.pubsub.native(),
+
+  subscription: drivers.subscription.websocket({
+    path: '/graphql',
+  }),
+
+  /**
+   * Automatically emit the `graphql.schema` file.
+   */
   emitSchemaFile: true,
-  pubSub: pubsub.notification,
 })
+
+export default graphqlConfig
+
+declare module '@foadonis/graphql/types' {
+  export interface GraphQLDriver extends InferGraphQLDriver<typeof graphqlConfig> {}
+  export interface PubSubDriver extends InferPubSubDriver<typeof graphqlConfig> {}
+  export interface SubscriptionDriver extends InferSubscriptionDriver<typeof graphqlConfig> {}
+}

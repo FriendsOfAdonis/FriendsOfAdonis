@@ -1,4 +1,4 @@
-import Stripe from 'stripe'
+import type Stripe from 'stripe'
 
 type Constructor = new (...args: any[]) => {}
 

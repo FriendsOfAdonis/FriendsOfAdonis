@@ -2,6 +2,22 @@
 title: Configuration
 ---
 
+## Autoloading
+
+GraphQL resolvers are autoloaded, meaning that you do not need to manually register them. In addition the autoloading supports Hot Module Reloading thanks to [hot-hook](https://github.com/Julien-R44/hot-hook).
+
+The autoloaded folder can be changed inside `adonisrc.ts`.
+
+```ts title="adonisrc.ts"
+import { defineConfig } from '@adonisjs/core/app'
+
+export default defineConfig({
+  directories: {
+    resolvers: 'app/graphql/resolvers', // [!code highlight] Configures the autoloaded folder
+  },
+})
+```
+
 ## Emitting Schema
 
 It is possible to automatically emit the generated GraphQL schema using the `emitSchemaFile` configuration option. This might be useful for generating client without relying on schema introspection or for working in "schema-first".

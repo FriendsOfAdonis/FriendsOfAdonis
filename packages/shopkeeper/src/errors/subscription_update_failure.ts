@@ -1,5 +1,5 @@
 import { Exception } from '@adonisjs/core/exceptions'
-import Subscription from '../models/subscription.js'
+import type Subscription from '../models/subscription.js'
 
 export class SubscriptionUpdateFailureError extends Exception {
   static incompleteSubscription(subscription: Subscription) {

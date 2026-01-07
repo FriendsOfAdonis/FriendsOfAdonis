@@ -1,5 +1,5 @@
 import app from '@adonisjs/core/services/app'
-import { OpenAPI } from '../src/openapi.js'
+import { type OpenAPI } from '../src/openapi.js'
 
 let openapi: OpenAPI
 

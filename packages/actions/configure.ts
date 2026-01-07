@@ -12,7 +12,7 @@
 |
 */
 
-import ConfigureCommand from '@adonisjs/core/commands/configure'
+import type ConfigureCommand from '@adonisjs/core/commands/configure'
 import { readFile, writeFile } from 'node:fs/promises'
 
 export async function configure(command: ConfigureCommand) {

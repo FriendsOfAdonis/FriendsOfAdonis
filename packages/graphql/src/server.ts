@@ -1,133 +1,209 @@
-import { ApolloServer } from '@apollo/server'
-import { GraphQLConfig, LazyImport } from './types.js'
-import { HttpContext } from '@adonisjs/core/http'
-import { buildSchema } from 'type-graphql'
-import { ContainerBindings, HttpRouterService } from '@adonisjs/core/types'
-import { adonisToGraphqlRequest, graphqlToAdonisResponse } from './utils/apollo.js'
-import { ContainerResolver } from '@adonisjs/core/container'
-import { Logger } from '@adonisjs/core/logger'
+/// <reference types="hot-hook/import-meta" />
+
+import {
+  type GraphQLDriverContract,
+  type PubSubDriverContract,
+  type PubSubPublishArgsByKey,
+  type GraphQLOptions,
+  type SubscriptionDriverContract,
+} from './types.js'
+import { type HttpContext } from '@adonisjs/core/http'
+import { buildSchema, type NonEmptyArray } from 'type-graphql'
+import { type ContainerBindings, type HttpRouterService } from '@adonisjs/core/types'
+import { type ContainerResolver } from '@adonisjs/core/container'
+import { type Logger } from '@adonisjs/core/logger'
 import { authChecker } from './auth_checker.js'
 import { DateTime } from 'luxon'
 import { LuxonDateTimeScalar } from './scalars/luxon_datetime.js'
-import { ApolloServerPluginLandingPageDisabled } from '@apollo/server/plugin/disabled'
-import { Server } from 'node:http'
-import { WebSocketServer } from 'ws'
-import { useServer } from 'graphql-ws/use/ws'
-import { GraphQLSchema } from 'graphql'
+import { type GraphQLSchema } from 'graphql'
+import { UnavailableFeatureError } from './errors/unavailable_feature.js'
+import { isHotHookMessage } from './utils/hmr.ts'
+import { type LazyImport } from '@adonisjs/core/types/common'
 
-export default class GraphQLServer {
+export default class GraphQLServer<
+  Events = PubSubPublishArgsByKey,
+  KnownDriver extends GraphQLDriverContract = GraphQLDriverContract,
+  KnownPubSubDriver extends PubSubDriverContract<Events> = PubSubDriverContract<Events>,
+  KnownSubscriptionDriver extends SubscriptionDriverContract = SubscriptionDriverContract,
+> {
   #resolvers: LazyImport<Function>[] = []
+
   #container: ContainerResolver<ContainerBindings>
-  #config: GraphQLConfig
+  #config: GraphQLOptions
   #logger: Logger
-  #apollo?: ApolloServer
+
+  #driver: KnownDriver
+  #pubSub?: KnownPubSubDriver
+  #subscription?: KnownSubscriptionDriver
 
   constructor(
-    config: GraphQLConfig,
+    config: GraphQLOptions<KnownDriver, KnownPubSubDriver, KnownSubscriptionDriver>,
     container: ContainerResolver<ContainerBindings>,
     logger: Logger
   ) {
     this.#config = config
+    this.#driver = config.driver
+    this.#pubSub = config.pubSub
+    this.#subscription = config.subscription
     this.#container = container
     this.#logger = logger
   }
 
-  get apollo() {
-    if (!this.#apollo) {
-      throw new Error('ApolloServer has not been configured yet')
-    }
-
-    return this.#apollo
+  /**
+   * Registers resolvers to the GraphQL server.
+   *
+   * @example
+   *
+   * graphql.resolvers([
+   *  () => import('#graphql/resolvers/user_resolver')
+   *  () => import('#graphql/resolvers/recipe_resolver')
+   * ])
+   */
+  resolvers(resolvers: LazyImport<Function>[]) {
+    this.#resolvers.push(...resolvers)
   }
 
-  async resolvers(resolvers: LazyImport<Function>[]) {
-    this.#resolvers = resolvers
+  /**
+   * Starts listening to hot-hook to reload server
+   * when files are changed.
+   *
+   * @param path - absolute path to the directory to watch
+   */
+  hmr(path: string) {
+    process.on('message', (message) => {
+      if (!isHotHookMessage(message)) return
+
+      if (message.type === 'hot-hook:file-changed') {
+        if (message.path.startsWith(path)) {
+          this.reload()
+        }
+      }
+    })
   }
 
-  async start(server: Server) {
+  /**
+   * Starts the GraphQL server.
+   * When configured, also starts the PubSub and websocket server.
+   */
+  async start() {
     const schema = await this.#buildSchema()
 
-    await this.#startApollo(schema)
-    await this.#startWebsocket(schema, server)
+    await Promise.all([
+      this.#driver.start(schema),
+      this.#pubSub?.start(),
+      this.#subscription?.start(schema),
+    ])
+
+    this.#logger.info(`started GraphQL server on path ${this.#config.path}`)
+  }
+
+  /**
+   * Reloads the GraphQL server.
+   * The schema is rebuilt to reload the resolvers.
+   *
+   * Used internally for reloading the server when a resolver
+   * has been invalidated by HMR.
+   */
+  async reload() {
+    if (!this.#driver.isReady) {
+      return
+    }
+
+    const schema = await this.#buildSchema()
+    await this.#driver.reload(schema)
+  }
+
+  /**
+   * Stops the GraphQL server.
+   * When configured, also stops the PubSub and websocket server.
+   */
+  async stop() {
+    await Promise.all([this.#driver.stop(), this.#pubSub?.stop(), this.#subscription?.stop()])
+  }
+
+  /**
+   * Retrieves the configured PubSub.
+   *
+   * @throws {UnavailableFeatureError} - no PubSub is configured
+   */
+  get pubSub() {
+    if (!this.#pubSub)
+      throw new UnavailableFeatureError(
+        `You must configure a PubSub inside "config/graphql.ts" to use subscriptions`
+      )
+    return this.#pubSub
+  }
+
+  get subscription() {
+    if (!this.#subscription) {
+      throw new UnavailableFeatureError(
+        `You must configure a SubscriptionDriver inside "config/graphql.ts" to use subscriptions`
+      )
+    }
+
+    return this.#subscription
+  }
+
+  /**
+   * Retrieves the GraphQL driver.
+   */
+  get driver() {
+    return this.#driver
+  }
+
+  async #loadResolvers() {
+    const resolvers = []
+    for (const config of this.#resolvers.values()) {
+      const { default: Resolver } = await config()
+      resolvers.push(Resolver)
+    }
+
+    return resolvers
   }
 
   async #buildSchema(): Promise<GraphQLSchema> {
-    const resolvers = await Promise.all(this.#resolvers.map((r) => r())).then(
-      (m) => m.map((r) => r.default).filter(Boolean) as Function[]
-    )
+    const { scalarsMap, ...buildSchemaOptions } = this.#config
 
-    const { apollo, scalarsMap, ...buildSchemaOptions } = this.#config
+    const resolvers = await this.#loadResolvers()
 
     return buildSchema({
-      resolvers: resolvers as any,
+      resolvers: resolvers as NonEmptyArray<Function>,
       container: {
-        get: (someClass) => {
+        get: async (someClass, { context }) => {
+          const container = context.containerResolver as
+            | ContainerResolver<ContainerBindings>
+            | undefined
+
+          if (container) {
+            return container.make(someClass)
+          }
+
           return this.#container.make(someClass)
         },
       },
       scalarsMap: [{ type: DateTime, scalar: LuxonDateTimeScalar }, ...(scalarsMap ?? [])],
       authChecker: authChecker,
+      pubSub: this.#pubSub,
       ...buildSchemaOptions,
     })
   }
 
-  async #startApollo(schema: GraphQLSchema) {
-    const {
-      apollo: { plugins, playground, ...apolloConfig },
-    } = this.#config
-
-    const apollo = new ApolloServer({
-      schema,
-      plugins: [
-        ...(plugins ?? []),
-        ...(!playground ? [ApolloServerPluginLandingPageDisabled()] : []),
-      ],
-      ...apolloConfig,
-    })
-
-    this.#apollo = apollo
-    await apollo.start()
-
-    this.#logger.info('started GraphQL Apollo Server')
-  }
-
-  async #startWebsocket(schema: GraphQLSchema, httpServer: Server) {
-    // We do not start the websocket server if pubsub is not configured
-    if (!this.#config.pubSub) {
-      return
-    }
-
-    const ws = new WebSocketServer({
-      path: '/graphql',
-      server: httpServer,
-    })
-
-    useServer({ schema }, ws)
-  }
-
   async handle(ctx: HttpContext) {
-    const apollo = this.#apollo
-    if (!apollo) {
-      this.#logger.warn('tried to access Apollo Server when not initialized')
-      return
-    }
-
     if ('auth' in ctx) {
       await (ctx.auth as any).check()
     }
 
-    const httpGraphQLRequest = adonisToGraphqlRequest(ctx.request)
-    const httpGraphQLResponse = await apollo.executeHTTPGraphQLRequest({
-      httpGraphQLRequest,
-      context: async () => ctx,
-    })
-
-    return graphqlToAdonisResponse(ctx.response, httpGraphQLResponse)
+    return this.#driver.handle(ctx)
   }
 
+  /**
+   * Registers the `/graphql` route.
+   */
   registerRoute(router: HttpRouterService) {
-    router.route(this.#config.path, ['GET', 'POST', 'PATCH', 'HEAD', 'OPTIONS'], (ctx) =>
-      this.handle(ctx)
-    )
+    return router
+      .route(this.#config.path, ['GET', 'POST', 'PATCH', 'HEAD', 'OPTIONS'], (ctx) =>
+        this.handle(ctx)
+      )
+      .as('graphql')
   }
 }

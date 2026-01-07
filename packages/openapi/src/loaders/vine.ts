@@ -1,4 +1,4 @@
-import { TypeLoaderFn } from 'openapi-metadata'
+import { type TypeLoaderFn } from 'openapi-metadata'
 import { SimpleMessagesProvider, VineValidator } from '@vinejs/vine'
 import type { OpenAPIV3 } from 'openapi-types'
 import _ from 'lodash'

@@ -1,5 +1,5 @@
 import { Exception } from '@adonisjs/core/exceptions'
-import { Payment } from '../payment.js'
+import { type Payment } from '../payment.js'
 
 export class IncompletePaymentError extends Exception {
   payment: Payment

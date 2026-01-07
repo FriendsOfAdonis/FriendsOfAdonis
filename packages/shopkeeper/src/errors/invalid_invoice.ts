@@ -1,5 +1,5 @@
 import { Exception } from '@adonisjs/core/exceptions'
-import Stripe from 'stripe'
+import type Stripe from 'stripe'
 
 export class InvalidInvoiceError extends Exception {
   static invalidOwner(invoice: Stripe.Invoice | Stripe.UpcomingInvoice, owner: any) {

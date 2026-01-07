@@ -1,5 +1,5 @@
 import { Exception } from '@adonisjs/core/exceptions'
-import { WithManagesStripe } from '../mixins/manages_stripe.js'
+import { type WithManagesStripe } from '../mixins/manages_stripe.js'
 
 export class InvalidCustomerError extends Exception {
   static notYetCreated(target: WithManagesStripe['prototype']) {
