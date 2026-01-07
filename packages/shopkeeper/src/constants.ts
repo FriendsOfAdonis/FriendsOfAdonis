@@ -1,5 +1,5 @@
-import Stripe from 'stripe'
-import { StripeEventTypes } from './types.js'
+import type Stripe from 'stripe'
+import { type StripeEventTypes } from './types.js'
 
 export const WEBHOOK_EVENTS: StripeEventTypes[] = [
   'customer.subscription.created',

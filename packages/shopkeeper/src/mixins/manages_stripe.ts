@@ -1,6 +1,6 @@
-import { NormalizeConstructor } from '@adonisjs/core/types/helpers'
-import { BaseModel } from '@adonisjs/lucid/orm'
-import Stripe from 'stripe'
+import { type NormalizeConstructor } from '@adonisjs/core/types/helpers'
+import { type BaseModel } from '@adonisjs/lucid/orm'
+import type Stripe from 'stripe'
 import shopkeeper from '../../services/shopkeeper.js'
 import { InvalidCustomerError } from '../errors/invalid_customer.js'
 

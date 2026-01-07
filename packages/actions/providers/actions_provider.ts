@@ -1,4 +1,4 @@
-import { ApplicationService } from '@adonisjs/core/types'
+import { type ApplicationService } from '@adonisjs/core/types'
 import { ActionsManager } from '../src/manager.js'
 
 export default class ActionsProvider {

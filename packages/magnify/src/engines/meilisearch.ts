@@ -1,8 +1,8 @@
-import { MeilisearchConfig, SearchableModel, SearchableRow } from '../types.js'
-import { MeiliSearch, SearchParams, SearchResponse } from 'meilisearch'
-import { SearchBuilder } from '../builder.js'
+import { type MeilisearchConfig, type SearchableModel, type SearchableRow } from '../types.js'
+import { MeiliSearch, type SearchParams, type SearchResponse } from 'meilisearch'
+import { type SearchBuilder } from '../builder.js'
 import { SimplePaginator } from '@adonisjs/lucid/database'
-import { MagnifyEngine } from './main.js'
+import { type MagnifyEngine } from './main.js'
 import is from '@adonisjs/core/helpers/is'
 
 export class MeilisearchEngine implements MagnifyEngine {

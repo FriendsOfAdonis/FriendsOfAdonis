@@ -4,9 +4,9 @@ import { createCustomer } from '../utils.js'
 import SubscriptionItem from '../../src/models/subscription_item.js'
 import string from '@adonisjs/core/helpers/string'
 import { DateTime } from 'luxon'
-import Stripe from 'stripe'
+import type Stripe from 'stripe'
 import { createApp } from '../app.js'
-import { Shopkeeper } from '../../src/shopkeeper.js'
+import { type Shopkeeper } from '../../src/shopkeeper.js'
 
 function randomCustomerId() {
   return `cus_${string.random(16)}`

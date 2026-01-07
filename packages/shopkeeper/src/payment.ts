@@ -1,6 +1,6 @@
-import Stripe from 'stripe'
+import type Stripe from 'stripe'
 import shopkeeper from '../services/shopkeeper.js'
-import { WithBillable } from './mixins/billable.js'
+import { type WithBillable } from './mixins/billable.js'
 import { IncompletePaymentError } from './errors/incomplete_payment.js'
 
 export class Payment {

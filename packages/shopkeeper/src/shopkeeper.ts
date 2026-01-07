@@ -1,9 +1,9 @@
 import Stripe from 'stripe'
-import { ShopkeeperConfig } from './types.js'
-import { WithBillable } from './mixins/billable.js'
-import { NormalizeConstructor } from '@poppinss/utils/types'
-import Subscription from './models/subscription.js'
-import SubscriptionItem from './models/subscription_item.js'
+import { type ShopkeeperConfig } from './types.js'
+import { type WithBillable } from './mixins/billable.js'
+import { type NormalizeConstructor } from '@poppinss/utils/types'
+import type Subscription from './models/subscription.js'
+import type SubscriptionItem from './models/subscription_item.js'
 
 export class Shopkeeper {
   readonly #config: ShopkeeperConfig

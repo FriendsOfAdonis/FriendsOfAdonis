@@ -1,6 +1,6 @@
-import { HttpContext } from '@adonisjs/core/http'
+import { type HttpContext } from '@adonisjs/core/http'
 import emitter from '@adonisjs/core/services/emitter'
-import Stripe from 'stripe'
+import type Stripe from 'stripe'
 
 export async function handleWebhook(ctx: HttpContext) {
   const payload = ctx.request.body() as Stripe.Event

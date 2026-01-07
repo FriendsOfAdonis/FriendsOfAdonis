@@ -1,5 +1,11 @@
-import { ClassDeclaration, ClassMethod, ClassProperty, Program, TSType } from '@babel/types'
-import { ASTType, PropertyType } from './types.js'
+import {
+  type ClassDeclaration,
+  type ClassMethod,
+  type ClassProperty,
+  type Program,
+  type TSType,
+} from '@babel/types'
+import { type ASTType, type PropertyType } from './types.js'
 
 export function getExportDefaultDeclaration(ast: Program) {
   const declaration = ast.body.find((statement) => statement.type === 'ExportDefaultDeclaration')

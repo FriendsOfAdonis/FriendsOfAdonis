@@ -3,14 +3,14 @@
 import { InvalidCustomerError } from '../errors/invalid_customer.js'
 import { CustomerAlreadyCreatedError } from '../errors/customer_already_created.js'
 import shopkeeper from '../../services/shopkeeper.js'
-import Stripe from 'stripe'
+import type Stripe from 'stripe'
 import app from '@adonisjs/core/services/app'
 import { Discount } from '../discount.js'
 import { PromotionCode } from '../promotion_code.js'
 import { CustomerBalanceTransaction } from '../customer_balance_transaction.js'
-import { ManagesStripeI, WithManagesStripe } from './manages_stripe.js'
-import { NormalizeConstructor } from '@poppinss/utils/types'
-import { WithBillable } from './billable.js'
+import { type ManagesStripeI, type WithManagesStripe } from './manages_stripe.js'
+import { type NormalizeConstructor } from '@poppinss/utils/types'
+import { type WithBillable } from './billable.js'
 
 export interface ManagesCustomerI extends ManagesStripeI<true> {
   /**

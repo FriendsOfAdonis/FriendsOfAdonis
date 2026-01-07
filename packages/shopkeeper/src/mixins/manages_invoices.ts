@@ -1,13 +1,13 @@
-import Stripe from 'stripe'
-import { WithManagesCustomer } from './manages_customer.js'
+import type Stripe from 'stripe'
+import { type WithManagesCustomer } from './manages_customer.js'
 import { Invoice } from '../invoice.js'
 import { Exception } from '@adonisjs/core/exceptions'
 import { Payment } from '../payment.js'
 import shopkeeper from '../../services/shopkeeper.js'
 import { checkStripeError } from '../utils/errors.js'
-import { WithHandlesTaxes } from './handles_taxes.js'
+import { type WithHandlesTaxes } from './handles_taxes.js'
 import { InvalidInvoiceError } from '../errors/invalid_invoice.js'
-import { NormalizeConstructor } from '@poppinss/utils/types'
+import { type NormalizeConstructor } from '@poppinss/utils/types'
 
 type Constructor = NormalizeConstructor<WithHandlesTaxes & WithManagesCustomer>
 

@@ -1,6 +1,6 @@
-import { ApplicationService } from '@adonisjs/core/types'
+import { type ApplicationService } from '@adonisjs/core/types'
 import { Shopkeeper } from '../src/shopkeeper.js'
-import { ShopkeeperConfig } from '../src/types.js'
+import { type ShopkeeperConfig } from '../src/types.js'
 import { handleCustomerSubscriptionCreated } from '../src/handlers/handle_customer_subscription_created.js'
 import { handleCustomerSubscriptionUpdated } from '../src/handlers/handle_customer_subscription_updated.js'
 import { handleCustomerSubscriptionDeleted } from '../src/handlers/handle_customer_subscription_deleted.js'

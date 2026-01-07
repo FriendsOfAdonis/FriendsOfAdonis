@@ -1,4 +1,4 @@
-import Stripe from 'stripe'
+import type Stripe from 'stripe'
 
 type Error<T extends Stripe.errors.StripeError['type']> = Stripe.errors.StripeError & { type: T }
 
