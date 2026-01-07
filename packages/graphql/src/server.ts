@@ -163,15 +163,16 @@ export default class GraphQLServer<Events = PubSubPublishArgsByKey> {
     return buildSchema({
       resolvers: resolvers as NonEmptyArray<Function>,
       container: {
-        get: async (someClass, data) => {
-          try {
-            const result = await this.#container.make(someClass)
-            return result
-          } catch (e) {
-            console.log(someClass)
-            console.error(e)
-            throw e
+        get: async (someClass, { context }) => {
+          const container = context.containerResolver as
+            | ContainerResolver<ContainerBindings>
+            | undefined
+
+          if (container) {
+            return container.make(someClass)
           }
+
+          return this.#container.make(someClass)
         },
       },
       scalarsMap: [{ type: DateTime, scalar: LuxonDateTimeScalar }, ...(scalarsMap ?? [])],
