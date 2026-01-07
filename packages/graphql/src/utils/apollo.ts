@@ -1,7 +1,7 @@
-import { Request, Response } from '@adonisjs/core/http'
-import { HeaderMap, HTTPGraphQLRequest, HTTPGraphQLResponse } from '@apollo/server'
+import { type HttpRequest, type HttpResponse } from '@adonisjs/core/http'
+import { HeaderMap, type HTTPGraphQLRequest, type HTTPGraphQLResponse } from '@apollo/server'
 
-export function adonisToGraphqlRequest(request: Request): HTTPGraphQLRequest {
+export function adonisToGraphqlRequest(request: HttpRequest): HTTPGraphQLRequest {
   const body = request.body()
   const headers = new HeaderMap()
 
@@ -14,13 +14,13 @@ export function adonisToGraphqlRequest(request: Request): HTTPGraphQLRequest {
   return {
     method: request.method().toUpperCase(),
     headers,
-    search: request.parsedUrl.search ?? '',
+    search: request.parsedUrl.query,
     body,
   }
 }
 
 export function graphqlToAdonisResponse(
-  response: Response,
+  response: HttpResponse,
   httpGraphqlResponse: HTTPGraphQLResponse
 ): void {
   for (const [key, value] of httpGraphqlResponse.headers) {

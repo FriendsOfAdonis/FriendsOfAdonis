@@ -1,12 +1,12 @@
 import { test } from '@japa/runner'
 import { createCustomer } from '../utils.js'
-import Stripe from 'stripe'
+import type Stripe from 'stripe'
 import { IncompletePaymentError } from '../../src/errors/incomplete_payment.js'
 import Subscription from '../../src/models/subscription.js'
 import { DateTime } from 'luxon'
 import User from '../fixtures/user.js'
 import { Payment } from '../../src/payment.js'
-import { Shopkeeper } from '../../src/shopkeeper.js'
+import { type Shopkeeper } from '../../src/shopkeeper.js'
 import { createApp } from '../app.js'
 
 let product: Stripe.Product

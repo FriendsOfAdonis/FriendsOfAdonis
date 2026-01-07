@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon'
-import Stripe from 'stripe'
+import type Stripe from 'stripe'
 import { PromotionCode } from './promotion_code.js'
 import { Coupon } from './coupon.js'
 

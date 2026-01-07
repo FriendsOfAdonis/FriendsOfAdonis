@@ -1,7 +1,7 @@
 /// <reference types="@poppinss/hooks" />
 
-import { NormalizeConstructor } from '@adonisjs/core/types/helpers'
-import { BaseModel } from '@adonisjs/lucid/orm'
+import { type NormalizeConstructor } from '@adonisjs/core/types/helpers'
+import { type BaseModel } from '@adonisjs/lucid/orm'
 import { compose } from '@adonisjs/core/helpers'
 import { ManagesCustomer } from './manages_customer.js'
 import { ManagesPaymentMethods } from './manages_payment_methods.js'

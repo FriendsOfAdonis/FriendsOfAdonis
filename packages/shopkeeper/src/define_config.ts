@@ -1,4 +1,4 @@
-import { ShopkeeperConfig } from './types.js'
+import { type ShopkeeperConfig } from './types.js'
 
 export function defineConfig(config: ShopkeeperConfig): ShopkeeperConfig {
   return config

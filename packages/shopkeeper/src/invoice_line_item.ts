@@ -1,5 +1,5 @@
-import Stripe from 'stripe'
-import { Invoice } from './invoice.js'
+import type Stripe from 'stripe'
+import { type Invoice } from './invoice.js'
 
 export class InvoiceLineItem {
   #invoice: Invoice

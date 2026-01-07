@@ -1,8 +1,8 @@
-import { HttpContext } from '@adonisjs/core/http'
-import { LazyImport } from '@adonisjs/core/types/events'
-import { AsController, AsListener, BaseAction } from './base_action.js'
+import { type HttpContext } from '@adonisjs/core/http'
+import { type LazyImport } from '@adonisjs/core/types/events'
+import { type AsController, type AsListener, type BaseAction } from './base_action.js'
 import app from '@adonisjs/core/services/app'
-import { Constructor } from './types.js'
+import { type Constructor } from './types.js'
 
 export class ActionsManager {
   /**

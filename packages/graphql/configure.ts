@@ -12,7 +12,7 @@
 |
 */
 
-import ConfigureCommand from '@adonisjs/core/commands/configure'
+import type ConfigureCommand from '@adonisjs/core/commands/configure'
 import { stubsRoot } from './stubs/main.js'
 import { readPackageJSON, writePackageJSON } from 'pkg-types'
 
@@ -21,12 +21,26 @@ export async function configure(command: ConfigureCommand) {
 
   await codemods.updateRcFile((rcFile) => {
     rcFile.addProvider('@foadonis/graphql/graphql_provider')
-    rcFile.addPreloadFile('#start/graphql')
+    rcFile.addCommand('@foadonis/graphql/commands')
+
+    rcFile.addNamedImport('@foadonis/graphql', ['indexResolvers'])
+    rcFile.addAssemblerHook('init', 'indexResolvers()', true)
   })
 
-  await codemods.makeUsingStub(stubsRoot, 'config/graphql.stub', {})
-  await codemods.makeUsingStub(stubsRoot, 'start/graphql.stub', {})
-  await codemods.makeUsingStub(stubsRoot, 'resolvers/demo_resolver.stub', {})
+  const driver = await command.prompt.choice(
+    'What driver do you want to use?',
+    [
+      {
+        message: 'Apollo (@apollo/server)',
+        name: 'apollo',
+      },
+      {
+        message: 'Yoga (graphql-yoga)',
+        name: 'yoga',
+      },
+    ],
+    { name: 'driver' }
+  )
 
   const shouldInstallPackages = await command.prompt.confirm(
     `Do you want to install additional packages required by "@foadonis/graphql"?`,
@@ -43,8 +57,37 @@ export async function configure(command: ConfigureCommand) {
         name: 'graphql-scalars',
         isDevDependency: false,
       },
+      {
+        name: '@graphql-yoga/subscription',
+        isDevDependency: false,
+      },
+      ...(driver === 'apollo'
+        ? [
+            {
+              name: '@apollo/server',
+              isDevDependency: false,
+            },
+          ]
+        : []),
+      ...(driver === 'yoga'
+        ? [
+            {
+              name: 'graphql-yoga',
+              isDevDependency: false,
+            },
+            {
+              name: '@graphql-yoga/plugin-disable-introspection',
+              isDevDependency: false,
+            },
+          ]
+        : []),
     ])
   }
+
+  await codemods.makeUsingStub(stubsRoot, `config/${driver}.stub`, {})
+  await codemods.makeUsingStub(stubsRoot, 'make/resolver.stub', {
+    name: 'demo',
+  })
 
   await updatePackageJson(command)
 }

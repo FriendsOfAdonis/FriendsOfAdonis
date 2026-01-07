@@ -1,5 +1,5 @@
-import { BaseCommand } from '@adonisjs/core/ace'
-import { HttpContext } from '@adonisjs/core/http'
+import { type BaseCommand } from '@adonisjs/core/ace'
+import { type HttpContext } from '@adonisjs/core/http'
 
 export abstract class BaseAction {
   abstract handle(..._: any[]): any

@@ -1,7 +1,7 @@
 import { Exception } from '@adonisjs/core/exceptions'
-import Stripe from 'stripe'
+import type Stripe from 'stripe'
 import { InvalidPaymentError } from './errors/invalid_payment.js'
-import { WithManagesPaymentMethods } from './mixins/manages_payment_methods.js'
+import { type WithManagesPaymentMethods } from './mixins/manages_payment_methods.js'
 
 export class PaymentMethod {
   /**

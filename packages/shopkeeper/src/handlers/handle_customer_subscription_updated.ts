@@ -1,4 +1,4 @@
-import Stripe from 'stripe'
+import type Stripe from 'stripe'
 import shopkeeper from '../../services/shopkeeper.js'
 import { DateTime } from 'luxon'
 

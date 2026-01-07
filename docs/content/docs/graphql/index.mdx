@@ -3,18 +3,54 @@ title: 'Introduction'
 icon: Album
 ---
 
-Create GraphQL APIs powered by [Apollo GraphQL](https://www.apollographql.com/) and [TypeGrahQL](https://typegraphql.com/) on [AdonisJS](https://adonisjs.com/).
+[@foadonis/graphql](https://www.npmjs.com/package/@foadonis/graphql) allows you to build large-scale and production ready GraphQL APIs powered by [AdonisJS](https://adonisjs.com/).
+
+Built on top of [TypeGraphQL](https://typegraphql.com/) it leverages AdonisJS ecosystem allowing you to deliver best-in-class GraphQL APIs.
 
 ![GraphQL Playground](/graphql/graphql-playground.png)
 
+```ts tab="app/graphql/resolvers/recipe_resolver.ts" twoslash
+// @noErrors
+import { Resolver } from '@foadonis/graphql'
+import Recipe from '#models/recipe'
+
+@Resolver(() => Recipe)
+export default class RecipeResolver {
+  @Query(() => Recipe)
+  recipes(@Arg('recipeId') recipeId: string) {
+    return Recipe.findOrFail(recipeId)
+  }
+
+  @Mutation(() => Recipe)
+  createRecipe() {
+    return Recipe.create({
+      name: 'New recipe',
+    })
+  }
+}
+```
+
+```ts tab="app/models/recipe.ts" twoslash
+// @noErrors
+import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { ObjectType, Field, ID } from '@foadonis/graphql'
+import { DateTime } from 'luxon'
+
+export default class Recipe extends BaseModel {
+  @column({ isPrimary: true })
+  @Field(() => ID)
+  declare id: string
+
+  @column()
+  @Field(() => String)
+  declare name: string
+}
+```
+
 ## Features
 
-✔ Code first development  
-✔ Schema first development [WIP]  
-✔ Fully typesafe  
-✔ Apollo GraphQL playground
+✔ End-to-end type safety  
+✔ Supports both [Apollo Server](https://www.apollographql.com/docs/apollo-server) and [Yoga Server](https://the-guild.dev/graphql/yoga-server)  
 ✔ Out of the box authentication with [@adonisjs/auth](https://docs.adonisjs.com/guides/authentication/introduction)  
 ✔ Out of the box authorization with [Bouncer](https://docs.adonisjs.com/guides/security/authorization)  
-✔ Real-time subscriptions [WIP]  
-✔ Apollo GraphQL Federation [WIP]  
-✔ Custom scalar types for Luxon
+✔ Real-time subscriptions over [Websockets](https://en.wikipedia.org/wiki/WebSocket)

@@ -2,7 +2,7 @@ import { test } from '@japa/runner'
 import { createCustomer } from '../utils.js'
 import { InvalidCustomerError } from '../../src/errors/invalid_customer.js'
 import { Invoice } from '../../src/invoice.js'
-import Stripe from 'stripe'
+import type Stripe from 'stripe'
 import { InvalidInvoiceError } from '../../src/errors/invalid_invoice.js'
 
 test.group('Invoices', () => {

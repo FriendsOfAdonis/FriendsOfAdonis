@@ -1,4 +1,4 @@
-import { ValidateFn } from '@poppinss/validator-lite/types'
+import { type ValidateFn } from '@poppinss/validator-lite/types'
 import { Env } from '@adonisjs/core/env'
 import { E_PRIVATE_KEY_NOT_FOUND } from './errors.js'
 import { CryptPrivateKey } from './private_key.js'

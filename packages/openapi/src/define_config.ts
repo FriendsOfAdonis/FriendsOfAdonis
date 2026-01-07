@@ -1,4 +1,4 @@
-import { OpenAPIConfig } from './types.js'
+import { type OpenAPIConfig } from './types.js'
 
 /**
  * Creates an OpenAPI configuration.

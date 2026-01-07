@@ -2,7 +2,7 @@
 title: Supscriptions
 ---
 
-Subscriptions allow clients to receive updates in real time from the server. It works by exposing a Websocket endpoint allowing real-time communication.
+Subscriptions allow clients to receive updates in real time from the server. You can either us Websocket or Server-Sent-Events protocol.
 
 This documentation might use some vocabulary you never had to deal with before:
 
@@ -20,39 +20,26 @@ a recipe has been created.
 could use `pubsub.subscribe('recipe:created', callback)` to subscribe to the `recipe:created` topic
 and `pubsub.publish('recipe:created', recipe)` to publish a created recipe.
 
-<Callout>
-
-You can find more information about Subscriptions on the [Official TypeGraphQL
-documentation](https://typegraphql.com/docs/subscriptions.html)
-
-</Callout>
-
 ## Configuration
 
-First you will need to install the [`@graphql-yoga/subscription`](https://github.com/dotansimha/graphql-yoga/tree/main) package.
+First you will need to install the [@graphql-yoga/subscription](https://the-guild.dev/graphql/yoga-server/docs/features/subscriptions) package.
 
 ```package-install
 npm i @graphql-yoga/subscription
 ```
 
-### PubSub instance
+Then configure both the `PubSubDriver` and `Subscription` driver in `config/graphql.ts`.
 
-Let's now create a new `PubSub` instance that will be used by our GraphQL server to Subscribe and us to Publish.
-
-```ts title="app/graphql/pubsub.ts"
-import { createPubSub } from '@graphql-yoga/subscription'
-
-export default createPubSub()
-```
-
-Register it in your GraphQL configuration:
-
-```ts title="config/graphql.ts"
-import pubsub from '#graphql/pubsub'
-import { defineConfig } from '@foadonis/graphql'
+```ts title="config/graphql.ts" twoslash
+// @noErrors
+import { defineConfig, drivers } from '@foadonis/graphql'
 
 export default defineConfig({
-  pubSub: pubsub, // [!code highlight]
+  // [!code highlight:4]
+  pubSub: drivers.pubsub.native(),
+  subscription: drivers.subscription.websocket({
+    path: '/graphql',
+  }),
 })
 ```
 
@@ -62,19 +49,6 @@ In production, you might have multiple instances of your Adonis Application runn
 
 </Callout>
 
-## Typing the PubSub
-
-Our `PubSub` can already be used as it is but to have proper autocompletion and ensure we always forward proper data it is useful to define what are the different topics.
-
-```ts title="app/graphql/pubsub.ts"
-import { createPubSub } from '@graphql-yoga/subscription'
-
-export default createPubSub<{
-  'recipe:created': [Recipe]
-  'recipe:deleted': [Recipe]
-}>()
-```
-
 ## Creating Subscriptions
 
 Subscription resolvers are similar to [queries and mutation resolvers](./resolvers). In this example we will allow clients to receive real-time updates every time a new Recipe is created.
@@ -83,7 +57,8 @@ In a Resolver class, create a new method decorated with `@Subscription`.
 
 ### Single Topic
 
-```ts title="app/graphql/resolvers/recipe_resolver.ts"
+```ts title="app/graphql/resolvers/recipe_resolver.ts" twoslash
+// @noErrors
 import { Resolver, Subscription } from '@foadonis/graphql'
 import Recipe from '#graphql/recipe'
 
@@ -102,7 +77,8 @@ export default class RecipeResolver {
 
 The `topics` option accepts a list of topics allowing you to subscribe to multiple topics.
 
-```ts title="app/graphql/resolvers/recipe_resolver.ts"
+```ts title="app/graphql/resolvers/recipe_resolver.ts" twoslash
+// @noErrors
 import { Resolver, Subscription } from '@foadonis/graphql'
 import Recipe from '#models/recipe'
 import RecipeEvent from '#graphql/schemas/recipe_event'
@@ -122,7 +98,8 @@ export default class RecipeResolver {
 
 The topics option also accept a function that receive the context allowing you to dynamically subscribe to topics.
 
-```ts title="app/graphql/resolvers/recipe_resolver.ts"
+```ts title="app/graphql/resolvers/recipe_resolver.ts" twoslash
+// @noErrors
 import { Resolver, Subscription } from '@foadonis/graphql'
 import Recipe from '#models/recipe'
 import RecipeEvent from '#graphql/schemas/recipe_event'
@@ -144,7 +121,12 @@ The `@Subscription` decorator accepts a `subscribe` parameter allowing you to su
 
 For example a common scenario used for real-time applications is to emit an initial empty event and subscribe to different topics to re-send values to the client.
 
-```ts title="app/graphql/resolvers/recipe_resolver.ts"
+```ts title="app/graphql/resolvers/recipe_resolver.ts" twoslash
+import graphql from '@foadonis/graphql/services/main'
+import { Resolver, Subscription } from '@foadonis/graphql'
+import { Repeater } from '@graphql-yoga/subscription'
+
+// @noErrors
 @Resolver()
 export default class RecipeResolver {
   @Subscription(() => [Recipe], {
@@ -174,11 +156,12 @@ Now that we have create our subscriptions, we can use the `PubSub` system to bro
 
 ### Inside a resolver
 
-```ts title="app/graphql/resolvers/recipe_resolver.ts"
-import { Resolver, Subscription } from '@foadonis/graphql'
+```ts title="app/graphql/resolvers/recipe_resolver.ts" twoslash
+// @noErrors
+import { Resolver, Mutation } from '@foadonis/graphql'
 import Recipe from '#models/recipe'
 import RecipeEvent from '#graphql/schemas/recipe_event'
-import pubsub from '#graphql/pubsub'
+import graphql from '@foadonis/graphql/services/main'
 
 @Resolver()
 export default class RecipeResolver {
@@ -186,7 +169,7 @@ export default class RecipeResolver {
   createRecipe(): RecipeEvent {
     const recipe = Recipe.create()
 
-    pubsub.publish('recipe:created', new RecipeEvent(recipe, 'created'))
+    graphql.pubSub.publish('recipe:created', new RecipeEvent(recipe, 'created'))
 
     return recipe
   }
@@ -195,52 +178,95 @@ export default class RecipeResolver {
 
 ### Outside a resolver
 
-```ts title="start/routes.ts"
+```ts title="start/routes.ts" twoslash
+// @noErrors
+import router from '@adonisjs/core/services/router'
 import Recipe from '#models/recipe'
 import RecipeEvent from '#graphql/schemas/recipe_event'
-import pubsub from '#graphql/pubsub'
+import graphql from '@foadonis/graphql/services/main'
 
 router.post('/api/recipes', () => {
   const recipe = Recipe.create()
 
-  pubsub.publish('recipe:created', new RecipeEvent(recipe, 'created'))
+  graphql.pubSub.publish('recipe:created', new RecipeEvent(recipe, 'created'))
 
   return recipe
 })
 ```
 
+## Typing PubSub Events
+
+Our `PubSub` can already be used as it is but to have proper autocompletion and ensure we always forward proper data it is useful to define what are the different topics.
+
+```ts title="types/pubsub.ts"
+declare module '@foadonis/graphql/types' {
+  interface PubSubEvents {
+    'recipe:created': [Recipe]
+    'recipe:deleted': [Recipe]
+  }
+}
+```
+
 ## Distributed PubSub
 
-When running multiple instances of your Adonis Application in a distributed environment you need a way to distribute the published event so every subscription will receive them.
-
-<Callout>
-
-This feature is not officially supported. In a near future you will be able to use your already configured [Adonis Redis](https://docs.adonisjs.com/guides/database/redis).
-
-</Callout>
+When running multiple instances of your Adonis Application in a distributed environment you need a way to distribute the published event so every instance will notify their subscribers.
 
 ```package-install
 npm install @graphql-yoga/redis-event-target ioredis
 ```
 
-```ts title="app/graphql/pubsub.ts"
-import { createPubSub } from 'graphql-yoga'
-import { Redis } from 'ioredis'
-import { createRedisEventTarget } from '@graphql-yoga/redis-event-target'
+```ts title="config/graphql.ts"
+import { defineConfig, drivers } from '@foadonis/graphql'
 
-const publishClient = new Redis()
-const subscribeClient = new Redis()
-
-const eventTarget = createRedisEventTarget({
-  publishClient,
-  subscribeClient,
+export default defineConfig({
+  pubSub: drivers.pubsub.redis({
+    publish: {
+      host: env.get('REDIS_HOST'),
+      port: env.get('REDIS_PORT'),
+      password: env.get('REDIS_PASSWORD'),
+    },
+    subscribe: {
+      host: env.get('REDIS_HOST'),
+      port: env.get('REDIS_PORT'),
+      password: env.get('REDIS_PASSWORD'),
+    },
+  }),
 })
-
-const pubSub = createPubSub({ eventTarget })
 ```
 
-<Callout>
+## Context
 
-More information on the official [Yoga documentation](https://the-guild.dev/graphql/yoga-server/docs/features/subscriptions#distributed-pubsub-for-production).
+When doing Subscriptions over Websocket there is no [ServerResponse](https://nodejs.org/api/http.html#class-httpserverresponse) as once the Weboscket handshake has been performed there is no way to write to the response.
 
-</Callout>
+We still create an [HttpContext](https://docs.adonisjs.com/guides/concepts/http-context) containing the initial [Request](https://docs.adonisjs.com/guides/basics/request) and a fake [Response](https://docs.adonisjs.com/guides/basics/response) allowing you to access it inside your resolvers.
+**Be aware that you will not be able to use the response.**
+
+```ts
+import { Resolver, Subscription, Ctx } from '@foadonis/graphql'
+import { HttpContext } from '@adonisjs/core/http'
+
+export default class RecipesResolver {
+  @Subscription({
+    topics: ['recipe:created', 'recipe:deleted'],
+  })
+  recipe(@Root() payload: RecipeEvent, @Ctx() ctx: HttpContext): RecipeEvent {
+    ctx.request.cookie('my-cookie') // ✅ Works
+    ctx.response.cookie('my-cookie', 'new-value') // ❌ Does not work
+
+    return payload
+  }
+}
+```
+
+### Middlewares & Authentication
+
+As we re-create an [HttpContext](https://docs.adonisjs.com/guides/concepts/http-context) you can use the same middlewares you would use on the [HttpRouter](https://docs.adonisjs.com/guides/basics/routing) (minus the response capabilities).
+
+```ts title=start/kernel.ts
+import graphql from '@foadonis/graphql/services/main'
+
+graphql.subscription.use([
+  () => import('@adonisjs/auth/initialize_auth_middleware'),
+  () => import('#middleware/silent_auth_middleware'),
+])
+```
