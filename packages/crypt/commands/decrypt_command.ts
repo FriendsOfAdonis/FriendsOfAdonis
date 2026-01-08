@@ -1,18 +1,13 @@
 import { args } from '@adonisjs/core/ace'
-import { CommandOptions } from '@adonisjs/core/types/ace'
-import { isEncrypted } from '../src/utils/is_encrypted.js'
-import { E_PRIVATE_KEY_NOT_FOUND } from '../src/errors.js'
-import { CryptBaseCommand } from '../src/base_command.js'
-import { CryptPrivateKey } from '../src/private_key.js'
-import { EnvFile } from '../src/env_file.js'
+import { E_PRIVATE_KEY_NOT_FOUND } from '../src/exceptions.ts'
+import { CryptBaseCommand } from '../src/base_command.ts'
+import { CryptPrivateKey } from '../src/private_key.ts'
+import { EnvFile } from '../src/env_file.ts'
+import { isEncrypted } from '../src/utils/is_encrypted.ts'
 
-export default class GetCommand extends CryptBaseCommand {
-  static commandName = 'crypt:get'
+export default class DecryptCommand extends CryptBaseCommand {
+  static commandName = 'env:decrypt'
   static description = 'Decrypt an environment variable'
-
-  static options: CommandOptions = {
-    startApp: true,
-  }
 
   @args.string({ required: false })
   declare key?: string
@@ -37,26 +32,27 @@ export default class GetCommand extends CryptBaseCommand {
     const value = parsed[key]
     const encrypted = isEncrypted(value)
 
-    const t = this.ui.table()
-    t.head([this.filename()])
-    t.row(['Key', key])
-    t.row(['Value', encrypted ? privateKey.decrypt(key, encrypted) : value])
-    t.row(['Encrypted', String(Boolean(encrypted))])
-    t.render()
+    const table = this.ui.table()
+    table.head([this.filename()])
+    table.row(['Key', key])
+    table.row(['Value', encrypted ? privateKey.decrypt(encrypted) : value])
+    table.row(['Encrypted', String(Boolean(encrypted))])
+    table.render()
   }
 
   renderTable(privateKey: CryptPrivateKey, parsed: Record<string, string>) {
-    const t = this.ui.table()
-    t.head(['Key', 'Value', 'Encrypted'])
+    const table = this.ui.table()
+    table.head(['Key', 'Value', 'Encrypted'])
 
     for (const [key, value] of Object.entries(parsed)) {
       const encrypted = isEncrypted(value)
-      t.row([
+      table.row([
         key,
-        encrypted ? privateKey.decrypt(key, encrypted) : value,
+        encrypted ? privateKey.decrypt(encrypted) : value,
         String(Boolean(encrypted)),
       ])
-      t.render()
     }
+
+    table.render()
   }
 }

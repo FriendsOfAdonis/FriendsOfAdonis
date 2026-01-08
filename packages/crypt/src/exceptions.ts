@@ -1,12 +1,6 @@
 import { createError, Exception } from '@adonisjs/core/exceptions'
-import { truncate } from './utils/truncate.js'
-import { keynames } from './utils/keynames.js'
-
-export const E_NOT_INITIALIZED_ERROR = createError(
-  'Crypt is not initialized. Make sure you replace `Env.create` with `Crypt.create`',
-  'E_NOT_INITIALIZED_ERROR',
-  500
-)
+import { truncate } from './utils/truncate.ts'
+import { keynames } from './utils/keynames.ts'
 
 export const E_INVALID_PRIVATE_KEY = class InvalidPrivateKeyException extends Exception {
   static code = 'E_INVALID_PRIVATE_KEY'
@@ -21,8 +15,8 @@ export const E_INVALID_PRIVATE_KEY = class InvalidPrivateKeyException extends Ex
 export const E_MALFORMED_ENCRYPTED_DATA = class MalformedEncryptedDataException extends Exception {
   static code = 'E_MALFORMED_ENCRYPTED_DATA'
 
-  constructor(key: string) {
-    super(`Could not decrypt "${key}" because encrypted data appears malformed`)
+  constructor() {
+    super(`Could not decrypt environment variable because encrypted data appears malformed`)
   }
 }
 
@@ -35,6 +29,24 @@ export const E_PRIVATE_KEY_NOT_FOUND = class PrivateKeyNotFoundException extends
         ? `"${key}" is encrypted but you do not have any private key provided. Environment variables checked: ${keynames('private')}`
         : `You do not have any private key provided. Environment variables checked: ${keynames('private')}`
     )
+  }
+}
+
+export const E_PUBLIC_KEY_NOT_FOUND = class PublicKeyNotFoundException extends Exception {
+  static code = 'E_PUBLIC_KEY_NOT_FOUND'
+
+  constructor() {
+    super(
+      `You do not have any public key provided. Environment variables checked: ${keynames('private')}\nYou can initialize Crypt using "node ace crypt:init"`
+    )
+  }
+}
+
+export const E_ENVIRONMENT_VARIABLE_NOT_FOUND = class EnvironmentVariableNotFound extends Exception {
+  static code = 'E_ENVIRONMENT_VARIABLE_NOT_FOUND'
+
+  constructor(name: string, message?: string) {
+    super(message ?? `Environment variable "${name}" not found`)
   }
 }
 

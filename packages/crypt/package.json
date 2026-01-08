@@ -14,6 +14,7 @@
   "exports": {
     ".": "./build/index.js",
     "./commands": "./build/commands/main.js",
+    "./register": "./build/src/register.js",
     "./types": "./build/src/types.js"
   },
   "scripts": {

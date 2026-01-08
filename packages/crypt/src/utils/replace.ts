@@ -6,14 +6,14 @@ export async function replace(src: string, key: string, replaceValue: string) {
   let output
   let newPart = ''
 
-  const parsed = await new EnvParser(src).parse()
+  const parsed = await new EnvParser(src, new URL(import.meta.url)).parse()
   const quotes = _quotes(src)
   if (Object.prototype.hasOwnProperty.call(parsed, key)) {
     const quote = quotes[key]
     newPart += `${key}=${quote}${replaceValue}${quote}`
 
     const originalValue = parsed[key]
-    const escapedOriginalValue = escapeForRegex(originalValue)
+    const escapedOriginalValue = escapeForRegex(originalValue!)
 
     // conditionally enforce end of line
     let enforceEndOfLine = ''

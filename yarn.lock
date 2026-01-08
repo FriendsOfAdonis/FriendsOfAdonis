@@ -19315,6 +19315,7 @@ __metadata:
     "@adonisjs/core": "catalog:"
     "@adonisjs/cors": "catalog:"
     "@adonisjs/session": "catalog:"
+    "@foadonis/crypt": "workspace:*"
     "@foadonis/eslint-config": "workspace:*"
     "@foadonis/graphql": "workspace:*"
     "@foadonis/typescript-config": "workspace:*"

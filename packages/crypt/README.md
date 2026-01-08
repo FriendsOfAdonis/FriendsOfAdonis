@@ -21,7 +21,7 @@
 
 <!-- automd:coverage -->
 
-![Coverage](https://img.shields.io/badge/coverage-0%25-red)
+![Coverage](https://img.shields.io/badge/coverage-81%25-brightgreen)
 
 <!-- /automd -->
 
