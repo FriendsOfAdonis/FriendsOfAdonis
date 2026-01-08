@@ -5,9 +5,13 @@ import { readFile, writeFile } from 'node:fs/promises'
  * Utility class to work with dotenv keys file (.env.keys).
  */
 export class KeysFile {
+  /**
+   * @param path - path to the env file containing private keys
+   * @param keys - list of private key env variables
+   */
   constructor(
     public path: string,
-    public keys: Record<string, string>
+    public keys: NodeJS.Dict<string>
   ) {}
 
   /**
@@ -18,7 +22,7 @@ export class KeysFile {
       .then((c) => c.toString())
       .catch(() => '')
 
-    const parsed = await new EnvParser(content).parse()
+    const parsed = await new EnvParser(content, new URL(import.meta.url)).parse()
 
     return new KeysFile(path, parsed)
   }
