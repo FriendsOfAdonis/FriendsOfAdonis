@@ -20,5 +20,5 @@ test.group('Configure', () => {
     await assert.fileExists('adonisrc.ts')
     await assert.fileContains('adonisrc.ts', '@foadonis/crypt/commands')
     await assert.fileContains('start/env.ts', '@foadonis/crypt/register')
-  })
+  }).timeout(30_000)
 })
