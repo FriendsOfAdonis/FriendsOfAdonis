@@ -1,5 +1,17 @@
 # @foadonis/maintenance
 
+## 1.0.0-next.0
+
+### Major Changes
+
+- [`d62dac4`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/d62dac4df9718f0e04e4c04daac7a4f8444da93f) Thanks [@kerwanp](https://github.com/kerwanp)! - Crypt v1 🚀
+
+  ## Changes
+  - Moved `node ace crypt:set` to `node ace env:encrypt`
+  - Moved `node ace crypt:get` to `node ace env:decrypt`
+  - Use native `Env.defineIdentifier`
+  - Improve Ace package configuration
+
 ## 0.1.0
 
 ### Minor Changes

@@ -14,7 +14,12 @@
     "playground-graphql": "0.0.0",
     "playground-openapi": "0.0.0",
     "@foadonis/eslint-config": "0.0.2",
-    "@foadonis/typescript-config": "0.0.0"
+    "@foadonis/typescript-config": "0.0.0",
+    "@foadonis/autoloader": "0.0.0"
   },
-  "changesets": []
+  "changesets": [
+    "cute-seas-shop",
+    "stale-dingos-enter",
+    "wide-tips-tickle"
+  ]
 }
