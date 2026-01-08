@@ -1,7 +1,7 @@
 {
   "name": "@foadonis/actions",
   "description": "Adonis library to safely store your secrets in your repository",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "engines": {
     "node": ">=20.6.0"
   },
