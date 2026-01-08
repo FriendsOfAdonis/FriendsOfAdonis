@@ -1,5 +1,11 @@
 # @foadonis/graphql
 
+## 0.0.1-next.0
+
+### Patch Changes
+
+- [`ea99649`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/ea996495e36a2c57cf0c4eb06e20ab77aa25ac8b) Thanks [@kerwanp](https://github.com/kerwanp)! - Initial release
+
 ## 0.0.9
 
 ### Patch Changes
