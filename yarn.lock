@@ -3118,6 +3118,7 @@ __metadata:
     "@japa/expect-type": "npm:^2.0.4"
     "@japa/file-system": "npm:^3.0.0"
     "@japa/runner": "npm:^4.0.0"
+    "@martin.xyz/openapi-decorators": "npm:^0.0.1-next.2"
     "@swc/core": "npm:1.15.5"
     "@types/luxon": "npm:^3.7.1"
     "@types/node": "npm:^25.0.2"
@@ -3128,7 +3129,6 @@ __metadata:
     del-cli: "npm:^7.0.0"
     eslint: "catalog:"
     luxon: "npm:^3.7.2"
-    openapi-metadata: "npm:^0.2.2"
     openapi-types: "npm:^12.1.3"
     prettier: "npm:^3.7.4"
     reflect-metadata: "npm:^0.2.2"
@@ -4224,6 +4224,19 @@ __metadata:
     js-yaml: "npm:^4.1.0"
     tinyglobby: "npm:^0.2.13"
   checksum: 10c0/c7dbda3bf027338a10ee8337a1c1774e6979b300afa7db55a89fe205339dfe59810e4b8cf1edc94287b3ddc9da4413d6221bcae9f6dbf0dcadc7f82bd8c5a7bb
+  languageName: node
+  linkType: hard
+
+"@martin.xyz/openapi-decorators@npm:^0.0.1-next.2":
+  version: 0.0.1-next.2
+  resolution: "@martin.xyz/openapi-decorators@npm:0.0.1-next.2"
+  dependencies:
+    deepmerge: "npm:^4.3.1"
+    openapi-types: "npm:^12.1.3"
+    type-fest: "npm:^5.3.1"
+  peerDependencies:
+    reflect-metadata: ^0.2.2
+  checksum: 10c0/d2bdbb8f36ec2024e767af3d0af80a34dc2cb962a28827074b3cb8bce3fcdeb4bf94e07bbd67caf7e2b34a525db176031e859e5eb841898ccce93566d312d773
   languageName: node
   linkType: hard
 
@@ -18621,19 +18634,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openapi-metadata@npm:^0.2.2":
-  version: 0.2.2
-  resolution: "openapi-metadata@npm:0.2.2"
-  dependencies:
-    deepmerge: "npm:^4.3.1"
-    openapi-types: "npm:^12.1.3"
-    type-fest: "npm:^4.40.1"
-  peerDependencies:
-    reflect-metadata: ^0.2.2
-  checksum: 10c0/869064ff3085966118c72b5748a54af62b347facc2a8fa84cd3668c8b57218b5f5e2056549cabdb3735ea8b22d89f79f7e069736cd6fcb2313a069be1b1f8ff7
-  languageName: node
-  linkType: hard
-
 "openapi-types@npm:^12.1.3":
   version: 12.1.3
   resolution: "openapi-types@npm:12.1.3"
@@ -19315,7 +19315,6 @@ __metadata:
     "@adonisjs/core": "catalog:"
     "@adonisjs/cors": "catalog:"
     "@adonisjs/session": "catalog:"
-    "@foadonis/crypt": "workspace:*"
     "@foadonis/eslint-config": "workspace:*"
     "@foadonis/graphql": "workspace:*"
     "@foadonis/typescript-config": "workspace:*"
@@ -22766,14 +22765,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"type-fest@npm:^4.31.0, type-fest@npm:^4.39.1, type-fest@npm:^4.40.1":
+"type-fest@npm:^4.31.0, type-fest@npm:^4.39.1":
   version: 4.41.0
   resolution: "type-fest@npm:4.41.0"
   checksum: 10c0/f5ca697797ed5e88d33ac8f1fec21921839871f808dc59345c9cf67345bfb958ce41bd821165dbf3ae591cedec2bf6fe8882098dfdd8dc54320b859711a2c1e4
   languageName: node
   linkType: hard
 
-"type-fest@npm:^5.2.0":
+"type-fest@npm:^5.2.0, type-fest@npm:^5.3.1":
   version: 5.3.1
   resolution: "type-fest@npm:5.3.1"
   dependencies:

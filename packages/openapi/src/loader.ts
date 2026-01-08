@@ -1,17 +1,22 @@
 import { type Logger } from '@adonisjs/core/logger'
 import { type HttpRouterService } from '@adonisjs/core/types'
 import { type RouteJSON } from '@adonisjs/core/types/http'
-import { OperationMetadataStorage } from 'openapi-metadata/metadata'
+import {
+  ExcludeMetadataStorage,
+  OperationMetadataStorage,
+} from '@martin.xyz/openapi-decorators/metadata'
 import { isConstructor, toOpenAPIPath } from './utils.js'
-import stringHelpers from '@adonisjs/core/helpers/string'
+import { type OperationTaggerFn } from './types.js'
 
 export class RouterLoader {
   #router: HttpRouterService
   #logger: Logger
+  #tagger: OperationTaggerFn
 
-  constructor(router: HttpRouterService, logger: Logger) {
+  constructor(router: HttpRouterService, logger: Logger, tagger: OperationTaggerFn) {
     this.#router = router
     this.#logger = logger
+    this.#tagger = tagger
   }
 
   async importRouterController(route: RouteJSON): Promise<[Function, string] | undefined> {
@@ -27,8 +32,6 @@ export class RouterLoader {
     let construct = reference[0] as Function
     const propertyKey = reference[1] ?? 'handle'
 
-    if (propertyKey === 'handle') return
-
     // For lazy imports
     if (!isConstructor(construct)) {
       construct = await construct().then((m: any) => m.default)
@@ -43,7 +46,10 @@ export class RouterLoader {
 
     const [target, propertyKey] = reference
 
-    const name = stringHelpers.create(target.name).removeSuffix('Controller').toString()
+    // We must manually check for metadata
+    if (ExcludeMetadataStorage.getMetadata(target) === true) return target
+
+    const tags = this.#tagger(route, target, propertyKey)
 
     // Transform Adonis-style path parameters to OpenAPI-compliant format
     const openAPIPath = toOpenAPIPath(route.pattern)
@@ -56,7 +62,7 @@ export class RouterLoader {
         ...existing,
         path: openAPIPath,
         methods: route.methods.filter((m) => m !== 'HEAD').map((r) => r.toLowerCase()) as any,
-        tags: [name],
+        tags: tags,
       },
       propertyKey
     )

@@ -12,12 +12,10 @@ export async function GET(_req: Request, { params }: RouteContext<'/og/[...slug]
   const pkg = packages[page.slugs[0]]
 
   return new ImageResponse(
-    (
-      <MetadataImage
-        description={pkg.description ?? page.data.description}
-        title={pkg.name ?? page.data.title}
-      />
-    ),
+    <MetadataImage
+      description={pkg.description ?? page.data.description}
+      title={pkg.name ?? page.data.title}
+    />,
     await getImageResponseOptions()
   )
 }

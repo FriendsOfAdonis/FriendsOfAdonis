@@ -12,9 +12,10 @@
     "security",
     "---References---",
     "(references)/configuration",
-    "[Decorators](https://openapi-ts.dev/openapi-metadata/decorators)",
+    "(references)/decorators",
     "---Advanced---",
     "(advanced)/generic-types",
-    "(advanced)/mapped-types"
+    "(advanced)/mapped-types",
+    "(advanced)/custom-type-loaders"
   ]
 }
