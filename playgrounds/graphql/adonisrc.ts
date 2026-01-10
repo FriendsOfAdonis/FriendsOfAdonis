@@ -17,6 +17,7 @@ export default defineConfig({
     () => import('@adonisjs/lucid/commands'),
     () => import('@adonisjs/bouncer/commands'),
     () => import('@foadonis/graphql/commands'),
+    () => import('@foadonis/lucidity/commands'),
   ],
 
   /*
