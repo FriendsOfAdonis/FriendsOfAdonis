@@ -37,6 +37,7 @@
     "@adonisjs/cors": "catalog:",
     "@adonisjs/session": "catalog:",
     "@foadonis/graphql": "workspace:*",
+    "@foadonis/lucidity": "workspace:*",
     "@graphql-yoga/plugin-disable-introspection": "^2.18.1",
     "@graphql-yoga/subscription": "^5.0.5",
     "better-sqlite3": "^12.5.0",
