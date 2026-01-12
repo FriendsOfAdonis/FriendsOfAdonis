@@ -1,4 +1,13 @@
 {
-  "pages": ["magnify", "shopkeeper", "openapi", "graphql", "actions", "maintenance", "crypt"],
+  "pages": [
+    "magnify",
+    "shopkeeper",
+    "openapi",
+    "graphql",
+    "actions",
+    "lucidity",
+    "maintenance",
+    "crypt"
+  ],
   "description": "Documentation for the Friends Of Adonis packages"
 }

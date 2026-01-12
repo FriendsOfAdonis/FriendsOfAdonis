@@ -8,6 +8,7 @@ import { MigrationGenerator } from '../src/ddl/migration_generator.ts'
 import { DatabaseIntrospector } from '../src/ddl/introspection/database_introspector.ts'
 import { flags } from '@adonisjs/core/ace'
 import { highlight } from 'cli-highlight'
+import { analyseDatabaseDrift } from '../src/ddl/drift.ts'
 
 export default class MakeMigration extends BaseMakeMigration {
   static commandName = 'make:migration'
@@ -53,7 +54,14 @@ export default class MakeMigration extends BaseMakeMigration {
     const filename = this.filename()
     const path = this.app.migrationsPath(this.filename())
 
-    const generator = new MigrationGenerator(databaseSchema, modelsSchema, project!, path)
+    const drifts = analyseDatabaseDrift(databaseSchema, modelsSchema)
+
+    if (!drifts) {
+      this.logger.success('No drift detected between your models and your database!')
+      return
+    }
+
+    const generator = new MigrationGenerator(databaseSchema, modelsSchema, drifts, project!, path)
 
     const migration = await generator.generate()
 

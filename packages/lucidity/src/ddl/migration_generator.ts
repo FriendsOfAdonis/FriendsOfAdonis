@@ -1,11 +1,140 @@
-import { type DatabaseSchema, type ColumnSchemaOptions } from '../types.ts'
-import { type DeepPartial } from '@adonisjs/core/types/common'
+import { type DatabaseSchema, type ColumnSchema, type TableSchema } from '../types.ts'
 import { type Project } from 'ts-morph'
 import {
   MigrationTransformer,
-  type TableWriter,
+  type MigrationTableTransformer,
 } from '../code_transformers/migration_transformer.ts'
-import { databaseDiff, type DetailedDiff } from './diff.ts'
+import { type TableDrift, type ColumnAlteredDrift, type ColumnDrift } from './drift.ts'
+
+export type DatabaseDriftHandlers = {
+  [key in TableDrift['type']]: (
+    transformer: MigrationTransformer,
+    drift: TableDrift & { type: key }
+  ) => void
+}
+
+export type TableDriftHandlers = {
+  [key in ColumnDrift['type']]: (
+    up: MigrationTableTransformer,
+    down: MigrationTableTransformer,
+    drift: ColumnDrift & { type: key }
+  ) => void
+}
+
+export type ColumnDriftHandlers = {
+  [key in keyof ColumnSchema]: (
+    up: MigrationTableTransformer,
+    down: MigrationTableTransformer,
+    drift: ColumnAlteredDrift
+  ) => void
+}
+
+function addColumn(column: string, schema: ColumnSchema, transformer: MigrationTableTransformer) {
+  transformer.addColumn(column, schema.type, (columnWriter) => {
+    if (schema.isPrimary === true) {
+      columnWriter.callMethod(`primary`)
+    }
+
+    if (schema.nullable) {
+      columnWriter.callMethod('nullable')
+    } else {
+      columnWriter.callMethod('notNullable')
+    }
+
+    if (schema.unique) {
+      columnWriter.callMethod('unique')
+    }
+
+    if (schema.default) {
+      columnWriter.callMethod('default', [schema.default])
+    }
+  })
+}
+
+const DATABASE_DRIFT_HANDLERS: DatabaseDriftHandlers = {
+  'table:created': (transformer, drift) => {
+    addTable('up', transformer, drift.table, drift.schema)
+    transformer.addDropTable('down', drift.table)
+  },
+  'table:altered': (transformer, drift) => {
+    const up = transformer.addAlterTable('up', drift.table)
+    const down = transformer.addAlterTable('down', drift.table)
+
+    for (const columnDrift of drift.drifts) {
+      const handler = TABLE_DRIFT_HANDLERS[columnDrift.type]
+      handler(up, down, columnDrift as any)
+    }
+  },
+  'table:deleted': (transformer, drift) => {
+    transformer.addDropTable('up', drift.table)
+    addTable('down', transformer, drift.table, drift.schema)
+  },
+}
+
+const TABLE_DRIFT_HANDLERS: TableDriftHandlers = {
+  'column:created': (up, down, drift) => {
+    addColumn(drift.column, drift.schema, up)
+    down.addDropColumn(drift.column)
+  },
+  'column:altered': (up, down, drift) => {
+    for (const key of drift.drift) {
+      const handler = COLUMN_DRIFT_HANDLERS[key]
+      if (!handler) {
+        console.log('handler not found', key)
+        continue
+      }
+      handler!(up, down, drift)
+    }
+  },
+  'column:deleted': (up, down, drift) => {
+    up.addDropColumn(drift.column)
+    addColumn(drift.column, drift.schema, down)
+  },
+}
+
+const COLUMN_DRIFT_HANDLERS: Partial<ColumnDriftHandlers> = {
+  unique: (up, down, drift) => {
+    if (drift.target.unique) {
+      up.addUnique([drift.column])
+      down.addDropUnique([drift.column])
+    } else {
+      up.addDropUnique([drift.column])
+      down.addUnique([drift.column])
+    }
+  },
+  nullable: (up, down, drift) => {
+    if (drift.target.nullable) {
+      up.addSetNullable(drift.column)
+      down.addDropNullable(drift.column)
+    } else {
+      up.addDropNullable(drift.column)
+      down.addSetNullable(drift.column)
+    }
+  },
+  default: (up, down, drift) => {},
+  isPrimary: (up, down, drift) => {
+    if (drift.target.isPrimary) {
+      up.addPrimary([drift.column])
+      down.addDropPrimary([drift.column])
+    } else {
+      up.addDropPrimary([drift.column])
+      down.addPrimary([drift.column])
+    }
+  },
+}
+
+function addTable(
+  lifecycle: 'up' | 'down',
+  transformer: MigrationTransformer,
+  table: string,
+  schema: TableSchema
+) {
+  const create = transformer.addCreateTable(lifecycle, table)
+
+  for (const [column, columnSchema] of Object.entries(schema.columns)) {
+    addColumn(column, columnSchema, create)
+  }
+}
 
 export class MigrationGenerator {
   private transformer: MigrationTransformer
@@ -13,6 +142,7 @@ export class MigrationGenerator {
   constructor(
     private source: DatabaseSchema,
     private target: DatabaseSchema,
+    private drifts: TableDrift[],
     project: Project,
     path: string
   ) {
@@ -20,150 +150,11 @@ export class MigrationGenerator {
   }
 
   async generate() {
-    const diff = databaseDiff(this.source, this.target)
-
-    if (
-      !this.#hasChanges(diff.added) &&
-      !this.#hasChanges(diff.updated) &&
-      !this.#hasChanges(diff.deleted)
-    ) {
-      return false
+    for (const drift of this.drifts) {
+      const handler = DATABASE_DRIFT_HANDLERS[drift.type]
+      handler(this.transformer, drift as any)
     }
-
-    this.generateCreateTables(diff.added)
-    this.generateAlterTables(diff.updated)
 
     return this.transformer
-  }
-
-  generateCreateTables(diff: DeepPartial<DatabaseSchema>) {
-    for (const [tableName, tableSchema] of Object.entries(diff.tables ?? {})) {
-      if (!tableSchema) continue
-
-      const up = this.transformer.addCreateTable('up', tableName)
-      this.transformer.addDropTable('down', tableName)
-
-      for (const [columnName, columnSchema] of Object.entries(tableSchema.columns ?? {})) {
-        if (!columnSchema) continue
-        const targetColumnSchema = this.target.tables[tableName].columns[columnName]
-
-        this.#generateCreateColumn(columnName, targetColumnSchema, up)
-      }
-
-      for (const [indexName, indexSchema] of Object.entries(tableSchema.indices ?? {})) {
-        if (!indexSchema) continue
-
-        console.log(indexName)
-      }
-    }
-  }
-
-  generateAlterTables(diff: DeepPartial<DatabaseSchema>) {
-    for (const [tableName, tableSchema] of Object.entries(diff.tables ?? {})) {
-      if (!tableSchema) continue
-
-      const up = this.transformer.addAlterTable('up', tableName)
-      const down = this.transformer.addAlterTable('down', tableName)
-
-      for (const [columnName, columnSchema] of Object.entries(tableSchema.columns ?? {})) {
-        if (!columnSchema) continue
-
-        const targetColumnSchema = this.target.tables[tableName].columns[columnName]
-        const sourceColumnSchema = this.target.tables[tableName].columns[columnName]
-
-        if (!this.source.tables[tableName].columns[columnName]) {
-          this.#generateCreateColumn(columnName, targetColumnSchema, up)
-          down.addDropColumn(columnName)
-          continue
-        }
-
-        if (columnSchema.type !== undefined) {
-          up.addDropColumn(columnName)
-          this.#generateCreateColumn(columnName, targetColumnSchema, up)
-
-          down.addDropColumn(columnName)
-          this.#generateCreateColumn(columnName, sourceColumnSchema, down)
-
-          continue
-        }
-
-        if (columnSchema.nullable !== undefined) {
-          if (columnSchema.nullable) {
-            up.addSetNullable(columnName)
-            down.addDropNullable(columnName)
-          } else {
-            up.addDropNullable(columnName)
-            down.addSetNullable(columnName)
-          }
-        }
-
-        if (columnSchema.unique !== undefined) {
-          up.addUnique([columnName])
-          down.addDropUnique([columnName])
-        }
-      }
-    }
-  }
-
-  #generateCreateColumn(columnName: string, schema: ColumnSchemaOptions, writer: TableWriter) {
-    writer.addColumn(columnName, schema.type, (columnWriter) => {
-      if (schema.isPrimary === true) {
-        columnWriter.callMethod(`primary`)
-      }
-
-      if (schema.nullable) {
-        columnWriter.callMethod('nullable')
-      } else {
-        columnWriter.callMethod('notNullable')
-      }
-
-      if (schema.unique) {
-        columnWriter.callMethod('unique')
-      }
-
-      if (schema.default) {
-        columnWriter.callMethod('default', [schema.default])
-      }
-    })
-
-    // TODO: Down
-  }
-
-  #hasChanges(diff: DeepPartial<DatabaseSchema>) {
-    return diff.tables && Object.keys(diff.tables).length > 0
-  }
-
-  printDiff(diff: DetailedDiff) {
-    const added = diff.added as DeepPartial<DatabaseSchema>
-    const altered = diff.updated as DeepPartial<DatabaseSchema>
-    const deleted = diff.deleted as DeepPartial<DatabaseSchema>
-
-    const print = (type: 'added' | 'altered' | 'deleted', element: DeepPartial<DatabaseSchema>) => {
-      for (const [tableName, tableSchema] of Object.entries(element.tables ?? {})) {
-        if (!tableSchema) continue
-
-        console.log(`${type} table ${tableName}:`)
-
-        for (const [columnName, columnSchema] of Object.entries(tableSchema.columns ?? {})) {
-          console.log(`- ${columnName}:`)
-
-          if (type === 'altered') {
-            for (const key of Object.keys(columnSchema ?? {})) {
-              // @ts-ignore
-              const sourceValue = this.source.tables[tableName].columns[columnName][key as any]
-              // @ts-ignore
-              const targetValue = this.target.tables[tableName].columns[columnName][key as any]
-
-              console.log(`  - ${key}: ${sourceValue} -> ${targetValue}`)
-            }
-          }
-        }
-      }
-      console.log('')
-    }
-
-    print('added', added)
-    print('altered', altered)
-    print('deleted', deleted)
   }
 }

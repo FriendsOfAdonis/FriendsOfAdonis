@@ -3038,6 +3038,7 @@ __metadata:
     "@japa/expect-type": "npm:^2.0.4"
     "@japa/file-system": "npm:^3.0.0"
     "@japa/runner": "npm:^4.0.0"
+    "@japa/snapshot": "npm:^2.0.10"
     "@npmcli/package-json": "npm:^7.0.4"
     "@swc/core": "npm:1.15.5"
     "@types/luxon": "npm:^3.7.1"
@@ -4021,6 +4022,28 @@ __metadata:
     slash: "npm:^5.1.0"
     supports-color: "npm:^10.1.0"
   checksum: 10c0/9ef9cdb3c591b8a9ebdd4e0ab5291928a98b3b2250f49b2def82b1f5dc5360750f4219ac1bccb0e24a374f640812258e4df70fa3775a65fd89c690577c41b4dd
+  languageName: node
+  linkType: hard
+
+"@japa/snapshot@npm:^2.0.10":
+  version: 2.0.10
+  resolution: "@japa/snapshot@npm:2.0.10"
+  dependencies:
+    dedent: "npm:^1.7.0"
+    jest-message-util: "npm:^30.2.0"
+    magic-string: "npm:^0.30.21"
+    pretty-format: "npm:^30.2.0"
+    stack-utils: "npm:^2.0.6"
+  peerDependencies:
+    "@japa/assert": ^2.0.0 || ^3.0.0 || ^4.0.0
+    "@japa/expect": ^3.0.2
+    "@japa/runner": ^3.1.2 || ^4.0.0 || ^5.0.0
+  peerDependenciesMeta:
+    "@japa/assert":
+      optional: true
+    "@japa/expect":
+      optional: true
+  checksum: 10c0/c549f5ffc057b4a4506f53868cac3a4c0ddfdfa5f5aa14a9fa07e05847b499d5a96becc29511a1b6fc63ee107b9862f1a4f783fb65e956497e25b16a9f356913
   languageName: node
   linkType: hard
 
@@ -11356,7 +11379,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dedent@npm:^1.7.1":
+"dedent@npm:^1.7.0, dedent@npm:^1.7.1":
   version: 1.7.1
   resolution: "dedent@npm:1.7.1"
   peerDependencies:
@@ -16027,7 +16050,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jest-message-util@npm:30.2.0":
+"jest-message-util@npm:30.2.0, jest-message-util@npm:^30.2.0":
   version: 30.2.0
   resolution: "jest-message-util@npm:30.2.0"
   dependencies:
@@ -19726,7 +19749,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pretty-format@npm:30.2.0":
+"pretty-format@npm:30.2.0, pretty-format@npm:^30.2.0":
   version: 30.2.0
   resolution: "pretty-format@npm:30.2.0"
   dependencies:
