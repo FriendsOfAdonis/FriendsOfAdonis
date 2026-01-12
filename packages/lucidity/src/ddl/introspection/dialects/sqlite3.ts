@@ -20,7 +20,7 @@ export class SQLite3Introspector extends BaseDatabaseIntrospector {
         type: type.toLowerCase(),
         isPrimary: Boolean(item.pk),
         nullable: !item.notnull,
-        default: item.dflt_value,
+        default: item.dflt_value ?? undefined,
         maxLength,
         unique: false, // Defaults to unique, replaced if we find index
       }

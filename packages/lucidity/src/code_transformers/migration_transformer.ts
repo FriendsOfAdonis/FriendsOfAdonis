@@ -72,7 +72,7 @@ export class MigrationTransformer {
     const call = expression.getChildren()[0] as CallExpression
     const arrowFn = call.getArguments()[1] as ArrowFunction
 
-    return new TableWriter(arrowFn)
+    return new MigrationTableTransformer(arrowFn)
   }
 
   addCreateTable(lifecycle: 'up' | 'down', table: string) {
@@ -99,7 +99,7 @@ export class MigrationTransformer {
   }
 }
 
-export class TableWriter {
+export class MigrationTableTransformer {
   constructor(public body: ArrowFunction) {}
 
   addColumn(name: string, type: string, callback: (writer: ColumnWriter) => void) {
@@ -133,6 +133,16 @@ export class TableWriter {
   addDropUnique(columns: string[]) {
     const inner = columns.map((column) => `'${column}'`).join(',')
     this.body.addStatements(`table.dropUnique([${inner}])`)
+  }
+
+  addPrimary(columns: string[]) {
+    const inner = columns.map((column) => `'${column}'`).join(',')
+    this.body.addStatements(`table.primary([${inner}])`)
+  }
+
+  addDropPrimary(columns: string[]) {
+    const inner = columns.map((column) => `'${column}'`).join(',')
+    this.body.addStatements(`table.dropPrimary([${inner}])`)
   }
 }
 

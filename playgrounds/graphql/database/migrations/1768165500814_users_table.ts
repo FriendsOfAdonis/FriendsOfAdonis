@@ -15,6 +15,7 @@ export default class extends BaseSchema {
       table.dropNullable('created_at')
     })
     this.schema.alterTable('users', (table) => {
+      table.string('test').notNullable()
       table.dropNullable('updated_at')
     })
   }
@@ -26,6 +27,7 @@ export default class extends BaseSchema {
       table.setNullable('created_at')
     })
     this.schema.alterTable('users', (table) => {
+      table.dropColumn('test')
       table.setNullable('updated_at')
     })
   }

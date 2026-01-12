@@ -1,0 +1,7 @@
+{
+  "title": "Lucidity",
+  "description": "Quality of life features for Lucid ORM",
+  "root": true,
+  "icon": "Search",
+  "pages": ["index", "getting-started", "---Features---", "migrations"]
+}
