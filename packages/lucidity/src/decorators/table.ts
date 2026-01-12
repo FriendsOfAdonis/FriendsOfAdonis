@@ -1,7 +1,7 @@
 import { IndexMetadataStorage } from '../metadata/main.ts'
 import { type IndexSchema } from '../types.ts'
 
-function index(options: Omit<IndexSchema, 'unique'> & { name?: string; unique?: boolean }) {
+function index(options: Omit<IndexSchema, 'isUnique'> & { name?: string; isUnique?: boolean }) {
   return function (target: Function) {
     const metadata = IndexMetadataStorage.getMetadata(target) ?? {}
 
@@ -11,7 +11,7 @@ function index(options: Omit<IndexSchema, 'unique'> & { name?: string; unique?: 
       ...metadata,
       [name]: {
         columns: options.columns,
-        unique: options.unique ?? false,
+        isUnique: options.isUnique ?? false,
       },
     })
   }

@@ -23,11 +23,11 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @column({ type: 'varchar' })
   declare test: string
 
-  @column.varchar({ nullable: true })
+  @column.varchar({ isNullable: true })
   @Field(() => String, { nullable: true })
   declare fullName: string | null
 
-  @column.varchar({ unique: true })
+  @column.varchar({ isNullable: true })
   @Field()
   declare email: string
 

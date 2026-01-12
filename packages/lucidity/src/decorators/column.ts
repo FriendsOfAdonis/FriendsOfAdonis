@@ -7,19 +7,32 @@ import {
 } from '../types.ts'
 import { type LucidModel } from '@adonisjs/lucid/types/model'
 
+const DEFAULT_VARCHAR_LENGTH = 255
+
 export function addSchemaMeta(
   target: Object,
   propertyKey: string,
   options?: Partial<ColumnOptions>
 ) {
-  const { columnName, serializeAs, serialize, prepare, consume, meta, ...schema } = options ?? {}
+  const {
+    type = 'varchar',
+    isUnique = false,
+    isPrimary = false,
+    isNullable = false,
+    maxLength,
+  } = options ?? {}
+
+  // Default maxLength to 255 for varchar/string types (Knex default)
+  const resolvedMaxLength =
+    maxLength === undefined && type === 'varchar' ? DEFAULT_VARCHAR_LENGTH : maxLength
 
   const columnSchema: ColumnSchema = {
-    type: 'varchar',
-    nullable: false,
-    unique: false,
-    isPrimary: false,
-    ...(schema as Partial<ColumnSchema>),
+    type,
+    isNullable,
+    isUnique,
+    isPrimary,
+    default: options?.default,
+    maxLength: resolvedMaxLength,
   }
 
   const Model = target.constructor as LucidModel

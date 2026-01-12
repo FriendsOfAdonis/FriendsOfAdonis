@@ -29,11 +29,11 @@ export abstract class BaseDatabaseIntrospector implements IntrospectorContract {
       ])
 
       for (const [indexName, index] of Object.entries(indices)) {
-        if (!index.unique || index.columns.length !== 1) continue
+        if (!index.isUnique || index.columns.length !== 1) continue
         delete indices[indexName]
 
         if (!columns[index.columns[0]].isPrimary) {
-          columns[index.columns[0]].unique = true
+          columns[index.columns[0]].isUnique = true
         }
       }
 

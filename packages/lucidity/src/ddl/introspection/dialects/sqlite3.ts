@@ -9,20 +9,18 @@ export class SQLite3Introspector extends BaseDatabaseIntrospector {
     const columns = await this.connection.rawQuery(`PRAGMA table_info(\`${table}\`)`)
 
     for (const item of columns) {
-      let maxLength = item.type.match(maxLengthRegex)
-      if (maxLength) {
-        maxLength = maxLength[1]
-      }
+      const match = item.type.match(maxLengthRegex)
+      const maxLength = match ? Number(match[1]) : undefined
 
-      const type = maxLength ? item.type.split('(')[0] : item.type
+      const type = maxLength !== undefined ? item.type.split('(')[0] : item.type
 
       output[item.name] = {
         type: type.toLowerCase(),
         isPrimary: Boolean(item.pk),
-        nullable: !item.notnull,
+        isNullable: !item.notnull,
         default: item.dflt_value ?? undefined,
         maxLength,
-        unique: false, // Defaults to unique, replaced if we find index
+        isUnique: false, // Defaults to false, replaced if we find unique index
       }
     }
 
@@ -37,7 +35,7 @@ export class SQLite3Introspector extends BaseDatabaseIntrospector {
       const info = await this.connection.rawQuery(`PRAGMA index_info(\`${index.name}\`)`)
 
       output[index.name] = {
-        unique: Boolean(index.unique),
+        isUnique: Boolean(index.unique),
         columns: info.map((item: any) => item.name),
       }
     }
