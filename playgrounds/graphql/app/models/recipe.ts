@@ -14,7 +14,7 @@ export default class Recipe extends BaseModel {
   @Field()
   declare title: string
 
-  @column.text({ nullable: true })
+  @column.string({ isNullable: true })
   @Field(() => String, { nullable: true })
   declare description: string | null
 

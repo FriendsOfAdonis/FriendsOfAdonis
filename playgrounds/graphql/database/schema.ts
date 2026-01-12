@@ -68,7 +68,7 @@ export class UserSchema extends BaseModel {
   @column()
   declare fullName: string | null
   @column()
-  declare email: string
+  declare email: string | null
   @column({ serializeAs: null })
   declare password: string
   @column.dateTime({ autoCreate: true })

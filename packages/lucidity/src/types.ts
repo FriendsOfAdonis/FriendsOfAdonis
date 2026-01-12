@@ -12,14 +12,14 @@ export interface BaseSchemaOptions {
    *
    * @default false
    */
-  unique: boolean
+  isUnique: boolean
 
   /**
    * Wether the column is nullable.
    *
    * @default false
    */
-  nullable: boolean
+  isNullable: boolean
 
   /**
    * Default value in SQL format.
@@ -32,6 +32,11 @@ export interface BaseSchemaOptions {
    * @default false
    */
   isPrimary: boolean
+
+  /**
+   * Maximum length for string-like columns (e.g., varchar, char).
+   */
+  maxLength?: string | number
 }
 
 export interface VarcharSchemaOptions extends BaseSchemaOptions {
@@ -39,8 +44,6 @@ export interface VarcharSchemaOptions extends BaseSchemaOptions {
    * Defines a "varchar" column.
    */
   type: 'varchar' | 'text'
-
-  maxLength?: number
 }
 
 export interface DateTimeSchemaOptions extends BaseSchemaOptions {
@@ -70,7 +73,7 @@ export interface TableSchema {
 
 export interface IndexSchema {
   columns: string[]
-  unique: boolean
+  isUnique: boolean
 }
 
 export type ColumnSchema = ColumnSchemaOptions

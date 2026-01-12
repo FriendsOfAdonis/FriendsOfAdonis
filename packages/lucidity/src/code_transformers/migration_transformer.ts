@@ -144,6 +144,12 @@ export class MigrationTableTransformer {
     const inner = columns.map((column) => `'${column}'`).join(',')
     this.body.addStatements(`table.dropPrimary([${inner}])`)
   }
+
+  addAlterColumn(column: string, type: string, args: (string | number)[] = []) {
+    const realtype = DATA_TYPES_MAPPING[type] ?? type
+    const argsStr = args.length > 0 ? `, ${args.join(', ')}` : ''
+    this.body.addStatements(`table.${realtype}('${column}'${argsStr}).alter()`)
+  }
 }
 
 export class ColumnWriter {

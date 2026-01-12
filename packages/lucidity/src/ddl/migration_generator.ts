@@ -1,4 +1,4 @@
-import { type DatabaseSchema, type ColumnSchema, type TableSchema } from '../types.ts'
+import { type ColumnSchema, type TableSchema } from '../types.ts'
 import { type Project } from 'ts-morph'
 import {
   MigrationTransformer,
@@ -35,13 +35,13 @@ function addColumn(column: string, schema: ColumnSchema, transformer: MigrationT
       columnWriter.callMethod(`primary`)
     }
 
-    if (schema.nullable) {
+    if (schema.isNullable) {
       columnWriter.callMethod('nullable')
     } else {
       columnWriter.callMethod('notNullable')
     }
 
-    if (schema.unique) {
+    if (schema.isUnique) {
       columnWriter.callMethod('unique')
     }
 
@@ -93,8 +93,14 @@ const TABLE_DRIFT_HANDLERS: TableDriftHandlers = {
 }
 
 const COLUMN_DRIFT_HANDLERS: Partial<ColumnDriftHandlers> = {
-  unique: (up, down, drift) => {
-    if (drift.target.unique) {
+  type: (up, down, drift) => {
+    const targetArgs = drift.target.maxLength !== undefined ? [drift.target.maxLength] : []
+    const sourceArgs = drift.source.maxLength !== undefined ? [drift.source.maxLength] : []
+    up.addAlterColumn(drift.column, drift.target.type, targetArgs)
+    down.addAlterColumn(drift.column, drift.source.type, sourceArgs)
+  },
+  isUnique: (up, down, drift) => {
+    if (drift.target.isUnique) {
       up.addUnique([drift.column])
       down.addDropUnique([drift.column])
     } else {
@@ -102,8 +108,14 @@ const COLUMN_DRIFT_HANDLERS: Partial<ColumnDriftHandlers> = {
       down.addUnique([drift.column])
     }
   },
-  nullable: (up, down, drift) => {
-    if (drift.target.nullable) {
+  maxLength: (up, down, drift) => {
+    if (drift.drift.includes('type')) return
+
+    // Max length behave the same as type
+    COLUMN_DRIFT_HANDLERS.type!(up, down, drift)
+  },
+  isNullable: (up, down, drift) => {
+    if (drift.target.isNullable) {
       up.addSetNullable(drift.column)
       down.addDropNullable(drift.column)
     } else {
@@ -111,7 +123,7 @@ const COLUMN_DRIFT_HANDLERS: Partial<ColumnDriftHandlers> = {
       down.addSetNullable(drift.column)
     }
   },
-  default: (up, down, drift) => {},
+  default: (_up, _down, _drift) => {},
   isPrimary: (up, down, drift) => {
     if (drift.target.isPrimary) {
       up.addPrimary([drift.column])
@@ -140,8 +152,6 @@ export class MigrationGenerator {
   private transformer: MigrationTransformer
 
   constructor(
-    private source: DatabaseSchema,
-    private target: DatabaseSchema,
     private drifts: TableDrift[],
     project: Project,
     path: string

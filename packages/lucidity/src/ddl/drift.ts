@@ -148,9 +148,9 @@ export type ObjectDrift<T extends Object> = (keyof T)[]
  * Analyse drift between two objects.
  * Only identify changes with one level depth.
  *
- * @returns drifts or false if no there are no drifts
+ * @returns altered properties or false if none
  */
-export function analyzeObjectDrift<T extends Object>(source: T, target: T): ObjectDrift<T> | false {
+export function analyzeObjectDrift<T extends Object>(source: T, target: T) {
   const drift: ObjectDrift<T> = []
 
   for (const key of Object.keys(target)) {
@@ -163,6 +163,10 @@ export function analyzeObjectDrift<T extends Object>(source: T, target: T): Obje
     if (target[key as keyof T] !== source[key as keyof T]) {
       drift.push(key as keyof T)
     }
+  }
+
+  if (drift.length === 0) {
+    return false
   }
 
   return [...new Set(drift)]

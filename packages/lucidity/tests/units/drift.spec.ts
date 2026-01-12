@@ -63,8 +63,8 @@ test.group('analyseDatabaseDrift', () => {
             columns: {
               id: {
                 type: 'integer',
-                unique: false,
-                nullable: false,
+                isUnique: false,
+                isNullable: false,
                 isPrimary: true,
               },
             },
@@ -85,10 +85,10 @@ test.group('analyseDatabaseDrift', () => {
             {
               "column": "id",
               "schema": {
+                "isNullable": false,
                 "isPrimary": true,
-                "nullable": false,
+                "isUnique": false,
                 "type": "integer",
-                "unique": false,
               },
               "type": "column:created",
             },
@@ -153,9 +153,9 @@ test.group('analyseTableDrift', () => {
         columns: {
           id: {
             type: 'varchar',
-            unique: false,
+            isUnique: false,
             isPrimary: true,
-            nullable: false,
+            isNullable: false,
           },
         },
         indices: {},
@@ -167,10 +167,10 @@ test.group('analyseTableDrift', () => {
         {
           "column": "id",
           "schema": {
+            "isNullable": false,
             "isPrimary": true,
-            "nullable": false,
+            "isUnique": false,
             "type": "varchar",
-            "unique": false,
           },
           "type": "column:created",
         },
@@ -184,9 +184,9 @@ test.group('analyseTableDrift', () => {
         columns: {
           id: {
             type: 'varchar',
-            unique: false,
+            isUnique: false,
             isPrimary: true,
-            nullable: false,
+            isNullable: false,
           },
         },
         indices: {},
@@ -202,10 +202,10 @@ test.group('analyseTableDrift', () => {
         {
           "column": "id",
           "schema": {
+            "isNullable": false,
             "isPrimary": true,
-            "nullable": false,
+            "isUnique": false,
             "type": "varchar",
-            "unique": false,
           },
           "type": "column:deleted",
         },

@@ -61,7 +61,7 @@ export default class MakeMigration extends BaseMakeMigration {
       return
     }
 
-    const generator = new MigrationGenerator(databaseSchema, modelsSchema, drifts, project!, path)
+    const generator = new MigrationGenerator(drifts, project!, path)
 
     const migration = await generator.generate()
 
