@@ -16,18 +16,18 @@ const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
 export default class User extends compose(BaseModel, AuthFinder) {
   static accessTokens = DbAccessTokensProvider.forModel(User)
 
-  @column.integer({ isPrimary: true })
+  @column.increments({ isPrimary: true })
   @Field()
   declare id: number
 
   @column({ type: 'varchar' })
   declare test: string
 
-  @column.varchar({ isNullable: true })
+  @column.string({ isNullable: true })
   @Field(() => String, { nullable: true })
   declare fullName: string | null
 
-  @column.varchar({ isNullable: true })
+  @column.string({ isNullable: false, isUnique: true, maxLength: 254 })
   @Field()
   declare email: string
 

@@ -1,13 +1,11 @@
-import { column as baseColumn, dateTimeColumn } from '@adonisjs/lucid/orm'
+import { column as baseColumn, dateTimeColumn, dateColumn } from '@adonisjs/lucid/orm'
 import {
   type DateTimeColumnOptions,
   type ColumnOptions,
-  type VarcharColumnOptions,
-  type ColumnSchema,
+  type KnexColumnType,
+  type BaseSchemaOptions,
 } from '../types.ts'
 import { type LucidModel } from '@adonisjs/lucid/types/model'
-
-const DEFAULT_VARCHAR_LENGTH = 255
 
 export function addSchemaMeta(
   target: Object,
@@ -15,24 +13,24 @@ export function addSchemaMeta(
   options?: Partial<ColumnOptions>
 ) {
   const {
-    type = 'varchar',
+    type = 'string',
     isUnique = false,
     isPrimary = false,
     isNullable = false,
+    autoIncrement = false,
     maxLength,
+    values,
   } = options ?? {}
 
-  // Default maxLength to 255 for varchar/string types (Knex default)
-  const resolvedMaxLength =
-    maxLength === undefined && type === 'varchar' ? DEFAULT_VARCHAR_LENGTH : maxLength
-
-  const columnSchema: ColumnSchema = {
+  const columnSchema: BaseSchemaOptions = {
     type,
     isNullable,
     isUnique,
     isPrimary,
+    autoIncrement,
     default: options?.default,
-    maxLength: resolvedMaxLength,
+    values,
+    maxLength,
   }
 
   const Model = target.constructor as LucidModel
@@ -51,22 +49,68 @@ export function column(options?: Partial<ColumnOptions>) {
   }
 }
 
-const createColumnDecorator = <T extends ColumnOptions = ColumnOptions>(type: T['type']) => {
-  return (options?: Partial<Omit<T, 'type'>>) => column({ type, ...options })
+const createColumnDecorator = <T extends ColumnOptions = ColumnOptions>(
+  type: KnexColumnType,
+  defaultOptions: Partial<ColumnOptions> = {}
+) => {
+  return (options?: Partial<Omit<T, 'type'>>) => column({ type, ...defaultOptions, ...options })
 }
 
-column.varchar = createColumnDecorator<VarcharColumnOptions>('varchar')
-column.string = createColumnDecorator<VarcharColumnOptions>('varchar')
-column.text = createColumnDecorator<VarcharColumnOptions>('text')
+column.increments = createColumnDecorator('integer', { autoIncrement: true })
+column.bigIncrements = createColumnDecorator('bigint', { autoIncrement: true })
 
 column.integer = createColumnDecorator('integer')
+column.tinyint = createColumnDecorator('tinyint')
+column.smallint = createColumnDecorator('smallint')
+column.mediumint = createColumnDecorator('mediumint')
+column.bigint = createColumnDecorator('bigint')
+column.text = createColumnDecorator('text')
+column.string = createColumnDecorator('string')
+column.float = createColumnDecorator('float')
+column.double = createColumnDecorator('double')
+column.decimal = createColumnDecorator('decimal')
+column.boolean = createColumnDecorator('boolean')
+// column.date = createColumnDecorator('date')
+// column.datetime = createColumnDecorator('datetime')
+column.time = createColumnDecorator('time')
+column.timestamp = createColumnDecorator('timestamp')
+column.geometry = createColumnDecorator('geometry')
+column.geography = createColumnDecorator('geography')
+column.point = createColumnDecorator('point')
+column.binary = createColumnDecorator('binary')
 column.json = createColumnDecorator('json')
+column.jsonb = createColumnDecorator('jsonb')
+column.uuid = createColumnDecorator('uuid')
+
+column.enum = function enumColumn(options: Partial<ColumnOptions> & { enum: string[] | object }) {
+  return function decorateAsColumn(target: Object, propertyKey: string) {
+    column(options)(target, propertyKey)
+
+    const values = Array.isArray(options.enum) ? options.enum : Object.keys(options.enum)
+
+    addSchemaMeta(target, propertyKey, {
+      type: 'enum',
+      values,
+      ...options,
+    })
+  }
+}
 
 column.dateTime = function datetime(options?: Partial<Omit<DateTimeColumnOptions, 'type'>>) {
   return function decorateAsColumn(target: Object, propertyKey: string) {
     dateTimeColumn(options)(target as any, propertyKey) // TODO: Types
     addSchemaMeta(target, propertyKey, {
       type: 'datetime',
+      ...options,
+    })
+  }
+}
+
+column.date = function datetime(options?: Partial<Omit<DateTimeColumnOptions, 'type'>>) {
+  return function decorateAsColumn(target: Object, propertyKey: string) {
+    dateColumn(options)(target as any, propertyKey) // TODO: Types
+    addSchemaMeta(target, propertyKey, {
+      type: 'date',
       ...options,
     })
   }

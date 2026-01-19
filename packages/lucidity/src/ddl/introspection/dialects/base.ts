@@ -3,9 +3,9 @@ import { type QueryClientContract } from '@adonisjs/lucid/types/database'
 import {
   type IntrospectorContract,
   type DatabaseSchema,
-  type TableSchema,
   type ColumnSchema,
   type IndexSchema,
+  type KnexColumnType,
 } from '../../../types.ts'
 
 /**
@@ -20,32 +20,68 @@ export abstract class BaseDatabaseIntrospector implements IntrospectorContract {
   }
 
   async introspect(): Promise<DatabaseSchema> {
-    const tables: Record<string, TableSchema> = {}
+    const schema: DatabaseSchema = {
+      tables: {},
+    }
 
-    for (const tableName of await this.connection.getAllTables()) {
-      const [columns, indices] = await Promise.all([
-        this.getColumns(tableName),
-        this.getIndices(tableName),
-      ])
+    const tables = await this.getTables()
 
-      for (const [indexName, index] of Object.entries(indices)) {
-        if (!index.isUnique || index.columns.length !== 1) continue
-        delete indices[indexName]
+    await Promise.all(
+      tables.map(async (tableName) => {
+        const [columns, indices] = await Promise.all([
+          this.getColumns(tableName),
+          this.getIndices(tableName),
+        ])
 
-        if (!columns[index.columns[0]].isPrimary) {
-          columns[index.columns[0]].isUnique = true
+        for (const [indexName, index] of Object.entries(indices)) {
+          if (!index.isUnique || index.columns.length !== 1) continue
+          delete indices[indexName]
+
+          if (!columns[index.columns[0]].isPrimary) {
+            columns[index.columns[0]].isUnique = true
+          }
         }
-      }
 
-      tables[tableName] = {
-        columns,
-        indices,
+        schema.tables[tableName] = {
+          columns,
+          indices,
+          foreignKeys: {},
+        }
+      })
+    )
+
+    return schema
+  }
+
+  async introspectTable(table: string) {
+    const [columns, indices] = await Promise.all([this.getColumns(table), this.getIndices(table)])
+
+    for (const [indexName, index] of Object.entries(indices)) {
+      if (!index.isUnique || index.columns.length !== 1) continue
+      delete indices[indexName]
+
+      if (!columns[index.columns[0]].isPrimary) {
+        columns[index.columns[0]].isUnique = true
       }
     }
 
     return {
-      tables,
+      columns,
+      indices,
     }
+  }
+
+  /**
+   * Returns undefined when the max length is the default value for the column type.
+   */
+  protected normalizeMaxLength(type: string, maxLength?: number | null) {
+    if (maxLength === undefined || maxLength === null) return
+    if (type === 'varchar' && maxLength === 255) return undefined
+    return maxLength
+  }
+
+  toSQLType(type: KnexColumnType): string {
+    return type
   }
 
   getTables(): Promise<string[]> {

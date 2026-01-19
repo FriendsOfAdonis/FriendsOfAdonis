@@ -12,10 +12,12 @@ test.group('analyseDatabaseDrift', () => {
           users: {
             columns: {},
             indices: {},
+            foreignKeys: {},
           },
           posts: {
             columns: {},
             indices: {},
+            foreignKeys: {},
           },
         },
       }
@@ -26,6 +28,7 @@ test.group('analyseDatabaseDrift', () => {
         {
           "schema": {
             "columns": {},
+            "foreignKeys": {},
             "indices": {},
           },
           "table": "users",
@@ -34,6 +37,7 @@ test.group('analyseDatabaseDrift', () => {
         {
           "schema": {
             "columns": {},
+            "foreignKeys": {},
             "indices": {},
           },
           "table": "posts",
@@ -50,10 +54,12 @@ test.group('analyseDatabaseDrift', () => {
           users: {
             columns: {},
             indices: {},
+            foreignKeys: {},
           },
           posts: {
             columns: {},
             indices: {},
+            foreignKeys: {},
           },
         },
       },
@@ -66,13 +72,16 @@ test.group('analyseDatabaseDrift', () => {
                 isUnique: false,
                 isNullable: false,
                 isPrimary: true,
+                autoIncrement: false,
               },
             },
             indices: {},
+            foreignKeys: {},
           },
           posts: {
             columns: {},
             indices: {},
+            foreignKeys: {},
           },
         },
       }
@@ -85,6 +94,7 @@ test.group('analyseDatabaseDrift', () => {
             {
               "column": "id",
               "schema": {
+                "autoIncrement": false,
                 "isNullable": false,
                 "isPrimary": true,
                 "isUnique": false,
@@ -107,10 +117,12 @@ test.group('analyseDatabaseDrift', () => {
           users: {
             columns: {},
             indices: {},
+            foreignKeys: {},
           },
           posts: {
             columns: {},
             indices: {},
+            foreignKeys: {},
           },
         },
       },
@@ -124,6 +136,7 @@ test.group('analyseDatabaseDrift', () => {
         {
           "schema": {
             "columns": {},
+            "foreignKeys": {},
             "indices": {},
           },
           "table": "users",
@@ -132,6 +145,7 @@ test.group('analyseDatabaseDrift', () => {
         {
           "schema": {
             "columns": {},
+            "foreignKeys": {},
             "indices": {},
           },
           "table": "posts",
@@ -148,6 +162,7 @@ test.group('analyseTableDrift', () => {
       {
         columns: {},
         indices: {},
+        foreignKeys: {},
       },
       {
         columns: {
@@ -156,9 +171,11 @@ test.group('analyseTableDrift', () => {
             isUnique: false,
             isPrimary: true,
             isNullable: false,
+            autoIncrement: false,
           },
         },
         indices: {},
+        foreignKeys: {},
       }
     )
 
@@ -167,6 +184,7 @@ test.group('analyseTableDrift', () => {
         {
           "column": "id",
           "schema": {
+            "autoIncrement": false,
             "isNullable": false,
             "isPrimary": true,
             "isUnique": false,
@@ -187,13 +205,16 @@ test.group('analyseTableDrift', () => {
             isUnique: false,
             isPrimary: true,
             isNullable: false,
+            autoIncrement: false,
           },
         },
         indices: {},
+        foreignKeys: {},
       },
       {
         columns: {},
         indices: {},
+        foreignKeys: {},
       }
     )
 
@@ -202,6 +223,7 @@ test.group('analyseTableDrift', () => {
         {
           "column": "id",
           "schema": {
+            "autoIncrement": false,
             "isNullable": false,
             "isPrimary": true,
             "isUnique": false,

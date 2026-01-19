@@ -1,4 +1,5 @@
 import {
+  type CodeBlockWriter,
   type SourceFile,
   type FormatCodeSettings,
   type Project,
@@ -7,9 +8,8 @@ import {
   type ExpressionStatement,
   type CallExpression,
   type ArrowFunction,
-  type CodeBlockWriter,
 } from 'ts-morph'
-import { DATA_TYPES_MAPPING } from '../ddl/mappings.ts'
+import { type KnexColumnBuilderMethod, type KnexTableBuilderMethod } from '../types.ts'
 
 export class MigrationTransformer {
   #project: Project
@@ -102,60 +102,61 @@ export class MigrationTransformer {
 export class MigrationTableTransformer {
   constructor(public body: ArrowFunction) {}
 
-  addColumn(name: string, type: string, callback: (writer: ColumnWriter) => void) {
-    const realtype = DATA_TYPES_MAPPING[type] ?? type
-
+  column(
+    method: KnexTableBuilderMethod,
+    args: string[] = [],
+    callback: (writer: ColumnExpressionWriter) => void
+  ) {
     this.body.addStatements((writer) => {
-      writer.write(`table.${realtype}('${name}')`)
-      const transformer = new ColumnWriter(writer)
-      callback(transformer)
-      writer.write(';').newLine()
+      writer.write(`table.${method}(${args.join(', ')})`)
+
+      const column = new ColumnExpressionWriter(writer)
+      callback(column)
+      writer.newLine()
     })
   }
 
+  callTableMethod(name: KnexTableBuilderMethod, args: string[] = []) {
+    this.body.addStatements(`table.${name}(${args.join(', ')})`)
+  }
+
   addDropColumn(column: string) {
-    this.body.addStatements(`table.dropColumn('${column}')`)
+    this.callTableMethod('dropColumn', [`'${column}'`])
   }
 
   addSetNullable(column: string) {
-    this.body.addStatements(`table.setNullable('${column}')`)
+    this.callTableMethod('setNullable', [`'${column}'`])
   }
 
   addDropNullable(column: string) {
-    this.body.addStatements(`table.dropNullable('${column}')`)
+    this.callTableMethod('dropNullable', [`'${column}'`])
   }
 
   addUnique(columns: string[]) {
-    const inner = columns.map((column) => `'${column}'`).join(',')
-    this.body.addStatements(`table.unique([${inner}])`)
+    const inner = columns.map((column) => `'${column}'`).join(', ')
+    this.callTableMethod('unique', [inner])
   }
 
   addDropUnique(columns: string[]) {
     const inner = columns.map((column) => `'${column}'`).join(',')
-    this.body.addStatements(`table.dropUnique([${inner}])`)
+    this.callTableMethod('dropUnique', [inner])
   }
 
   addPrimary(columns: string[]) {
     const inner = columns.map((column) => `'${column}'`).join(',')
-    this.body.addStatements(`table.primary([${inner}])`)
+    this.callTableMethod('primary', [inner])
   }
 
   addDropPrimary(columns: string[]) {
     const inner = columns.map((column) => `'${column}'`).join(',')
-    this.body.addStatements(`table.dropPrimary([${inner}])`)
-  }
-
-  addAlterColumn(column: string, type: string, args: (string | number)[] = []) {
-    const realtype = DATA_TYPES_MAPPING[type] ?? type
-    const argsStr = args.length > 0 ? `, ${args.join(', ')}` : ''
-    this.body.addStatements(`table.${realtype}('${column}'${argsStr}).alter()`)
+    this.callTableMethod('dropPrimary', [inner])
   }
 }
 
-export class ColumnWriter {
+export class ColumnExpressionWriter {
   constructor(public writer: CodeBlockWriter) {}
 
-  callMethod(name: string, args: string[] = []) {
+  callMethod(name: KnexColumnBuilderMethod, args: string[] = []) {
     this.writer.write(`.${name}(${args.join(', ')})`)
   }
 }

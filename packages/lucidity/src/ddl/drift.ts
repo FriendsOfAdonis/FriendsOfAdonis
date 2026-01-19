@@ -113,6 +113,8 @@ export function analyseTableDrift(source: TableSchema, target: TableSchema) {
   }
 
   for (const [columnName, columnSchema] of Object.entries(target.columns)) {
+    if (!columnSchema) continue
+
     if (!source.columns[columnName]) {
       drifts.push({
         type: 'column:created',
@@ -153,21 +155,36 @@ export type ObjectDrift<T extends Object> = (keyof T)[]
 export function analyzeObjectDrift<T extends Object>(source: T, target: T) {
   const drift: ObjectDrift<T> = []
 
-  for (const key of Object.keys(target)) {
-    if (target[key as keyof T] !== source[key as keyof T]) {
-      drift.push(key as keyof T)
+  function checkDrift(a: T, b: T) {
+    for (const key of Object.keys(a)) {
+      const s = a[key as keyof T]
+      const t = b[key as keyof T]
+
+      if (Array.isArray(s) && Array.isArray(t)) {
+        if (checkArrayEquality(s, t)) {
+          continue
+        }
+      }
+
+      if (s !== t) {
+        drift.push(key as keyof T)
+      }
     }
   }
 
-  for (const key of Object.keys(source)) {
-    if (target[key as keyof T] !== source[key as keyof T]) {
-      drift.push(key as keyof T)
-    }
-  }
+  checkDrift(source, target)
+  checkDrift(target, source)
 
   if (drift.length === 0) {
     return false
   }
 
   return [...new Set(drift)]
+}
+
+function checkArrayEquality<T>(a: T[], b: T[]): boolean {
+  if (a.length !== b.length) return false
+  const sortedA = [...a].sort()
+  const sortedB = [...b].sort()
+  return sortedA.every((val, index) => val === sortedB[index])
 }

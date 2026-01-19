@@ -30,7 +30,7 @@ export class PostSchema extends BaseModel {
   static $columns = ['id', 'title', 'description', 'ingredients', 'updatedAt', 'createdAt'] as const
   $columns = PostSchema.$columns
   @column({ isPrimary: true })
-  declare id: string
+  declare id: number
   @column()
   declare title: string
   @column()
@@ -68,7 +68,7 @@ export class UserSchema extends BaseModel {
   @column()
   declare fullName: string | null
   @column()
-  declare email: string | null
+  declare email: string
   @column({ serializeAs: null })
   declare password: string
   @column.dateTime({ autoCreate: true })
