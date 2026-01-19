@@ -1,7 +1,7 @@
 {
   "name": "@foadonis/lucidity",
   "description": "Quality of life improvements for the Lucid ORM",
-  "version": "0.0.0",
+  "version": "0.0.1-next.0",
   "engines": {
     "node": ">=20.6.0"
   },
@@ -69,6 +69,7 @@
     "@types/better-sqlite3": "^7.6.12",
     "@types/luxon": "^3.7.1",
     "@types/node": "catalog:",
+    "@types/pg": "^8.11.0",
     "@types/sinon": "^21.0.0",
     "@types/wtfnode": "^0",
     "better-sqlite3": "^11.9.1",
@@ -77,8 +78,10 @@
     "del-cli": "^7.0.0",
     "eslint": "catalog:",
     "luxon": "^3.7.2",
+    "pg": "^8.13.0",
     "prettier": "catalog:",
     "reflect-metadata": "^0.2.2",
+    "testcontainers": "^10.18.0",
     "ts-node": "^10.9.2",
     "typescript": "catalog:",
     "youch": "catalog:"
@@ -90,6 +93,7 @@
   },
   "dependencies": {
     "@npmcli/package-json": "^7.0.4",
+    "chalk": "^5.6.2",
     "cli-highlight": "^2.1.11",
     "deep-object-diff": "^1.1.9",
     "globby": "^16.1.0",

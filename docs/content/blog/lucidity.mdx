@@ -1,0 +1,42 @@
+---
+title: 'Introducing Lucidity'
+description: Generate migrations automatically with Lucid ORM
+thumbnail: /images/blog/sentry-with-adonis/thumbnail.png
+date: 2025-04-02
+author: Martin PAUCOT
+---
+
+## TL;DR
+
+Lucidity allows you to define your database schema directly using the `@column` decorator.
+When running the `make:migration` it introspect your database and detect changes to generate the migration to synchronize your database schema with your models schema.
+
+Get started using `node ace add @foadonis/lucidity`.
+
+## Story
+
+Coming from the [Symfony](https://symfony.com) world, I worked on extremely large monolyth containing sometimes over ~200 tables, architectured over years of development. One of the biggest challenge was maintaining the database schema:
+
+- How do you work with 5 years of migration files?
+- How do you ensure that no one forgot a `notNullable()` in a migration?
+
+With the AdonisJS v7, Lucid bring an new feature that automatically generate your models (model schemas) by introspecting your database.
+This approach is called "Schema-first" is a really different from the industry standard, and there are reasons for this.
+
+### Code-first vs Schema-first
+
+#### Schema-first
+
+With the Schema-first approach, the database is introspected (tables, columns, etc) to generate automatically your models: **Your infrastructure define your application**.
+
+## The Horror storyy
+
+It started with a single alert: an undefined value had slipped into our analytics calculations. At first, we thought it was a fluke. But as we dug deeper, the numbers refused to make sense.
+
+This shouldn’t have been possible. Our system is end-to-end type-safe. Every model, every calculation, every function is strictly typed. Undefined values don’t just happen… or so we thought.
+
+We tried reproducing the error. Locally: nothing. Staging: nothing. Every test passed. Every check confirmed our assumptions. But production was screaming at us with a mysterious bug that no one could explain.
+
+Hours were spent reverse-engineering the analytics pipeline, tracing every calculation, every join, every aggregation. And then, like a ghost in the machine, we found it: a null value had been set in a column that should never have been nullable. A single rogue database entry was corrupting the whole system.
+
+If only we had a way to ensure our database schema always matched our models… a tool that could catch these mismatches before they hit production. That’s exactly what Lucidity does.

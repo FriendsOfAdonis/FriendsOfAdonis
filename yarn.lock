@@ -684,16 +684,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@adonisjs/lucid@npm:^22.0.0-next.4":
-  version: 22.0.0-next.4
-  resolution: "@adonisjs/lucid@npm:22.0.0-next.4"
+"@adonisjs/lucid@npm:^22.0.0-next.7":
+  version: 22.0.0-next.7
+  resolution: "@adonisjs/lucid@npm:22.0.0-next.7"
   dependencies:
-    "@adonisjs/presets": "npm:^3.0.0-next.0"
-    "@faker-js/faker": "npm:^10.1.0"
+    "@adonisjs/presets": "npm:^3.0.0-next.1"
+    "@faker-js/faker": "npm:^10.2.0"
     "@poppinss/hooks": "npm:^7.3.0"
     "@poppinss/macroable": "npm:^1.1.0"
     "@poppinss/qs": "npm:^6.15.0"
-    "@poppinss/utils": "npm:^7.0.0-next.5"
+    "@poppinss/utils": "npm:^7.0.0-next.6"
     deepmerge: "npm:^4.3.1"
     fast-deep-equal: "npm:^3.1.3"
     igniculus: "npm:^1.5.0"
@@ -704,8 +704,8 @@ __metadata:
     slash: "npm:^5.1.0"
     tarn: "npm:^3.0.2"
   peerDependencies:
-    "@adonisjs/assembler": ^8.0.0-next.9
-    "@adonisjs/core": ^7.0.0-next.1
+    "@adonisjs/assembler": ^8.0.0-next.29
+    "@adonisjs/core": ^7.0.0-next.21
     "@vinejs/vine": ^3.0.0 || ^4.0.0
     luxon: ^3.4.4
   peerDependenciesMeta:
@@ -715,7 +715,7 @@ __metadata:
       optional: true
     luxon:
       optional: true
-  checksum: 10c0/34c05b962117bfc291baa63e298040ad97a26ee927111b909b77e473abdab91386f54239c81ba443de236702efe6c605a5a7bd531ff718687a472ce2017e222c
+  checksum: 10c0/5478bf9d28ab06cf76c0e077972668cc4bfa16d50623c6ea88f4eb75846a24b9ef2364a2f5eab6bb571a07a3461afcb62c15f03482c805c5c9e29d4562104a3e
   languageName: node
   linkType: hard
 
@@ -744,6 +744,19 @@ __metadata:
     "@adonisjs/assembler":
       optional: true
   checksum: 10c0/967cf38f79306784e4e65ee037dc77e9dfb07ac11a66efafc9550836e6f1f9eb81970189aa665b036f58a7db6bfa1bd0eb73f3205491b6beeca21215e0d308c9
+  languageName: node
+  linkType: hard
+
+"@adonisjs/presets@npm:^3.0.0-next.1":
+  version: 3.0.0-next.1
+  resolution: "@adonisjs/presets@npm:3.0.0-next.1"
+  peerDependencies:
+    "@adonisjs/assembler": ^8.0.0-next.9
+    "@adonisjs/core": ^7.0.0-next.1
+  peerDependenciesMeta:
+    "@adonisjs/assembler":
+      optional: true
+  checksum: 10c0/a51203cdfd0067eb2550addf373fe2b2f9fe702a92bdb5f5f1e037f78dbae64c312a309ad18283db3377e1edd40ae6125bf955ded4d52d1b5befe3e25da922b2
   languageName: node
   linkType: hard
 
@@ -2755,7 +2768,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@faker-js/faker@npm:^10.1.0":
+"@faker-js/faker@npm:^10.2.0":
   version: 10.2.0
   resolution: "@faker-js/faker@npm:10.2.0"
   checksum: 10c0/72b5048ff32e90b2876560015e177f91b0625dafaaa43631302e413329105be331a1c126c8f7b0f95817cacd51c9222b58e62b6f09f5485522302e6103f19f09
@@ -2766,6 +2779,13 @@ __metadata:
   version: 9.9.0
   resolution: "@faker-js/faker@npm:9.9.0"
   checksum: 10c0/02107cb6915217b4831fa4b261603165972eb7f09d2ab2e1d4b75807df2d425a2bac8621cddbfdcc158c2c447c2bce2e14939d51c4a63fbd832df55452e7f73c
+  languageName: node
+  linkType: hard
+
+"@fastify/busboy@npm:^2.0.0":
+  version: 2.1.1
+  resolution: "@fastify/busboy@npm:2.1.1"
+  checksum: 10c0/6f8027a8cba7f8f7b736718b013f5a38c0476eea67034c94a0d3c375e2b114366ad4419e6a6fa7ffc2ef9c6d3e0435d76dd584a7a1cbac23962fda7650b579e3
   languageName: node
   linkType: hard
 
@@ -3044,10 +3064,12 @@ __metadata:
     "@types/better-sqlite3": "npm:^7.6.12"
     "@types/luxon": "npm:^3.7.1"
     "@types/node": "catalog:"
+    "@types/pg": "npm:^8.11.0"
     "@types/sinon": "npm:^21.0.0"
     "@types/wtfnode": "npm:^0"
     better-sqlite3: "npm:^11.9.1"
     c8: "npm:^10.1.3"
+    chalk: "npm:^5.6.2"
     cli-highlight: "npm:^2.1.11"
     copyfiles: "npm:^2.4.1"
     deep-object-diff: "npm:^1.1.9"
@@ -3055,9 +3077,11 @@ __metadata:
     eslint: "catalog:"
     globby: "npm:^16.1.0"
     luxon: "npm:^3.7.2"
+    pg: "npm:^8.13.0"
     pkg-types: "npm:^2.3.0"
     prettier: "catalog:"
     reflect-metadata: "npm:^0.2.2"
+    testcontainers: "npm:^10.18.0"
     ts-morph: "npm:^27.0.2"
     ts-node: "npm:^10.9.2"
     type-fest: "npm:^5.3.1"
@@ -5901,6 +5925,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@poppinss/utils@npm:^7.0.0-next.6":
+  version: 7.0.0-next.6
+  resolution: "@poppinss/utils@npm:7.0.0-next.6"
+  dependencies:
+    "@poppinss/exception": "npm:^1.2.3"
+    "@poppinss/object-builder": "npm:^1.1.0"
+    "@poppinss/string": "npm:^1.7.1"
+    "@poppinss/types": "npm:^1.2.1"
+    flattie: "npm:^1.1.1"
+  checksum: 10c0/ba9a76feb5549c0b1c73c1c2a21c2ec94c75d8837bf36bf378e45ec443597c3455fc046abfdaa49055c938d096680aad2dbf5de6e3ee126dc9455bd34a841cab
+  languageName: node
+  linkType: hard
+
 "@poppinss/validator-lite@npm:^2.1.0":
   version: 2.1.0
   resolution: "@poppinss/validator-lite@npm:2.1.0"
@@ -7826,7 +7863,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/dockerode@npm:^3.3.47":
+"@types/dockerode@npm:^3.3.35, @types/dockerode@npm:^3.3.47":
   version: 3.3.47
   resolution: "@types/dockerode@npm:3.3.47"
   dependencies:
@@ -8078,6 +8115,17 @@ __metadata:
     pg-protocol: "npm:*"
     pg-types: "npm:^2.2.0"
   checksum: 10c0/7f93f83a4da0dc6133918f824d826fa34e78fb8cf86392d28a0e095c836c6910c014ced5d4b364d83e8485a65ce369adeb9663b14ba301241d4c0f80073007f3
+  languageName: node
+  linkType: hard
+
+"@types/pg@npm:^8.11.0":
+  version: 8.16.0
+  resolution: "@types/pg@npm:8.16.0"
+  dependencies:
+    "@types/node": "npm:*"
+    pg-protocol: "npm:*"
+    pg-types: "npm:^2.2.0"
+  checksum: 10c0/421fe7c07d5c0226835d362414a63653f86251ee966150d807ed60174c13921d1b8a3e2f1c2bfba9659ec0282ca50974030c4c1efcd575003eb922ea12ca7d05
   languageName: node
   linkType: hard
 
@@ -10573,6 +10621,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"chalk@npm:^5.6.2":
+  version: 5.6.2
+  resolution: "chalk@npm:5.6.2"
+  checksum: 10c0/99a4b0f0e7991796b1e7e3f52dceb9137cae2a9dfc8fc0784a550dc4c558e15ab32ed70b14b21b52beb2679b4892b41a0aa44249bcb996f01e125d58477c6976
+  languageName: node
+  linkType: hard
+
 "change-case@npm:^5.4.4":
   version: 5.4.4
   resolution: "change-case@npm:5.4.4"
@@ -11697,6 +11752,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"docker-compose@npm:^0.24.8":
+  version: 0.24.8
+  resolution: "docker-compose@npm:0.24.8"
+  dependencies:
+    yaml: "npm:^2.2.2"
+  checksum: 10c0/1494389e554fed8aabf9fef24210a641cd2442028b1462d7f68186919f5e75045f7bfb4ccaf47c94ed879dcb63e4d82885c389399f531550c4b244920740b2b3
+  languageName: node
+  linkType: hard
+
 "docker-compose@npm:^1.3.0":
   version: 1.3.0
   resolution: "docker-compose@npm:1.3.0"
@@ -11718,7 +11782,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dockerode@npm:^4.0.9":
+"dockerode@npm:^4.0.5, dockerode@npm:^4.0.9":
   version: 4.0.9
   resolution: "dockerode@npm:4.0.9"
   dependencies:
@@ -19267,10 +19331,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"pg-cloudflare@npm:^1.2.7":
+  version: 1.2.7
+  resolution: "pg-cloudflare@npm:1.2.7"
+  checksum: 10c0/8a52713dbdecc9d389dc4e65e3b7ede2e199ec3715f7491ee80a15db171f2d75677a102e9c2cef0cb91a2f310e91f976eaec0dd6ef5d8bf357de0b948f9d9431
+  languageName: node
+  linkType: hard
+
 "pg-connection-string@npm:2.6.2":
   version: 2.6.2
   resolution: "pg-connection-string@npm:2.6.2"
   checksum: 10c0/e8fdea74fcc8bdc3d7c5c6eadd9425fdba7e67fb7fe836f9c0cecad94c8984e435256657d1d8ce0483d1fedef667e7a57e32449a63cb805cb0289fc34b62da35
+  languageName: node
+  linkType: hard
+
+"pg-connection-string@npm:^2.9.1":
+  version: 2.9.1
+  resolution: "pg-connection-string@npm:2.9.1"
+  checksum: 10c0/9a646529bbc0843806fc5de98ce93735a4612b571f11867178a85665d11989a827e6fd157388ca0e34ec948098564fce836c178cfd499b9f0e8cd9972b8e2e5c
   languageName: node
   linkType: hard
 
@@ -19281,14 +19359,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pg-protocol@npm:*":
+"pg-pool@npm:^3.10.1":
+  version: 3.10.1
+  resolution: "pg-pool@npm:3.10.1"
+  peerDependencies:
+    pg: ">=8.0"
+  checksum: 10c0/a00916b7df64226cc597fe769e3a757ff9b11562dc87ce5b0a54101a18c1fe282daaa2accaf27221e81e1e4cdf4da6a33dab09614734d32904d6c4e11c44a079
+  languageName: node
+  linkType: hard
+
+"pg-protocol@npm:*, pg-protocol@npm:^1.10.3":
   version: 1.10.3
   resolution: "pg-protocol@npm:1.10.3"
   checksum: 10c0/f7ef54708c93ee6d271e37678296fc5097e4337fca91a88a3d99359b78633dbdbf6e983f0adb34b7cdd261b7ec7266deb20c3233bf3dfdb498b3e1098e8750b9
   languageName: node
   linkType: hard
 
-"pg-types@npm:^2.2.0":
+"pg-types@npm:2.2.0, pg-types@npm:^2.2.0":
   version: 2.2.0
   resolution: "pg-types@npm:2.2.0"
   dependencies:
@@ -19298,6 +19385,37 @@ __metadata:
     postgres-date: "npm:~1.0.4"
     postgres-interval: "npm:^1.1.0"
   checksum: 10c0/ab3f8069a323f601cd2d2279ca8c425447dab3f9b61d933b0601d7ffc00d6200df25e26a4290b2b0783b59278198f7dd2ed03e94c4875797919605116a577c65
+  languageName: node
+  linkType: hard
+
+"pg@npm:^8.13.0":
+  version: 8.16.3
+  resolution: "pg@npm:8.16.3"
+  dependencies:
+    pg-cloudflare: "npm:^1.2.7"
+    pg-connection-string: "npm:^2.9.1"
+    pg-pool: "npm:^3.10.1"
+    pg-protocol: "npm:^1.10.3"
+    pg-types: "npm:2.2.0"
+    pgpass: "npm:1.0.5"
+  peerDependencies:
+    pg-native: ">=3.0.1"
+  dependenciesMeta:
+    pg-cloudflare:
+      optional: true
+  peerDependenciesMeta:
+    pg-native:
+      optional: true
+  checksum: 10c0/a6a407ff0efb7599760d72ffdcda47a74c34c0fd71d896623caac45cf2cfb0f49a10973cce23110f182b9810639a1e9f6904454d7358c7001574ee0ffdcbce2a
+  languageName: node
+  linkType: hard
+
+"pgpass@npm:1.0.5":
+  version: 1.0.5
+  resolution: "pgpass@npm:1.0.5"
+  dependencies:
+    split2: "npm:^4.1.0"
+  checksum: 10c0/5ea6c9b2de04c33abb08d33a2dded303c4a3c7162a9264519cbe85c0a9857d712463140ba42fad0c7cd4b21f644dd870b45bb2e02fcbe505b4de0744fd802c1d
   languageName: node
   linkType: hard
 
@@ -21620,7 +21738,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"split2@npm:^4.0.0":
+"split2@npm:^4.0.0, split2@npm:^4.1.0":
   version: 4.2.0
   resolution: "split2@npm:4.2.0"
   checksum: 10c0/b292beb8ce9215f8c642bb68be6249c5a4c7f332fc8ecadae7be5cbdf1ea95addc95f0459ef2e7ad9d45fd1064698a097e4eb211c83e772b49bc0ee423e91534
@@ -22261,7 +22379,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tar-fs@npm:^3.1.1":
+"tar-fs@npm:^3.0.7, tar-fs@npm:^3.1.1":
   version: 3.1.1
   resolution: "tar-fs@npm:3.1.1"
   dependencies:
@@ -22379,6 +22497,29 @@ __metadata:
     glob: "npm:^10.4.1"
     minimatch: "npm:^9.0.4"
   checksum: 10c0/6d67b9af4336a2e12b26a68c83308c7863534c65f27ed4ff7068a56f5a58f7ac703e8fc80f698a19bb154fd8f705cdf7ec347d9512b2c522c737269507e7b263
+  languageName: node
+  linkType: hard
+
+"testcontainers@npm:^10.18.0":
+  version: 10.28.0
+  resolution: "testcontainers@npm:10.28.0"
+  dependencies:
+    "@balena/dockerignore": "npm:^1.0.2"
+    "@types/dockerode": "npm:^3.3.35"
+    archiver: "npm:^7.0.1"
+    async-lock: "npm:^1.4.1"
+    byline: "npm:^5.0.0"
+    debug: "npm:^4.3.5"
+    docker-compose: "npm:^0.24.8"
+    dockerode: "npm:^4.0.5"
+    get-port: "npm:^7.1.0"
+    proper-lockfile: "npm:^4.1.2"
+    properties-reader: "npm:^2.3.0"
+    ssh-remote-port-forward: "npm:^1.0.4"
+    tar-fs: "npm:^3.0.7"
+    tmp: "npm:^0.2.3"
+    undici: "npm:^5.29.0"
+  checksum: 10c0/0bdefbcac5b774df4ed373f7e6f6a4df91f2c7fd2be135571471df6bdfa62919843824d11329a36a53c7446210db1eb17d8fb6658b7616d4b0158c089ed9563b
   languageName: node
   linkType: hard
 
@@ -22533,7 +22674,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tmp@npm:^0.2.5":
+"tmp@npm:^0.2.3, tmp@npm:^0.2.5":
   version: 0.2.5
   resolution: "tmp@npm:0.2.5"
   checksum: 10c0/cee5bb7d674bb4ba3ab3f3841c2ca7e46daeb2109eec395c1ec7329a91d52fcb21032b79ac25161a37b2565c4858fefab927af9735926a113ef7bac9091a6e0e
@@ -23198,6 +23339,15 @@ __metadata:
   version: 7.16.0
   resolution: "undici-types@npm:7.16.0"
   checksum: 10c0/3033e2f2b5c9f1504bdc5934646cb54e37ecaca0f9249c983f7b1fc2e87c6d18399ebb05dc7fd5419e02b2e915f734d872a65da2e3eeed1813951c427d33cc9a
+  languageName: node
+  linkType: hard
+
+"undici@npm:^5.29.0":
+  version: 5.29.0
+  resolution: "undici@npm:5.29.0"
+  dependencies:
+    "@fastify/busboy": "npm:^2.0.0"
+  checksum: 10c0/e4e4d631ca54ee0ad82d2e90e7798fa00a106e27e6c880687e445cc2f13b4bc87c5eba2a88c266c3eecffb18f26e227b778412da74a23acc374fca7caccec49b
   languageName: node
   linkType: hard
 

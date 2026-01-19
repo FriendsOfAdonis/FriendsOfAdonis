@@ -1,12 +1,14 @@
 import { type Database } from '@adonisjs/lucid/database'
 import { type QueryClientContract } from '@adonisjs/lucid/types/database'
 import { type DatabaseSchema, type IntrospectorContract } from '../../types.ts'
+import { PostgresIntrospector } from './dialects/postgres.ts'
 import { SQLite3Introspector } from './dialects/sqlite3.ts'
 import { type BaseDatabaseIntrospector } from './dialects/base.ts'
 import { type Constructor } from '@adonisjs/core/types/common'
 
 const DIALECTS: Record<string, Constructor<BaseDatabaseIntrospector>> = {
   'better-sqlite3': SQLite3Introspector,
+  'postgres': PostgresIntrospector,
 }
 
 /**

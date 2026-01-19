@@ -5,7 +5,7 @@ export interface BaseSchemaOptions {
   /**
    * The mapping type to use for the column.
    */
-  type: 'integer' | 'json' | string
+  type: KnexColumnType | (string & {})
 
   /**
    * Wether the column is a unique key.
@@ -34,16 +34,43 @@ export interface BaseSchemaOptions {
   isPrimary: boolean
 
   /**
+   * Wether the column is autoincrements.
+   *
+   * @default false
+   */
+  autoIncrement: boolean
+
+  /**
    * Maximum length for string-like columns (e.g., varchar, char).
    */
-  maxLength?: string | number
+  maxLength?: number
+
+  /**
+   * List of enum values for enum-like columns.
+   */
+  values?: string[]
 }
 
-export interface VarcharSchemaOptions extends BaseSchemaOptions {
+export interface IndexOptions {
   /**
-   * Defines a "varchar" column.
+   * Name of the foreign key.
    */
-  type: 'varchar' | 'text'
+  name: string
+
+  /**
+   * Columns included in the foreign key.
+   */
+  columns: string[]
+
+  /**
+   * Foreign key ON DELETE action.
+   */
+  onDelete?: 'CASCASE' | 'SET NULL' | 'SET DEFAULT' | 'RESTRICT' | 'NO ACTION'
+
+  /**
+   * Foreign key ON UPDATE action.
+   */
+  onUpdate?: 'CASCASE' | 'SET NULL' | 'SET DEFAULT' | 'RESTRICT' | 'NO ACTION'
 }
 
 export interface DateTimeSchemaOptions extends BaseSchemaOptions {
@@ -52,15 +79,16 @@ export interface DateTimeSchemaOptions extends BaseSchemaOptions {
   autoUpdate?: boolean
 }
 
-export type ColumnSchemaOptions = BaseSchemaOptions | VarcharSchemaOptions | DateTimeSchemaOptions
+export interface EnumSchemaOptions extends BaseSchemaOptions {
+  type: 'enum'
+  values: string[]
+}
 
-export interface VarcharColumnOptions extends BaseColumnOptions, VarcharSchemaOptions {}
+export type ColumnSchemaOptions = BaseSchemaOptions | DateTimeSchemaOptions | EnumSchemaOptions
+
 export interface DateTimeColumnOptions extends BaseColumnOptions, DateTimeSchemaOptions {}
 
-export type ColumnOptions =
-  | VarcharColumnOptions
-  | DateTimeColumnOptions
-  | (BaseColumnOptions & BaseSchemaOptions)
+export type ColumnOptions = BaseColumnOptions & BaseSchemaOptions
 
 export interface DatabaseSchema {
   tables: Record<string, TableSchema>
@@ -69,6 +97,7 @@ export interface DatabaseSchema {
 export interface TableSchema {
   columns: Record<string, ColumnSchema>
   indices: Record<string, IndexSchema>
+  foreignKeys: Record<string, ForeignKeySchema>
 }
 
 export interface IndexSchema {
@@ -76,7 +105,24 @@ export interface IndexSchema {
   isUnique: boolean
 }
 
-export type ColumnSchema = ColumnSchemaOptions
+export type ColumnSchema = {
+  type: string
+
+  isUnique: boolean
+  isPrimary: boolean
+  isNullable: boolean
+
+  autoIncrement: boolean
+  maxLength?: number
+  default?: string
+  values?: string[]
+}
+
+export type ForeignKeySchema = {
+  columns: string[]
+  onUpdate?: string
+  onDelete?: string
+}
 
 export interface ColumnInfo extends Knex.ColumnInfo {
   isPrimary: boolean
@@ -85,3 +131,34 @@ export interface ColumnInfo extends Knex.ColumnInfo {
 export interface IntrospectorContract {
   introspect(): Promise<DatabaseSchema>
 }
+
+/**
+ * List of known types handled by Knex table builder.
+ */
+export type KnexColumnType =
+  | 'integer'
+  | 'tinyint'
+  | 'smallint'
+  | 'mediumint'
+  | 'bigint'
+  | 'text'
+  | 'string'
+  | 'float'
+  | 'double'
+  | 'decimal'
+  | 'boolean'
+  | 'date'
+  | 'datetime'
+  | 'time'
+  | 'timestamp'
+  | 'geometry'
+  | 'geography'
+  | 'point'
+  | 'binary'
+  | 'enum'
+  | 'json'
+  | 'jsonb'
+  | 'uuid'
+
+export type KnexTableBuilderMethod = keyof Knex.CreateTableBuilder
+export type KnexColumnBuilderMethod = keyof Knex.ColumnBuilder

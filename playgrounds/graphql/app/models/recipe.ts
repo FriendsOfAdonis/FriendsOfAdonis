@@ -6,15 +6,15 @@ import { DateTime } from 'luxon'
 @ObjectType()
 @table.index({ columns: ['title', 'description'] })
 export default class Recipe extends BaseModel {
-  @column.integer({ isPrimary: true })
+  @column.increments({ isPrimary: true })
   @Field(() => ID)
-  declare id: string
+  declare id: number
 
-  @column.varchar()
+  @column.string()
   @Field()
   declare title: string
 
-  @column.string({ isNullable: true })
+  @column.text({ isNullable: true })
   @Field(() => String, { nullable: true })
   declare description: string | null
 
