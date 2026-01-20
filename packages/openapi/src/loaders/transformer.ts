@@ -1,3 +1,4 @@
+import stringHelpers from '@adonisjs/core/helpers/string'
 import { BaseTransformer, Item } from '@adonisjs/core/transformers'
 import { type Constructor } from '@adonisjs/core/types/common'
 import { type ExtractTransformerVariants } from '@adonisjs/core/types/transformers'
@@ -17,7 +18,7 @@ export const TransformerLoader: TypeLoaderFn = async (context, value) => {
       return
     }
 
-    return resolveSchema(context, value.transformer, schema, value.variant)
+    return resolveSchema(context, value.transformer, schema, value.variant, value.isPaginated)
   }
 }
 
@@ -56,13 +57,13 @@ function transformSchema(
         const resolved = findSchema(context, schema)
         properties[key] = {
           ...data,
-          items: resolveSchema(context, value.transformer, resolved, value.variant),
+          items: resolveSchema(context, value.transformer, resolved, value.variant, false),
         }
       }
 
       if (data.type === 'object') {
         const resolved = findSchema(context, schema)
-        properties[key] = resolveSchema(context, value.transformer, resolved, value.variant)
+        properties[key] = resolveSchema(context, value.transformer, resolved, value.variant, false)
       }
     }
   }
@@ -78,16 +79,42 @@ function resolveSchema(
   context: Context,
   transformerClass: Constructor<BaseTransformer<unknown>>,
   schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject,
-  variant: string
-) {
+  variant: string,
+  isPaginated: boolean
+): OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject {
   const transformed = transformSchema(
     context,
     transformerClass,
     findSchema(context, schema),
     variant
   )
-  const name = `${transformerClass.name}_${variant}`
+  const a = stringHelpers.create(transformerClass.name).removeSuffix('Transformer').toString()
+  const b = stringHelpers.create(variant).removePrefix('to')
+  const name = stringHelpers.create(`${a}_${b}`).pascalCase().toString()
   context.schemas[name] = transformed
+
+  if (isPaginated) {
+    return {
+      type: 'object',
+      properties: {
+        data: {
+          type: 'array',
+          items: { $ref: getSchemaPath(name) },
+        },
+        meta: {
+          type: 'object',
+          properties: {
+            firstPage: { type: 'number' },
+            lastPage: { type: 'number' },
+            perPage: { type: 'number' },
+            total: { type: 'number' },
+          },
+        },
+      },
+      required: ['data', 'meta'],
+    }
+  }
+
   return { $ref: getSchemaPath(name) }
 }
 
@@ -97,8 +124,14 @@ export class TransformerSchema<
   constructor(
     public transformer: Transformer,
     public resource: ExtractTransformerResource<InstanceType<Transformer>>,
-    public variant: string = 'toObject'
+    public variant: string = 'toObject',
+    public isPaginated = false
   ) {}
+
+  paginated() {
+    this.isPaginated = true
+    return this
+  }
 
   useVariant<V extends ExtractTransformerVariants<InstanceType<Transformer>>>(variant: V) {
     this.variant = variant
