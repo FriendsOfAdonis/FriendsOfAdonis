@@ -1,5 +1,13 @@
 # @foadonis/openapi
 
+## 1.0.0-next.0
+
+### Major Changes
+
+- [`5c989b9`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/5c989b9191ed8cdc4305a7631582613967c65093) Thanks [@kerwanp](https://github.com/kerwanp)! - Add AdonisJS V7 support
+  Migrate from openapi-metadata to @martin.xyz/openapi-decorators
+  Add TransformerTypeLoader to generate schema using transformers
+
 ## 0.5.0
 
 ### Minor Changes
