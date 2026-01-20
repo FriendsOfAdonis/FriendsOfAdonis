@@ -3118,7 +3118,7 @@ __metadata:
     "@japa/expect-type": "npm:^2.0.4"
     "@japa/file-system": "npm:^3.0.0"
     "@japa/runner": "npm:^4.0.0"
-    "@martin.xyz/openapi-decorators": "npm:^0.0.1-next.2"
+    "@martin.xyz/openapi-decorators": "npm:^0.0.1-next.3"
     "@swc/core": "npm:1.15.5"
     "@types/luxon": "npm:^3.7.1"
     "@types/node": "npm:^25.0.2"
@@ -3133,6 +3133,7 @@ __metadata:
     prettier: "npm:^3.7.4"
     reflect-metadata: "npm:^0.2.2"
     ts-node: "npm:^10.9.2"
+    type-fest: "npm:^5.4.1"
     typescript: "catalog:"
     yaml: "npm:^2.8.2"
     youch: "catalog:"
@@ -4227,16 +4228,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@martin.xyz/openapi-decorators@npm:^0.0.1-next.2":
-  version: 0.0.1-next.2
-  resolution: "@martin.xyz/openapi-decorators@npm:0.0.1-next.2"
+"@martin.xyz/openapi-decorators@npm:^0.0.1-next.3":
+  version: 0.0.1-next.3
+  resolution: "@martin.xyz/openapi-decorators@npm:0.0.1-next.3"
   dependencies:
     deepmerge: "npm:^4.3.1"
     openapi-types: "npm:^12.1.3"
     type-fest: "npm:^5.3.1"
   peerDependencies:
     reflect-metadata: ^0.2.2
-  checksum: 10c0/d2bdbb8f36ec2024e767af3d0af80a34dc2cb962a28827074b3cb8bce3fcdeb4bf94e07bbd67caf7e2b34a525db176031e859e5eb841898ccce93566d312d773
+  checksum: 10c0/6987a7737cf9cb48a02593386a7b26a242cc965051c4165dfe4f0cdc65e399f1fec8f299625c56bb5b80c81da27b50af0b5ea93ab54e67a4a830db2f1eae67a0
   languageName: node
   linkType: hard
 
@@ -22772,12 +22773,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"type-fest@npm:^5.2.0, type-fest@npm:^5.3.1":
+"type-fest@npm:^5.2.0":
   version: 5.3.1
   resolution: "type-fest@npm:5.3.1"
   dependencies:
     tagged-tag: "npm:^1.0.0"
   checksum: 10c0/3282cf11f5e8708321c109b5a72967702cf4c3b928b4d77f5819600b23915dc6a6b8f16cde4182cfbad308973ed3eeea544825cafe9657634ac1f331dc940315
+  languageName: node
+  linkType: hard
+
+"type-fest@npm:^5.3.1, type-fest@npm:^5.4.1":
+  version: 5.4.1
+  resolution: "type-fest@npm:5.4.1"
+  dependencies:
+    tagged-tag: "npm:^1.0.0"
+  checksum: 10c0/500386d690e634499e6fb765a1e33909a75fea0258acdd56a2d1c9565d6810e222f6d95bd80daa5498377c7ea976af46f518185b5dbd67ff8454562544808aa1
   languageName: node
   linkType: hard
 

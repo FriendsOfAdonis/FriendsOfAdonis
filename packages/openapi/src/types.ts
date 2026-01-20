@@ -1,5 +1,7 @@
+import { type Constructor } from '@adonisjs/core/types/common'
 import { type RouteJSON } from '@adonisjs/core/types/http'
 import { type generateDocument } from '@martin.xyz/openapi-decorators'
+import { type ExtractTransformerResource, type TransformerSchema } from './loaders/transformer.ts'
 
 type GenerateDocumentParameters = Parameters<typeof generateDocument>[0]
 
@@ -40,3 +42,12 @@ export type OperationTaggerFn = (
   target: Function,
   propertyKey: string
 ) => string[]
+
+declare module '@adonisjs/core/transformers' {
+  namespace BaseTransformer {
+    function schema<Self extends Constructor<BaseTransformer<unknown>>>(
+      this: Self,
+      model: ExtractTransformerResource<InstanceType<Self>>
+    ): TransformerSchema<Self>
+  }
+}

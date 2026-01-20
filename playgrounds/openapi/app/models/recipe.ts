@@ -8,20 +8,25 @@ export default class Recipe extends BaseModel {
   declare id: string
 
   @column()
+  @ApiProperty()
   declare title: string
 
   @column()
+  @ApiProperty({ type: String, nullable: true })
   declare description: string | null
 
   @column({
     prepare: (value) => JSON.stringify(value),
     consume: (value) => JSON.parse(value),
   })
+  @ApiProperty({ type: [String] })
   declare ingredients: string[]
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
+  @ApiProperty()
   declare updatedAt: DateTime
 
   @column.dateTime({ autoCreate: true })
+  @ApiProperty()
   declare createdAt: DateTime
 }

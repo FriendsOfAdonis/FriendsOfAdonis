@@ -29,7 +29,7 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare email: string
 
   @hasMany(() => Recipe)
-  @ApiProperty({ type: Recipe })
+  @ApiProperty({ type: [Recipe] })
   declare recipes: HasMany<typeof Recipe>
 
   @column({ serializeAs: null })

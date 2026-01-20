@@ -12,6 +12,7 @@ import {
 } from '@martin.xyz/openapi-decorators/ui'
 import { type OpenAPIDocument } from '@martin.xyz/openapi-decorators/types'
 import stringHelpers from '@adonisjs/core/helpers/string'
+import { TransformerLoader } from './loaders/transformer.ts'
 
 const OpenAPIController = () => import('./controllers/openapi_controller.js')
 
@@ -56,7 +57,12 @@ export class OpenAPI {
     this.#document = await generateDocument({
       controllers: [...controllers, ...(this.#config.controllers ?? [])],
       customLogger: this.#logger,
-      loaders: [LuxonTypeLoader, VineTypeLoader, ...(this.#config.loaders ?? [])],
+      loaders: [
+        LuxonTypeLoader,
+        VineTypeLoader,
+        TransformerLoader,
+        ...(this.#config.loaders ?? []),
+      ],
       document: this.#config.document,
     })
 
