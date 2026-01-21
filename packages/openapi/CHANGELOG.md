@@ -1,5 +1,11 @@
 # @foadonis/openapi
 
+## 0.5.1
+
+### Patch Changes
+
+- [#101](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/101) [`af9c615`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/af9c615c09c00fa911ff143b07017c381a347fa0) Thanks [@noahkln](https://github.com/noahkln)! - Prioritize custom type loaders over built-in loaders
+
 ## 0.5.0
 
 ### Minor Changes
