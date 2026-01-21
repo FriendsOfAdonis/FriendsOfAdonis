@@ -29,7 +29,8 @@
     "#start/*": "./start/*.js",
     "#tests/*": "./tests/*.js",
     "#config/*": "./config/*.js",
-    "#graphql/*": "./app/graphql/*.js"
+    "#graphql/*": "./app/graphql/*.js",
+    "#loaders/*": "./app/loaders/*.js"
   },
   "devDependencies": {
     "@adonisjs/assembler": "^7.8.2",
