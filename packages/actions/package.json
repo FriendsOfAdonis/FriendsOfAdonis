@@ -13,10 +13,11 @@
   ],
   "exports": {
     ".": "./build/index.js",
-    "./provider": "./build/providers/actions_provider.js",
+    "./actions_provider": "./build/providers/actions_provider.js",
     "./services/main": "./build/services/main.js",
     "./commands": "./build/commands/main.js",
-    "./types": "./build/src/types.js"
+    "./types": "./build/src/types.js",
+    "./instrumentation": "./build/src/instrumentation.js"
   },
   "scripts": {
     "clean": "del-cli build",
@@ -59,6 +60,8 @@
     "@japa/expect-type": "^2.0.4",
     "@japa/file-system": "^3.0.0",
     "@japa/runner": "^4.0.0",
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/instrumentation": "^0.211.0",
     "@swc/core": "1.15.5",
     "@types/node": "^25.0.2",
     "c8": "^10.1.3",
@@ -72,7 +75,17 @@
     "youch": "catalog:"
   },
   "peerDependencies": {
-    "@adonisjs/core": "^6.2.0 || ^7.0.0-next.19"
+    "@adonisjs/core": "^6.2.0 || ^7.0.0-next.19",
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/instrumentation": "^0.211.0"
+  },
+  "peerDependenciesMeta": {
+    "@opentelemetry/api": {
+      "optional": true
+    },
+    "@opentelemetry/instrumentation": {
+      "optional": true
+    }
   },
   "publishConfig": {
     "access": "public",
@@ -88,6 +101,8 @@
     ]
   },
   "dependencies": {
+    "@poppinss/hooks": "^7.3.0",
+    "@poppinss/macroable": "^1.1.0",
     "@poppinss/utils": "^6.10.1"
   }
 }

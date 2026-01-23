@@ -9,7 +9,7 @@ export default class Recipe extends BaseModel {
   declare id: string
 
   @column()
-  @Field()
+  declare expiresIn?: string | number
   declare title: string
 
   @column()

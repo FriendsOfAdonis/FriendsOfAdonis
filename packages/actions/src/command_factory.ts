@@ -1,7 +1,7 @@
 import { BaseCommand } from '@adonisjs/core/ace'
 import { type AsCommand } from './base_action.js'
-import { type Constructor } from './types.js'
 import { commandName } from './utils.js'
+import { type Constructor } from '@adonisjs/core/types/common'
 
 export function makeCommand(Action: Constructor<AsCommand>): typeof BaseCommand {
   class FakeCommand extends BaseCommand {

@@ -1,4 +1,5 @@
 import { defineConfig } from '@adonisjs/core/app'
+import { indexActions } from '@foadonis/actions'
 
 export default defineConfig({
   /*
@@ -38,6 +39,8 @@ export default defineConfig({
     () => import('@adonisjs/bouncer/bouncer_provider'),
     () => import('@adonisjs/core/providers/vinejs_provider'),
     () => import('@foadonis/openapi/openapi_provider'),
+    () => import('@foadonis/actions/actions_provider'),
+    () => import('@adonisjs/otel/otel_provider')
   ],
 
   /*
@@ -48,7 +51,11 @@ export default defineConfig({
   | List of modules to import before starting the application.
   |
   */
-  preloads: [() => import('#start/routes'), () => import('#start/kernel')],
+  preloads: [
+    () => import('#start/routes'),
+    () => import('#start/kernel'),
+    () => import('#start/events'),
+  ],
 
   /*
   |--------------------------------------------------------------------------
@@ -73,5 +80,9 @@ export default defineConfig({
       },
     ],
     forceExit: false,
+  },
+
+  hooks: {
+    init: [indexActions()],
   },
 })

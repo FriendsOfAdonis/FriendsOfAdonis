@@ -2,14 +2,16 @@ import { type CommandMetaData, type LoadersContract } from '@adonisjs/core/types
 import { fsReadAll, importDefault, slash } from '@poppinss/utils'
 import { basename, extname, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { type AsCommand } from './base_action.js'
-import { type Constructor } from './types.js'
-import { makeCommand } from './command_factory.js'
+import { type BaseAction, type AsCommand } from './base_action.ts'
+import { makeCommand } from './command_factory.ts'
 import { type BaseCommand } from '@adonisjs/core/ace'
+import { type ApplicationService } from '@adonisjs/core/types'
+import { implementsAsCommand } from './utils.ts'
+import { type Constructor } from '@adonisjs/core/types/common'
 
 const JS_MODULES = ['.js', '.cjs', '.mjs']
 
-export class ActionsLoader implements LoadersContract<typeof BaseCommand> {
+export class ActionCommandsLoader implements LoadersContract<typeof BaseCommand> {
   #actionsDirectory: string
   #commands: { command: typeof BaseCommand; filePath: string }[] = []
 
@@ -60,12 +62,22 @@ export class ActionsLoader implements LoadersContract<typeof BaseCommand> {
 
       const relativeFileName = slash(relative(this.#actionsDirectory, fileURLToPath(file)))
 
-      commands[relativeFileName] = await importDefault<new () => AsCommand>(
+      const Action = await importDefault<{ default: typeof BaseAction }>(
         () => import(file),
         relativeFileName
       )
+
+      if (implementsAsCommand(Action.prototype)) {
+        commands[relativeFileName] = Action as unknown as Constructor<AsCommand>
+      }
     }
 
     return commands
+  }
+
+  static async configure(app: ApplicationService) {
+    const ace = await app.container.make('ace')
+    const directory = app.rcFile.directories.actions ?? 'app/actions'
+    ace.addLoader(new ActionCommandsLoader(directory))
   }
 }

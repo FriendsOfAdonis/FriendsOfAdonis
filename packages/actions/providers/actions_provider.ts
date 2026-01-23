@@ -1,20 +1,28 @@
 import { type ApplicationService } from '@adonisjs/core/types'
-import { ActionsManager } from '../src/manager.js'
+import { ActionsRunner } from '../src/manager.js'
+import { BaseAction } from '../src/base_action.ts'
+import { ActionLoader } from '../src/runner.ts'
 
 export default class ActionsProvider {
   constructor(private app: ApplicationService) {}
 
   register() {
-    this.app.container.singleton('actions', () => {
-      return new ActionsManager()
+    this.app.container.singleton(ActionsRunner, (resolver) => {
+      return new ActionsRunner(resolver)
     })
+
+    this.app.container.alias('actions.runner', ActionsRunner)
   }
 
-  async boot() {}
+  async boot() {
+    const runner = await this.app.container.make('actions.runner')
+    BaseAction.useRunner(runner)
+    ActionLoader.useRunner(runner)
+  }
 }
 
 declare module '@adonisjs/core/types' {
   interface ContainerBindings {
-    actions: ActionsManager
+    'actions.runner': ActionsRunner
   }
 }

@@ -12,7 +12,7 @@ export default class Recipe extends BaseModel {
   declare title: string
 
   @column()
-  @ApiProperty({ type: String, nullable: true })
+  @ApiProperty({ type: 'string', nullable: true })
   declare description: string | null
 
   @column({

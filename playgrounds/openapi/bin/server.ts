@@ -8,6 +8,12 @@
 | command to run this file and monitor file changes
 |
 */
+/**
+ * OpenTelemetry initialization - MUST be the first import
+ * @see https://opentelemetry.io/docs/languages/js/getting-started/nodejs/
+ */
+import '../otel.js'
+
 
 import 'reflect-metadata'
 import { Ignitor, prettyPrintError } from '@adonisjs/core'
