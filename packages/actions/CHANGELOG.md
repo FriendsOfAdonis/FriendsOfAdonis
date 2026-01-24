@@ -1,5 +1,11 @@
 # @foadonis/actions
 
+## 0.2.0-next.0
+
+### Minor Changes
+
+- [#103](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/103) [`13a9fd4`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/13a9fd48d3d8748bd6a12cc20327ec0c83f9a1b7) Thanks [@github-actions](https://github.com/apps/github-actions)! - Barrel file generation and OpenTelemetry instrumentation
+
 ## 0.1.0
 
 ### Minor Changes
