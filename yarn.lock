@@ -2858,6 +2858,7 @@ __metadata:
     copyfiles: "npm:^2.4.1"
     del-cli: "npm:^7.0.0"
     eslint: "catalog:"
+    pkg-types: "npm:^2.3.0"
     prettier: "npm:^3.7.4"
     reflect-metadata: "npm:^0.2.2"
     ts-node: "npm:^10.9.2"

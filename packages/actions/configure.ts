@@ -13,46 +13,51 @@
 */
 
 import type ConfigureCommand from '@adonisjs/core/commands/configure'
-import { readFile, writeFile } from 'node:fs/promises'
+import { readPackageJSON, writePackageJSON } from 'pkg-types'
 
 export async function configure(command: ConfigureCommand) {
   const codemods = await command.createCodemods()
 
   await codemods.updateRcFile((rcFile) => {
-    rcFile.addCommand('@foadonis/crypt/commands')
+    rcFile
+      .addProvider('@foadonis/actions/actions_provider')
+      .addCommand('@foadonis/actions/commands')
+      .addNamedImport('@foadonis/actions', ['indexActions'])
+      .addAssemblerHook('init', 'indexActions()', true)
   })
 
-  await updateEnvFile(command)
+  await updatePackageJson(command)
 
   logSuccess(command)
 }
 
-async function updateEnvFile(command: ConfigureCommand) {
-  try {
-    const path = command.app.startPath('env.ts')
-    const content = await readFile(command.app.startPath('env.ts')).then((r) => r.toString())
-    await writeFile(path, `import '@foadonis/crypt'\n${content}`)
-  } catch (e) {
-    command.logger.warning(
-      'An error occured when injecting crypt in `start/env.ts`. You might have to do it manually.'
-    )
+async function updatePackageJson(command: ConfigureCommand) {
+  const path = command.app.makePath('package.json')
+  const packageJson = await readPackageJSON(path)
+
+  packageJson.imports = {
+    ...packageJson.imports,
+    '#actions/*': './app/actions/*.js',
   }
+
+  await writePackageJSON(path, packageJson)
+
+  logSuccess(command)
 }
 
 function logSuccess(command: ConfigureCommand) {
   const c = command.colors
   const foadonis = c.bold('Friends Of Adonis')
-  const name = c.yellow('@foadonis/crypt')
+  const name = c.yellow('@foadonis/actions')
   command.logger.log('')
   command.logger.log(c.green('╭─────────────────────────────────────╮'))
   command.logger.log(c.green(`│ ${foadonis} | ${name} │`))
   command.logger.log(c.green('╰─────────────────────────────────────╯'))
   command.logger.log('╭')
-  command.logger.log('│ Welcome to @foadonis/crypt!')
+  command.logger.log('│ Welcome to @foadonis/actions!')
   command.logger.log('│ ')
   command.logger.log('│ Get started')
-  command.logger.log('│ ↪  Docs: https://friendsofadonis.com/docs/crypt')
-  command.logger.log('│ ↪  Start: node ace crypt:init')
+  command.logger.log('│ ↪  Docs: https://friendsofadonis.com/docs/actions')
   command.logger.log('│ ')
   command.logger.log(
     `│ ${c.yellow('⭐ Give a star: https://github.com/FriendsOfAdonis/FriendsOfAdonis')}`

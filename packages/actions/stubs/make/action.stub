@@ -1,0 +1,15 @@
+{{#var entity = generators.createEntity(name) }}
+{{#var modelName = generators.modelName(entity.name) }}
+{{#var fileName = string(modelName).snakeCase().suffix('_action').ext('.ts').toString() }}
+{{{
+  exports({
+    to: app.makePath(app.rcFile.directories.actions ?? 'app/actions', fileName)
+  })
+}}}
+import { BaseAction } from '@foadonis/actions'
+
+export default class {{ modelName }}Resolver {
+  handle() {
+    // Your business-logic
+  }
+}
