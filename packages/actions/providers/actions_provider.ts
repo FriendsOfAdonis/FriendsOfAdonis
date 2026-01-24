@@ -1,7 +1,7 @@
 import { type ApplicationService } from '@adonisjs/core/types'
-import { ActionsRunner } from '../src/manager.js'
+import { ActionsRunner } from '../src/runner.ts'
 import { BaseAction } from '../src/base_action.ts'
-import { ActionLoader } from '../src/runner.ts'
+import { ActionLoader } from '../src/loader.ts'
 
 export default class ActionsProvider {
   constructor(private app: ApplicationService) {}

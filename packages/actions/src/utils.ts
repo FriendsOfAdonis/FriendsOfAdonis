@@ -1,10 +1,6 @@
 import stringHelpers from '@adonisjs/core/helpers/string'
-import {
-  type AsListener,
-  type AsController,
-  type BaseAction,
-  type AsCommand,
-} from './base_action.ts'
+import { type BaseAction } from './base_action.ts'
+import { type AsCommand, type AsController, type AsListener } from './types.ts'
 
 export function commandName(value: string) {
   return `action:${stringHelpers.create(value).removeExtension().removeSuffix('action').dashCase().toString()}`

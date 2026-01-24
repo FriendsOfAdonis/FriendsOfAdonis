@@ -4,7 +4,7 @@ import {
   type InstrumentationConfig,
 } from '@opentelemetry/instrumentation'
 import { trace, context, SpanKind, SpanStatusCode, type Span } from '@opentelemetry/api'
-import { ActionsRunner } from './manager.js'
+import { ActionsRunner } from './runner.ts'
 import type { BaseAction } from './base_action.js'
 
 const PACKAGE_NAME = '@foadonis/actions'
@@ -52,7 +52,7 @@ export class ActionsInstrumentation extends InstrumentationBase<ActionsInstrumen
     if (isWrapped(ActionsRunner.prototype.dispatch)) {
       this._unwrap(ActionsRunner.prototype, 'dispatch')
     }
-    this._wrap(ActionsRunner.prototype, 'dispatch', this._getDispatchPatch())
+    this._wrap(ActionsRunner.prototype, 'dispatch', this._getDispatchPatch() as any)
   }
 
   disable() {

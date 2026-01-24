@@ -2,12 +2,13 @@ import { type CommandMetaData, type LoadersContract } from '@adonisjs/core/types
 import { fsReadAll, importDefault, slash } from '@poppinss/utils'
 import { basename, extname, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { type BaseAction, type AsCommand } from './base_action.ts'
+import { type BaseAction } from './base_action.ts'
 import { makeCommand } from './command_factory.ts'
 import { type BaseCommand } from '@adonisjs/core/ace'
 import { type ApplicationService } from '@adonisjs/core/types'
 import { implementsAsCommand } from './utils.ts'
 import { type Constructor } from '@adonisjs/core/types/common'
+import { type AsCommand } from './types.ts'
 
 const JS_MODULES = ['.js', '.cjs', '.mjs']
 

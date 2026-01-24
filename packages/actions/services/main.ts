@@ -1,5 +1,5 @@
 import app from '@adonisjs/core/services/app'
-import type { ActionsRunner } from '../src/manager.js'
+import type { ActionsRunner } from '../src/runner.ts'
 
 let actions: ActionsRunner
 

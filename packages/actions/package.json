@@ -16,7 +16,6 @@
     "./actions_provider": "./build/providers/actions_provider.js",
     "./services/main": "./build/services/main.js",
     "./commands": "./build/commands/main.js",
-    "./types": "./build/src/types.js",
     "./instrumentation": "./build/src/instrumentation.js"
   },
   "scripts": {
