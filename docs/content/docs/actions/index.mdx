@@ -1,4 +1,89 @@
 ---
 title: Introduction
 icon: Album
+description: Reusable actions that can be run as Commands, Controllers or Event Listeners.
 ---
+
+## Why Actions?
+
+This package introduces a new way of organizing the logic of your AdonisJS applications by focusing on the **actions** your applications provide.
+
+Instead of creating controllers, commands, listeners, and jobs separately, it allows you to create a single class that handles a specific task and run that class in any context you need.
+
+Therefore, it encourages you to switch your focus from:
+
+> "What controllers do I need?", "Should I make a validator for this?", "Should this run asynchronously in a job instead?", "Do I need a separate command for this?"
+
+to:
+
+> **"What does my application actually do?"**
+
+By organizing your code around actions, you get:
+
+- **One class, one task** — Each action handles a single, well-defined responsibility
+- **Reusability** — The same action can be executed as a command, controller, or listener without code duplication
+- **Testability** — Test your business logic independently of how it's invoked
+- **Flexibility** — Change how an action is triggered (HTTP, CLI, event) without modifying the core logic
+
+```ts twoslash tab="app/actions/register_user_action.ts"
+// @noErrors
+import User from '#models/user'
+import { BaseAction, AsCommand, AsController } from '@foadonis/actions'
+import { BaseCommand } from '@adonisjs/core/ace'
+import { HttpContext } from '@adonisjs/core/http'
+
+export default class RegisterUserAction extends BaseAction implements AsCommand, AsController {
+  async handle(email: string, password: string) {
+    const user = await user.create({
+      email,
+      password,
+    })
+
+    await UserRegistered.dispatch(user)
+
+    return user
+  }
+
+  async asCommand({ prompt, logger }: BaseCommand) {
+    const email = await prompt.ask('Email address')
+    const password = await prompt.ask('Password')
+    const user = await this.handle(user)
+
+    logger.success(`User ${user.id} has been registered`)
+  }
+
+  async asController({ request, serialize }: HttpContext) {
+    const payload = await request.validateUsing(createUserValidator)
+    const user = await this.handle(payload.email, payload.password)
+    const token = await User.accessTokens.create(user)
+
+    return serialize(AccessTokenTransformer.transform(token))
+  }
+}
+```
+
+```ts tab="start/routes.ts" twoslash
+// @noErrors
+import router from '@adonisjs/core/services/router'
+import actions from '#generated/actions'
+
+router.post('/register', actions.Users.RegisterUser.asController())
+```
+
+```ts tab="start/events.ts" twoslash
+// @noErrors
+import emitter from '@adonisjs/core/services/emitter'
+import actions from '#generated/actions'
+
+emitter.on(UserRegistered, actions.Users.SendNotificationEmailAction.asListener())
+```
+
+## Features
+
+✔ Create reusable actions with a single `handle` method  
+✔ Run actions as ACE commands automatically  
+✔ Use actions as HTTP route controllers  
+✔ Register actions as event listeners  
+✔ Full dependency injection support  
+✔ Type-safe action execution  
+✔ OpenTelemetry integration

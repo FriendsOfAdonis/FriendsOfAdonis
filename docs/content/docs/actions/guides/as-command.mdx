@@ -4,9 +4,48 @@ title: Action as command
 
 Your Actions can be ran as [Commands](https://docs.adonisjs.com/guides/ace/creating-commands) making them available using `node ace <action>`.
 
+## Configure
+
+To automatically register the commands into the `Ace` kernel you must update your `bin/console.ts`.
+
+```ts title="bin/console.ts"
+import { ActionsLoader } from '@foadonis/actions' // [!code ++]
+
+new Ignitor(APP_ROOT, { importer: IMPORTER })
+  .tap((app) => {
+    app.booting(async () => {
+      await import('#start/env')
+    })
+    app.listen('SIGTERM', () => app.terminate())
+    app.listenIf(app.managedByPm2, 'SIGINT', () => app.terminate())
+  })
+  .ace()
+  .configure(ActionsCommandsLoader.configure) // [!code ++]
+  .handle(process.argv.splice(2))
+  .catch((error) => {
+    process.exitCode = 1
+    prettyPrintError(error)
+  })
+```
+
+This will add a new [CommandLoader](https://github.com/adonisjs/ace/tree/14.x/src/loaders) that will scan for the `app/actions` folder and automatically register actions that implement `AsCommand`.
+You can change the folder by updating your `adonisrc.ts` file:
+
+```ts title="adonisrc.ts"
+import { defineConfig } from '@adonisjs/core/app'
+
+export default defineConfig({
+  directories: {
+    actions: 'app/actions', // [!code ++]
+  },
+})
+```
+
 ## Implementing `AsCommand`
 
-```ts [title="app/actions/users/delete_user_action.ts"] twoslash
+By implementing `AsCommand` you can define how your action is executed in the context of an ace command.
+
+```ts title="app/actions/users/delete_user_action.ts" twoslash
 // @noErrors
 import User from '#models/user'
 import { BaseAction, AsCommand } from '@foadonis/actions'
@@ -28,6 +67,12 @@ export default class DeleteUserAction extends BaseAction implements AsCommand {
 }
 ```
 
+You can now run your action using:
+
+```bash
+node ace action:delete-user
+```
+
 ## Configure command
 
 By default the package will automatically generate a name and a description for your command.
@@ -41,8 +86,12 @@ import { BaseAction, AsCommand } from '@foadonis/actions'
 import { BaseCommand } from '@adonisjs/core/ace'
 
 export default class DeleteUserAction extends BaseAction implements AsCommand {
-  static commandName = 'users:delete' // [!code ++]
-  static description = 'Delete a user from the database' // [!code ++]
+  // [!code highlight:5]
+  static commandName = 'users:delete'
+  static description = 'Delete a user from the database'
+  static options: CommandOptions = {
+    startApp: true,
+  }
 
   handle() {}
   asCommand(command: BaseCommand) {}

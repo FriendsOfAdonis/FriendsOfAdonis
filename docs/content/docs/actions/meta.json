@@ -6,11 +6,11 @@
   "pages": [
     "index",
     "getting-started",
+    "concept",
     "--- Guides ---",
-    "guides/actions",
     "guides/as-controller",
     "guides/as-command",
     "guides/as-listener",
-    "guides/best-practices"
+    "guides/telemetry"
   ]
 }

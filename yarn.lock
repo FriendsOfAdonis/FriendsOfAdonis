@@ -719,13 +719,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@adonisjs/otel@file:/home/mpaucot/workspace/adonisjs/otel::locator=friends-of-adonis%40workspace%3A.":
-  version: 1.1.2
-  resolution: "@adonisjs/otel@file:/home/mpaucot/workspace/adonisjs/otel#/home/mpaucot/workspace/adonisjs/otel::hash=dc8495&locator=friends-of-adonis%40workspace%3A."
+"@adonisjs/otel@npm:1.0.0-next.4":
+  version: 1.0.0-next.4
+  resolution: "@adonisjs/otel@npm:1.0.0-next.4"
   dependencies:
     "@opentelemetry/api": "npm:^1.9.0"
     "@opentelemetry/auto-instrumentations-node": "npm:^0.67.2"
-    "@opentelemetry/core": "npm:^2.2.0"
     "@opentelemetry/exporter-metrics-otlp-grpc": "npm:^0.208.0"
     "@opentelemetry/exporter-trace-otlp-grpc": "npm:^0.208.0"
     "@opentelemetry/instrumentation": "npm:^0.208.0"
@@ -738,7 +737,7 @@ __metadata:
     import-in-the-middle: "npm:^2.0.0"
   peerDependencies:
     "@adonisjs/core": ^6.2.0 || ^7.0.0
-  checksum: 10c0/223323016617d2312d0d1597f1e5894b4cc661bbbdbb4e98c71bd82f6beb9ca3ed145802ca5b4ec69352e7cfe91d4e88ae10fc9989bf5323633e0b82d68f2b8b
+  checksum: 10c0/a4b20bd6f1dfa28c771a25765c9d1cbb4b26e93d77739f081dcabc020be05c7eb3ee4ff9a10866bd644e69b64e30d89a617ae8a7ce4e26c8239670cdaf3dd83b
   languageName: node
   linkType: hard
 

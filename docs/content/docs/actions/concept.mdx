@@ -1,0 +1,294 @@
+---
+icon: Info
+title: Concept
+---
+
+## What is the Action pattern
+
+The **Action pattern**, also known as the **Use Case pattern**, is a software design approach that encapsulates a specific piece of business logic into a single, cohesive unit. This pattern has its roots in [Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) and [Domain-Driven Design](https://martinfowler.com/bliki/DomainDrivenDesign.html), where each use case is represented by a dedicated class.
+
+### Core Principles
+
+**One class, one responsibility**  
+Each action represents a single, well-defined use case or business operation. For example, `DeleteUserAction` handles user deletion, while `SendWelcomeEmailAction` handles sending welcome emails.
+
+**Encapsulation of business logic**  
+Actions encapsulate all the necessary steps to complete a task, including validation, data transformation, and orchestration of multiple services or repositories.
+
+**Separation of concerns**  
+By isolating business logic from controllers, commands, and listeners, actions ensure a clear separation between the application's layers. The same action can be executed from different entry points without duplicating code.
+
+### Benefits
+
+- **Maintainability** — Business logic is centralized, making updates and fixes easier to implement
+- **Testability** — Actions can be tested in isolation, independent of HTTP requests, CLI commands, or events
+- **Reusability** — The same action can be executed as a controller, command, or listener
+- **Clarity** — Your `app/actions` folder becomes a clear catalog of what your application can do
+- **Scalability** — New features can be added as new actions without modifying existing code
+
+### Traditional Approach vs. Action Pattern
+
+**Traditional approach:**
+
+```ts
+export default class UsersController {
+  async delete({ params, response }: HttpContext) {
+    const user = await User.findOrFail(params.id)
+    await user.delete()
+    return response.status(204)
+  }
+}
+
+export default class DeleteUserCommand extends BaseCommand {
+  async run() {
+    const email = await this.prompt.ask('User email')
+    const user = await User.findByOrFail({ email })
+    await user.delete()
+    this.logger.success('User deleted')
+  }
+}
+```
+
+**With Action pattern:**
+
+```ts title="app/actions/delete_user.ts"
+export default class DeleteUserAction extends BaseAction implements AsController, AsCommand {
+  async handle(user: User) {
+    await user.delete()
+  }
+
+  async asController({ request, response }: HttpContext) {
+    const user = await User.findOrFail(request.param('id'))
+    await this.handle(user)
+    return response.status(204)
+  }
+
+  async asCommand({ prompt, logger }: BaseCommand) {
+    const email = await prompt.ask('User email')
+    const user = await User.findByOrFail({ email })
+    await this.handle(user)
+    logger.success('User deleted')
+  }
+}
+```
+
+The business logic (`handle` method) is defined once and reused across different contexts, eliminating code duplication and ensuring consistency.
+
+### Relation to Other Patterns
+
+The Action pattern shares similarities with:
+
+- **Command Pattern** — Both encapsulate operations as objects, but actions focus on business use cases rather than undo/redo functionality
+- **Service Layer Pattern** — Actions can be seen as a more granular, use-case-oriented version of service classes
+- **Interactor Pattern** (from Clean Architecture) — Actions are similar to interactors, representing application-specific business rules
+
+## Best practices
+
+Following these best practices will help you maintain consistency and clarity in your application organization.
+
+### Naming conventions
+
+**Start with a verb**
+
+Name your action classes as concise, explicit phrases starting with a verb. The name should clearly describe what the action does.
+
+**Good examples:**  
+✅ `DeleteUserAction` — Deletes a user  
+✅ `SendWelcomeEmailAction` — Sends a welcome email  
+✅ `CreateCheckoutSessionAction` — Creates a checkout session  
+✅ `ResetUserPasswordAction` — Resets a user's password
+
+**Bad examples:**  
+❌ `UserAction` — Too vague, doesn't describe what it does  
+❌ `UserDeleter` — Uses a noun instead of a verb  
+❌ `HandleUser` — Unclear what "handle" means
+
+Following this practice, **your folder structure naturally becomes a clear catalog of all the features your application offers.**
+
+### Organizing your actions
+
+**Categorize your actions**
+
+When your application grows, you might end up with a large `app/actions` folder. Don't hesitate to organize them into subfolders by domain or feature. Autoloading will still work correctly.
+
+<Files>
+  <Folder name="app" defaultOpen>
+    <Folder name="actions" defaultOpen>
+      <Folder name="auth" defaultOpen>
+        <File name="login_user_action.ts" />
+        <File name="register_user_action.ts" />
+        <File name="reset_user_password_action.ts" />
+      </Folder>
+      <Folder name="billing" defaultOpen>
+        <File name="create_checkout_session_action.ts" />
+        <File name="update_payment_method_action.ts" />
+      </Folder>
+      <Folder name="users" defaultOpen>
+        <File name="create_user_action.ts" />
+        <File name="delete_user_action.ts" />
+        <File name="update_user_action.ts" />
+      </Folder>
+    </Folder>
+  </Folder>
+</Files>
+
+**Keep actions focused, compose them for workflows**
+
+Each action should handle a single, well-defined use case. However, actions can and should call other actions to compose workflows. This allows you to build complex business processes while keeping each action focused and testable.
+
+```ts title="app/actions/orders/process_order_action.ts" twoslash
+// @noErrors
+import { BaseAction } from '@foadonis/actions'
+import Order from '#models/order'
+
+export default class ProcessOrderAction extends BaseAction {
+  // ✅ Good: Orchestrates other focused actions
+  async handle(order: Order) {
+    // Each step is a focused, testable action
+    await ChargeUserAction.run(order.user, order.amount)
+    await UpdateInventoryAction.run(order.product, order.quantity)
+    await SendOrderConfirmationAction.run(order.user)
+  }
+}
+```
+
+```ts title="app/actions/orders/charge_order_action.ts" twoslash
+// @noErrors
+import { BaseAction } from '@foadonis/actions'
+import Order from '#models/order'
+
+export default class ChargeOrderAction extends BaseAction {
+  // ✅ Focused: Handles only charging
+  async handle(order: Order) {
+    // Charge customer logic
+  }
+}
+```
+
+This approach gives you the best of both worlds: focused, testable actions that can be composed into complex workflows.
+
+### Working with services
+
+**Don't throw away services**
+
+It's tempting to stop using services when you move business logic into actions. However, services are still valuable for **external integrations** and **reusable business logic** that doesn't fit into a single use case.
+
+Keep services for:
+
+- External API integrations (Stripe, SendGrid, etc.)
+- Complex domain logic that's shared across multiple actions
+- Infrastructure concerns (file storage, caching, etc.)
+
+```ts title="app/services/stripe_service.ts" twoslash
+// @noErrors
+import Stripe from 'stripe'
+
+export default class StripeService {
+  constructor(private stripe: Stripe) {}
+
+  async chargeCustomer(customerId: string, currency: string, amount: number) {
+    return this.stripe.charges.create({
+      amount,
+      currency,
+      customer: customerId,
+    })
+  }
+}
+```
+
+```ts title="app/actions/users/charge_user_action.ts" twoslash
+// @noErrors
+import { BaseAction } from '@foadonis/actions'
+import { inject } from '@adonisjs/core'
+import User from '#models/user'
+import StripeService from '#services/stripe_service'
+
+@inject()
+export default class ChargeUserAction extends BaseAction {
+  constructor(private stripe: StripeService) {}
+
+  async handle(user: User, amount: number) {
+    await this.stripe.chargeCustomer(user.stripeId, user.currency, amount)
+  }
+}
+```
+
+### Keep business logic in `handle`
+
+**Separate context-specific code from business logic**
+
+The `handle` method should contain your pure business logic, independent of how the action is invoked. Context-specific code (like reading request parameters or prompting for input) should be in `asController`, `asCommand`, or `asListener`.
+
+```ts title="app/actions/delete_user_action.ts" twoslash
+// @noErrors
+import { BaseAction, AsController, AsCommand } from '@foadonis/actions'
+import { BaseCommand } from '@adonisjs/core/ace'
+import { HttpContext } from '@adonisjs/core/http'
+import User from '#models/user'
+
+export default class DeleteUserAction extends BaseAction implements AsController, AsCommand {
+  // ✅ Business logic is context-agnostic
+  async handle(user: User) {
+    await user.delete()
+  }
+
+  // Context-specific: reads from HTTP request
+  async asController({ request, response }: HttpContext) {
+    const user = await User.findOrFail(request.param('id'))
+    await this.handle(user)
+    return response.status(204)
+  }
+
+  // Context-specific: prompts for input
+  async asCommand({ prompt, logger }: BaseCommand) {
+    const email = await prompt.ask('User email')
+    const user = await User.findByOrFail({ email })
+    await this.handle(user)
+    logger.success('User deleted successfully')
+  }
+}
+```
+
+### Avoid event-driven logic
+
+**Why avoid event-driven applications?**
+
+Event-driven architectures have a significant advantage: you can run logic without caring about the entrypoint. A listener can respond to `user:created` whether it was triggered by a registration form, an admin panel, or an import script.
+
+However, this flexibility comes with a major drawback: **it becomes really hard to retrieve the initial path that resulted in the final event**. When debugging or tracing a user creation flow, you might struggle to understand:
+
+- Where did this event originate?
+- What was the original context?
+- Why was this user created?
+
+**Actions provide the best of both worlds**
+
+By using actions and decoupling business logic from the entrypoint, you get the benefits of event-driven architecture while maintaining traceability:
+
+- **Decoupled business logic** — The same action can be called from HTTP, CLI, or events
+- **Clear execution path** — You can always trace back to where the action was invoked
+- **Testable** — Actions can be tested independently without event infrastructure
+- **Direct action calls** — Call other actions directly instead of emitting events, maintaining full traceability
+
+```ts title="app/actions/create_user_action.ts" twoslash
+// @noErrors
+export default class CreateUserAction extends BaseAction {
+  // ❌ Bad: we lose traceability of the business logic
+  async handle(data: CreateUserData) {
+    const user = await User.create(data)
+    await emitter.emit('user:registered', user)
+    return user
+  }
+}
+
+export default class CreateUserAction extends BaseAction {
+  // ✅ Good: We know that when creating a user, a welcome email is sent
+  async handle(data: CreateUserData) {
+    const user = await User.create(data)
+    await SendWelcomeEmailAction.run(user)
+    return user
+  }
+}
+```
+
+Instead of emitting events where you lose traceability, call actions directly. This way, you can always follow the execution path and understand what happens after each step.

@@ -1,0 +1,35 @@
+---
+title: OpenTelemetry
+---
+
+This package bring a custom [OpenTelemetry](https://opentelemetry.io/) instrumentation that automatically spans your actions.
+
+![grafana otel](/actions/telemetry.png)
+
+## Configuration
+
+First you need to make sure that you have [@adonisjs/otel](https://docs.adonisjs.com/guides/digging-deeper/opentelemetry) configured in your application.
+
+```bash
+node ace add @adonisjs/otel
+```
+
+Inside the `config/otel.ts` file add the custom instrumentation `ActionsInstrumentation`:
+
+```ts title="config/otel.ts"
+import { defineConfig } from '@adonisjs/otel'
+import env from '#start/env'
+import { ActionsInstrumentation } from '@foadonis/actions/instrumentation' // [!code ++]
+
+export default defineConfig({
+  serviceName: env.get('APP_NAME'),
+  serviceVersion: env.get('APP_VERSION'),
+  environment: env.get('APP_ENV'),
+
+  instrumentations: {
+    '@foadonis/actions/instrumentation': new ActionsInstrumentation(), // [!code ++]
+  },
+})
+```
+
+You should now properly see your actions in your traces.

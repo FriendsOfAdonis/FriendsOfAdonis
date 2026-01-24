@@ -2,3 +2,116 @@
 title: Getting Started
 icon: Rocket
 ---
+
+## Installation
+
+Install and configure the package using the following command :
+
+```sh
+node ace add @foadonis/actions
+```
+
+<ConfigurationSteps pkg="@foadonis/actions" providers={['actions']} commands />
+
+## Getting Started
+
+Actions can be created with the `make:action` command:
+
+```bash
+node ace make:action UpdateUserPassword
+```
+
+This will create a `UpdateUserPasswordAction` class in the `app/actions` folder.
+The `handle` method should contain the logic of your action.
+
+```ts title="app/actions/update_user_password.ts" twoslash
+// @noErrors
+import { BaseAction } from '@foadonis/actions'
+import User from '#models/user'
+
+export default class UpdateUserPasswordAction extends BaseAction {
+  async handle(user: User, password: string) {
+    user.password = password
+    return user.save()
+  }
+}
+```
+
+Then, anywhere in your application you can start using your action:
+
+```ts twoslash
+// @noErrors
+import UpdateUserPasswordAction from '#actions/update_user_password'
+import User from '#models/user'
+
+// Using the static run method
+const user = await User.findOrFail(1)
+await UpdateUserPasswordAction.run(user, 'new-password')
+```
+
+### Using Dependency Injection
+
+Actions are resolved from the AdonisJS container, which means you can use [dependency injection](https://docs.adonisjs.com/guides/concepts/dependency-injection) to inject services and other dependencies.
+
+```ts title="app/actions/charge_user_action.ts" twoslash
+// @noErrors
+import { BaseAction } from '@foadonis/actions'
+import { inject } from '@adonisjs/core'
+import User from '#models/user'
+import StripeService from '#services/stripe_service'
+
+@inject()
+export default class ChargeUserAction extends BaseAction {
+  constructor(private stripe: StripeService) {}
+
+  async handle(user: User, amount: number) {
+    await this.stripe.chargeCustomer(user.stripeId, amount)
+  }
+}
+```
+
+### Running Actions in Different Contexts
+
+One of the key benefits of actions is that the same action can be executed in different contexts. Your action can implement one or more interfaces to be used as:
+
+- **As a Controller** — Handle HTTP requests
+- **As a Command** — Run from the CLI using ACE
+- **As a Listener** — Respond to events
+
+Here's a quick example of an action that can be used as both a controller and a command:
+
+```ts title="app/actions/delete_user_action.ts" twoslash
+// @noErrors
+import { BaseAction, AsCommand, AsController } from '@foadonis/actions'
+import { BaseCommand } from '@adonisjs/core/ace'
+import { HttpContext } from '@adonisjs/core/http'
+import User from '#models/user'
+
+export default class DeleteUserAction extends BaseAction implements AsCommand, AsController {
+  async handle(user: User) {
+    await user.delete()
+  }
+
+  async asCommand({ prompt, logger }: BaseCommand) {
+    const email = await prompt.ask('User email')
+    const user = await User.findByOrFail({ email })
+    await this.handle(user)
+    logger.success(`User ${user.id} has been deleted`)
+  }
+
+  async asController({ request, response }: HttpContext) {
+    const user = await User.findOrFail(request.param('id'))
+    await this.handle(user)
+    return response.status(204)
+  }
+}
+```
+
+## Next Steps
+
+Now that you understand the basics, explore the different ways to use actions:
+
+- [Concept & Best Practices](/docs/actions/concept) — Learn how to structure and organize your actions
+- [Action as Controller](/docs/actions/guides/as-controller) — Use actions to handle HTTP requests
+- [Action as Command](/docs/actions/guides/as-command) — Run actions from the command line
+- [Action as Listener](/docs/actions/guides/as-listener) — Use actions to respond to events
