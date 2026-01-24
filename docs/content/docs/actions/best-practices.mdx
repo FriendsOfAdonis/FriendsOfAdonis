@@ -1,92 +1,9 @@
 ---
 icon: Info
-title: Concept
+title: Best Practices
 ---
 
-## What is the Action pattern
-
-The **Action pattern**, also known as the **Use Case pattern**, is a software design approach that encapsulates a specific piece of business logic into a single, cohesive unit. This pattern has its roots in [Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) and [Domain-Driven Design](https://martinfowler.com/bliki/DomainDrivenDesign.html), where each use case is represented by a dedicated class.
-
-### Core Principles
-
-**One class, one responsibility**  
-Each action represents a single, well-defined use case or business operation. For example, `DeleteUserAction` handles user deletion, while `SendWelcomeEmailAction` handles sending welcome emails.
-
-**Encapsulation of business logic**  
-Actions encapsulate all the necessary steps to complete a task, including validation, data transformation, and orchestration of multiple services or repositories.
-
-**Separation of concerns**  
-By isolating business logic from controllers, commands, and listeners, actions ensure a clear separation between the application's layers. The same action can be executed from different entry points without duplicating code.
-
-### Benefits
-
-- **Maintainability** — Business logic is centralized, making updates and fixes easier to implement
-- **Testability** — Actions can be tested in isolation, independent of HTTP requests, CLI commands, or events
-- **Reusability** — The same action can be executed as a controller, command, or listener
-- **Clarity** — Your `app/actions` folder becomes a clear catalog of what your application can do
-- **Scalability** — New features can be added as new actions without modifying existing code
-
-### Traditional Approach vs. Action Pattern
-
-**Traditional approach:**
-
-```ts
-export default class UsersController {
-  async delete({ params, response }: HttpContext) {
-    const user = await User.findOrFail(params.id)
-    await user.delete()
-    return response.status(204)
-  }
-}
-
-export default class DeleteUserCommand extends BaseCommand {
-  async run() {
-    const email = await this.prompt.ask('User email')
-    const user = await User.findByOrFail({ email })
-    await user.delete()
-    this.logger.success('User deleted')
-  }
-}
-```
-
-**With Action pattern:**
-
-```ts title="app/actions/delete_user.ts"
-export default class DeleteUserAction extends BaseAction implements AsController, AsCommand {
-  async handle(user: User) {
-    await user.delete()
-  }
-
-  async asController({ request, response }: HttpContext) {
-    const user = await User.findOrFail(request.param('id'))
-    await this.handle(user)
-    return response.status(204)
-  }
-
-  async asCommand({ prompt, logger }: BaseCommand) {
-    const email = await prompt.ask('User email')
-    const user = await User.findByOrFail({ email })
-    await this.handle(user)
-    logger.success('User deleted')
-  }
-}
-```
-
-The business logic (`handle` method) is defined once and reused across different contexts, eliminating code duplication and ensuring consistency.
-
-### Relation to Other Patterns
-
-The Action pattern shares similarities with:
-
-- **Command Pattern** — Both encapsulate operations as objects, but actions focus on business use cases rather than undo/redo functionality
-- **Service Layer Pattern** — Actions can be seen as a more granular, use-case-oriented version of service classes
-- **Interactor Pattern** (from Clean Architecture) — Actions are similar to interactors, representing application-specific business rules
-
-## Best practices
-
-Following these best practices will help you maintain consistency and clarity in your application organization.
-
-### Naming conventions
+## Naming conventions
 
 **Start with a verb**
 
@@ -105,7 +22,7 @@ Name your action classes as concise, explicit phrases starting with a verb. The 
 
 Following this practice, **your folder structure naturally becomes a clear catalog of all the features your application offers.**
 
-### Organizing your actions
+## Organizing your actions
 
 **Categorize your actions**
 
@@ -167,7 +84,7 @@ export default class ChargeOrderAction extends BaseAction {
 
 This approach gives you the best of both worlds: focused, testable actions that can be composed into complex workflows.
 
-### Working with services
+## Working with services
 
 **Don't throw away services**
 
@@ -213,7 +130,7 @@ export default class ChargeUserAction extends BaseAction {
 }
 ```
 
-### Keep business logic in `handle`
+## Keep business logic in `handle`
 
 **Separate context-specific code from business logic**
 
@@ -249,7 +166,7 @@ export default class DeleteUserAction extends BaseAction implements AsController
 }
 ```
 
-### Avoid event-driven logic
+## Avoid event-driven logic
 
 **Why avoid event-driven applications?**
 

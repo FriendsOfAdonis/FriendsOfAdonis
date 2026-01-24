@@ -48,6 +48,9 @@ export class ActionsInstrumentation extends InstrumentationBase<ActionsInstrumen
     return []
   }
 
+  /**
+   * Enables instrumentation by wrapping ActionsRunner.dispatch.
+   */
   enable() {
     if (isWrapped(ActionsRunner.prototype.dispatch)) {
       this._unwrap(ActionsRunner.prototype, 'dispatch')
@@ -55,6 +58,9 @@ export class ActionsInstrumentation extends InstrumentationBase<ActionsInstrumen
     this._wrap(ActionsRunner.prototype, 'dispatch', this._getDispatchPatch() as any)
   }
 
+  /**
+   * Disables instrumentation by unwrapping ActionsRunner.dispatch.
+   */
   disable() {
     if (isWrapped(ActionsRunner.prototype.dispatch)) {
       this._unwrap(ActionsRunner.prototype, 'dispatch')

@@ -12,20 +12,34 @@ import { type AsCommand } from './types.ts'
 
 const JS_MODULES = ['.js', '.cjs', '.mjs']
 
+/**
+ * Custom Ace commands loader that discovers actions implementing
+ * AsCommand and exposes them as CLI commands.
+ */
 export class ActionCommandsLoader implements LoadersContract<typeof BaseCommand> {
   #actionsDirectory: string
   #commands: { command: typeof BaseCommand; filePath: string }[] = []
 
+  /**
+   * @param actionsDirectory - Absolute path to the actions directory
+   */
   constructor(actionsDirectory: string) {
     this.#actionsDirectory = actionsDirectory
   }
 
+  /**
+   * Retrieves a command class by its metadata.
+   */
   async getCommand(metadata: CommandMetaData): Promise<typeof BaseCommand | null> {
     const entry = this.#commands.find((m) => m.filePath === metadata.filePath)
     if (!entry) return null
     return entry.command
   }
 
+  /**
+   * Scans the actions directory and returns metadata for all
+   * actions implementing AsCommand.
+   */
   async getMetaData(): Promise<CommandMetaData[]> {
     const actions = await this.#loadActions()
 
@@ -76,6 +90,9 @@ export class ActionCommandsLoader implements LoadersContract<typeof BaseCommand>
     return commands
   }
 
+  /**
+   * Registers the loader with Ace to discover action-based commands.
+   */
   static async configure(app: ApplicationService) {
     const ace = await app.container.make('ace')
     const directory = app.rcFile.directories.actions ?? 'app/actions'

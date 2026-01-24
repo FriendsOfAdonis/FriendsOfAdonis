@@ -1,0 +1,25 @@
+---
+title: 'Telemetry'
+description: 'OpenTelemetry instrumentation for actions'
+---
+
+`@foadonis/actions` provides an optional OpenTelemetry instrumentation that automatically creates spans for each action execution. This integrates with the `@adonisjs/otel` package to give you visibility into your actions' performance.
+
+## Setup
+
+First, make sure you have `@adonisjs/otel` installed and configured. See the [AdonisJS OpenTelemetry guide](https://docs.adonisjs.com/guides/digging-deeper/opentelemetry) for setup instructions.
+
+Add the `ActionsInstrumentation` to your `bin/otel.ts` file:
+
+```ts title="bin/otel.ts"
+import { init } from '@adonisjs/otel/init'
+import { ActionsInstrumentation } from '@foadonis/actions/instrumentation'
+
+await init(import.meta.dirname, {
+  instrumentations: {
+    '@foadonis/actions/instrumentation': new ActionsInstrumentation(),
+  },
+})
+```
+
+That's it. Your actions will now be traced automatically, creating spans with the action name and capturing any errors that occur during execution.

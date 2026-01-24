@@ -1,117 +1,133 @@
 ---
-title: Getting Started
+title: 'Getting Started'
+description: 'Install and configure @foadonis/actions in your AdonisJS application'
 icon: Rocket
 ---
 
+<div className="fd-steps [&_h2]:fd-step">
+
 ## Installation
 
-Install and configure the package using the following command :
+Install and configure the package using the following command:
 
 ```sh
 node ace add @foadonis/actions
 ```
 
-<ConfigurationSteps pkg="@foadonis/actions" providers={['actions']} commands />
+<ConfigurationSteps
+  pkg="@foadonis/actions"
+  providers={['actions']}
+  commands
+  assemblerHooks={[{ import: 'indexActions', hook: 'indexActions()' }]}
+  packageJsonImports={[{ alias: '#actions/*', path: './app/actions/*.js' }]}
+/>
 
-## Getting Started
+## Create Your First Action
 
-Actions can be created with the `make:action` command:
+Generate a new action using the `make:action` command:
 
-```bash
-node ace make:action UpdateUserPassword
+```sh
+node ace make:action CreateUser
 ```
 
-This will create a `UpdateUserPasswordAction` class in the `app/actions` folder.
-The `handle` method should contain the logic of your action.
+This creates a new file at `app/actions/create_user_action.ts`:
 
-```ts title="app/actions/update_user_password.ts" twoslash
-// @noErrors
+```ts title="app/actions/create_user_action.ts"
 import { BaseAction } from '@foadonis/actions'
-import User from '#models/user'
 
-export default class UpdateUserPasswordAction extends BaseAction {
-  async handle(user: User, password: string) {
-    user.password = password
-    return user.save()
+export default class CreateUserAction extends BaseAction {
+  handle() {
+    // Your business logic
   }
 }
 ```
 
-Then, anywhere in your application you can start using your action:
+## Implement Your Action
 
-```ts twoslash
-// @noErrors
-import UpdateUserPasswordAction from '#actions/update_user_password'
-import User from '#models/user'
+Let's implement a simple action that creates a user:
 
-// Using the static run method
-const user = await User.findOrFail(1)
-await UpdateUserPasswordAction.run(user, 'new-password')
-```
-
-### Using Dependency Injection
-
-Actions are resolved from the AdonisJS container, which means you can use [dependency injection](https://docs.adonisjs.com/guides/concepts/dependency-injection) to inject services and other dependencies.
-
-```ts title="app/actions/charge_user_action.ts" twoslash
-// @noErrors
+```ts title="app/actions/create_user_action.ts"
 import { BaseAction } from '@foadonis/actions'
-import { inject } from '@adonisjs/core'
 import User from '#models/user'
-import StripeService from '#services/stripe_service'
 
-@inject()
-export default class ChargeUserAction extends BaseAction {
-  constructor(private stripe: StripeService) {}
+export default class CreateUserAction extends BaseAction {
+  async handle(email: string, password: string) {
+    const user = await User.create({
+      email,
+      password,
+    })
 
-  async handle(user: User, amount: number) {
-    await this.stripe.chargeCustomer(user.stripeId, amount)
+    this.logger.info({ userId: user.id }, 'User created successfuly')
+
+    return user
   }
 }
 ```
 
-### Running Actions in Different Contexts
+The `handle` method contains your business logic. It can accept any arguments and return any value.
 
-One of the key benefits of actions is that the same action can be executed in different contexts. Your action can implement one or more interfaces to be used as:
+## Running Actions Directly
 
-- **As a Controller** — Handle HTTP requests
-- **As a Command** — Run from the CLI using ACE
-- **As a Listener** — Respond to events
+You can run an action directly using the static `run` method:
 
-Here's a quick example of an action that can be used as both a controller and a command:
+```ts
+import CreateUserAction from '#actions/create_user_action'
 
-```ts title="app/actions/delete_user_action.ts" twoslash
-// @noErrors
-import { BaseAction, AsCommand, AsController } from '@foadonis/actions'
-import { BaseCommand } from '@adonisjs/core/ace'
-import { HttpContext } from '@adonisjs/core/http'
+const user = await CreateUserAction.run('john@example.com', 'secret123')
+```
+
+This is useful for calling actions from other actions, services, or tests.
+
+## Using Actions as Controllers
+
+To use an action as an HTTP controller, implement the `AsController` interface:
+
+```ts title="app/actions/create_user_action.ts"
+import { BaseAction, type AsController } from '@foadonis/actions'
+import { type HttpContext } from '@adonisjs/core/http'
 import User from '#models/user'
 
-export default class DeleteUserAction extends BaseAction implements AsCommand, AsController {
-  async handle(user: User) {
-    await user.delete()
-  }
+export default class CreateUserAction extends BaseAction implements AsController {
+  async handle(email: string, password: string) {
+    const user = await User.create({
+      email,
+      password,
+    })
 
-  async asCommand({ prompt, logger }: BaseCommand) {
-    const email = await prompt.ask('User email')
-    const user = await User.findByOrFail({ email })
-    await this.handle(user)
-    logger.success(`User ${user.id} has been deleted`)
+    this.logger.info({ userId: user.id }, 'User created successfuly')
+
+    return user
   }
 
   async asController({ request, response }: HttpContext) {
-    const user = await User.findOrFail(request.param('id'))
-    await this.handle(user)
-    return response.status(204)
+    const { email, password } = request.only(['email', 'password'])
+    const user = await this.handle(email, password)
+    return response.created(user)
   }
 }
 ```
 
+The `asController` method receives the full `HttpContext` and handles HTTP-specific concerns like parsing the request and formatting the response.
+
+## Register the Route
+
+Actions are automatically indexed during the build process. A barrel file is generated at `.adonisjs/server/actions.ts` that exports all your actions.
+
+Register the route using the generated actions:
+
+```ts title="start/routes.ts"
+import { actions } from '#generated/actions'
+import router from '@adonisjs/core/services/router'
+
+router.post('/users', actions.CreateUser.asController())
+```
+
+</div>
+
 ## Next Steps
 
-Now that you understand the basics, explore the different ways to use actions:
+Now that you have Actions set up, explore the different ways to use them:
 
-- [Concept & Best Practices](/docs/actions/concept) — Learn how to structure and organize your actions
-- [Action as Controller](/docs/actions/guides/as-controller) — Use actions to handle HTTP requests
-- [Action as Command](/docs/actions/guides/as-command) — Run actions from the command line
-- [Action as Listener](/docs/actions/guides/as-listener) — Use actions to respond to events
+- [As Controller](/docs/actions/as-controller) — Use actions as HTTP controllers (recommended starting point)
+- [As Command](/docs/actions/as-command) — Use actions as CLI commands
+- [As Listener](/docs/actions/as-listener) — Use actions as event listeners

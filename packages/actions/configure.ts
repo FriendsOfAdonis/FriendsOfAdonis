@@ -15,6 +15,10 @@
 import type ConfigureCommand from '@adonisjs/core/commands/configure'
 import { readPackageJSON, writePackageJSON } from 'pkg-types'
 
+/**
+ * Configures @foadonis/actions for an AdonisJS application.
+ * Registers the provider, commands, and sets up the assembler hook.
+ */
 export async function configure(command: ConfigureCommand) {
   const codemods = await command.createCodemods()
 

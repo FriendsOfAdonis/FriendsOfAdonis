@@ -1,0 +1,119 @@
+---
+title: "Using Actions as Commands"
+description: "Use actions as CLI commands"
+---
+
+The `AsCommand` interface allows you to run actions from the command line. Actions implementing this interface are automatically registered as Ace commands.
+
+## Basic Example
+
+Implement the `AsCommand` interface and define the `asCommand` method:
+
+```ts title="app/actions/prune_expired_sessions_action.ts"
+import { BaseAction, type AsCommand } from '@foadonis/actions'
+import { type BaseCommand } from '@adonisjs/core/ace'
+import Session from '#models/session'
+
+export default class PruneExpiredSessionsAction extends BaseAction implements AsCommand {
+  async handle() {
+    const deleted = await Session.query()
+      .where('expiresAt', '<', new Date())
+      .delete()
+
+    return deleted
+  }
+
+  async asCommand(command: BaseCommand) {
+    const count = await this.handle()
+    command.logger.success(`Pruned ${count} expired sessions`)
+  }
+}
+```
+
+The command is automatically registered based on the action name. Run it with:
+
+```sh
+node ace action:prune-expired-sessions
+```
+
+## Command Name and Description
+
+Customize the command name and description using static properties:
+
+```ts title="app/actions/charge_overdue_invoices_action.ts"
+import { BaseAction, type AsCommand } from '@foadonis/actions'
+import { type BaseCommand } from '@adonisjs/core/ace'
+import Invoice from '#models/invoice'
+import PaymentService from '#services/payment_service'
+import { inject } from '@adonisjs/core'
+
+@inject()
+export default class ChargeOverdueInvoicesAction extends BaseAction implements AsCommand {
+  static commandName = 'invoices:charge-overdue'
+  static description = 'Attempt to charge all overdue invoices'
+
+  constructor(private paymentService: PaymentService) {
+    super()
+  }
+
+  async handle() {
+    const invoices = await Invoice.query()
+      .where('status', 'overdue')
+      .preload('user')
+
+    let charged = 0
+    for (const invoice of invoices) {
+      const success = await this.paymentService.charge(invoice.user, invoice.amount)
+      if (success) {
+        invoice.status = 'paid'
+        await invoice.save()
+        charged++
+      }
+    }
+
+    return { total: invoices.length, charged }
+  }
+
+  async asCommand(command: BaseCommand) {
+    const { total, charged } = await this.handle()
+    command.logger.success(`Charged ${charged}/${total} overdue invoices`)
+  }
+}
+```
+
+```sh
+node ace invoices:charge-overdue
+```
+
+## Terminal I/O
+
+Use the command's prompts and logger for interactive input and formatted output:
+
+```ts title="app/actions/create_user_action.ts"
+import { BaseAction, type AsCommand } from '@foadonis/actions'
+import { type BaseCommand } from '@adonisjs/core/ace'
+import User from '#models/user'
+
+export default class CreateUserAction extends BaseAction implements AsCommand {
+  static commandName = 'users:create'
+  static description = 'Create a new user interactively'
+
+  async handle(email: string, password: string) {
+    const user = await User.create({ email, password })
+    return user
+  }
+
+  async asCommand(command: BaseCommand) {
+    const email = await command.prompt.ask('Enter email')
+    const password = await command.prompt.secure('Enter password')
+
+    const user = await this.handle(email, password)
+
+    command.logger.success(`User ${user.email} created successfully`)
+  }
+}
+```
+
+```sh
+node ace users:create
+```

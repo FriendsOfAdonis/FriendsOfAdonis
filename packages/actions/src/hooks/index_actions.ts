@@ -22,6 +22,10 @@ export interface IndexActionsOptions {
   glob?: string[]
 }
 
+/**
+ * Assembler hook that generates an index file for all actions.
+ * The generated file exports a tree structure of lazy-loaded actions.
+ */
 export function indexActions({
   source = 'app/actions',
   importAlias = '#actions',

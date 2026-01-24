@@ -1,0 +1,257 @@
+---
+title: 'Reference'
+description: 'API reference and CLI commands'
+icon: Braces
+---
+
+## BaseAction
+
+The base class for all actions.
+
+```ts
+import { BaseAction } from '@foadonis/actions'
+
+export default class MyAction extends BaseAction {
+  async handle() {
+    // Your business logic
+  }
+}
+```
+
+### Properties
+
+| Property | Type     | Description                               |
+| -------- | -------- | ----------------------------------------- |
+| `logger` | `Logger` | Logger instance scoped to the action name |
+
+### Static Methods
+
+#### `run(...args)`
+
+Runs the action with the given arguments. Returns the result of the `handle` method.
+
+```ts
+const result = await MyAction.run(arg1, arg2)
+```
+
+#### `useRunner(runner)`
+
+Sets the runner instance for the action. Called automatically by the provider.
+
+```ts
+BaseAction.useRunner(runner)
+```
+
+---
+
+## AsController
+
+Interface for actions that can be used as HTTP controllers.
+
+```ts
+import { BaseAction, type AsController } from '@foadonis/actions'
+import { type HttpContext } from '@adonisjs/core/http'
+
+export default class MyAction extends BaseAction implements AsController {
+  async handle() {
+    // Business logic
+  }
+
+  async asController(ctx: HttpContext) {
+    // HTTP handling
+  }
+}
+```
+
+### Methods
+
+| Method         | Parameters         | Description                                          |
+| -------------- | ------------------ | ---------------------------------------------------- |
+| `asController` | `ctx: HttpContext` | Called when the action is invoked as a route handler |
+
+---
+
+## AsCommand
+
+Interface for actions that can be used as CLI commands.
+
+```ts
+import { BaseAction, type AsCommand } from '@foadonis/actions'
+import { type BaseCommand } from '@adonisjs/core/ace'
+
+export default class MyAction extends BaseAction implements AsCommand {
+  static commandName = 'my:command'
+  static description = 'Description of the command'
+
+  async handle() {
+    // Business logic
+  }
+
+  async asCommand(command: BaseCommand) {
+    // CLI handling
+  }
+}
+```
+
+### Static Properties
+
+| Property      | Type     | Description                                                        |
+| ------------- | -------- | ------------------------------------------------------------------ |
+| `commandName` | `string` | Custom command name (optional, defaults to `action:<action-name>`) |
+| `description` | `string` | Command description shown in `node ace list`                       |
+
+### Methods
+
+| Method      | Parameters             | Description                                        |
+| ----------- | ---------------------- | -------------------------------------------------- |
+| `asCommand` | `command: BaseCommand` | Called when the action is invoked as a CLI command |
+
+---
+
+## AsListener
+
+Interface for actions that can be used as event listeners.
+
+```ts
+import { BaseAction, type AsListener } from '@foadonis/actions'
+
+export default class MyAction extends BaseAction implements AsListener<MyEvent> {
+  async handle() {
+    // Business logic
+  }
+
+  async asListener(event: MyEvent) {
+    // Event handling
+  }
+}
+```
+
+### Methods
+
+| Method       | Parameters | Description                                 |
+| ------------ | ---------- | ------------------------------------------- |
+| `asListener` | `event: T` | Called when the subscribed event is emitted |
+
+---
+
+## loader
+
+Helper function for lazy-loading actions in routes and events.
+
+```ts
+import { loader } from '@foadonis/actions'
+
+const actionLoader = loader(() => import('#actions/my_action'))
+
+// Use as controller
+actionLoader.asController()
+
+// Use as listener
+actionLoader.asListener()
+```
+
+### Methods
+
+| Method           | Returns      | Description                        |
+| ---------------- | ------------ | ---------------------------------- |
+| `asController()` | `RouteFn`    | Returns a route handler function   |
+| `asListener()`   | `ListenerFn` | Returns an event listener function |
+
+---
+
+## ActionsRunner
+
+The runner responsible for resolving and executing actions.
+
+```ts
+import { ActionsRunner } from '@foadonis/actions'
+```
+
+### Methods
+
+| Method     | Parameters                        | Returns           | Description                           |
+| ---------- | --------------------------------- | ----------------- | ------------------------------------- |
+| `dispatch` | `actionClass, runner, container?` | `Promise<any>`    | Resolves and executes an action       |
+| `resolve`  | `Action, resolver?`               | `Promise<Action>` | Resolves an action from the container |
+
+### Container Binding
+
+The runner is available in the container as `actions.runner`:
+
+```ts
+const runner = await app.container.make('actions.runner')
+```
+
+---
+
+## CLI Commands
+
+### make:action
+
+Creates a new action file.
+
+```sh
+node ace make:action <name>
+```
+
+**Arguments:**
+
+| Argument | Description                                                     |
+| -------- | --------------------------------------------------------------- |
+| `name`   | The name of the action (e.g., `CreateUser`, `SendNotification`) |
+
+**Examples:**
+
+```sh
+# Creates app/actions/create_user_action.ts
+node ace make:action CreateUser
+
+# Creates app/actions/billing/process_payment_action.ts
+node ace make:action billing/ProcessPayment
+```
+
+---
+
+## Configuration
+
+### indexActions
+
+Assembler hook for indexing actions. Generates a barrel file at `.adonisjs/server/actions.ts`.
+
+```ts title="adonisrc.ts"
+import { defineConfig } from '@adonisjs/core/app'
+import { indexActions } from '@foadonis/actions'
+
+export default defineConfig({
+  hooks: {
+    init: [indexActions()],
+  },
+})
+```
+
+**Options:**
+
+| Option        | Type       | Default              | Description                             |
+| ------------- | ---------- | -------------------- | --------------------------------------- |
+| `source`      | `string`   | `'app/actions'`      | Source directory for actions            |
+| `importAlias` | `string`   | `'#actions'`         | Import alias for actions                |
+| `glob`        | `string[]` | `['**/*_action.ts']` | Glob patterns for matching action files |
+
+**Example with custom options:**
+
+```ts title="adonisrc.ts"
+import { defineConfig } from '@adonisjs/core/app'
+import { indexActions } from '@foadonis/actions'
+
+export default defineConfig({
+  hooks: {
+    init: [
+      indexActions({
+        source: 'app/actions',
+        importAlias: '#actions',
+        glob: ['**/*_action.ts'],
+      }),
+    ],
+  },
+})
+```

@@ -1,0 +1,102 @@
+---
+title: "Using Actions as Listeners"
+description: "Use actions as event listeners"
+---
+
+The `AsListener` interface allows you to trigger actions in response to events. This is useful for decoupling side effects from your main business logic.
+
+## Basic Example
+
+Implement the `AsListener` interface and define the `asListener` method:
+
+```ts title="app/actions/send_welcome_email_action.ts"
+import { BaseAction, type AsListener } from '@foadonis/actions'
+import mail from '@adonisjs/mail/services/main'
+import User from '#models/user'
+
+export default class SendWelcomeEmailAction extends BaseAction implements AsListener<User> {
+  async handle(user: User) {
+    await mail.send((message) => {
+      message
+        .to(user.email)
+        .subject('Welcome!')
+        .htmlView('emails/welcome', { user })
+    })
+
+    this.logger.info(`Welcome email sent to ${user.email}`)
+  }
+
+  async asListener(user: User) {
+    await this.handle(user)
+  }
+}
+```
+
+## Registering Listeners
+
+Register the listener in `start/events.ts` using the generated actions:
+
+```ts title="start/events.ts"
+import emitter from '@adonisjs/core/services/emitter'
+import { actions } from '#generated/actions'
+
+emitter.on('user:registered', actions.SendWelcomeEmail.asListener())
+```
+
+## Typed Event Payloads
+
+For type-safe event payloads, define an event class:
+
+```ts title="app/events/user_registered.ts"
+import { BaseEvent } from '@adonisjs/core/events'
+import User from '#models/user'
+
+export default class UserRegistered extends BaseEvent {
+  constructor(public user: User) {
+    super()
+  }
+}
+```
+
+Then type the `AsListener` interface with the event class:
+
+```ts title="app/actions/send_welcome_email_action.ts"
+import { BaseAction, type AsListener } from '@foadonis/actions'
+import mail from '@adonisjs/mail/services/main'
+import UserRegistered from '#events/user_registered'
+
+export default class SendWelcomeEmailAction extends BaseAction implements AsListener<UserRegistered> {
+  async handle(email: string) {
+    await mail.send((message) => {
+      message
+        .to(email)
+        .subject('Welcome!')
+        .htmlView('emails/welcome', { email })
+    })
+
+    this.logger.info(`Welcome email sent to ${email}`)
+  }
+
+  async asListener(event: UserRegistered) {
+    await this.handle(event.user.email)
+  }
+}
+```
+
+Register using the event class:
+
+```ts title="start/events.ts"
+import emitter from '@adonisjs/core/services/emitter'
+import { actions } from '#generated/actions'
+import UserRegistered from '#events/user_registered'
+
+emitter.on(UserRegistered, actions.SendWelcomeEmail.asListener())
+```
+
+Dispatch the event from anywhere in your application:
+
+```ts
+import UserRegistered from '#events/user_registered'
+
+await UserRegistered.dispatch(user)
+```

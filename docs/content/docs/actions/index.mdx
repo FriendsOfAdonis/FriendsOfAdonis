@@ -1,89 +1,71 @@
 ---
-title: Introduction
+title: 'Introduction'
+description: 'Organize your business logic into reusable, testable actions'
 icon: Album
-description: Reusable actions that can be run as Commands, Controllers or Event Listeners.
 ---
 
-## Why Actions?
+Actions provide a structured way to organize your business logic into single-purpose, reusable classes. Instead of scattering logic across controllers, commands, and event listeners, you encapsulate it in one place and invoke it from anywhere.
 
-This package introduces a new way of organizing the logic of your AdonisJS applications by focusing on the **actions** your applications provide.
+## The Problem
 
-Instead of creating controllers, commands, listeners, and jobs separately, it allows you to create a single class that handles a specific task and run that class in any context you need.
+In a typical AdonisJS application, you might need to perform the same operation from multiple entry points. For example, creating a user might happen:
 
-Therefore, it encourages you to switch your focus from:
+- From an HTTP request (registration form)
+- From a CLI command (seeding or admin tools)
+- From an event listener (OAuth callback)
 
-> "What controllers do I need?", "Should I make a validator for this?", "Should this run asynchronously in a job instead?", "Do I need a separate command for this?"
+Without a clear pattern, this leads to duplicated code, inconsistent behavior, and logic that's difficult to test in isolation.
 
-to:
+## The Solution
 
-> **"What does my application actually do?"**
+Actions solve this by extracting your business logic into dedicated classes. Each action has a single responsibility and can be invoked from any entry point in your application.
 
-By organizing your code around actions, you get:
-
-- **One class, one task** — Each action handles a single, well-defined responsibility
-- **Reusability** — The same action can be executed as a command, controller, or listener without code duplication
-- **Testability** — Test your business logic independently of how it's invoked
-- **Flexibility** — Change how an action is triggered (HTTP, CLI, event) without modifying the core logic
-
-```ts twoslash tab="app/actions/register_user_action.ts"
-// @noErrors
+```ts title="app/actions/create_user_action.ts"
+import { BaseAction } from '@foadonis/actions'
 import User from '#models/user'
-import { BaseAction, AsCommand, AsController } from '@foadonis/actions'
-import { BaseCommand } from '@adonisjs/core/ace'
-import { HttpContext } from '@adonisjs/core/http'
 
-export default class RegisterUserAction extends BaseAction implements AsCommand, AsController {
+export default class CreateUserAction extends BaseAction {
   async handle(email: string, password: string) {
-    const user = await user.create({
-      email,
-      password,
-    })
-
-    await UserRegistered.dispatch(user)
-
+    const user = await User.create({ email, password })
     return user
-  }
-
-  async asCommand({ prompt, logger }: BaseCommand) {
-    const email = await prompt.ask('Email address')
-    const password = await prompt.ask('Password')
-    const user = await this.handle(user)
-
-    logger.success(`User ${user.id} has been registered`)
-  }
-
-  async asController({ request, serialize }: HttpContext) {
-    const payload = await request.validateUsing(createUserValidator)
-    const user = await this.handle(payload.email, payload.password)
-    const token = await User.accessTokens.create(user)
-
-    return serialize(AccessTokenTransformer.transform(token))
   }
 }
 ```
 
-```ts tab="start/routes.ts" twoslash
-// @noErrors
-import router from '@adonisjs/core/services/router'
-import actions from '#generated/actions'
+This pattern is inspired by the **UseCase** concept from Clean Architecture, where each use case represents a single action the system can perform.
 
-router.post('/register', actions.Users.RegisterUser.asController())
+## Benefits
+
+- **Reusability** — Write once, use from HTTP controllers, CLI commands, or event listeners
+- **Testability** — Test your business logic in isolation without HTTP context or CLI setup
+- **Organization** — Keep controllers thin and focused on HTTP concerns
+- **Consistency** — Ensure the same logic runs regardless of the entry point
+
+## How It Works
+
+An action can serve multiple entry points through dedicated interfaces.
+
+By implementing `AsController`, `AsCommand`, or `AsListener`, your action becomes usable from that entry point while keeping the core logic in the `handle` method.
+
+```ts title="app/actions/create_user_action.ts"
+import { BaseAction, type AsController } from '@foadonis/actions'
+import { type HttpContext } from '@adonisjs/core/http'
+import User from '#models/user'
+
+export default class CreateUserAction extends BaseAction implements AsController {
+  async handle(email: string, password: string) {
+    const user = await User.create({ email, password })
+    return user
+  }
+
+  async asController({ request, response }: HttpContext) {
+    const { email, password } = request.only(['email', 'password'])
+    const user = await this.handle(email, password)
+    return response.created(user)
+  }
+}
 ```
 
-```ts tab="start/events.ts" twoslash
-// @noErrors
-import emitter from '@adonisjs/core/services/emitter'
-import actions from '#generated/actions'
+## Next Steps
 
-emitter.on(UserRegistered, actions.Users.SendNotificationEmailAction.asListener())
-```
-
-## Features
-
-✔ Create reusable actions with a single `handle` method  
-✔ Run actions as ACE commands automatically  
-✔ Use actions as HTTP route controllers  
-✔ Register actions as event listeners  
-✔ Full dependency injection support  
-✔ Type-safe action execution  
-✔ OpenTelemetry integration
+Ready to get started? Head to the [Getting Started](/docs/actions/getting-started) guide to install and configure Actions in your AdonisJS application.
