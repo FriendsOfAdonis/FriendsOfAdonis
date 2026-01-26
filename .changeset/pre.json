@@ -18,7 +18,9 @@
     "@foadonis/autoloader": "0.0.0"
   },
   "changesets": [
+    "calm-onions-press",
     "cute-seas-shop",
+    "evil-experts-wash",
     "itchy-drinks-spend",
     "stale-dingos-enter",
     "warm-walls-lay",
