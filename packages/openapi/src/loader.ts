@@ -4,6 +4,7 @@ import { type RouteJSON } from '@adonisjs/core/types/http'
 import {
   ExcludeMetadataStorage,
   OperationMetadataStorage,
+  OperationParameterMetadataStorage,
 } from '@martin.xyz/openapi-decorators/metadata'
 import { isConstructor, toOpenAPIPath } from './utils.js'
 import { type OperationTaggerFn } from './types.js'
@@ -53,6 +54,7 @@ export class RouterLoader {
 
     // Transform Adonis-style path parameters to OpenAPI-compliant format
     const openAPIPath = toOpenAPIPath(route.pattern)
+    const params = route.tokens.filter((item) => item.type === 1).map((item) => item.val)
 
     const existing = OperationMetadataStorage.getMetadata(target.prototype, propertyKey, true)
 
@@ -66,6 +68,16 @@ export class RouterLoader {
       },
       propertyKey
     )
+
+    for (const param of params) {
+      OperationParameterMetadataStorage.mergeMetadata(
+        target.prototype,
+        [{ in: 'path', type: 'string', name: param }],
+        propertyKey
+      )
+
+      console.log(param)
+    }
 
     return target
   }

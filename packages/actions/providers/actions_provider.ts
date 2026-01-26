@@ -1,7 +1,6 @@
 import { type ApplicationService } from '@adonisjs/core/types'
 import { ActionsRunner } from '../src/runner.ts'
 import { BaseAction } from '../src/base_action.ts'
-import { ActionLoader } from '../src/loader.ts'
 
 /**
  * Service provider that registers the ActionsRunner singleton
@@ -27,7 +26,6 @@ export default class ActionsProvider {
   async boot() {
     const runner = await this.app.container.make('actions.runner')
     BaseAction.useRunner(runner)
-    ActionLoader.useRunner(runner)
   }
 }
 
