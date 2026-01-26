@@ -1,5 +1,11 @@
 # @foadonis/actions
 
+## 0.2.0-next.1
+
+### Patch Changes
+
+- [`413d63c`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/413d63c58c377683cc721aea694a1b45bd498898) Thanks [@kerwanp](https://github.com/kerwanp)! - Simplify action loader to keep reference to module
+
 ## 0.2.0-next.0
 
 ### Minor Changes

@@ -1,5 +1,11 @@
 # @foadonis/maintenance
 
+## 1.0.0-next.1
+
+### Patch Changes
+
+- [`413d63c`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/413d63c58c377683cc721aea694a1b45bd498898) Thanks [@kerwanp](https://github.com/kerwanp)! - Avoid loading path from app to avoid race condition issue
+
 ## 1.0.0-next.0
 
 ### Major Changes
