@@ -1,5 +1,11 @@
 # @foadonis/actions
 
+## 0.2.0-next.2
+
+### Patch Changes
+
+- [`2276d57`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/2276d577c83a5cde273501719c1a48cb9aef50c0) Thanks [@kerwanp](https://github.com/kerwanp)! - Fix types issues when using constrution arguments
+
 ## 0.2.0-next.1
 
 ### Patch Changes
