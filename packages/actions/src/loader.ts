@@ -1,4 +1,8 @@
-import { type UnWrapLazyImport, type LazyImport } from '@adonisjs/core/types/common'
+import {
+  type UnWrapLazyImport,
+  type LazyImport,
+  type Constructor,
+} from '@adonisjs/core/types/common'
 import { type BaseAction } from './base_action.ts'
 import { type AsController, type AsListener } from './types.ts'
 
@@ -6,7 +10,7 @@ import { type AsController, type AsListener } from './types.ts'
  * Creates an ActionLoader for lazy-loading actions.
  * Provides type-safe methods based on interfaces the action implements.
  */
-export function loader<Import extends LazyImport<typeof BaseAction>>(fn: Import) {
+export function loader<Import extends LazyImport<Constructor<BaseAction>>>(fn: Import) {
   return {
     asController: () => [fn, 'asController'] as const,
     asListener: () => [fn, 'asListener'] as const,
@@ -17,7 +21,7 @@ export function loader<Import extends LazyImport<typeof BaseAction>>(fn: Import)
  * Available methods on an ActionLoader, conditionally typed based
  * on which interfaces the loaded action implements.
  */
-export interface LoaderMethods<Import extends LazyImport<typeof BaseAction>> {
+export interface LoaderMethods<Import extends LazyImport<Constructor<BaseAction>>> {
   asController: InstanceType<UnWrapLazyImport<Import>> extends AsController
     ? () => [Import, 'asController']
     : never

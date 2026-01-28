@@ -1,6 +1,7 @@
 import { type ActionsRunner } from './runner.ts'
 import { RuntimeException } from '@adonisjs/core/exceptions'
 import { type Logger } from '@adonisjs/core/logger'
+import { type Constructor } from '@adonisjs/core/types/common'
 
 /**
  * Base class for all actions in the application.
@@ -38,17 +39,19 @@ export abstract class BaseAction {
    * Executes the action's handle method with dependency injection.
    * @throws {RuntimeException} If no runner has been configured
    */
-  static async run<Action extends typeof BaseAction>(
+  static async run<Action extends Constructor<BaseAction>>(
     this: Action,
     ...args: Parameters<InstanceType<Action>['handle']>
   ) {
-    if (!this.runner) {
+    const Action = this as unknown as typeof BaseAction
+
+    if (!Action.runner) {
       throw new RuntimeException(
         `Cannot run "${this.name}" action. Make sure to pass runner to the "BaseAction" class for run to work`
       )
     }
 
-    return this.runner.dispatch(this, async (action) => {
+    return Action.runner.dispatch(Action, async (action) => {
       return action.handle(...args)
     })
   }
