@@ -39,10 +39,10 @@ export abstract class BaseAction {
    * Executes the action's handle method with dependency injection.
    * @throws {RuntimeException} If no runner has been configured
    */
-  static async run<Action extends Constructor<BaseAction>>(
+  static run<Action extends Constructor<BaseAction>>(
     this: Action,
     ...args: Parameters<InstanceType<Action>['handle']>
-  ) {
+  ): ReturnType<InstanceType<Action>['handle']> {
     const Action = this as unknown as typeof BaseAction
 
     if (!Action.runner) {
@@ -53,6 +53,6 @@ export abstract class BaseAction {
 
     return Action.runner.dispatch(Action, async (action) => {
       return action.handle(...args)
-    })
+    }) as ReturnType<InstanceType<Action>['handle']>
   }
 }

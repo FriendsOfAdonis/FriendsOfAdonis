@@ -53,6 +53,12 @@ function transformSchema(
     if (value instanceof Item) {
       const data = (value as any).transformerData[0] as OpenAPIV3.SchemaObject
 
+      if ('$ref' in data) {
+        const resolved = findSchema(context, data)
+        properties[key] = resolveSchema(context, value.transformer, resolved, value.variant, false)
+        continue
+      }
+
       if (data.type === 'array') {
         const resolved = findSchema(context, schema)
         properties[key] = {
@@ -82,16 +88,19 @@ function resolveSchema(
   variant: string,
   isPaginated: boolean
 ): OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject {
-  const transformed = transformSchema(
-    context,
-    transformerClass,
-    findSchema(context, schema),
-    variant
-  )
   const a = stringHelpers.create(transformerClass.name).removeSuffix('Transformer').toString()
   const b = stringHelpers.create(variant).removePrefix('to')
   const name = stringHelpers.create(`${a}_${b}`).pascalCase().toString()
-  context.schemas[name] = transformed
+
+  if (!context.schemas[name]) {
+    const transformed = transformSchema(
+      context,
+      transformerClass,
+      findSchema(context, schema),
+      variant
+    )
+    context.schemas[name] = transformed
+  }
 
   if (isPaginated) {
     return {
