@@ -10,15 +10,15 @@ configure({
   suites: [
     {
       name: 'units',
-      files: ['tests/units/**/*.spec.(js|ts)'],
+      files: ['tests/units/**/*.spec.ts'],
     },
     {
       name: 'integration',
-      files: ['tests/integration/**/*.spec.(js|ts)'],
+      files: ['tests/integration/**/*.spec.ts'],
     },
     {
       name: 'functional',
-      files: ['tests/functional/**/*.spec.(js|ts)'],
+      files: ['tests/functional/**/*.spec.ts'],
     },
   ],
   plugins: [assert(), expectTypeOf(), fileSystem({ basePath: BASE_URL, autoClean: false })],

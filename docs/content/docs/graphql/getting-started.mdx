@@ -20,7 +20,7 @@ To explore the different capabilities of GraphQL we will create a sample GraphQL
 Let's start tih the `Recipe` type, which is the foundation of our API.
 
 <Callout type="warn">
-  We assume that you already now [Adonis](https://adonisjs.com/) and its ORM
+  We assume that you already know [Adonis](https://adonisjs.com/) and its ORM
   [Lucid](https://lucid.adonisjs.com/docs/introduction). The migrations have been omitted from the
   tutorial.
 </Callout>
@@ -31,7 +31,7 @@ Let's start tih the `Recipe` type, which is the foundation of our API.
 
 We will start with a basic `Recipe` model.
 
-```ts title="app/models/recipe.ts"
+```ts title="app/models/recipe.ts" twoslash
 import { BaseModel, column } from '@adonisjs/lucid/orm'
 import { DateTime } from 'luxon'
 
@@ -54,9 +54,9 @@ export default class Recipe extends BaseModel {
 
 We now need to create an object type from our model. It will then be used in our GraphQL schema.
 
-```ts title="app/models/recipe.ts"
+```ts title="app/models/recipe.ts" twoslash
 import { BaseModel, column } from '@adonisjs/lucid/orm'
-import { ObjectType, Field } from '@foadonis/graphql/decorators' // [!code ++]
+import { ObjectType, Field, ID } from '@foadonis/graphql' // [!code ++]
 import { DateTime } from 'luxon'
 
 @ObjectType() // [!code ++]
@@ -90,9 +90,10 @@ After that we want to create typical crud operations. Also called queries and mu
 
 #### The Resolver
 
-```ts title="app/graphql/recipe_resolver.ts"
+```ts title="app/graphql/recipe_resolver.ts" twoslash
+// @noErrors
 import Recipe from '#models/recipe'
-import { Arg, Args, Int, Mutation, Query, Resolver } from 'type-graphql'
+import { Arg, Args, Int, Mutation, Query, Resolver } from '@foadonis/graphql'
 
 @Resolver(Recipe)
 export default class RecipeResolver {
@@ -130,49 +131,37 @@ export default class RecipeResolver {
 We are missing two important pieces, the inputs for the `recipes` query and the arguments for the `addRecipe` mutation.
 Let's create them:
 
-```ts title="app/graphql/recipe_resolver.ts"
-import { ArrayMaxSize, Length, Max, MaxLength, Min } from 'class-validator'
-import { ArgsType, Field, InputType, Int } from 'type-graphql'
+```ts title="app/graphql/recipe_resolver.ts" twoslash
+import { ArgsType, Field, InputType, Int } from '@foadonis/graphql'
 
 @ArgsType()
 class RecipeArgs {
   @Field(() => Int)
-  @Min(0)
   page: number = 0
 
   @Field(() => Int)
-  @Min(1)
-  @Max(25)
   perPage: number = 0
 }
 
 @InputType()
 class NewRecipeInput {
   @Field()
-  @MaxLength(30)
   declare title: string
 
   @Field({ nullable: true })
-  @Length(30, 255)
   declare description?: string
 
   @Field(() => [String])
-  @ArrayMaxSize(30)
   declare ingredients: string[]
 }
 ```
-
-<Callout>
-  The `@Length`, `@Min` and `@ArrayMaxSize` are decorators coming from
-  [`class-validator`](https://github.com/typestack/class-validator) a well-known validation library
-  that rely on decorators.
-</Callout>
 
 #### Register the Resolver
 
 We must now register our `Resolver` with the GraphQL server:
 
-```ts title="start/graphql.ts"
+```ts title="start/graphql.ts" twoslash
+// @noErrors
 import graphql from '@foadonis/graphql/services/main'
 
 graphql.resolvers([() => import('#graphql/resolvers/recipe_resolver')])

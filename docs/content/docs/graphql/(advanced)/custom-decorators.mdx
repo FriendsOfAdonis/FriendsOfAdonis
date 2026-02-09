@@ -1,3 +1,71 @@
 ---
 title: Custom decorators
 ---
+
+Custom decorators allow you to improve your developer experience and reduce code boilerplate.
+
+Here is an extremely simple `FieldID` decorator:
+
+```ts title="app/graphql/decorators.ts"
+export function FieldID(options: FieldOptions = {}) {
+  return Field(() => ID, {
+    description: 'Resource identifier in the UUID V4 format',
+    ...options,
+  })
+}
+
+@ObjectType()
+export class User {
+  @FieldID()
+  id: string
+
+  @FieldID()
+  organizationId: string
+}
+```
+
+## Method decorators
+
+We've seen that [middlewares](../middlewares.mdx) allow us to reuse some code between resolvers. To further reduce the boilerplate and improve the API we can create our own custom method decorators.
+
+```ts title="app/graphql/decorators.ts"
+export function LogExecutionTiming() {
+  return createMethodMiddlewareDecorator(async (_, next) => {
+    const start = Date.now()
+    const result = await next()
+    const diff = Date.now() - start
+    this.logger.info(`took ${diff}ms`)
+    return result
+  })
+}
+
+@Resolver()
+class RecipeResolver {
+  @LogExecutionTiming()
+  @Query()
+  createRecipe() {}
+}
+```
+
+## Class decorators
+
+Similar to method decorators, we can create our own custom resolver class decorators
+
+```ts title="app/graphql/decorators.ts"
+export function ValidateRequestIp(ips: string[]) {
+  return createResolverClassMiddlewareDecorator(async ({ context }, next) => {
+    if (!ips.includes(context.request.ip())) {
+      throw new UnauthorizedIpException()
+    }
+
+    return next()
+  })
+}
+
+@ValidateRequestIp('127.0.0.1')
+@Resolver()
+class InternalResolver {
+  @Query()
+  localhostOnly() {}
+}
+```

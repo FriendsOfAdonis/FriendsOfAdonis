@@ -7,5 +7,5 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["playground-graphql", "playground-openapi", "docs"]
+  "ignore": ["playground-graphql", "playground-openapi", "docs", "@foadonis/shopkeeper"]
 }

@@ -22,7 +22,7 @@ and `pubsub.publish('recipe:created', recipe)` to publish a created recipe.
 
 <Callout>
 
-You can find more information about Middlewares on the [Official TypeGraphQL
+You can find more information about Subscriptions on the [Official TypeGraphQL
 documentation](https://typegraphql.com/docs/subscriptions.html)
 
 </Callout>
@@ -137,6 +137,36 @@ export default class RecipeResolver {
   }
 }
 ```
+
+### Custom Subscription
+
+The `@Subscription` decorator accepts a `subscribe` parameter allowing you to subscribe to any events using [Async Iterators](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncIterator).
+
+For example a common scenario used for real-time applications is to emit an initial empty event and subscribe to different topics to re-send values to the client.
+
+```ts title="app/graphql/resolvers/recipe_resolver.ts"
+@Resolver()
+export default class RecipeResolver {
+  @Subscription(() => [Recipe], {
+    subscribe: () =>
+      Repeater.merge([
+        undefined,
+        pubsub.subscribe('recipe:created'),
+        pubsub.subscribe('recipe:updated'),
+      ]),
+  })
+  @Query(() => [Recipe])
+  recipes() {
+    return Recipe.all()
+  }
+}
+```
+
+<Callout>
+
+This solution makes it easy to build real-time applications but it comes with a big performance trade-off as recipes will be re-fetched everytime a new one is updated or created.
+
+</Callout>
 
 ## Triggering Subscription Topics
 

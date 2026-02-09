@@ -18,10 +18,9 @@ export type InferEngines<
   T extends ConfigProvider<{ engines: Record<string, ManagerModeFactory> }>,
 > = Awaited<ReturnType<T['resolver']>>['engines']
 
-export interface MaintenanceService
-  extends MaintenanceManager<
-    DriversList extends Record<string, ManagerModeFactory> ? DriversList : never
-  > {}
+export interface MaintenanceService extends MaintenanceManager<
+  DriversList extends Record<string, ManagerModeFactory> ? DriversList : never
+> {}
 
 declare module '@adonisjs/core/types' {
   interface ContainerBindings {

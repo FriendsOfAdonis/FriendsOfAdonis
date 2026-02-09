@@ -7,7 +7,9 @@
     "---Guide---",
     "index",
     "getting-started",
-    "------",
+    "---Concepts---",
+    "(concepts)/types-and-fields",
+    "(concepts)/resolvers",
     "authorization",
     "middlewares",
     "subscriptions",
@@ -15,7 +17,8 @@
     "(references)/configuration",
     "(references)/decorators",
     "---Advanced---",
-    "[Custom decorators](https://typegraphql.com/docs/custom-decorators.html)",
+    "(advanced)/custom-decorators",
+    "(advanced)/validation",
     "[Generic Types](https://typegraphql.com/docs/generic-types.html)"
   ]
 }

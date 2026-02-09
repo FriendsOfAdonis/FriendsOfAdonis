@@ -1,0 +1,202 @@
+---
+title: Types and Fields
+---
+
+## Introduction
+
+`@foadonis/graphql` uses the ["code-first" approach](https://www.apollographql.com/blog/schema-first-vs-code-only-graphql) by automatically generating your GraphQL schema based on your code.
+
+With the following Typescript class which represents our `Recipe` model with fields for storing the recipe data:
+
+```ts
+class Recipe {
+  declare id: string
+  declare title: string
+  declare averageRating: number
+}
+```
+
+By using the provided decorators you can turn your Typescript class into a GraphQL Type:
+
+```ts tab="Typescript"
+import { ObjectType, Field } from '@foadonis/graphql'
+
+@ObjectType()
+class Recipe {
+  @Field()
+  declare id: string
+
+  @Field()
+  declare title: string
+
+  @Field()
+  declare averageRating: number
+}
+```
+
+```graphql tab="GraphQL"
+type Recipe {
+  id: String!
+  title: String!
+  averageRating: Float!
+}
+```
+
+## Complex types
+
+To generate the GraphQL we heavily rely on Typescript metadata to infer the type of a property. There are cases where this is not possible and require explicit type to be provided.
+
+### Nullable
+
+```ts tab="Typescript"
+import { ObjectType, Field } from '@foadonis/graphql'
+
+@ObjectType()
+class Recipe {
+  @Field()
+  declare title: string
+
+  @Field(() => String, { nullable: true })
+  declare description: string | null
+}
+```
+
+```graphql tab="GraphQL"
+type Recipe {
+  title: String!
+  description: String
+}
+```
+
+### Array
+
+```ts tab="Typescript"
+import { ObjectType, Field } from '@foadonis/graphql'
+
+@ObjectType()
+class Recipe {
+  @Field(() => [String])
+  declare tags: string[]
+}
+```
+
+```graphql tab="GraphQL"
+type Recipe {
+  tags: [String!]!
+}
+```
+
+### Scalars
+
+```ts tab="Typescript"
+import { ObjectType, Field, GraphQLBigInt } from '@foadonis/graphql'
+import { GraphQLUUID, GraphQLJSON } from 'graphql-scalars'
+
+@ObjectType()
+class Recipe {
+  @Field(() => GraphQLUUID, { nullable: true })
+  declare authorId: string | null
+
+  @Field(() => GraphQLJSON)
+  declare meta: any
+}
+```
+
+```graphql tab="GraphQL"
+type Recipe {
+  authorId: JSON
+  meta: JSON!
+}
+```
+
+### Objects
+
+```ts tab="Typescript"
+import { ObjectType, Field } from '@foadonis/graphql'
+
+@ObjectType()
+class User {
+  @Field()
+  name: string
+}
+
+@ObjectType()
+class Recipe {
+  @Field(() => [User])
+  declare authors: User[]
+}
+```
+
+```graphql tab="GraphQL"
+type User {
+  name: String!
+}
+
+type Recipe {
+  authors: [User!]!
+}
+```
+
+## Enums
+
+You can generate GraphQL enums using Typescript enums with the `registerEnumType` function. Due to typescript limitations the name and the type must be explicitly defined.
+
+```ts tab="Typescript"
+import { ObjectType, Field, registerEnumType } from '@foadonis/graphql'
+
+enum RecipeStatus {
+  DRAFT = 'DRAFT',
+  IN_REVIEW = 'IN_REVIEW',
+  PUBLISHED = 'PUBLISHED',
+}
+
+registerEnumType(RecipeStatus, {
+  name: 'RecipeStatus', // mandatory
+})
+
+@ObjectType()
+class Recipe {
+  @Field(() => Recipe) // mandatory
+  declare status: RecipeStatus
+}
+```
+
+```graphql tab="GraphQL"
+enum RecipeStatus {
+  DRAFT
+  IN_REVIEW
+  PUBLISHED
+}
+
+type Recipe {
+  status: RecipeStatus!
+}
+```
+
+For interoperability with databases the **enum value is used**. Meaning that if you want to share the types with your client you must map each key with the corresponding value.
+
+## Documentation
+
+The `description` parameter on `ObjectType` and `Field` allows you to provide documentation to your GraphQL schema that will be shown in the introspection.
+
+```ts tab="Typescript"
+import { ObjectType, Field, ID } from '@foadonis/graphql'
+
+@ObjectType({
+  description: 'A cooking recipe',
+})
+class Recipe {
+  @Field(() => ID, { description: 'Unique identifier in Uuid V4 format' })
+  declare id: string
+}
+```
+
+```graphql tab="GraphQL"
+"""
+A cooking recipe
+"""
+type User {
+  "Unique identifier in Uuid V4 format"
+  id: ID!
+}
+```

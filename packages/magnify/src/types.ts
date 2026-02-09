@@ -32,10 +32,9 @@ export type InferEngines<
   T extends ConfigProvider<{ engines: Record<string, ManagerEngineFactory> }>,
 > = Awaited<ReturnType<T['resolver']>>['engines']
 
-export interface MagnifyService
-  extends MagnifyManager<
-    EnginesList extends Record<string, ManagerEngineFactory> ? EnginesList : never
-  > {}
+export interface MagnifyService extends MagnifyManager<
+  EnginesList extends Record<string, ManagerEngineFactory> ? EnginesList : never
+> {}
 
 declare module '@adonisjs/core/types' {
   interface ContainerBindings {

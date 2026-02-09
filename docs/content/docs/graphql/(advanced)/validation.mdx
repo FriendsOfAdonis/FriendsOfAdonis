@@ -1,0 +1,59 @@
+---
+title: Validation
+---
+
+## Introduction
+
+Inputs validation is an important piece in every backend application but is usually a source of trouble and result in a lot of boilerplate and duplicated code.
+
+With `@foadonis/graphql` it is possible to have your validation schema as close as possible as your GraphQL schema (inputs, args, etc).
+
+### Disclaimer
+
+As of today, [VineJS](https://vinejs.dev/docs/introduction) is not supported out of the box and validation libraries that use decorators ([class-validator](https://github.com/typestack/class-validator), [joiful](https://github.com/joiful-ts/joiful)) are not maintained anymore and you might want to consider manual validation for now.
+
+## class-validator
+
+[class-validator](https://github.com/typestack/class-validator) is a validation library relying on decorators, allowing you to define your GraphQL schema and validation schema the same way.
+
+```package-install
+npm install class-validator
+```
+
+```ts title="config/graphql.ts"
+export default defineConfig({
+  // [...]
+  validate: true,
+})
+```
+
+We can now define our `CreateRecipeInput` schema with the following:
+
+```ts
+@InputType()
+export class CreateRecipeInput {
+  @Field()
+  @Length(3, 30)
+  declare title: string
+
+  @Field({ nullable: true })
+  @Length(30, 255)
+  declare description?: string
+}
+```
+
+And that's it! When this input is used in a resolver the data will be automatically validated:
+
+```ts title="app/graphql/resolvers/recipe_resolver.ts"
+@Resolver(() => Recipe)
+class RecipeResolver {
+  @Mutation(() => Recipe)
+  createRecipe(@Arg('input') data: CreateRecipeInput) {
+    return Recipe.create(data)
+  }
+}
+```
+
+## Custom validator
+
+WIP

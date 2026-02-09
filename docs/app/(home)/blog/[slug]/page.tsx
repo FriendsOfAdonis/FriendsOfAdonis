@@ -54,9 +54,7 @@ export default async function Page(props: { readonly params: Promise<{ slug: str
           </div>
           <div>
             <p className="mb-1 text-sm text-fd-muted-foreground">At</p>
-            <p className="font-medium">
-              {new Date(page.data.date ?? page.file.name).toDateString()}
-            </p>
+            <p className="font-medium">{new Date(page.data.date).toDateString()}</p>
           </div>
           <Control url={page.url} />
         </div>
