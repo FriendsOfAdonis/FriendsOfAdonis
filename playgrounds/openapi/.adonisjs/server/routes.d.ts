@@ -15,6 +15,9 @@ export type ScannedRoutes = {
     'openapi.json': { paramsTuple?: []; params?: {} }
     'openapi.yaml': { paramsTuple?: []; params?: {} }
   }
+  POST: {
+    'posts.store': { paramsTuple?: []; params?: {} }
+  }
   GET: {
     'posts.index': { paramsTuple?: []; params?: {} }
     'posts.create': { paramsTuple?: []; params?: {} }
@@ -32,9 +35,6 @@ export type ScannedRoutes = {
     'openapi.html': { paramsTuple?: []; params?: {} }
     'openapi.json': { paramsTuple?: []; params?: {} }
     'openapi.yaml': { paramsTuple?: []; params?: {} }
-  }
-  POST: {
-    'posts.store': { paramsTuple?: []; params?: {} }
   }
   PUT: {
     'posts.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }

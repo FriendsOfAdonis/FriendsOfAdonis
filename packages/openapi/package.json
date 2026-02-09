@@ -92,6 +92,7 @@
   },
   "dependencies": {
     "@martin.xyz/openapi-decorators": "^0.0.1-next.3",
+    "@standard-schema/spec": "^1.1.0",
     "yaml": "^2.8.2"
   },
   "publishConfig": {
