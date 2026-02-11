@@ -1,5 +1,11 @@
 # @foadonis/actions
 
+## 0.2.0-next.3
+
+### Patch Changes
+
+- [#106](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/106) [`e9d00a7`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/e9d00a75a424715366ee7e7c5d04e8a8a27a7a4d) Thanks [@github-actions](https://github.com/apps/github-actions)! - Fix type issues with BaseAction run method
+
 ## 0.2.0-next.2
 
 ### Patch Changes
