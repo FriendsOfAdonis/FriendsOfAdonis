@@ -1,5 +1,15 @@
 # @foadonis/openapi
 
+## 1.0.0-next.1
+
+### Minor Changes
+
+- [#106](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/106) [`029d13d`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/029d13dac2e795f64a08d0f494d532982ec56957) Thanks [@github-actions](https://github.com/apps/github-actions)! - Add supports for StandardJSONSchema and toJSONSchema and remove VineTypeLoader
+
+### Patch Changes
+
+- [#106](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/106) [`e9d00a7`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/e9d00a75a424715366ee7e7c5d04e8a8a27a7a4d) Thanks [@github-actions](https://github.com/apps/github-actions)! - Handle cyclic reference in TransformerLoader
+
 ## 1.0.0-next.0
 
 ### Major Changes
