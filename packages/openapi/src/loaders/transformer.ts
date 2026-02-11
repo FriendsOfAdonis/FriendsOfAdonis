@@ -110,7 +110,7 @@ function resolveSchema(
           type: 'array',
           items: { $ref: getSchemaPath(name) },
         },
-        meta: {
+        metadata: {
           type: 'object',
           properties: {
             firstPage: { type: 'number' },
