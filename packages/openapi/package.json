@@ -16,6 +16,7 @@
     "./commands": "./build/commands/main.js",
     "./openapi_provider": "./build/providers/openapi_provider.js",
     "./services/main": "./build/services/main.js",
+    "./transformers": "./build/src/loaders/transformer.js",
     "./types": "./build/src/types.js",
     "./decorators": {
       "import": "./build/src/decorators.js",
@@ -91,7 +92,7 @@
     "luxon": "^3.5.0"
   },
   "dependencies": {
-    "@martin.xyz/openapi-decorators": "^0.0.1-next.3",
+    "@martin.xyz/openapi-decorators": "^0.1.2",
     "@standard-schema/spec": "^1.1.0",
     "yaml": "^2.8.2"
   },

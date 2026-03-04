@@ -1,0 +1,34 @@
+---
+title: Schema from Validators
+---
+
+A common pattern with Adonis is to perform [request validation](https://docs.adonisjs.com/guides/basics/validation#validating-different-data-sources) using `request.validateUsing(validator)`.
+
+By using the `@ApiSchema` decorator you can generate the OpenAPI documentation automatically from the same validator.
+
+<Callout>
+  This feature is based on [StandardJSONSchema](https://standardschema.dev/json-schema) which works
+  with any validation library that support it (Vine, Zod, etc).
+</Callout>
+
+## Usage
+
+```ts
+const IndexSchema = vine.create({
+  params: vine.object({
+    categoryId: vine.string().uuid(),
+  }),
+
+  qs: vine.object({
+    page: vine.number(),
+    perPage: vine.number(),
+  }),
+})
+
+export class PostsController {
+  @ApiSchema(IndexSchema)
+  index({ request }: HttpContext) {
+    const { params, qs } = await request.validateUsing(IndexSchema)
+  }
+}
+```

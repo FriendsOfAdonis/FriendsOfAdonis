@@ -11,9 +11,10 @@ import {
 } from '@martin.xyz/openapi-decorators/ui'
 import { type OpenAPIDocument } from '@martin.xyz/openapi-decorators/types'
 import stringHelpers from '@adonisjs/core/helpers/string'
-import { TransformerLoader } from './loaders/transformer.ts'
-import { StandardJSONSchemaLoader } from './loaders/standard_json_schema.ts'
-import { JSONSchemaLoader } from './loaders/json_schema.ts'
+import {
+  JSONSchemaTypeLoader,
+  StandardJSONSchemaTypeLoader,
+} from '@martin.xyz/openapi-decorators/loaders'
 
 const OpenAPIController = () => import('./controllers/openapi_controller.js')
 
@@ -60,9 +61,8 @@ export class OpenAPI {
       customLogger: this.#logger,
       loaders: [
         LuxonTypeLoader,
-        StandardJSONSchemaLoader,
-        JSONSchemaLoader,
-        TransformerLoader,
+        StandardJSONSchemaTypeLoader,
+        JSONSchemaTypeLoader,
         ...(this.#config.loaders ?? []),
       ],
       document: this.#config.document,

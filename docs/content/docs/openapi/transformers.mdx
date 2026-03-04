@@ -1,0 +1,264 @@
+---
+title: Using transformers
+---
+
+<Callout type="warn" title="Experimental Feature">
+  This feature is **experimental** and is not considered part of the stable API. It is likely to
+  undergo implementation changes in future releases.
+</Callout>
+
+If you are using [AdonisJS Transformers](https://docs.adonisjs.com/guides/frontend/transformers#overview) to serialize your API responses, you can automatically generate OpenAPI schemas from your transformers.
+
+Transformers pick, reshape, and nest your model properties. The `TransformerTypeLoader` reads that same structure so your documentation always matches the actual response shape.
+
+## Setup
+
+Before getting started, make sure that you have HTTP Transformers already configured in your project. You can read more on the [official documentation](https://docs.adonisjs.com/guides/frontend/transformers).
+
+### Update the serializer
+
+You need to update your existing serializer to extend `OpenAPISerializer`. This serializer defines how your API wraps data and structures pagination metadata in your OpenAPI document.
+
+```ts title="providers/api_provider.ts" twoslash
+// @noErrors
+import {
+  OpenAPISerializer,
+  PaginationMetadataSchema,
+  LUCID_PAGINATOR_METADATA_SCHEMA,
+} from '@foadonis/openapi/transformers'
+import { type SimplePaginatorMetaKeys } from '@adonisjs/lucid/types/querybuilder'
+
+export default class ApiSerializer extends OpenAPISerializer<{
+  Wrap: 'data'
+  PaginationMetaData: SimplePaginatorMetaKeys
+}> {
+  wrap: 'data' = 'data'
+
+  definePaginationMetaData(metaData: unknown): SimplePaginatorMetaKeys {
+    if (!this.isLucidPaginatorMetaData(metaData)) {
+      throw new Error('Invalid pagination metadata')
+    }
+    return metaData
+  }
+
+  /**
+   * Defines the OpenAPI schema for the pagination metadata.
+   */
+  definePaginationMetaDataSchema(): PaginationMetadataSchema<SimplePaginatorMetaKeys> {
+    return LUCID_PAGINATOR_METADATA_SCHEMA
+  }
+}
+
+export const serializer = new ApiSerializer() // Make sure to export the serializer
+```
+
+<Callout>
+  `OpenAPISerializer` extends `BaseSerializer` from AdonisJS, so you can use the same serializer for
+  both runtime serialization and OpenAPI schema generation.
+</Callout>
+
+If your API does not wrap responses in a `data` key, set `wrap` to `undefined`:
+
+```ts title="app/serializers/api_serializer.ts"
+export default class ApiSerializer extends OpenAPISerializer<{
+  PaginationMetaData: SimplePaginatorMetaKeys
+}> {
+  wrap: undefined
+
+  // ...
+}
+```
+
+### Register the type loader
+
+Add the `TransformerTypeLoader` to your OpenAPI configuration:
+
+```ts title="config/openapi.ts"
+import { defineConfig } from '@foadonis/openapi'
+import { TransformerTypeLoader } from '@foadonis/openapi/transformers'
+import { serializer } from '#providers/api_provider'
+
+export default defineConfig({
+  ui: 'scalar',
+  document: {
+    info: {
+      title: 'My API',
+      version: '1.0.0',
+    },
+  },
+  loaders: [TransformerTypeLoader({ serializer })],
+})
+```
+
+## Usage
+
+### Define your transformers
+
+Create your transformers as usual. The schema generator reads the transformer structure to determine which fields and relationships are included in the response.
+
+```ts title="app/transformers/post_transformer.ts"
+import { BaseTransformer } from '@adonisjs/core/transformers'
+import Post from '#models/post'
+import UserTransformer from '#transformers/user_transformer'
+
+export default class PostTransformer extends BaseTransformer<Post> {
+  toObject() {
+    return {
+      ...this.pick(this.resource, ['id', 'title']),
+      user: UserTransformer.transform(this.resource.user),
+    }
+  }
+}
+```
+
+### Use transformers as response types
+
+Use the static `.schema()` method on your transformer to generate the response type for your OpenAPI documentation:
+
+```ts title="app/controllers/posts_controller.ts"
+import { ApiResponse } from '@foadonis/openapi/decorators'
+import PostTransformer from '#transformers/post_transformer'
+import Post from '#models/post'
+
+export default class PostsController {
+  @ApiResponse({ type: PostTransformer.schema(Post) })
+  show() {
+    // ...
+  }
+}
+```
+
+The `.schema()` method accepts the following arguments:
+
+| Argument    | Description                                           |
+| ----------- | ----------------------------------------------------- |
+| `Model`     | The model class (or `[Model]` for a collection)       |
+| `paginated` | Set to `true` to generate a paginated response schema |
+
+#### Single item
+
+Returns the schema for a single transformed item, optionally wrapped in the serializer's wrap key.
+
+```ts
+@ApiResponse({ type: PostTransformer.schema(Post) })
+```
+
+#### Collection
+
+Wrap the model in an array to generate a collection schema:
+
+```ts
+@ApiResponse({ type: PostTransformer.schema([Post]) })
+```
+
+#### Paginated
+
+Pass `true` as the second argument to generate a paginated response schema with metadata:
+
+```ts
+@ApiResponse({ type: PostTransformer.schema(Post, true) })
+```
+
+This generates a schema that includes both the data array and the pagination metadata defined in your serializer.
+
+#### Using Variants
+
+You can use the same API as usual to use variants:
+
+```ts
+@ApiResponse({ type: PostTransformer.schema(Post).useVariant('toDetailed') })
+```
+
+This generates a schema using the `toDetailed` method of your transformer and store it as `PostDetailed`.
+
+<Callout>The naming is done by stripping the prefixes `to` and `for`.</Callout>
+
+## Generated schemas
+
+The transformer type loader automatically generates component schemas based on your transformer structure. For example, given a `PostTransformer` that picks `id` and `title` and includes a `UserTransformer`, the following schemas are generated:
+
+**With data wrapper:**
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "data": { "$ref": "#/components/schemas/PostObject" }
+  },
+  "required": ["data"]
+}
+```
+
+**Without data wrapper:**
+
+```json
+{ "$ref": "#/components/schemas/PostObject" }
+```
+
+The `PostObject` component schema only includes the fields selected by the transformer:
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "id": { "type": "number" },
+    "title": { "type": "string" },
+    "user": { "$ref": "#/components/schemas/UserObject" }
+  },
+  "required": ["id", "title", "user"]
+}
+```
+
+## Limitations
+
+### HttpContext is not available
+
+As OpenAPI schema is generated without any scope and should be idempotent the HttpContext is not available.
+
+### Schema cannot be updated
+
+The OpenAPISerializer works by reusing the schema generated for the resource meaning that your transformer should not perform any logic.
+
+```ts
+class User {
+  @ApiProperty()
+  declare firstName: string
+
+  @ApiProperty()
+  declare lastName: string
+}
+
+class UserTransformer extends BaseTransformer<User> {
+  toObject() {
+    return {
+      ...this.pick('firstName', 'lastName'),
+      fullName: `${this.firstName} ${this.lastName}`, // [!code highlight] This will not work
+    }
+  }
+}
+```
+
+Instead you should define a getter on your class to define the schema:
+
+```ts
+class User {
+  @ApiProperty()
+  declare firstName: string
+
+  @ApiProperty()
+  declare lastName: string
+
+  @ApiProperty()
+  get fullName(): string {
+    return `${this.firstName} ${this.lastName}`
+  }
+}
+
+class UserTransformer extends BaseTransformer<User> {
+  toObject() {
+    return {
+      ...this.pick('firstName', 'lastName', 'fullName'),
+    }
+  }
+}
+```
