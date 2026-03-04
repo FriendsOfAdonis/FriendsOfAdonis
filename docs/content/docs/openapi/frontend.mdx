@@ -1,0 +1,161 @@
+---
+title: Typesafe frontend
+---
+
+One of the main benefits of having an OpenAPI specification is the ability to generate typesafe clients for your frontend. This ensures that your frontend code stays in sync with your API without maintaining types manually.
+
+This guide covers two popular approaches: [openapi-fetch](https://openapi-ts.dev/openapi-fetch/) for a lightweight fetch wrapper, and [Hey API](https://heyapi.dev/) for full SDK generation.
+
+## openapi-fetch
+
+[openapi-fetch](https://openapi-ts.dev/openapi-fetch/) is a lightweight (~6 KB) typesafe fetch client that uses your OpenAPI schema types at compile time. It does not generate any runtime code — it only needs the generated TypeScript types.
+
+### Installation
+
+```sh
+npm i openapi-fetch
+npm i -D openapi-typescript
+```
+
+### Generate types
+
+Use `openapi-typescript` to generate types from your running AdonisJS server or exported schema:
+
+<Tabs items={["From URL", "From file"]}>
+
+```sh tab="From URL"
+npx openapi-typescript http://localhost:3333/api.json -o src/lib/api.d.ts
+```
+
+```sh tab="From file"
+npx openapi-typescript ./api.json -o src/lib/api.d.ts
+```
+
+</Tabs>
+
+<Callout>
+  Add this command to your `package.json` scripts so you can regenerate types whenever your API changes.
+
+```json title="package.json"
+{
+  "scripts": {
+    "generate:api": "openapi-typescript http://localhost:3333/api.json -o src/lib/api.d.ts"
+  }
+}
+```
+
+</Callout>
+
+### Create a client
+
+```ts title="src/lib/api.ts"
+import createClient from 'openapi-fetch'
+import type { paths } from './api'
+
+export const api = createClient<paths>({
+  baseUrl: 'http://localhost:3333',
+})
+```
+
+### Usage
+
+The client provides methods matching HTTP verbs. Parameters, request bodies, and responses are fully typed based on your OpenAPI schema.
+
+```ts
+// GET /posts
+const { data, error } = await api.GET('/posts')
+
+// GET /posts/:id
+const { data, error } = await api.GET('/posts/{id}', {
+  params: {
+    path: { id: 1 },
+  },
+})
+
+// POST /posts
+const { data, error } = await api.POST('/posts', {
+  body: {
+    title: 'My new post',
+    content: 'Hello world',
+  },
+})
+```
+
+Any typo in the URL path or missing required parameter will result in a TypeScript error.
+
+## Hey API
+
+[Hey API](https://heyapi.dev/) generates a full SDK from your OpenAPI specification, including typed functions for each endpoint and all request/response types.
+
+### Installation
+
+```sh
+npm i -D @hey-api/openapi-ts @hey-api/client-fetch
+```
+
+### Configuration
+
+Create a configuration file at the root of your frontend project:
+
+```ts title="openapi-ts.config.ts"
+import { defineConfig } from '@hey-api/openapi-ts'
+
+export default defineConfig({
+  input: 'http://localhost:3333/api.json',
+  output: 'src/lib/api',
+  plugins: ['@hey-api/client-fetch', '@hey-api/typescript', '@hey-api/sdk'],
+})
+```
+
+Add a script to your `package.json`:
+
+```json title="package.json"
+{
+  "scripts": {
+    "generate:api": "openapi-ts"
+  }
+}
+```
+
+### Generate the client
+
+```sh
+npm run generate:api
+```
+
+This generates a complete SDK in `src/lib/api/` with typed functions for each endpoint.
+
+### Usage
+
+```ts
+import { client } from './lib/api/client.gen'
+import { getPosts, createPost } from './lib/api/sdk.gen'
+
+// Configure the base URL
+client.setConfig({
+  baseUrl: 'http://localhost:3333',
+})
+
+// GET /posts
+const { data, error } = await getPosts()
+
+// POST /posts
+const { data, error } = await createPost({
+  body: {
+    title: 'My new post',
+    content: 'Hello world',
+  },
+})
+```
+
+## Which one to choose?
+
+|                        | openapi-fetch                       | Hey API                      |
+| ---------------------- | ----------------------------------- | ---------------------------- |
+| **Approach**           | Type-only, no code generation       | Full SDK generation          |
+| **Bundle size**        | ~6 KB                               | Depends on generated output  |
+| **Runtime code**       | Minimal                             | Generated per endpoint       |
+| **URL autocompletion** | Path strings with autocompletion    | Named functions per endpoint |
+| **Best for**           | Lightweight projects, minimal setup | Larger projects, richer DX   |
+
+Both approaches give you full type safety. Choose `openapi-fetch` if you prefer a minimal footprint with path-based calls, or `Hey API` if you prefer generated functions with named methods for each endpoint.

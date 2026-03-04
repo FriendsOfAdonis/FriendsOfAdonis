@@ -17,7 +17,7 @@
   },
   "scripts": {
     "clean": "del-cli build",
-    "copy:templates": "copyfiles \"stubs/**/*.stub\" build",
+    "copy:templates": "cpy \"stubs/**/*.stub\" build",
     "index:commands": "adonis-kit index build/commands",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
@@ -60,7 +60,7 @@
     "@types/node": "^25.0.2",
     "@types/picomatch": "^4",
     "c8": "^11.0.0",
-    "copyfiles": "^2.4.1",
+    "cpy-cli": "^7.0.0",
     "del-cli": "^7.0.0",
     "eslint": "catalog:",
     "hot-hook": "^0.4.0",

@@ -11,6 +11,7 @@
     "operations",
     "validators",
     "transformers",
+    "frontend",
     "---References---",
     "(references)/configuration",
     "(references)/decorators",

@@ -20,7 +20,7 @@
   },
   "scripts": {
     "clean": "del-cli build",
-    "copy:templates": "copyfiles \"stubs/**/*.stub\" build",
+    "copy:templates": "cpy \"stubs/**/*.stub\" build",
     "index:commands": "adonis-kit index build/commands",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
@@ -76,7 +76,7 @@
     "@types/ws": "^8.18.1",
     "@types/wtfnode": "^0",
     "c8": "^11.0.0",
-    "copyfiles": "^2.4.1",
+    "cpy-cli": "^7.0.0",
     "del-cli": "^7.0.0",
     "eslint": "catalog:",
     "graphql": "^16.12.0",
