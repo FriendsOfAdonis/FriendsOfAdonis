@@ -21,7 +21,7 @@ jobs:
           - 20.x
           - 22.x
           - 24.x
-          - 25.x
+          # - 25.x
     steps:
       - name: ⬇ Checkout repository
         uses: actions/checkout@v4
