@@ -1,5 +1,13 @@
 # @foadonis/graphql
 
+## 0.0.1
+
+### Patch Changes
+
+- [`ea99649`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/ea996495e36a2c57cf0c4eb06e20ab77aa25ac8b) Thanks [@kerwanp](https://github.com/kerwanp)! - Initial release
+
+- [`9c5a59b`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/9c5a59b1770d89e1d3c58d630e43dd5a4f4b36e3) Thanks [@kerwanp](https://github.com/kerwanp)! - Bump AdonisJS packages for V7 support release
+
 ## 0.0.1-next.1
 
 ### Patch Changes
