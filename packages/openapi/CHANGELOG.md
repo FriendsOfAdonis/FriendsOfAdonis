@@ -1,5 +1,11 @@
 # @foadonis/openapi
 
+## 1.0.0-next.3
+
+### Patch Changes
+
+- [`4d47a3d`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/4d47a3d0384940e53eed53b7204f0e88d40d64b4) Thanks [@kerwanp](https://github.com/kerwanp)! - Fix BaseTransformer augmentation type and export ApiSchema decorator
+
 ## 1.0.0-next.2
 
 ### Patch Changes
