@@ -31,6 +31,11 @@
 - [`5c989b9`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/5c989b9191ed8cdc4305a7631582613967c65093) Thanks [@kerwanp](https://github.com/kerwanp)! - Add AdonisJS V7 support
   Migrate from openapi-metadata to @martin.xyz/openapi-decorators
   Add TransformerTypeLoader to generate schema using transformers
+## 0.5.1
+
+### Patch Changes
+
+- [#101](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/101) [`af9c615`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/af9c615c09c00fa911ff143b07017c381a347fa0) Thanks [@noahkln](https://github.com/noahkln)! - Prioritize custom type loaders over built-in loaders
 
 ## 0.5.0
 
