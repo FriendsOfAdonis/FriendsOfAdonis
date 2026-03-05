@@ -1,5 +1,21 @@
 # @foadonis/actions
 
+## 0.2.0
+
+### Minor Changes
+
+- [`13a9fd4`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/13a9fd48d3d8748bd6a12cc20327ec0c83f9a1b7) Thanks [@kerwanp](https://github.com/kerwanp)! - Barrel file generation and OpenTelemetry instrumentation
+
+### Patch Changes
+
+- [`413d63c`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/413d63c58c377683cc721aea694a1b45bd498898) Thanks [@kerwanp](https://github.com/kerwanp)! - Simplify action loader to keep reference to module
+
+- [`2276d57`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/2276d577c83a5cde273501719c1a48cb9aef50c0) Thanks [@kerwanp](https://github.com/kerwanp)! - Fix types issues when using constrution arguments
+
+- [`9c5a59b`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/9c5a59b1770d89e1d3c58d630e43dd5a4f4b36e3) Thanks [@kerwanp](https://github.com/kerwanp)! - Bump AdonisJS packages for V7 support release
+
+- [`e9d00a7`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/e9d00a75a424715366ee7e7c5d04e8a8a27a7a4d) Thanks [@kerwanp](https://github.com/kerwanp)! - Fix type issues with BaseAction run method
+
 ## 0.2.0-next.4
 
 ### Patch Changes

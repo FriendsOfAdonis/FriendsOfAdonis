@@ -1,5 +1,52 @@
 # @foadonis/graphql
 
+## 1.0.0
+
+### Major Changes
+
+- [`ea99649`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/ea996495e36a2c57cf0c4eb06e20ab77aa25ac8b) Thanks [@kerwanp](https://github.com/kerwanp)! - GraphQL v1 🚀
+
+  ## New features
+  - ✨ Support for AdonisJS V7
+  - ✨ Support for Yoga and Apollo server
+  - ✨ Built-in support for PubSub system (native and redis)
+  - ✨ Built-in support for Subscriptions over Websocket
+  - ✨ Resolvers autoloading with HMR support
+  - ✨ make:resolver command
+
+  ## How to migrate
+
+  Update the `config/graphql.ts`:
+
+  ```ts
+  import { defineConfig, drivers, pubsubs } from '@foadonis/graphql'
+
+  export default defineConfig({
+    path: '/graphql',
+
+    driver: drivers.apollo({
+      playground: true,
+      introspection: true,
+    }),
+
+    logger: 'app',
+
+    emitSchemaFile: true,
+  })
+  ```
+
+  Remove the `start/graphql.ts` as resolvers are now autoloaded.
+
+  Install `@graphql-yoga/subscription`:
+
+  ```bash
+  npm i @graphql-yoga/subscription
+  ```
+
+### Patch Changes
+
+- [`9c5a59b`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/9c5a59b1770d89e1d3c58d630e43dd5a4f4b36e3) Thanks [@kerwanp](https://github.com/kerwanp)! - Bump AdonisJS packages for V7 support release
+
 ## 1.0.0-next.1
 
 ### Patch Changes

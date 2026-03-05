@@ -1,5 +1,23 @@
 # @foadonis/maintenance
 
+## 1.0.0
+
+### Major Changes
+
+- [`d62dac4`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/d62dac4df9718f0e04e4c04daac7a4f8444da93f) Thanks [@kerwanp](https://github.com/kerwanp)! - Crypt v1 🚀
+
+  ## Changes
+  - Moved `node ace crypt:set` to `node ace env:encrypt`
+  - Moved `node ace crypt:get` to `node ace env:decrypt`
+  - Use native `Env.defineIdentifier`
+  - Improve Ace package configuration
+
+### Patch Changes
+
+- [`413d63c`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/413d63c58c377683cc721aea694a1b45bd498898) Thanks [@kerwanp](https://github.com/kerwanp)! - Avoid loading path from app to avoid race condition issue
+
+- [`9c5a59b`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/9c5a59b1770d89e1d3c58d630e43dd5a4f4b36e3) Thanks [@kerwanp](https://github.com/kerwanp)! - Bump AdonisJS packages for V7 support release
+
 ## 1.0.0-next.2
 
 ### Patch Changes

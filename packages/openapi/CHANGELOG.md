@@ -1,5 +1,27 @@
 # @foadonis/openapi
 
+## 1.0.0
+
+### Major Changes
+
+- [`5c989b9`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/5c989b9191ed8cdc4305a7631582613967c65093) Thanks [@kerwanp](https://github.com/kerwanp)! - Add AdonisJS V7 support
+  Migrate from openapi-metadata to @martin.xyz/openapi-decorators
+  Add TransformerTypeLoader to generate schema using transformers
+
+### Minor Changes
+
+- [`029d13d`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/029d13dac2e795f64a08d0f494d532982ec56957) Thanks [@kerwanp](https://github.com/kerwanp)! - Add supports for StandardJSONSchema and toJSONSchema and remove VineTypeLoader
+
+### Patch Changes
+
+- [`e9d00a7`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/e9d00a75a424715366ee7e7c5d04e8a8a27a7a4d) Thanks [@kerwanp](https://github.com/kerwanp)! - Handle cyclic reference in TransformerLoader
+
+- [`4d47a3d`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/4d47a3d0384940e53eed53b7204f0e88d40d64b4) Thanks [@kerwanp](https://github.com/kerwanp)! - Fix BaseTransformer augmentation type and export ApiSchema decorator
+
+- [`9c5a59b`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/9c5a59b1770d89e1d3c58d630e43dd5a4f4b36e3) Thanks [@kerwanp](https://github.com/kerwanp)! - Bump AdonisJS packages for V7 support release
+
+- [`9c5a59b`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/9c5a59b1770d89e1d3c58d630e43dd5a4f4b36e3) Thanks [@kerwanp](https://github.com/kerwanp)! - Bump @martin.xyz/openapi-decorators and loaders
+
 ## 1.0.0-next.3
 
 ### Patch Changes
@@ -31,6 +53,7 @@
 - [`5c989b9`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/5c989b9191ed8cdc4305a7631582613967c65093) Thanks [@kerwanp](https://github.com/kerwanp)! - Add AdonisJS V7 support
   Migrate from openapi-metadata to @martin.xyz/openapi-decorators
   Add TransformerTypeLoader to generate schema using transformers
+
 ## 0.5.1
 
 ### Patch Changes
