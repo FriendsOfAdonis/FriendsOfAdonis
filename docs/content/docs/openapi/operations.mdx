@@ -5,25 +5,95 @@ description: 'Configure OpenAPI operations with tags, headers, responses, and me
 
 In OpenAPI terms, paths are endpoints (resources), such as `/users` or `/reports/summary`, that your API exposes, and operations are the HTTP methods used to manipulate these paths, such as `GET`, `POST` or `DELETE`.
 
-## Tags
+Your application routes are automatically loaded by `@foadonis/openapi`. All the decorators below let you enrich the generated documentation with additional information. They can be applied on **individual methods** (operations) or on the **controller class** (applied to all operations of that controller).
 
-Tags allows you to categorize your endpoints, you can apply them to specific operations or on the controller.
+## Operations
 
-```ts file="app/controllers/users_controller.ts" twoslash
-import { ApiTags } from '@foadonis/openapi/decorators'
+The `@ApiOperation` decorator configures the metadata of an operation. This is not required as operations are automatically loaded from the AdonisJS Router, but it allows you to add a summary, description, or mark an operation as deprecated.
 
-@ApiTags('Demo')
-export default class UsersController {
-  @ApiTags('Other', 'Public')
+```ts file="app/controllers/posts_controller.ts" twoslash
+// @noErrors
+import { ApiOperation } from '@foadonis/openapi/decorators'
+
+export default class PostsController {
+  @ApiOperation({ summary: 'List all Posts', description: 'Returns a paginated list of posts.' })
+  index() {}
+
+  @ApiOperation({ summary: 'Create a Post' })
+  store() {}
+
+  @ApiOperation({ summary: 'Old endpoint', deprecated: true })
+  legacy() {}
+}
+```
+
+## Request body
+
+Use the `@ApiBody` decorator to describe the request body of an operation. You can reference a class schema, a VineJS validator, or provide a raw OpenAPI schema.
+
+```ts file="app/controllers/posts_controller.ts" twoslash
+// @noErrors
+import { ApiBody } from '@foadonis/openapi/decorators'
+import { createPostValidator } from '#validators/post'
+import { CreatePostDto } from '#dtos/post'
+
+export default class PostsController {
+  // Using a class schema
+  @ApiBody({ description: 'The post to create', type: CreatePostDto })
+  store() {}
+
+  // Using a VineJS validator (via thunk)
+  @ApiBody({ type: () => createPostValidator })
+  storeWithValidator() {}
+
+  // Using a raw OpenAPI schema
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        content: { type: 'string' },
+      },
+      required: ['title'],
+    },
+  })
+  storeWithRaw() {}
+}
+```
+
+## Path parameters
+
+Use the `@ApiParam` decorator to describe path parameters (e.g. `:id` in `/posts/:id`).
+
+```ts file="app/controllers/posts_controller.ts" twoslash
+// @noErrors
+import { ApiParam } from '@foadonis/openapi/decorators'
+
+export default class PostsController {
+  @ApiParam({ name: 'id', description: 'The post ID', schema: { type: 'integer' } })
+  show() {}
+}
+```
+
+## Query parameters
+
+Use the `@ApiQuery` decorator to describe query string parameters. You can stack multiple `@ApiQuery` decorators on the same operation.
+
+```ts file="app/controllers/posts_controller.ts" twoslash
+// @noErrors
+import { ApiQuery } from '@foadonis/openapi/decorators'
+
+export default class PostsController {
+  @ApiQuery({ name: 'page', description: 'Page number', schema: { type: 'integer' } })
+  @ApiQuery({ name: 'perPage', description: 'Items per page', schema: { type: 'integer' } })
+  @ApiQuery({ name: 'sort', enum: ['title', 'createdAt', 'updatedAt'] })
   index() {}
 }
 ```
 
-<Callout>Tags will automatically be applied to your controllers using its name.</Callout>
-
 ## Headers
 
-You can define custom headers that are expected as part of the request. You can apply it to specific operations or directly on the controller.
+Use the `@ApiHeader` decorator to define custom headers expected as part of the request.
 
 ```ts file="app/controllers/users_controller.ts" twoslash
 import { ApiHeader } from '@foadonis/openapi/decorators'
@@ -38,29 +108,85 @@ export default class UsersController {
 }
 ```
 
-## Responses
+## Cookies
 
-You can define HTTP responses using the `@ApiResponse` decorator. You can stack them on a same operation for different status codes.
-It can also be used directly on the controller to be applied on all its operations.
+Use the `@ApiCookie` decorator to describe cookie parameters.
 
 ```ts file="app/controllers/users_controller.ts" twoslash
-// @noErrors
-import { ApiResponse } from '@foadonis/openapi/decorators'
+import { ApiCookie } from '@foadonis/openapi/decorators'
 
-@ApiResponse({ status: 403, description: 'Forbidden' })
 export default class UsersController {
-  @ApiResponse({
-    status: 201,
-    description: 'The record has been successfully created.',
-    type: User,
-  })
-  create() {}
+  @ApiCookie({ name: 'session_id', description: 'The session identifier' })
+  index() {}
 }
 ```
 
-## Media Type (content-type)
+## Responses
 
-You can configure the Media type on your body and responses for specific operation. For example this allow you to enable file upload.
+Use the `@ApiResponse` decorator to describe HTTP responses. You can stack multiple `@ApiResponse` decorators for different status codes.
+
+```ts file="app/controllers/posts_controller.ts" twoslash
+// @noErrors
+import { ApiResponse } from '@foadonis/openapi/decorators'
+import Post from '#models/post'
+
+@ApiResponse({ status: 403, description: 'Forbidden' })
+export default class PostsController {
+  @ApiResponse({ status: 200, description: 'A list of posts', type: [Post] })
+  index() {}
+
+  @ApiResponse({ status: 201, description: 'The created post', type: Post })
+  @ApiResponse({ status: 422, description: 'Validation failed' })
+  store() {}
+}
+```
+
+When no `status` is provided, it defaults to `200`. You can also use `'default'` as the status for a catch-all response.
+
+## Tags
+
+Tags allow you to categorize your endpoints. They can be applied to specific operations or on the controller.
+
+```ts file="app/controllers/users_controller.ts" twoslash
+import { ApiTags } from '@foadonis/openapi/decorators'
+
+@ApiTags('Users')
+export default class UsersController {
+  @ApiTags('Public')
+  index() {}
+}
+```
+
+<Callout>Tags are automatically applied to your controllers using the controller name.</Callout>
+
+## Security
+
+Use the security decorators to define authentication requirements on your endpoints.
+
+```ts file="app/controllers/posts_controller.ts" twoslash
+// @noErrors
+import { ApiBearerAuth, ApiSecurity } from '@foadonis/openapi/decorators'
+
+@ApiBearerAuth()
+export default class PostsController {
+  index() {}
+
+  // Custom security scheme with scopes
+  @ApiSecurity('oauth2', 'read:posts', 'write:posts')
+  store() {}
+}
+```
+
+The following security decorators are available:
+- **`@ApiBearerAuth()`** - Bearer token authentication
+- **`@ApiBasicAuth()`** - HTTP Basic authentication
+- **`@ApiCookieAuth()`** - Cookie-based authentication
+- **`@ApiOauth2(...scopes)`** - OAuth2 with optional scopes
+- **`@ApiSecurity(name, ...scopes)`** - Custom security scheme
+
+## Media type (content-type)
+
+You can configure the media type on your body and responses. This is useful for file uploads or other non-JSON content types.
 
 ```ts file="app/controllers/users_controller.ts" twoslash
 import { ApiProperty, ApiBody } from '@foadonis/openapi/decorators'
@@ -78,5 +204,130 @@ export default class UsersController {
     mediaType: 'multipart/form-data',
   })
   uploadFile() {}
+}
+```
+
+## Schema from validators
+
+Instead of decorating each parameter individually, you can use the `@ApiSchema` decorator to automatically generate the OpenAPI documentation from a VineJS validator (or any [Standard Schema](https://standardschema.dev/json-schema) compatible library).
+
+`@ApiSchema` will automatically map the validator properties to the correct OpenAPI parameters based on their keys:
+- **`params`** - Mapped to path parameters via `@ApiParam`
+- **`qs`** - Mapped to query parameters via `@ApiQuery`
+- **`headers`** - Mapped to header parameters via `@ApiHeader`
+- **`cookies`** - Mapped to cookie parameters via `@ApiCookie`
+- Any remaining properties are mapped to the **request body** via `@ApiBody`
+
+```ts file="app/controllers/posts_controller.ts" twoslash
+// @noErrors
+import vine from '@vinejs/vine'
+import { ApiSchema } from '@foadonis/openapi/decorators'
+
+const indexValidator = vine.create({
+  params: vine.object({
+    categoryId: vine.string().uuid(),
+  }),
+
+  qs: vine.object({
+    page: vine.number(),
+    perPage: vine.number(),
+  }),
+})
+
+const storeValidator = vine.create({
+  title: vine.string().minLength(3).maxLength(255),
+  content: vine.string(),
+})
+
+export default class PostsController {
+  // Automatically generates path params and query params
+  @ApiSchema(indexValidator)
+  index({ request }: HttpContext) {
+    const { params, qs } = await request.validateUsing(indexValidator)
+  }
+
+  // Remaining properties become the request body
+  @ApiSchema(storeValidator)
+  store({ request }: HttpContext) {
+    const payload = await request.validateUsing(storeValidator)
+  }
+}
+```
+
+<Callout>
+  `@ApiSchema` is a convenient alternative to manually using `@ApiParam`, `@ApiQuery`, `@ApiHeader`, `@ApiCookie`, and `@ApiBody`. It is especially useful when you already have validators defined for your endpoints.
+</Callout>
+
+## Excluding endpoints
+
+Use `@ApiExcludeOperation` to hide a specific operation or `@ApiExcludeController` to hide an entire controller from the generated documentation.
+
+```ts file="app/controllers/internal_controller.ts" twoslash
+// @noErrors
+import { ApiExcludeController, ApiExcludeOperation } from '@foadonis/openapi/decorators'
+
+// Hide the entire controller
+@ApiExcludeController()
+export class InternalController {
+  healthCheck() {}
+}
+
+// Or hide specific operations
+export class PostsController {
+  @ApiExcludeOperation()
+  internalSync() {}
+}
+```
+
+## Full example
+
+Here is a complete example combining multiple decorators on a typical CRUD controller:
+
+```ts file="app/controllers/posts_controller.ts" twoslash
+// @noErrors
+import {
+  ApiOperation,
+  ApiTags,
+  ApiBody,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@foadonis/openapi/decorators'
+import Post from '#models/post'
+import { createPostValidator, updatePostValidator } from '#validators/post'
+
+@ApiTags('Posts')
+@ApiBearerAuth()
+@ApiResponse({ status: 401, description: 'Unauthorized' })
+export default class PostsController {
+  @ApiOperation({ summary: 'List all posts' })
+  @ApiQuery({ name: 'page', schema: { type: 'integer' } })
+  @ApiQuery({ name: 'perPage', schema: { type: 'integer' } })
+  @ApiResponse({ type: [Post] })
+  index() {}
+
+  @ApiOperation({ summary: 'Get a post by ID' })
+  @ApiParam({ name: 'id', schema: { type: 'integer' } })
+  @ApiResponse({ type: Post })
+  @ApiResponse({ status: 404, description: 'Post not found' })
+  show() {}
+
+  @ApiOperation({ summary: 'Create a new post' })
+  @ApiBody({ type: () => createPostValidator })
+  @ApiResponse({ status: 201, type: Post })
+  @ApiResponse({ status: 422, description: 'Validation error' })
+  store() {}
+
+  @ApiOperation({ summary: 'Update a post' })
+  @ApiParam({ name: 'id', schema: { type: 'integer' } })
+  @ApiBody({ type: () => updatePostValidator })
+  @ApiResponse({ type: Post })
+  update() {}
+
+  @ApiOperation({ summary: 'Delete a post' })
+  @ApiParam({ name: 'id', schema: { type: 'integer' } })
+  @ApiResponse({ status: 204, description: 'Post deleted' })
+  destroy() {}
 }
 ```

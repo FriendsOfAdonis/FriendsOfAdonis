@@ -1,3 +1,4 @@
+import { indexEntities } from '@adonisjs/core'
 import { defineConfig } from '@adonisjs/core/app'
 import { indexActions } from '@foadonis/actions'
 
@@ -40,7 +41,7 @@ export default defineConfig({
     () => import('@adonisjs/core/providers/vinejs_provider'),
     () => import('@foadonis/openapi/openapi_provider'),
     () => import('@foadonis/actions/actions_provider'),
-    () => import('@adonisjs/otel/otel_provider')
+    () => import('@adonisjs/otel/otel_provider'),
   ],
 
   /*
@@ -83,6 +84,11 @@ export default defineConfig({
   },
 
   hooks: {
-    init: [indexActions()],
+    init: [
+      indexEntities({
+        transformers: { enabled: true, withSharedProps: true },
+      }),
+      indexActions(),
+    ],
   },
 })

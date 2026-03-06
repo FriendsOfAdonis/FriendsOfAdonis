@@ -11,6 +11,7 @@
     "operations",
     "validators",
     "transformers",
+    "lucid-schema",
     "frontend",
     "---References---",
     "(references)/configuration",

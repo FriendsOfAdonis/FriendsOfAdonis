@@ -1,0 +1,115 @@
+---
+title: Using Lucid Model Schemas
+description: 'Generate OpenAPI response schemas from Lucid Model Schemas. Automatically document models from your database schema.'
+---
+
+<Callout type="warn" title="Experimental Feature">
+  This feature is **experimental** and is not considered part of the stable API. It is likely to
+  undergo implementation changes in future releases.
+</Callout>
+
+If you are using [Lucid Auto-Generated Schema Classes](https://lucid.adonisjs.com/docs/schema-classes) for your models, you can automatically generate your models' OpenAPI definitions from your database schema.
+
+Schema Classes are generated automatically based on your database schema. By using the `@foadonis/openapi` custom schema rules your models will be automatically decorated.
+
+## Setup
+
+### Configure OpenAPI schema rules
+
+Inside your Database configuration add the OpenAPI schema rules `@foadonis/openapi/lucid/schema_rules` to the `rulesPaths`.
+
+```ts title="config/database.ts"
+import { defineConfig } from '@adonisjs/lucid'
+
+import env from '#start/env'
+
+const dbConfig = defineConfig({
+  connection: 'myconnection',
+  connections: {
+    myconnection: {
+      // ...
+
+      schemaGeneration: {
+        enabled: true,
+        rulesPaths: ['@foadonis/openapi/lucid/schema_rules'], // [!code highlight]
+      },
+    },
+  },
+})
+
+export default dbConfig
+```
+
+## Usage
+
+When running migrations or with the command `node ace schema:generate` your models schema properties will be automatically decorated with `@ApiProperty`.
+
+```ts title="database/schema.ts"
+export class RecipeSchema extends BaseModel {
+  static $columns = ['id', 'title', 'description'] as const
+  $columns = RecipeSchema.$columns
+  @column({ isPrimary: true })
+  @ApiProperty({ nullable: false, type: 'number' }) // [!code highlight]
+  declare id: number
+  @column()
+  @ApiProperty({ nullable: false, type: 'string' }) // [!code highlight]
+  declare title: string
+  @column()
+  @ApiProperty({ nullable: true, type: 'string' }) // [!code highlight]
+  declare description: string | null
+}
+```
+
+### Customize properties
+
+In some cases you might want to define your own `ApiProperty` options. To achieve this you can override it inside your model.
+
+```ts
+import { UserSchema } from '#database/schema'
+import { UserRole } from '#enums/user_role'
+
+export default class User extends UserSchema {
+  @ApiProperty({ enum: UserRole })
+  role: UserRole
+}
+```
+
+### Customize schema rules
+
+You can override the schema generation behavior by providing your own schema rules. The library provide a set of utils to apply the `@ApiProperty` decorator.
+
+```ts title="database/schema_rules.ts"
+import { type SchemaRules } from '@adonisjs/lucid/types/schema_generator'
+import { generateSchemaType } from '@foadonis/openapi/lucid'
+
+export default {
+  types: {
+    uuid: generateSchemaType({
+      description: 'Resource identifier in the Uuid V4 format',
+      example: 'ec1a4a51-9361-4f42-97ec-233cb913ca81',
+    }),
+  },
+} satisfies SchemaRules
+```
+
+```ts
+import { defineConfig } from '@adonisjs/lucid'
+
+import env from '#start/env'
+
+const dbConfig = defineConfig({
+  connection: 'myconnection',
+  connections: {
+    myconnection: {
+      // ...
+
+      schemaGeneration: {
+        enabled: true,
+        rulesPaths: ['@foadonis/openapi/lucid/schema_rules', '#database/schema_rules'], // [!code highlight]
+      },
+    },
+  },
+})
+
+export default dbConfig
+```

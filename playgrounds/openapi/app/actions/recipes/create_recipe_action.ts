@@ -1,4 +1,5 @@
 import UserRegistered from '#events/user_registered'
+import Recipe from '#models/recipe'
 import { type HttpContext } from '@adonisjs/http-server'
 import { type AsController, BaseAction } from '@foadonis/actions'
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@foadonis/openapi/decorators'
@@ -18,10 +19,7 @@ export default class CreateRecipeAction extends BaseAction implements AsControll
   @ApiOperation({ summary: 'Create recipe' })
   @ApiBody({ type: () => Schema })
   @ApiResponse({
-    type: () =>
-      vine.object({
-        test: vine.string(),
-      }),
+    type: () => Recipe,
   })
   asController(context: HttpContext) {
     return this.handle('from http test')
