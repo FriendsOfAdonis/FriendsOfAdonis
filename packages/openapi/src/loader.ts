@@ -75,8 +75,6 @@ export class RouterLoader {
         [{ in: 'path', type: 'string', name: param }],
         propertyKey
       )
-
-      console.log(param)
     }
 
     return target
