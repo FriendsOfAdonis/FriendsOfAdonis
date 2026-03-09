@@ -1,5 +1,11 @@
 # @foadonis/graphql
 
+## 0.0.2
+
+### Patch Changes
+
+- [#111](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/111) [`ad872d6`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/ad872d6b8372056ff5e8bcb53a126a2ed05de904) Thanks [@NadimD](https://github.com/NadimD)! - Fix stub templates being copied to the wrong directory during build.
+
 ## 0.0.1
 
 ### Patch Changes
