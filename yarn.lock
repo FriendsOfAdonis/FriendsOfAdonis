@@ -191,28 +191,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@adonisjs/bouncer@npm:^3.1.6 || ^4.0.0-next.1":
-  version: 4.0.0-next.2
-  resolution: "@adonisjs/bouncer@npm:4.0.0-next.2"
-  dependencies:
-    "@poppinss/utils": "npm:^7.0.0-next.4"
-  peerDependencies:
-    "@adonisjs/assembler": ^8.0.0-next.26
-    "@adonisjs/core": ^7.0.0-next.16
-    "@adonisjs/i18n": ^3.0.0-next.2
-    edge.js: ^6.4.0
-  peerDependenciesMeta:
-    "@adonisjs/assembler":
-      optional: true
-    "@adonisjs/i18n":
-      optional: true
-    edge.js:
-      optional: true
-  checksum: 10c0/dee3e023d584b67de2294b0798ab7fd8b39c144d67ac97df16b0c61637245a628ff125828c05608dc79846f2681e591f5cf4337bbbeb64dc4d994f2e395045f9
-  languageName: node
-  linkType: hard
-
-"@adonisjs/bouncer@npm:^4.0.0":
+"@adonisjs/bouncer@npm:^3.1.6 || ^4.0.0, @adonisjs/bouncer@npm:^4.0.0":
   version: 4.0.0
   resolution: "@adonisjs/bouncer@npm:4.0.0"
   dependencies:
@@ -2514,7 +2493,7 @@ __metadata:
     typescript: "catalog:"
     youch: "catalog:"
   peerDependencies:
-    "@adonisjs/core": ^6.2.0 || ^7.0.0-next.19
+    "@adonisjs/core": ^6.2.0 || ^7.0.0
     "@opentelemetry/api": ^1.9.0
     "@opentelemetry/instrumentation": ^0.211.0
   peerDependenciesMeta:
@@ -2580,7 +2559,7 @@ __metadata:
     typescript: "catalog:"
     youch: "catalog:"
   peerDependencies:
-    "@adonisjs/core": ^6.2.0 || ^7.0.0-next.19
+    "@adonisjs/core": ^6.2.0 || ^7.0.0
   languageName: unknown
   linkType: soft
 
@@ -2608,7 +2587,7 @@ __metadata:
   dependencies:
     "@adonisjs/assembler": "catalog:"
     "@adonisjs/auth": "catalog:"
-    "@adonisjs/bouncer": "npm:^3.1.6 || ^4.0.0-next.1"
+    "@adonisjs/bouncer": "npm:^3.1.6 || ^4.0.0"
     "@adonisjs/core": "catalog:"
     "@adonisjs/lucid": "catalog:"
     "@apollo/client": "npm:^4.0.11"
@@ -2651,8 +2630,8 @@ __metadata:
     ws: "npm:^8.18.3"
     youch: "catalog:"
   peerDependencies:
-    "@adonisjs/core": ^7.0.0-next.19
-    "@adonisjs/lucid": ^22.0.0-next.4
+    "@adonisjs/core": ^7.0.0
+    "@adonisjs/lucid": ^22.0.0
     graphql: ^16.9.0
     graphql-scalars: ^1.24.0
     luxon: ^3.5.0
@@ -2702,7 +2681,7 @@ __metadata:
     typescript: "catalog:"
     youch: "catalog:"
   peerDependencies:
-    "@adonisjs/lucid": ^21.6.1 || ^22.0.0-next.4
+    "@adonisjs/lucid": ^21.6.1 || ^22.0.0
   languageName: unknown
   linkType: soft
 
@@ -2741,8 +2720,8 @@ __metadata:
     typesense: "npm:^2.1.0"
     youch: "catalog:"
   peerDependencies:
-    "@adonisjs/core": ^6.2.0 || ^7.0.0-next.19
-    "@adonisjs/lucid": ^21.2.0 || ^22.0.0-next.4
+    "@adonisjs/core": ^6.2.0 || ^7.0.0
+    "@adonisjs/lucid": ^21.2.0 || ^22.0.0
     luxon: ^3.5.0
   dependenciesMeta:
     algoliasearch:
@@ -2780,7 +2759,7 @@ __metadata:
     typescript: "npm:^5.9.3"
     youch: "catalog:"
   peerDependencies:
-    "@adonisjs/core": ^6.2.0 || ^7.0.0-next.19
+    "@adonisjs/core": ^6.2.0 || ^7.0.0
   dependenciesMeta:
     "@adonisjs/cache":
       optional: true
@@ -2822,8 +2801,8 @@ __metadata:
     yaml: "npm:^2.8.2"
     youch: "catalog:"
   peerDependencies:
-    "@adonisjs/core": ^6.2.0 || ^7.0.0-next.19
-    "@adonisjs/lucid": ^21.2.0 || ^22.0.0-next.4
+    "@adonisjs/core": ^6.2.0 || ^7.0.0
+    "@adonisjs/lucid": ^21.2.0 || ^22.0.0
     "@vinejs/vine": ^3.0.0 || ^4.0.0
     luxon: ^3.5.0
   languageName: unknown
