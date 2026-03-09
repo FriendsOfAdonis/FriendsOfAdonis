@@ -1,5 +1,15 @@
 # @foadonis/openapi
 
+## 1.0.1
+
+### Patch Changes
+
+- [#113](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/113) [`9fa8427`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/9fa84273ab5be62f147dd72d7c48adb31c4b6050) Thanks [@kerwanp](https://github.com/kerwanp)! - Remove leftover console.log
+
+- [#115](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/115) [`d8771e8`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/d8771e8f18cbd1bfef15541f6f716705aea63731) Thanks [@kerwanp](https://github.com/kerwanp)! - Bump peer dependencies
+
+- [#111](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/111) [`ad872d6`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/ad872d6b8372056ff5e8bcb53a126a2ed05de904) Thanks [@NadimD](https://github.com/NadimD)! - Fix stub templates being copied to the wrong directory during build.
+
 ## 1.0.0
 
 ### Major Changes
