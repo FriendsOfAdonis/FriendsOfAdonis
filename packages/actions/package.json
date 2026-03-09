@@ -74,7 +74,7 @@
     "youch": "catalog:"
   },
   "peerDependencies": {
-    "@adonisjs/core": "^6.2.0 || ^7.0.0-next.19",
+    "@adonisjs/core": "^6.2.0 || ^7.0.0",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/instrumentation": "^0.211.0"
   },
