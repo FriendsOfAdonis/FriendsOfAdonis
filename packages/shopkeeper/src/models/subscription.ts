@@ -1,11 +1,11 @@
 import { BaseModel, belongsTo, column, hasMany } from '@adonisjs/lucid/orm'
-import type { HasMany } from '@adonisjs/lucid/types/relations'
+import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import { DateTime } from 'luxon'
 import Stripe from 'stripe'
 import { compose } from '@adonisjs/core/helpers'
-import { ManagesStripe } from '../mixins/manages_stripe.js'
+import { managesStripe } from '../mixins/manages_stripe.js'
 import { Exception } from '@adonisjs/core/exceptions'
-import { type BillableI } from '../contracts.js'
+import { type BillableModel } from '../contracts.js'
 import { IncompletePaymentError } from '../errors/incomplete_payment.js'
 import { Invoice } from '../invoice.js'
 import { Payment } from '../payment.js'
@@ -28,7 +28,7 @@ type SwapPricesParam =
 
 export default class Subscription extends compose(
   BaseModel,
-  ManagesStripe(false),
+  managesStripe(false),
   AllowsCoupon,
   HandlesPaymentFailures,
   InteractWithPaymentBehavior,
@@ -40,9 +40,8 @@ export default class Subscription extends compose(
   @column()
   declare userId: string
 
-  // @ts-expect-error Lucid decorator expects BelongsTo type, using BillableI to avoid circular type deps
   @belongsTo(() => shopkeeper.customerModel)
-  declare user: BillableI
+  declare user: BelongsTo<BillableModel>
 
   @column()
   declare type: string
@@ -90,8 +89,7 @@ export default class Subscription extends compose(
   /**
    * Determine if the subscription has a specific product.
    */
-  async hasProduct(product: string): Promise<boolean> {
-    // @ts-ignore -- Lucid type issue
+  async hasProduct(this: Subscription, product: string): Promise<boolean> {
     await this.load('items')
     return this.items.some((i) => i.stripeProduct === product)
   }
@@ -99,9 +97,8 @@ export default class Subscription extends compose(
   /**
    * Determine if the subscription has a specific price.
    */
-  async hasPrice(price: string): Promise<boolean> {
+  async hasPrice(this: Subscription, price: string): Promise<boolean> {
     if (this.hasMultiplePrices()) {
-      // @ts-ignore -- Lucid type issue
       await this.load('items')
       return this.items.some((i) => i.stripePrice === price)
     }
@@ -112,8 +109,7 @@ export default class Subscription extends compose(
   /**
    * Get the subscription item for the given price.
    */
-  findItemOrFail(price: string): Promise<SubscriptionItem> {
-    // @ts-ignore -- Lucid type issue
+  findItemOrFail(this: Subscription, price: string): Promise<SubscriptionItem> {
     return this.related('items').query().where('stripePrice', price).firstOrFail()
   }
 
@@ -415,7 +411,11 @@ export default class Subscription extends compose(
   /**
    * Swap the subscription to new Stripe prices.
    */
-  async swap(prices: SwapPricesParam, params: Stripe.SubscriptionUpdateParams = {}): Promise<this> {
+  async swap(
+    this: Subscription,
+    prices: SwapPricesParam,
+    params: Stripe.SubscriptionUpdateParams = {}
+  ): Promise<Subscription> {
     if (is.array(prices) && prices.length <= 0) {
       throw new Exception('Please provide at least one price when swapping.')
     }
@@ -462,7 +462,6 @@ export default class Subscription extends compose(
     }
 
     // Delete items that aren't attached to the subscription anymore
-    // @ts-ignore -- Lucid type issue
     await this.related('items').query().delete().whereNotIn('stripeId', subscriptionItemIds)
 
     await this.handlePaymentFailure(this)
@@ -476,112 +475,22 @@ export default class Subscription extends compose(
   async swapAndInvoice(
     prices: string | string[],
     params: Stripe.SubscriptionUpdateParams = {}
-  ): Promise<this> {
+  ): Promise<Subscription> {
     this.alwaysInvoice()
     return this.swap(prices, params)
-  }
-
-  /**
-   * Parse the given prices for a swap operation.
-   */
-  protected async parseSwapPrices(
-    prices: SwapPricesParam
-  ): Promise<Map<string, Stripe.SubscriptionUpdateParams.Item>> {
-    const isSinglePriceSwap = this.hasSinglePrice() && prices.length === 1
-
-    const output = new Map<string, Stripe.SubscriptionUpdateParams.Item>()
-
-    const entries: [string, string | Stripe.SubscriptionUpdateParams.Item][] =
-      typeof prices === 'string' ? [[prices, prices]] : Object.entries(prices)
-
-    for (const [key, value] of entries) {
-      const price = typeof value === 'string' ? value : key
-      const options = typeof value === 'string' ? {} : value
-
-      const payload: Stripe.SubscriptionUpdateParams.Item = {
-        tax_rates: await this.getPriceTaxRatesForPayload(price),
-      }
-
-      if (!options.price_data) {
-        payload.price = price
-      }
-
-      if (isSinglePriceSwap && !!this.quantity) {
-        payload.quantity = this.quantity
-      }
-
-      output.set(price, { ...payload, ...options })
-    }
-
-    return output
-  }
-
-  /**
-   * Merge the items that should be deleted during swap into the given items collection.
-   *
-   * TODO: Test this properly as im not sure of what i did
-   */
-  protected async mergeItemsThatShouldBeDeletedDuringSwap(
-    items: Map<string, Stripe.SubscriptionUpdateParams.Item>
-  ): Promise<Map<string, Stripe.SubscriptionUpdateParams.Item>> {
-    const stripeSubscription = await this.asStripeSubscription()
-
-    for (const stripeSubscriptionItem of stripeSubscription.items.data) {
-      const price = stripeSubscriptionItem.price
-      const item = items.get(price.id) || {}
-      if (!items.has(price.id)) {
-        item.deleted = true
-        if (price.recurring?.usage_type === 'metered') {
-          item.clear_usage = true
-        }
-      }
-
-      items.set(price.id, { ...item, id: stripeSubscriptionItem.id })
-    }
-
-    return items
-  }
-
-  /**
-   * Get the options array for a swap operation.
-   */
-  protected getSwapOptions(
-    items: Map<string, Stripe.SubscriptionUpdateParams.Item>,
-    params: Stripe.SubscriptionUpdateParams = {}
-  ): Stripe.SubscriptionUpdateParams {
-    let payload: Stripe.SubscriptionUpdateParams = {
-      items: [...items.values()],
-      payment_behavior: this.paymentBehavior(),
-      proration_behavior: this.prorateBehavior(),
-      discounts: this.promotionCodeId ? [{ promotion_code: this.promotionCodeId }] : undefined,
-      expand: ['latest_invoice.payment_intent'],
-    }
-
-    if (payload.payment_behavior !== 'pending_if_incomplete') {
-      payload.cancel_at_period_end = false
-    }
-
-    payload = {
-      ...payload,
-      ...params,
-      billing_cycle_anchor: this.billingCycleAnchor,
-      trial_end: this.onTrial() ? this.trialEndsAt!.toUnixInteger() : 'now',
-    }
-
-    return payload
   }
 
   /**
    * Add a new Stripe price to the subscription.
    */
   async addPrice(
+    this: Subscription,
     price: string,
     quantity: number | null = 1,
     params: Partial<Stripe.SubscriptionItemCreateParams> = {}
-  ): Promise<this> {
+  ): Promise<Subscription> {
     this.guardAgainstIncomplete()
 
-    // @ts-ignore -- Lucid type issue
     await this.load('items')
     if (this.items.some((i) => i.stripePrice === price)) {
       throw SubscriptionUpdateFailureError.duplicatePrice(this, price)
@@ -597,10 +506,12 @@ export default class Subscription extends compose(
       ...params,
     })
 
-    // @ts-ignore -- Lucid type issue
     await this.related('items').create({
       stripeId: stripeSubscriptionItem.id,
-      stripeProduct: stripeSubscriptionItem.price.product,
+      stripeProduct:
+        typeof stripeSubscriptionItem.price.product === 'string'
+          ? stripeSubscriptionItem.price.product
+          : stripeSubscriptionItem.price.product.id,
       stripePrice: stripeSubscriptionItem.price.id,
       quantity: stripeSubscriptionItem.quantity,
     })
@@ -626,7 +537,7 @@ export default class Subscription extends compose(
     price: string,
     quantity: number | null = 1,
     params: Partial<Stripe.SubscriptionItemCreateParams> = {}
-  ): Promise<this> {
+  ): Promise<Subscription> {
     this.alwaysInvoice()
     return this.addPrice(price, quantity, params)
   }
@@ -637,7 +548,7 @@ export default class Subscription extends compose(
   addMeteredPrice(
     price: string,
     params: Partial<Stripe.SubscriptionItemCreateParams> = {}
-  ): Promise<this> {
+  ): Promise<Subscription> {
     return this.addPrice(price, null, params)
   }
 
@@ -647,7 +558,7 @@ export default class Subscription extends compose(
   addMeteredPriceAndInvoice(
     price: string,
     params: Partial<Stripe.SubscriptionItemCreateParams> = {}
-  ): Promise<this> {
+  ): Promise<Subscription> {
     return this.addPriceAndInvoice(price, null, params)
   }
 
@@ -656,7 +567,7 @@ export default class Subscription extends compose(
    */
   async removePrice(price: string): Promise<this> {
     if (this.hasSinglePrice()) {
-      throw new Exception('Last price') // TODO: error
+      throw SubscriptionUpdateFailureError.cannotRemoveLastPrice(this)
     }
 
     const item = await this.findItemOrFail(price)
@@ -785,17 +696,16 @@ export default class Subscription extends compose(
    * Invoice the subscription outside of the regular billing cycle.
    */
   async invoice(
+    this: Subscription,
     params: Stripe.InvoiceCreateParams & Stripe.InvoicePayParams = {}
   ): Promise<Invoice> {
-    // @ts-ignore -- Lucid type issue
     await this.load('user')
     try {
-      const invoice = await this.user.invoice(params)
-      return invoice
+      return await this.user.invoice(params)
     } catch (e) {
       if (e instanceof IncompletePaymentError) {
-        // @ts-ignore -- TODO: figure out
-        this.stripeStatus = e.payment.invoice.subscription.status
+        const stripeSubscription = await this.asStripeSubscription()
+        this.stripeStatus = stripeSubscription.status
         await this.save()
       }
 
@@ -876,10 +786,10 @@ export default class Subscription extends compose(
    * Get a collection of the subscription's invoices.
    */
   async invoices(
+    this: Subscription,
     includePending = false,
     params: Stripe.InvoiceListParams = {}
   ): Promise<Invoice[]> {
-    // @ts-ignore -- Lucid type issue
     await this.load('user')
     return this.user.invoices(includePending, {
       ...params,
@@ -914,8 +824,7 @@ export default class Subscription extends compose(
   /**
    * Get the price tax rates for the Stripe payload.
    */
-  async getPriceTaxRatesForPayload(price: string): Promise<string[] | null> {
-    // @ts-ignore -- Lucid type issue
+  async getPriceTaxRatesForPayload(this: Subscription, price: string): Promise<string[] | null> {
     await this.load('user')
     return this.user.priceTaxRates()[price] ?? null
   }
@@ -1003,5 +912,95 @@ export default class Subscription extends compose(
    */
   asStripeSubscription(expand: string[] = []): Promise<Stripe.Subscription> {
     return this.stripe.subscriptions.retrieve(this.stripeId, { expand })
+  }
+
+  /**
+   * Parse the given prices for a swap operation.
+   */
+  protected async parseSwapPrices(
+    prices: SwapPricesParam
+  ): Promise<Map<string, Stripe.SubscriptionUpdateParams.Item>> {
+    const isSinglePriceSwap = this.hasSinglePrice() && prices.length === 1
+
+    const output = new Map<string, Stripe.SubscriptionUpdateParams.Item>()
+
+    const entries: [string, string | Stripe.SubscriptionUpdateParams.Item][] =
+      typeof prices === 'string' ? [[prices, prices]] : Object.entries(prices)
+
+    for (const [key, value] of entries) {
+      const price = typeof value === 'string' ? value : key
+      const options = typeof value === 'string' ? {} : value
+
+      const payload: Stripe.SubscriptionUpdateParams.Item = {
+        tax_rates: await this.getPriceTaxRatesForPayload(price),
+      }
+
+      if (!options.price_data) {
+        payload.price = price
+      }
+
+      if (isSinglePriceSwap && !!this.quantity) {
+        payload.quantity = this.quantity
+      }
+
+      output.set(price, { ...payload, ...options })
+    }
+
+    return output
+  }
+
+  /**
+   * Merge the items that should be deleted during swap into the given items collection.
+   *
+   * TODO: Test this properly as im not sure of what i did
+   */
+  protected async mergeItemsThatShouldBeDeletedDuringSwap(
+    items: Map<string, Stripe.SubscriptionUpdateParams.Item>
+  ): Promise<Map<string, Stripe.SubscriptionUpdateParams.Item>> {
+    const stripeSubscription = await this.asStripeSubscription()
+
+    for (const stripeSubscriptionItem of stripeSubscription.items.data) {
+      const price = stripeSubscriptionItem.price
+      const item = items.get(price.id) || {}
+      if (!items.has(price.id)) {
+        item.deleted = true
+        if (price.recurring?.usage_type === 'metered') {
+          item.clear_usage = true
+        }
+      }
+
+      items.set(price.id, { ...item, id: stripeSubscriptionItem.id })
+    }
+
+    return items
+  }
+
+  /**
+   * Get the options array for a swap operation.
+   */
+  protected getSwapOptions(
+    items: Map<string, Stripe.SubscriptionUpdateParams.Item>,
+    params: Stripe.SubscriptionUpdateParams = {}
+  ): Stripe.SubscriptionUpdateParams {
+    let payload: Stripe.SubscriptionUpdateParams = {
+      items: [...items.values()],
+      payment_behavior: this.paymentBehavior(),
+      proration_behavior: this.prorateBehavior(),
+      discounts: this.promotionCodeId ? [{ promotion_code: this.promotionCodeId }] : undefined,
+      expand: ['latest_invoice.payment_intent'],
+    }
+
+    if (payload.payment_behavior !== 'pending_if_incomplete') {
+      payload.cancel_at_period_end = false
+    }
+
+    payload = {
+      ...payload,
+      ...params,
+      billing_cycle_anchor: this.billingCycleAnchor,
+      trial_end: this.onTrial() ? this.trialEndsAt!.toUnixInteger() : 'now',
+    }
+
+    return payload
   }
 }

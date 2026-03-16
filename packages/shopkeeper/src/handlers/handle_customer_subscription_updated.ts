@@ -37,6 +37,7 @@ export async function handleCustomerSubscriptionUpdated(
     }
   }
 
+  // TODO: utiliser ts-pattern
   if (data.cancel_at_period_end) {
     subscription.endsAt = subscription.onTrial()
       ? subscription.trialEndsAt
@@ -61,8 +62,7 @@ export async function handleCustomerSubscriptionUpdated(
     await subscription.related('items').updateOrCreate(
       { stripeId: item.id },
       {
-        stripeProduct:
-          typeof item.price.product === 'string' ? item.price.product : item.price.product.id,
+        stripeProduct: item.price.product as string,
         stripePrice: item.price.id,
         quantity: item.quantity,
       }

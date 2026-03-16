@@ -2,6 +2,7 @@ import type Stripe from 'stripe'
 import shopkeeper from '../services/shopkeeper.js'
 import { type BillableI } from './contracts.js'
 import { IncompletePaymentError } from './errors/incomplete_payment.js'
+import { InvalidCustomerError } from './errors/invalid_customer.js'
 
 export class Payment {
   #paymentIntent: Stripe.PaymentIntent
@@ -119,7 +120,7 @@ export class Payment {
   /**
    * Validate if the payment intent was successful and throw an exception if not.
    */
-  validate(): true {
+  validate() {
     if (this.requiresPaymentMethod()) {
       throw IncompletePaymentError.paymentMethodRequired(this)
     }
@@ -151,6 +152,16 @@ export class Payment {
     return this.#customer
   }
 
+  async customerOrFail(): Promise<BillableI> {
+    const customer = await this.customer()
+    if (!customer) {
+      throw new InvalidCustomerError(
+        'No customer found for this payment intent. Cannot retrieve customer.'
+      )
+    }
+    return customer
+  }
+
   /**
    * Confirms the payment intent.
    */
@@ -165,12 +176,9 @@ export class Payment {
   /**
    * The Stripe PaymentIntent instance.
    */
-  async asStripePaymentIntent(expand?: string[]) {
+  async asStripePaymentIntent(expand?: string[]): Promise<Stripe.PaymentIntent> {
     if (expand) {
-      const customer = await this.customer()
-      if (!customer) {
-        throw new Error() // TODO: error handling
-      }
+      const customer = await this.customerOrFail()
       return customer.stripe.paymentIntents.retrieve(this.#paymentIntent.id, { expand })
     }
 

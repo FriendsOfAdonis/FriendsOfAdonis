@@ -1,6 +1,7 @@
 import { type HttpContext } from '@adonisjs/core/http'
 import { type NextFn } from '@adonisjs/core/types/http'
 import shopkeeper from '../../services/shopkeeper.js'
+import { InvalidWebhookError } from '../errors/invalid_webhook.js'
 
 export default class StripeWebhookMiddleware {
   async handle({ request }: HttpContext, next: NextFn) {
@@ -8,18 +9,23 @@ export default class StripeWebhookMiddleware {
     const body = request.raw()
 
     if (!body || !sig) {
-      throw new Error('') // TODO: Error
+      throw InvalidWebhookError.missingSignature()
+    }
+
+    const secret = shopkeeper.config.webhook.secret
+    if (!secret) {
+      throw InvalidWebhookError.missingSecret()
     }
 
     const valid = shopkeeper.stripe.webhooks.signature.verifyHeader(
       body,
       sig,
-      shopkeeper.config.webhook.secret!, // TODO: Error
+      secret,
       shopkeeper.config.webhook.tolerance
     )
 
     if (!valid) {
-      throw new Error('') // TODO: Error
+      throw InvalidWebhookError.invalidSignature()
     }
 
     await next()

@@ -13,4 +13,10 @@ export class SubscriptionUpdateFailureError extends Exception {
       `The price "${price}" is already attached to subscription "${subscription.stripeId}".`
     )
   }
+
+  static cannotRemoveLastPrice(subscription: Subscription) {
+    return new SubscriptionUpdateFailureError(
+      `The subscription "${subscription.stripeId}" must have at least one price.`
+    )
+  }
 }
