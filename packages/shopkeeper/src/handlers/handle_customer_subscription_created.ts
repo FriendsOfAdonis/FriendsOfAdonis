@@ -32,7 +32,8 @@ export async function handleCustomerSubscriptionCreated(
     await subscription.related('items').createMany(
       data.items.data.map((item) => ({
         stripeId: item.id,
-        stripeProduct: item.price.product as string,
+        stripeProduct:
+          typeof item.price.product === 'string' ? item.price.product : item.price.product.id,
         stripePrice: item.price.id,
         quantity: item.quantity,
       }))

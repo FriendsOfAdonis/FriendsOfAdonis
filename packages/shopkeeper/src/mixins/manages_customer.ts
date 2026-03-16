@@ -10,7 +10,6 @@ import { PromotionCode } from '../promotion_code.js'
 import { CustomerBalanceTransaction } from '../customer_balance_transaction.js'
 import { type ManagesStripeI, type WithManagesStripe } from './manages_stripe.js'
 import { type NormalizeConstructor } from '@poppinss/utils/types'
-import { type WithBillable } from './billable.js'
 
 export interface ManagesCustomerI extends ManagesStripeI<true> {
   /**
@@ -301,15 +300,27 @@ export function ManagesCustomer<Model extends Constructor>(superclass: Model) {
     }
 
     stripeName(): string | undefined {
-      return ('name' in this ? this.name : undefined) as string | undefined
+      if ('name' in this) {
+        const val = this.name
+        return typeof val === 'string' ? val : undefined
+      }
+      return undefined
     }
 
     stripeEmail(): string | undefined {
-      return ('email' in this ? this.email : undefined) as string | undefined
+      if ('email' in this) {
+        const val = this.email
+        return typeof val === 'string' ? val : undefined
+      }
+      return undefined
     }
 
     stripePhone(): string | undefined {
-      return ('phone' in this ? this.phone : undefined) as string | undefined
+      if ('phone' in this) {
+        const val = this.phone
+        return typeof val === 'string' ? val : undefined
+      }
+      return undefined
     }
 
     stripeAddress(): Stripe.Emptyable<Stripe.AddressParam> {
@@ -341,15 +352,19 @@ export function ManagesCustomer<Model extends Constructor>(superclass: Model) {
     }
 
     async applyCoupon(coupon: string): Promise<Stripe.Customer> {
-      return this.updateStripeCustomer({
-        coupon: coupon,
-      })
+      const stripeId = this.stripeIdOrFail()
+      // Customer-level discounts param is missing from Stripe SDK types (v20)
+      // but the REST API supports it. Using Object.assign to bypass type checking.
+      const params: Stripe.CustomerUpdateParams = {}
+      Object.assign(params, { discounts: [{ coupon }] })
+      return this.stripe.customers.update(stripeId, params)
     }
 
     async applyPromotionCode(promotionCodeId: string): Promise<Stripe.Customer> {
-      return this.updateStripeCustomer({
-        promotion_code: promotionCodeId,
-      })
+      const stripeId = this.stripeIdOrFail()
+      const params: Stripe.CustomerUpdateParams = {}
+      Object.assign(params, { discounts: [{ promotion_code: promotionCodeId }] })
+      return this.stripe.customers.update(stripeId, params)
     }
 
     async findPromotionCode(
@@ -401,11 +416,7 @@ export function ManagesCustomer<Model extends Constructor>(superclass: Model) {
         ...params,
       })
 
-      // TODO: Fix as unknown
-      return transactions.data.map(
-        (transaction) =>
-          new CustomerBalanceTransaction(this as unknown as WithBillable['prototype'], transaction)
-      )
+      return transactions.data.map((transaction) => new CustomerBalanceTransaction(transaction))
     }
 
     creditBalance(
@@ -440,8 +451,7 @@ export function ManagesCustomer<Model extends Constructor>(superclass: Model) {
         ...params,
       })
 
-      // TODO: Fix as any
-      return new CustomerBalanceTransaction(this as any, transaction)
+      return new CustomerBalanceTransaction(transaction)
     }
 
     preferredCurrency(): string {

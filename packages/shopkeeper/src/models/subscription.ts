@@ -1,11 +1,11 @@
 import { BaseModel, belongsTo, column, hasMany } from '@adonisjs/lucid/orm'
-import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
+import type { HasMany } from '@adonisjs/lucid/types/relations'
 import { DateTime } from 'luxon'
 import Stripe from 'stripe'
 import { compose } from '@adonisjs/core/helpers'
 import { ManagesStripe } from '../mixins/manages_stripe.js'
 import { Exception } from '@adonisjs/core/exceptions'
-import { WithBillable } from '../mixins/billable.js'
+import { type BillableI } from '../contracts.js'
 import { IncompletePaymentError } from '../errors/incomplete_payment.js'
 import { Invoice } from '../invoice.js'
 import { Payment } from '../payment.js'
@@ -40,9 +40,9 @@ export default class Subscription extends compose(
   @column()
   declare userId: string
 
-  // TODO: Decorate and type
+  // @ts-expect-error Lucid decorator expects BelongsTo type, using BillableI to avoid circular type deps
   @belongsTo(() => shopkeeper.customerModel)
-  declare user: BelongsTo<WithBillable>
+  declare user: BillableI
 
   @column()
   declare type: string
@@ -300,47 +300,59 @@ export default class Subscription extends compose(
   }
 
   /**
-   * Report usage for a metered product.
+   * Report a meter event for a metered product.
    */
-  async reportUsage(quantity = 1, timestamp?: number, price?: string): Promise<Stripe.UsageRecord> {
+  async reportUsage(
+    eventName: string,
+    value = '1',
+    price?: string,
+    params: Partial<Stripe.Billing.MeterEventCreateParams> = {}
+  ): Promise<Stripe.Billing.MeterEvent> {
     if (!price) {
       this.guardAgainstMultiplePrices()
     }
 
     const item = await this.findItemOrFail(price ?? this.stripePrice!)
-    return item.reportUsage(quantity, timestamp)
+    return item.reportUsage(eventName, value, params)
   }
 
   /**
-   * Report usage for specific price of a metered product.
+   * Report a meter event for a specific price of a metered product.
    */
-  reportUsageFor(price: string, quantity = 1, timestamp?: number): Promise<Stripe.UsageRecord> {
-    return this.reportUsage(quantity, timestamp, price)
+  reportUsageFor(
+    price: string,
+    eventName: string,
+    value = '1',
+    params: Partial<Stripe.Billing.MeterEventCreateParams> = {}
+  ): Promise<Stripe.Billing.MeterEvent> {
+    return this.reportUsage(eventName, value, price, params)
   }
 
   /**
-   * Get the usage records for a metered product.
+   * Get the meter event summaries for a metered product.
    */
   async usageRecords(
-    params: Stripe.SubscriptionItemListUsageRecordSummariesParams = {},
+    meterId: string,
+    params: Omit<Stripe.Billing.MeterListEventSummariesParams, 'customer'>,
     price?: string
-  ): Promise<Stripe.UsageRecordSummary[]> {
+  ): Promise<Stripe.Billing.MeterEventSummary[]> {
     if (!price) {
       this.guardAgainstMultiplePrices()
     }
 
     const item = await this.findItemOrFail(price ?? this.stripePrice!)
-    return item.usageRecords(params)
+    return item.usageRecords(meterId, params)
   }
 
   /**
-   * Get the usage records for a specific price of a metered product.
+   * Get the meter event summaries for a specific price of a metered product.
    */
   usageRecordsFor(
     price: string,
-    params: Stripe.SubscriptionItemListUsageRecordSummariesParams = {}
-  ): Promise<Stripe.UsageRecordSummary[]> {
-    return this.usageRecords(params, price)
+    meterId: string,
+    params: Omit<Stripe.Billing.MeterListEventSummariesParams, 'customer'>
+  ): Promise<Stripe.Billing.MeterEventSummary[]> {
+    return this.usageRecords(meterId, params, price)
   }
 
   /**
@@ -441,7 +453,8 @@ export default class Subscription extends compose(
           stripeId: item.id,
         },
         {
-          stripeProduct: item.price.product as string,
+          stripeProduct:
+            typeof item.price.product === 'string' ? item.price.product : item.price.product.id,
           stripePrice: item.price.id,
           quantity: item.quantity ?? null,
         }
@@ -478,12 +491,10 @@ export default class Subscription extends compose(
 
     const output = new Map<string, Stripe.SubscriptionUpdateParams.Item>()
 
-    const entries = typeof prices === 'string' ? [[prices, prices]] : Object.entries(prices)
+    const entries: [string, string | Stripe.SubscriptionUpdateParams.Item][] =
+      typeof prices === 'string' ? [[prices, prices]] : Object.entries(prices)
 
-    for (const [key, value] of entries as [
-      key: string,
-      value: string | Stripe.SubscriptionUpdateParams.Item,
-    ][]) {
+    for (const [key, value] of entries) {
       const price = typeof value === 'string' ? value : key
       const options = typeof value === 'string' ? {} : value
 
@@ -542,7 +553,7 @@ export default class Subscription extends compose(
       items: [...items.values()],
       payment_behavior: this.paymentBehavior(),
       proration_behavior: this.prorateBehavior(),
-      promotion_code: this.promotionCodeId,
+      discounts: this.promotionCodeId ? [{ promotion_code: this.promotionCodeId }] : undefined,
       expand: ['latest_invoice.payment_intent'],
     }
 
@@ -681,7 +692,9 @@ export default class Subscription extends compose(
     if (this.onTrial()) {
       this.endsAt = this.trialEndsAt
     } else {
-      this.endsAt = DateTime.fromSeconds(stripeSubscription.current_period_end)
+      this.endsAt = stripeSubscription.cancel_at
+        ? DateTime.fromSeconds(stripeSubscription.cancel_at)
+        : null
     }
 
     await this.save()
@@ -796,8 +809,9 @@ export default class Subscription extends compose(
   async latestInvoice(expand: string[] = []): Promise<Invoice | null> {
     const stripeSubscription = await this.asStripeSubscription(['latest_invoice', ...expand])
 
-    if (stripeSubscription.latest_invoice) {
-      return new Invoice(this.user, stripeSubscription.latest_invoice as Stripe.Invoice)
+    const latestInvoice = stripeSubscription.latest_invoice
+    if (latestInvoice && typeof latestInvoice !== 'string') {
+      return new Invoice(this.user, latestInvoice)
     }
 
     return null
@@ -806,9 +820,7 @@ export default class Subscription extends compose(
   /**
    * Fetches upcoming invoice for this subscription.
    */
-  async upcomingInvoice(
-    params: Stripe.InvoiceRetrieveUpcomingParams = {}
-  ): Promise<Invoice | null> {
+  async upcomingInvoice(params: Stripe.InvoiceCreatePreviewParams = {}): Promise<Invoice | null> {
     if (this.canceled()) {
       return null
     }
@@ -824,7 +836,7 @@ export default class Subscription extends compose(
    */
   async previewInvoice(
     prices: string[] | string,
-    params: Stripe.InvoiceRetrieveUpcomingParams = {}
+    params: Stripe.InvoiceCreatePreviewParams = {}
   ): Promise<Invoice | null> {
     prices = typeof prices === 'string' ? [prices] : prices
 
@@ -836,12 +848,24 @@ export default class Subscription extends compose(
 
     const swapOptions = this.getSwapOptions(swapItems)
 
-    const payload: Stripe.InvoiceRetrieveUpcomingParams = {
-      subscription_billing_cycle_anchor: swapOptions.billing_cycle_anchor,
-      subscription_cancel_at_period_end: swapOptions.cancel_at_period_end,
-      subscription_items: swapOptions.items,
-      subscription_proration_behavior: swapOptions.proration_behavior,
-      subscription_trial_end: swapOptions.trial_end,
+    const payload: Stripe.InvoiceCreatePreviewParams = {
+      subscription_details: {
+        billing_cycle_anchor: swapOptions.billing_cycle_anchor,
+        cancel_at_period_end: swapOptions.cancel_at_period_end,
+        items: swapOptions.items?.map(
+          ({ id, price, quantity, deleted, clear_usage, tax_rates, price_data }) => ({
+            id,
+            price,
+            quantity,
+            deleted,
+            clear_usage,
+            tax_rates,
+            price_data,
+          })
+        ),
+        proration_behavior: swapOptions.proration_behavior,
+        trial_end: swapOptions.trial_end,
+      },
       ...params,
     }
 
@@ -907,18 +931,26 @@ export default class Subscription extends compose(
    * Get the latest payment for a Subscription.
    */
   async latestPayment(): Promise<Payment | null> {
-    const subscription = await this.asStripeSubscription(['latest_invoice.payment_intent'])
-    const pi = (subscription.latest_invoice as Stripe.Invoice)
-      .payment_intent as Stripe.PaymentIntent
-    return pi ? new Payment(pi) : null
+    const subscription = await this.asStripeSubscription([
+      'latest_invoice.payments.data.payment.payment_intent',
+    ])
+    const invoice = subscription.latest_invoice
+    if (!invoice || typeof invoice === 'string') return null
+
+    const invoicePayment = invoice.payments?.data?.[0]
+    if (!invoicePayment?.payment?.payment_intent) return null
+
+    const pi = invoicePayment.payment.payment_intent
+    return typeof pi === 'string' ? null : new Payment(pi)
   }
 
   /**
    * The discount that applies to the subscription, if applicable.
    */
   async discount(): Promise<Discount | null> {
-    const subscription = await this.asStripeSubscription(['discount.promotion_code'])
-    return subscription.discount ? new Discount(subscription.discount) : null
+    const subscription = await this.asStripeSubscription(['discounts', 'discounts.promotion_code'])
+    const firstDiscount = subscription.discounts[0]
+    return firstDiscount && typeof firstDiscount !== 'string' ? new Discount(firstDiscount) : null
   }
 
   /**
@@ -926,7 +958,7 @@ export default class Subscription extends compose(
    */
   async applyCoupon(coupon: string): Promise<void> {
     await this.updateStripeSubscription({
-      coupon,
+      discounts: [{ coupon }],
     })
   }
 
@@ -935,7 +967,7 @@ export default class Subscription extends compose(
    */
   async applyPromotionCode(promotionCode: string): Promise<void> {
     await this.updateStripeSubscription({
-      promotion_code: promotionCode,
+      discounts: [{ promotion_code: promotionCode }],
     })
   }
 

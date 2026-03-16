@@ -6,7 +6,7 @@ import type Subscription from './models/subscription.js'
 import { compose } from '@adonisjs/core/helpers'
 import { HandlesTaxes } from './mixins/handles_taxes.js'
 import { Empty } from './types.js'
-import { type WithManagesSubscriptions } from './mixins/manages_subscriptions.js'
+import { type ManagesSubscriptionsI } from './contracts.js'
 import { AllowsCoupon } from './mixins/allows_coupons.js'
 import { HandlesPaymentFailures } from './mixins/handles_payment_failures.js'
 import { InteractWithPaymentBehavior } from './mixins/interacts_with_payment_behavior.js'
@@ -23,7 +23,7 @@ export class SubscriptionBuilder extends compose(
   /**
    * The model that is subscribing.
    */
-  #owner: WithManagesSubscriptions['prototype']
+  #owner: ManagesSubscriptionsI
 
   /**
    * The type of the subscription.
@@ -55,7 +55,7 @@ export class SubscriptionBuilder extends compose(
    */
   #metadata: Record<string, string> = {}
 
-  constructor(owner: WithManagesSubscriptions['prototype'], type: string, prices: string[]) {
+  constructor(owner: ManagesSubscriptionsI, type: string, prices: string[]) {
     super()
     this.#owner = owner
     this.#type = type
@@ -218,6 +218,7 @@ export class SubscriptionBuilder extends compose(
    */
   async createSubscription(stripeSubscription: Stripe.Subscription): Promise<Subscription> {
     let subscription = await this.#owner
+      // @ts-expect-error -- Lucid relation method not in ManagesSubscriptionsI
       .related('subscriptions')
       .query()
       .where('stripeId', stripeSubscription.id)
@@ -230,6 +231,7 @@ export class SubscriptionBuilder extends compose(
     const firstItem = stripeSubscription.items.data[0]
     const isSinglePrice = stripeSubscription.items.data.length === 1
 
+    // @ts-expect-error -- Lucid relation method not in ManagesSubscriptionsI
     subscription = await this.#owner.related('subscriptions').create({
       type: this.#type,
       stripeId: stripeSubscription.id,
@@ -243,7 +245,8 @@ export class SubscriptionBuilder extends compose(
     for (const item of stripeSubscription.items.data) {
       await subscription.related('items').create({
         stripeId: item.id,
-        stripeProduct: item.price.product as string,
+        stripeProduct:
+          typeof item.price.product === 'string' ? item.price.product : item.price.product.id,
         stripePrice: item.price.id,
         quantity: item.quantity,
       })
@@ -271,17 +274,28 @@ export class SubscriptionBuilder extends compose(
 
     const billingCycleAnchor = trialEnd ? this.#billingCycleAnchor : null
 
-    return Checkout.customer(this.#owner as any, this).create(
+    return Checkout.customer(this.#owner, this).create(
       [],
       {
-        // TODO: Avoid as any
-        line_items: this.#items as any,
+        line_items: this.#items.map((item) => ({
+          ...item,
+          tax_rates: Array.isArray(item.tax_rates) ? item.tax_rates : undefined,
+        })),
         mode: 'subscription',
         subscription_data: {
           default_tax_rates: this.getTaxRatesForPayload() ?? undefined,
           trial_end: trialEnd?.toUnixInteger(),
           billing_cycle_anchor: billingCycleAnchor ?? undefined,
-          proration_behavior: billingCycleAnchor ? (this.prorateBehavior() as any) : undefined, // TODO: Avoid as
+          proration_behavior: billingCycleAnchor
+            ? (():
+                | Stripe.Checkout.SessionCreateParams.SubscriptionData.ProrationBehavior
+                | undefined => {
+                const behavior = this.prorateBehavior()
+                return behavior === 'create_prorations' || behavior === 'none'
+                  ? behavior
+                  : undefined
+              })()
+            : undefined,
           metadata: {
             ...this.#metadata,
             ...(this.#type && {
@@ -317,15 +331,22 @@ export class SubscriptionBuilder extends compose(
    * Build the payload for subscription creation.
    */
   buildPayload(): Partial<Stripe.SubscriptionCreateParams> {
+    const discounts: Stripe.SubscriptionCreateParams.Discount[] = []
+    if (this.couponId) {
+      discounts.push({ coupon: this.couponId })
+    }
+    if (this.promotionCodeId) {
+      discounts.push({ promotion_code: this.promotionCodeId })
+    }
+
     return {
       automatic_tax: this.automaticTaxPayload(),
       billing_cycle_anchor: this.#billingCycleAnchor,
-      coupon: this.couponId,
+      discounts: discounts.length > 0 ? discounts : undefined,
       expand: ['latest_invoice.payment_intent'],
       metadata: this.#metadata,
       items: this.#items,
       payment_behavior: this.paymentBehavior(),
-      promotion_code: this.promotionCodeId,
       proration_behavior: this.prorateBehavior(),
       trial_end: this.getTrialEndForPayload(),
       off_session: true,

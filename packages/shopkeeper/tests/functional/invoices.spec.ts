@@ -76,7 +76,10 @@ test.group('Invoices', () => {
     assert.instanceOf(invoice, Invoice)
     assert.equal(invoice.rawTotal(), 50000)
     assert.equal(
-      await invoice.invoiceLineItems().then((l) => l[0].price?.tax_behavior),
+      await invoice.invoiceLineItems().then((l) => {
+        const price = l[0].pricing?.price_details?.price
+        return typeof price === 'object' ? price?.tax_behavior : undefined
+      }),
       'exclusive'
     )
   })
@@ -146,11 +149,11 @@ test.group('Invoices', () => {
     assert.equal(invoice.rawTotal(), 10000)
 
     const item = await user.tab('Shouting', undefined, {
-      unit_amount: 1000,
+      unit_amount_decimal: '1000',
       quantity: 2,
     })
 
-    assert.equal(item.unit_amount, 1000)
+    assert.equal(item.pricing?.unit_amount_decimal, '1000')
     assert.equal(item.quantity, 2)
   })
 })

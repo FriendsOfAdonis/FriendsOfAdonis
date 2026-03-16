@@ -34,26 +34,29 @@ export function ManagesInvoices<Model extends Constructor>(superclass: Model) {
       }
 
       const stripeId = this.stripeIdOrFail()
-      const options: TabItemParams = {
+      const { price_data: inputPriceData, ...restParams } = params
+
+      const options: Stripe.InvoiceItemCreateParams = {
         customer: stripeId,
         currency: this.preferredCurrency(),
         description,
-        ...params,
+        ...restParams,
       }
 
-      if (options.price_data) {
+      if (inputPriceData) {
         options.price_data = {
           unit_amount: amount,
           currency: this.preferredCurrency(),
-          ...options.price_data,
+          ...inputPriceData,
         }
-      } else if (options.quantity && !options.unit_amount) {
-        options.unit_amount = amount
+      } else if (options.quantity && !options.unit_amount_decimal) {
+        options.unit_amount_decimal =
+          amount !== null && amount !== undefined ? String(amount) : undefined
       } else {
         options.amount = amount
       }
 
-      return this.stripe.invoiceItems.create(options as Stripe.InvoiceItemCreateParams)
+      return this.stripe.invoiceItems.create(options)
     }
 
     /**
@@ -81,7 +84,7 @@ export function ManagesInvoices<Model extends Constructor>(superclass: Model) {
 
       return this.stripe.invoiceItems.create({
         customer: stripeId,
-        price,
+        pricing: { price },
         quantity,
         ...params,
       })
@@ -127,20 +130,15 @@ export function ManagesInvoices<Model extends Constructor>(superclass: Model) {
 
         return invoice
       } catch (e) {
-        const err = e as Stripe.errors.StripeError
-        if (err.type !== 'StripeCardError') {
-          throw err
-        }
+        const err = checkStripeError(e, 'StripeCardError')
 
         await invoice.refresh()
 
-        const pi = await this.stripe.paymentIntents.retrieve(
-          invoice.asStripeInvoice().payment_intent as string,
-          { expand: ['invoice.subscription'] }
-        )
+        if (err.payment_intent) {
+          const payment = new Payment(err.payment_intent)
+          payment.validate()
+        }
 
-        const payment = new Payment(pi)
-        payment.validate()
         return invoice
       }
     }
@@ -151,7 +149,7 @@ export function ManagesInvoices<Model extends Constructor>(superclass: Model) {
     async createInvoice(params: Stripe.InvoiceCreateParams = {}): Promise<Invoice> {
       const customer = await this.asStripeCustomer()
       const options: Stripe.InvoiceCreateParams = {
-        automatic_tax: this.automaticTaxPayload() as Stripe.InvoiceCreateParams.AutomaticTax, // TODO: Fix type
+        automatic_tax: this.automaticTaxPayload(),
         customer: customer.id,
         currency: customer.currency ?? shopkeeper.currency,
         ...params,
@@ -168,19 +166,16 @@ export function ManagesInvoices<Model extends Constructor>(superclass: Model) {
     /**
      * Get the customer's upcoming invoice.
      */
-    async upcomingInvoice(
-      params: Stripe.InvoiceRetrieveUpcomingParams = {}
-    ): Promise<Invoice | null> {
+    async upcomingInvoice(params: Stripe.InvoiceCreatePreviewParams = {}): Promise<Invoice | null> {
       const stripeId = this.stripeIdOrFail()
-      const options: Stripe.InvoiceRetrieveUpcomingParams = {
-        automatic_tax:
-          this.automaticTaxPayload() as Stripe.InvoiceRetrieveUpcomingParams.AutomaticTax,
+      const options: Stripe.InvoiceCreatePreviewParams = {
+        automatic_tax: this.automaticTaxPayload(),
         customer: stripeId,
         ...params,
       }
 
       try {
-        const invoice = await this.stripe.invoices.retrieveUpcoming(options)
+        const invoice = await this.stripe.invoices.createPreview(options)
         return new Invoice(this, invoice)
       } catch (e) {
         checkStripeError(e, 'StripeInvalidRequestError')
@@ -238,7 +233,7 @@ export function ManagesInvoices<Model extends Constructor>(superclass: Model) {
       const stripeInvoices = await this.stripe.invoices.list({ customer: stripeId, ...params })
 
       for (const invoice of stripeInvoices.data) {
-        if (invoice.paid || includePending) {
+        if (invoice.status === 'paid' || includePending) {
           invoices.push(new Invoice(this, invoice))
         }
       }
