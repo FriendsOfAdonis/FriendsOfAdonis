@@ -40,7 +40,9 @@ export async function handleCustomerSubscriptionUpdated(
   if (data.cancel_at_period_end) {
     subscription.endsAt = subscription.onTrial()
       ? subscription.trialEndsAt
-      : DateTime.fromSeconds(data.current_period_end)
+      : data.cancel_at
+        ? DateTime.fromSeconds(data.cancel_at)
+        : null
   } else if (data.cancel_at || data.canceled_at) {
     subscription.endsAt = DateTime.fromSeconds(data.cancel_at! ?? data.canceled_at!)
   } else {
@@ -59,7 +61,8 @@ export async function handleCustomerSubscriptionUpdated(
     await subscription.related('items').updateOrCreate(
       { stripeId: item.id },
       {
-        stripeProduct: item.price.product as string,
+        stripeProduct:
+          typeof item.price.product === 'string' ? item.price.product : item.price.product.id,
         stripePrice: item.price.id,
         quantity: item.quantity,
       }

@@ -158,7 +158,7 @@ test.group('Subscriptions', (group) => {
     const subscription = await user.subscription('main')
 
     await subscription?.swap([otherPrice.id], {
-      coupon: coupon.id,
+      discounts: [{ coupon: coupon.id }],
     })
 
     const couponId = await subscription?.discount().then((c) => c?.coupon().asStripeCoupon().id)

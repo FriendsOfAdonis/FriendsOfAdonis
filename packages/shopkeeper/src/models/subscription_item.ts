@@ -114,7 +114,10 @@ export default class SubscriptionItem extends compose(
       ...params,
     })
 
-    this.stripeProduct = stripeSubscriptionItem.price.product as string
+    this.stripeProduct =
+      typeof stripeSubscriptionItem.price.product === 'string'
+        ? stripeSubscriptionItem.price.product
+        : stripeSubscriptionItem.price.product.id
     this.stripePrice = stripeSubscriptionItem.price.id
     this.quantity = stripeSubscriptionItem.quantity ?? null
 
@@ -145,27 +148,48 @@ export default class SubscriptionItem extends compose(
   }
 
   /**
-   * Report usage for a metered product.
+   * Report a meter event for a metered product.
    */
-  reportUsage(quantity = 1, date?: DateTime | number): Promise<Stripe.UsageRecord> {
-    const timestamp = date instanceof DateTime ? date.toUnixInteger() : date
-    return this.stripe.subscriptionItems.createUsageRecord(this.stripeId, {
-      quantity,
-      action: date ? 'set' : 'increment',
-      timestamp: timestamp ?? DateTime.now().toUnixInteger(),
+  async reportUsage(
+    this: SubscriptionItem,
+    eventName: string,
+    value = '1',
+    params: Partial<Stripe.Billing.MeterEventCreateParams> = {}
+  ): Promise<Stripe.Billing.MeterEvent> {
+    await this.load('subscription')
+    // @ts-ignore -- Lucid type issue
+    await this.subscription.load('user')
+
+    const customerId = this.subscription.user.stripeIdOrFail()
+
+    return this.stripe.billing.meterEvents.create({
+      event_name: eventName,
+      payload: {
+        stripe_customer_id: customerId,
+        value,
+      },
+      ...params,
     })
   }
 
   /**
-   * Get the usage records for a metered product.
+   * Get the meter event summaries for a metered product.
    */
   async usageRecords(
-    params: Stripe.SubscriptionItemListUsageRecordSummariesParams = {}
-  ): Promise<Stripe.UsageRecordSummary[]> {
-    const response = await this.stripe.subscriptionItems.listUsageRecordSummaries(
-      this.stripeId,
-      params
-    )
+    this: SubscriptionItem,
+    meterId: string,
+    params: Omit<Stripe.Billing.MeterListEventSummariesParams, 'customer'>
+  ): Promise<Stripe.Billing.MeterEventSummary[]> {
+    await this.load('subscription')
+    // @ts-ignore -- Lucid type issue
+    await this.subscription.load('user')
+
+    const customerId = this.subscription.user.stripeIdOrFail()
+
+    const response = await this.stripe.billing.meters.listEventSummaries(meterId, {
+      customer: customerId,
+      ...params,
+    })
     return response.data
   }
 

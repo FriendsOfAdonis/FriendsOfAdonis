@@ -41,7 +41,7 @@ export function HandlesTaxes<Model extends Constructor>(superclass: Model) {
     /**
      * Get the payload for Stripe automatic tax calculation.
      */
-    automaticTaxPayload(): Stripe.SubscriptionCreateParams.AutomaticTax {
+    automaticTaxPayload(): { enabled: boolean } {
       return {
         // TODO: Check if necessary
         // customer_ip_address: this.customerIpAddress,

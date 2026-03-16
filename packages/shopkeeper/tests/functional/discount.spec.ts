@@ -47,7 +47,7 @@ test.group('Discount', (group) => {
     })
 
     promotionCode = await shopkeeper.stripe.promotionCodes.create({
-      coupon: coupon2.id,
+      promotion: { type: 'coupon', coupon: coupon2.id },
       code,
     })
   })
@@ -102,7 +102,7 @@ test.group('Discount', (group) => {
 
     const inactivePromotionCode = await shopkeeper.stripe.promotionCodes.create({
       active: false,
-      coupon: coupon.id,
+      promotion: { type: 'coupon', coupon: coupon.id },
       code: 'NEWYEAR',
     })
 

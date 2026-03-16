@@ -15,7 +15,11 @@ export class PromotionCode {
    * Get the coupon that belongs to the promotion code.
    */
   coupon(): Coupon {
-    return new Coupon(this.#promotionCode.coupon)
+    const coupon = this.#promotionCode.promotion.coupon
+    if (!coupon || typeof coupon === 'string') {
+      throw new Error('Promotion code coupon was not expanded')
+    }
+    return new Coupon(coupon)
   }
 
   /**

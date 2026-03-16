@@ -1,5 +1,5 @@
 import type Stripe from 'stripe'
-import { type WithBillable } from './mixins/billable.js'
+import { type ManagesCustomerI } from './contracts.js'
 import { type SubscriptionBuilder } from './subscription_builder.js'
 import { CheckoutBuilder } from './checkout_builder.js'
 import shopkeeper from '../services/shopkeeper.js'
@@ -7,18 +7,11 @@ import router from '@adonisjs/core/services/router'
 
 export class Checkout {
   /**
-   * The Stripe model instance.
-   */
-  // @ts-ignore -- Not used yet
-  #owner: WithBillable['prototype'] | null
-
-  /**
    * The Stripe checkout session instance.
    */
   #session: Stripe.Checkout.Session
 
-  constructor(owner: WithBillable['prototype'] | null, session: Stripe.Checkout.Session) {
-    this.#owner = owner
+  constructor(_owner: ManagesCustomerI | null, session: Stripe.Checkout.Session) {
     this.#session = session
   }
 
@@ -36,7 +29,7 @@ export class Checkout {
     return new CheckoutBuilder()
   }
 
-  static customer(owner: WithBillable['prototype'], parentInstance: SubscriptionBuilder) {
+  static customer(owner: ManagesCustomerI, parentInstance?: SubscriptionBuilder) {
     return new CheckoutBuilder(owner, parentInstance)
   }
 
@@ -44,7 +37,7 @@ export class Checkout {
    * Begin a new checkout session.
    */
   static async create(
-    owner?: WithBillable['prototype'],
+    owner?: ManagesCustomerI,
     sessionParams: Stripe.Checkout.SessionCreateParams = {},
     customerParams: Stripe.CustomerCreateParams = {}
   ): Promise<Checkout> {

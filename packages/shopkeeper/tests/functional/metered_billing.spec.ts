@@ -10,6 +10,8 @@ let product: Stripe.Product
 let meteredPrice: Stripe.Price
 let otherMeteredPrice: Stripe.Price
 let licensedPrice: Stripe.Price
+let meter: Stripe.Billing.Meter
+let otherMeter: Stripe.Billing.Meter
 
 async function sleep(seconds: number) {
   return new Promise<void>((res) => {
@@ -22,6 +24,19 @@ test.group('MeteredBilling', (group) => {
   group.setup(async () => {
     const app = await createApp()
     shopkeeper = app.shopkeeper
+
+    meter = await shopkeeper.stripe.billing.meters.create({
+      display_name: 'Test Meter',
+      event_name: 'test_meter_event',
+      default_aggregation: { formula: 'sum' },
+    })
+
+    otherMeter = await shopkeeper.stripe.billing.meters.create({
+      display_name: 'Other Test Meter',
+      event_name: 'other_test_meter_event',
+      default_aggregation: { formula: 'sum' },
+    })
+
     product = await shopkeeper.stripe.products.create({
       name: 'Test Product',
       type: 'service',
@@ -34,6 +49,7 @@ test.group('MeteredBilling', (group) => {
       recurring: {
         interval: 'month',
         usage_type: 'metered',
+        meter: meter.id,
       },
       unit_amount: 100,
     })
@@ -45,6 +61,7 @@ test.group('MeteredBilling', (group) => {
       recurring: {
         interval: 'month',
         usage_type: 'metered',
+        meter: otherMeter.id,
       },
       unit_amount: 200,
     })
@@ -70,12 +87,19 @@ test.group('MeteredBilling', (group) => {
 
     await sleep(1)
 
-    await subscription.reportUsage(5)
-    await subscription.reportUsageFor(meteredPrice.id, 10)
+    await subscription.reportUsage('test_meter_event', '5')
+    await subscription.reportUsageFor(meteredPrice.id, 'test_meter_event', '10')
 
-    const records = await subscription.usageRecords()
+    await sleep(2)
 
-    assert.equal(records[0].total_usage, 15)
+    const now = new Date()
+    const startTime = new Date(now.getTime() - 60 * 60 * 1000)
+    const records = await subscription.usageRecords(meter.id, {
+      start_time: Math.floor(startTime.getTime() / 1000),
+      end_time: Math.floor(now.getTime() / 1000),
+    })
+
+    assert.equal(records[0].aggregated_value, 15)
   })
 
   test('reporting usage for licensed price throws exception', async () => {
@@ -84,7 +108,7 @@ test.group('MeteredBilling', (group) => {
     const subscription = await user.newSubscription('main', licensedPrice.id).create('pm_card_visa')
 
     try {
-      await subscription.reportUsage()
+      await subscription.reportUsage('test_meter_event', '1')
     } catch (e) {
       checkStripeError(e, 'StripeInvalidRequestError')
     }
@@ -104,7 +128,7 @@ test.group('MeteredBilling', (group) => {
     assert.lengthOf(subscription.items, 3)
 
     try {
-      await subscription.reportUsage()
+      await subscription.reportUsage('other_test_meter_event', '1')
       throw new Error()
     } catch (e) {
       assert.instanceOf(e, InvalidArgumentError)
@@ -114,14 +138,23 @@ test.group('MeteredBilling', (group) => {
       )
     }
 
-    await subscription.reportUsageFor(otherMeteredPrice.id, 20)
+    await subscription.reportUsageFor(otherMeteredPrice.id, 'other_test_meter_event', '20')
 
-    const summary = await subscription.usageRecordsFor(otherMeteredPrice.id).then((s) => s[0])
+    await sleep(2)
 
-    assert.equal(summary.total_usage, 20)
+    const now = new Date()
+    const startTime = new Date(now.getTime() - 60 * 60 * 1000)
+    const summary = await subscription
+      .usageRecordsFor(otherMeteredPrice.id, otherMeter.id, {
+        start_time: Math.floor(startTime.getTime() / 1000),
+        end_time: Math.floor(now.getTime() / 1000),
+      })
+      .then((s) => s[0])
+
+    assert.equal(summary.aggregated_value, 20)
 
     try {
-      await subscription.reportUsageFor(licensedPrice.id)
+      await subscription.reportUsageFor(licensedPrice.id, 'test_meter_event', '1')
       throw new Error()
     } catch (e) {
       checkStripeError(e, 'StripeInvalidRequestError')
@@ -233,7 +266,7 @@ test.group('MeteredBilling', (group) => {
       .meteredPrice(meteredPrice.id)
       .create('pm_card_visa')
 
-    await subscription.reportUsage(10)
+    await subscription.reportUsage('test_meter_event', '10')
     await subscription.cancelNowAndInvoice()
 
     const invoices = await user.invoicesIncludingPending()
