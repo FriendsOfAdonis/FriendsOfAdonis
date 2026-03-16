@@ -1,37 +1,32 @@
 import { type NormalizeConstructor } from '@adonisjs/core/types/helpers'
-import { type BaseModel } from '@adonisjs/lucid/orm'
+import { type BaseModel, column } from '@adonisjs/lucid/orm'
 import type Stripe from 'stripe'
 import shopkeeper from '../../services/shopkeeper.js'
 import { InvalidCustomerError } from '../errors/invalid_customer.js'
 
-// TODO: Find way to have BaseModel generic
-export interface ManagesStripeI<Optional = false> {
+export type ManagesStripeRow<Optional extends boolean = true> = {
   stripeId: Optional extends false ? string : string | null
-
-  /**
-   * Determine if the customer has a Stripe customer ID.
-   */
   hasStripeId(): boolean
-
-  /**
-   * Returns the Stripe ID or fail.
-   */
   stripeIdOrFail(): string
-
-  /**
-   * Get the Stripe SDK client.
-   */
-  get stripe(): Stripe
+  readonly stripe: Stripe
 }
 
-type Constructor = NormalizeConstructor<typeof BaseModel>
+export type ManagesStripeClass<
+  Optional extends boolean = true,
+  T extends NormalizeConstructor<typeof BaseModel> = NormalizeConstructor<typeof BaseModel>,
+> = T & { new (...args: any[]): ManagesStripeRow<Optional> }
 
-export function ManagesStripe<Optional extends boolean, Model extends Constructor>(
-  _optional: Optional
-) {
-  return (superclass: Model) => {
-    class WithManagesStripeImpl extends superclass implements ManagesStripeI<Optional> {
+export function managesStripe<Optional extends boolean>(_optional: Optional) {
+  return <T extends NormalizeConstructor<typeof BaseModel>>(
+    superclass: T
+  ): ManagesStripeClass<Optional, T> => {
+    class EntityMixin extends superclass {
+      @column()
       declare stripeId: Optional extends false ? string : string | null
+
+      get stripe(): Stripe {
+        return shopkeeper.stripe
+      }
 
       hasStripeId(): boolean {
         return !!this.stripeId
@@ -43,17 +38,10 @@ export function ManagesStripe<Optional extends boolean, Model extends Constructo
         }
         return this.stripeId
       }
-
-      get stripe(): Stripe {
-        return shopkeeper.stripe
-      }
     }
 
-    WithManagesStripeImpl.boot()
-    WithManagesStripeImpl.$addColumn('stripeId', {})
-
-    return WithManagesStripeImpl
+    return EntityMixin
   }
 }
 
-export type WithManagesStripe = ReturnType<ReturnType<typeof ManagesStripe>>
+export type WithManagesStripe<Optional extends boolean = true> = ManagesStripeClass<Optional>

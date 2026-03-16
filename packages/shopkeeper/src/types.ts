@@ -1,7 +1,7 @@
 // Used as based class for mixins.
 
 import type Stripe from 'stripe'
-import { type WithBillable } from './mixins/billable.js'
+import { type BillableModel } from './contracts.js'
 import type Subscription from './models/subscription.js'
 import type SubscriptionItem from './models/subscription_item.js'
 import { type NormalizeConstructor } from '@poppinss/utils/types'
@@ -66,7 +66,7 @@ export type ShopkeeperConfig = {
      *
      * @example () => import('#models/user')
      */
-    customerModel: LazyImport<WithBillable>
+    customerModel: LazyImport<BillableModel>
 
     /**
      * The Subscription model import.

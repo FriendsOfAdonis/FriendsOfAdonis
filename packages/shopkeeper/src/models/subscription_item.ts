@@ -6,13 +6,13 @@ import { HandlesPaymentFailures } from '../mixins/handles_payment_failures.js'
 import { InteractWithPaymentBehavior } from '../mixins/interacts_with_payment_behavior.js'
 import { Prorates } from '../mixins/prorates.js'
 import Stripe from 'stripe'
-import { ManagesStripe } from '../mixins/manages_stripe.js'
+import { managesStripe } from '../mixins/manages_stripe.js'
 import { DateTime } from 'luxon'
 import shopkeeper from '../../services/shopkeeper.js'
 
 export default class SubscriptionItem extends compose(
   BaseModel,
-  ManagesStripe(false),
+  managesStripe(false),
   HandlesPaymentFailures,
   InteractWithPaymentBehavior,
   Prorates
@@ -157,7 +157,6 @@ export default class SubscriptionItem extends compose(
     params: Partial<Stripe.Billing.MeterEventCreateParams> = {}
   ): Promise<Stripe.Billing.MeterEvent> {
     await this.load('subscription')
-    // @ts-ignore -- Lucid type issue
     await this.subscription.load('user')
 
     const customerId = this.subscription.user.stripeIdOrFail()
@@ -181,7 +180,6 @@ export default class SubscriptionItem extends compose(
     params: Omit<Stripe.Billing.MeterListEventSummariesParams, 'customer'>
   ): Promise<Stripe.Billing.MeterEventSummary[]> {
     await this.load('subscription')
-    // @ts-ignore -- Lucid type issue
     await this.subscription.load('user')
 
     const customerId = this.subscription.user.stripeIdOrFail()

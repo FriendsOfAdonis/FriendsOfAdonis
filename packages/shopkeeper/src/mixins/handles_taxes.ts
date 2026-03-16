@@ -3,8 +3,23 @@ import shopkeeper from '../../services/shopkeeper.js'
 
 type Constructor = new (...args: any[]) => {}
 
-export function HandlesTaxes<Model extends Constructor>(superclass: Model) {
-  return class WithHandlesTaxes extends superclass implements WithHandlesTaxes {
+export type HandlesTaxesRow = {
+  customerIpAddress: string | null
+  estimationBillingAddress: Partial<Stripe.Address>
+  collectTaxIds: boolean
+  withTaxIpAddress(ipAddress: string): void
+  withTaxAddress(country: string, postalCode?: string, state?: string): void
+  automaticTaxPayload(): Stripe.InvoiceCreateParams.AutomaticTax
+  isAutomaticTaxEnabled(): boolean
+  withTaxIdsCollect(): void
+}
+
+export type HandlesTaxesClass<T extends Constructor = Constructor> = T & {
+  new (...args: any[]): HandlesTaxesRow
+}
+
+export function HandlesTaxes<T extends Constructor>(superclass: T): HandlesTaxesClass<T> {
+  class WithHandlesTaxes extends superclass {
     /**
      * The IP address of the customer used to determine the tax location.
      */
@@ -41,11 +56,8 @@ export function HandlesTaxes<Model extends Constructor>(superclass: Model) {
     /**
      * Get the payload for Stripe automatic tax calculation.
      */
-    automaticTaxPayload(): { enabled: boolean } {
+    automaticTaxPayload(): Stripe.InvoiceCreateParams.AutomaticTax {
       return {
-        // TODO: Check if necessary
-        // customer_ip_address: this.customerIpAddress,
-        // estimation_billing_address: this.estimationBillingAddress,
         enabled: this.isAutomaticTaxEnabled(),
       }
     }
@@ -64,6 +76,8 @@ export function HandlesTaxes<Model extends Constructor>(superclass: Model) {
       this.collectTaxIds = true
     }
   }
+
+  return WithHandlesTaxes
 }
 
-export type WithHandlesTaxes = ReturnType<typeof HandlesTaxes>
+export type WithHandlesTaxes = HandlesTaxesClass

@@ -2,8 +2,22 @@ import type Stripe from 'stripe'
 
 type Constructor = new (...args: any[]) => {}
 
-export function AllowsCoupon<Model extends Constructor>(superclass: Model) {
-  return class AllowsCouponImpl extends superclass {
+export interface AllowsCouponRow {
+  couponId?: string
+  promotionCodeId?: string
+  allowPromotionCodes: boolean
+  withCoupon(couponId: string): this
+  withPromotionCode(promotionCodeId: string): this
+  withAllowPromotionsCodes(): this
+  checkoutDiscounts(): Stripe.Checkout.SessionCreateParams.Discount[] | undefined
+}
+
+export type AllowsCouponClass<T extends Constructor = Constructor> = T & {
+  new (...args: any[]): AllowsCouponRow
+}
+
+export function AllowsCoupon<T extends Constructor>(superclass: T): AllowsCouponClass<T> {
+  class AllowsCouponImpl extends superclass {
     /**
      * The coupon ID being applied.
      */
@@ -56,6 +70,8 @@ export function AllowsCoupon<Model extends Constructor>(superclass: Model) {
       }
     }
   }
+
+  return AllowsCouponImpl
 }
 
-export type WithAllowsCoupon = ReturnType<typeof AllowsCoupon>['prototype']
+export type WithAllowsCoupon = AllowsCouponClass

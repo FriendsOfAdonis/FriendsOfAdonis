@@ -1,6 +1,7 @@
 import type Stripe from 'stripe'
 import type { DateTime } from 'luxon'
 import type { HasMany } from '@adonisjs/lucid/types/relations'
+import type { LucidModel } from '@adonisjs/lucid/types/model'
 import type { Invoice } from './invoice.js'
 import type { Payment } from './payment.js'
 import type { PaymentMethod } from './payment_method.js'
@@ -46,8 +47,6 @@ export interface ManagesCustomerI extends ManagesStripeI {
   stripeMetadata(): Record<string, string>
   syncStripeCustomerDetails(): Promise<Stripe.Customer>
   discount(): Promise<Discount | null>
-  applyCoupon(coupon: string): Promise<Stripe.Customer>
-  applyPromotionCode(promotionCodeId: string): Promise<Stripe.Customer>
   findPromotionCode(
     code: string,
     params?: Stripe.PromotionCodeListParams
@@ -94,6 +93,7 @@ export interface ManagesCustomerI extends ManagesStripeI {
 
 export interface ManagesPaymentMethodsI extends ManagesCustomerI {
   pmType: string | null
+  pmLastFour: string | null
 
   createSetupIntent(params?: Stripe.SetupIntentCreateParams): Promise<Stripe.SetupIntent>
   findSetupIntent(
@@ -148,22 +148,79 @@ export interface ManagesInvoicesI extends ManagesCustomerI, HandlesTaxesI {
   invoicesIncludingPending(params?: Stripe.InvoiceListParams): Promise<Invoice[]>
 }
 
-export interface ManagesSubscriptionsI extends ManagesPaymentMethodsI {
+export interface ManagesSubscriptionsI {
   trialEndsAt: DateTime | null
   subscriptions: HasMany<typeof Subscription>
 
-  newSubscription(type: string, prices?: string[]): SubscriptionBuilder
+  /**
+   * Begin creating a new subscription.
+   */
+  newSubscription(type: string, prices?: string | string[]): SubscriptionBuilder
+
+  /**
+   * Determine if the Stripe model is on trial.
+   */
   onTrial(type?: string, price?: string): Promise<boolean>
+
+  /**
+   * Determine if the Stripe model's trial has ended.
+   */
   hasExpiredTrial(type?: string, price?: string): Promise<boolean>
+
+  /**
+   * Determine if the Stripe model is on a "generic" trial at the model level.
+   */
   onGenericTrial(): boolean
+
+  /**
+   * Determine if the Stripe model's "generic" trial at the model level has expired.
+   */
   hasExpiredGenericTrial(): boolean
+
+  /**
+   * Get the ending date of the trial.
+   */
   getTrialEndsAt(type?: string): Promise<DateTime | null>
+
+  /**
+   * Determine if the Stripe model has a given subscription.
+   */
   subscribed(type?: string, price?: string): Promise<boolean>
+
+  /**
+   * Get a subscription instance by $type.
+   */
   subscription(type?: string): Promise<Subscription | null>
+
+  /**
+   * Determine if the Stripe model is actively subscribed to one of the given products.
+   */
   subscribedToProduct(products: string[], type: string): Promise<boolean>
+
+  /**
+   * Determine if the Stripe model is actively subscribed to one of the given prices.
+   */
   subscribedToPrice(prices: string[], type: string): Promise<boolean>
+
+  /**
+   * Get the tax rates to apply to the subscription.
+   */
   taxRates(): string[]
+
+  /**
+   * Get the tax rates to apply to individual subscription items.
+   */
   priceTaxRates(): Record<string, string[]>
+
+  /**
+   * Apply a coupon to the customer's subscriptions.
+   */
+  applyCoupon(coupon: string, subscriptionTypes?: string | string[]): Promise<void>
+
+  /**
+   * Apply a promotion code to the customer's subscriptions.
+   */
+  applyPromotionCode(promotionCodeId: string, subscriptionTypes?: string | string[]): Promise<void>
 }
 
 export interface PerformsChargesI extends ManagesCustomerI {
@@ -233,3 +290,5 @@ export interface BillableI
     ManagesInvoicesI,
     ManagesSubscriptionsI,
     PerformsChargesI {}
+
+export type BillableModel = LucidModel & { new (...args: any[]): BillableI }

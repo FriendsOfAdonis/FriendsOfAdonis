@@ -6,11 +6,18 @@ import type Subscription from './models/subscription.js'
 import { compose } from '@adonisjs/core/helpers'
 import { HandlesTaxes } from './mixins/handles_taxes.js'
 import { Empty } from './types.js'
-import { type ManagesSubscriptionsI } from './contracts.js'
+import {
+  type ManagesCustomerI,
+  type ManagesPaymentMethodsI,
+  type ManagesSubscriptionsI,
+} from './contracts.js'
 import { AllowsCoupon } from './mixins/allows_coupons.js'
 import { HandlesPaymentFailures } from './mixins/handles_payment_failures.js'
 import { InteractWithPaymentBehavior } from './mixins/interacts_with_payment_behavior.js'
 import { Prorates } from './mixins/prorates.js'
+import shopkeeper from '../services/shopkeeper.js'
+
+type SubscriptionBuilderOwner = ManagesSubscriptionsI & ManagesCustomerI & ManagesPaymentMethodsI
 
 export class SubscriptionBuilder extends compose(
   Empty,
@@ -23,7 +30,7 @@ export class SubscriptionBuilder extends compose(
   /**
    * The model that is subscribing.
    */
-  #owner: ManagesSubscriptionsI
+  #owner: SubscriptionBuilderOwner
 
   /**
    * The type of the subscription.
@@ -55,7 +62,7 @@ export class SubscriptionBuilder extends compose(
    */
   #metadata: Record<string, string> = {}
 
-  constructor(owner: ManagesSubscriptionsI, type: string, prices: string[]) {
+  constructor(owner: SubscriptionBuilderOwner, type: string, prices: string[]) {
     super()
     this.#owner = owner
     this.#type = type
@@ -186,7 +193,7 @@ export class SubscriptionBuilder extends compose(
 
     const stripeCustomer = await this.getStripeCustomer(paymentMethod, customerParams)
 
-    const stripeSuscription = await this.#owner.stripe.subscriptions.create({
+    const stripeSuscription = await shopkeeper.stripe.subscriptions.create({
       customer: stripeCustomer.id,
       ...this.buildPayload(),
       ...subscriptionParams,
@@ -218,7 +225,7 @@ export class SubscriptionBuilder extends compose(
    */
   async createSubscription(stripeSubscription: Stripe.Subscription): Promise<Subscription> {
     let subscription = await this.#owner
-      // @ts-expect-error -- Lucid relation method not in ManagesSubscriptionsI
+      // @ts-expect-error -- Lucid relation method not in SubscriptionBuilderOwner
       .related('subscriptions')
       .query()
       .where('stripeId', stripeSubscription.id)
@@ -231,7 +238,7 @@ export class SubscriptionBuilder extends compose(
     const firstItem = stripeSubscription.items.data[0]
     const isSinglePrice = stripeSubscription.items.data.length === 1
 
-    // @ts-expect-error -- Lucid relation method not in ManagesSubscriptionsI
+    // @ts-expect-error -- Lucid relation method not in SubscriptionBuilderOwner
     subscription = await this.#owner.related('subscriptions').create({
       type: this.#type,
       stripeId: stripeSubscription.id,
