@@ -2,6 +2,7 @@ import { test } from '@japa/runner'
 import { createCustomer } from '../utils.js'
 import { Payment } from '../../src/payment.js'
 import { IncompletePaymentError } from '../../src/errors/incomplete_payment.js'
+import shopkeeper from '../../services/shopkeeper.js'
 
 test.group('Charges', () => {
   test('customer can be charged', async ({ assert }) => {
@@ -69,7 +70,13 @@ test.group('Charges', () => {
     await user.updateDefaultPaymentMethod('pm_card_visa')
 
     const invoice = await user.invoiceFor('Adonis Cloud', 1000)
-    const refund = await user.refund(invoice.asStripeInvoice().payment_intent as string)
+    const stripeInvoice = await shopkeeper.stripe.invoices.retrieve(
+      invoice.asStripeInvoice().id,
+      { expand: ['payments.data.payment.payment_intent'] }
+    )
+    const pi = stripeInvoice.payments?.data?.[0]?.payment?.payment_intent
+    const piId = typeof pi === 'string' ? pi : pi?.id
+    const refund = await user.refund(piId!)
 
     assert.equal(refund.amount, 1000)
   })

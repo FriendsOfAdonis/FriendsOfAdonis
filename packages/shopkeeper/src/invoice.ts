@@ -1,5 +1,5 @@
 import type Stripe from 'stripe'
-import { type WithManagesInvoices } from './mixins/manages_invoices.js'
+import { type ManagesInvoicesI } from './contracts.js'
 import { Tax } from './tax.js'
 import { Discount } from './discount.js'
 import { InvalidInvoiceError } from './errors/invalid_invoice.js'
@@ -11,12 +11,12 @@ export class Invoice {
   /**
    * The Stripe model instance.
    */
-  #owner: WithManagesInvoices['prototype']
+  #owner: ManagesInvoicesI
 
   /**
    * The Stripe invoice instance.
    */
-  #invoice: Stripe.Invoice | Stripe.UpcomingInvoice
+  #invoice: Stripe.Invoice
 
   /**
    * The Stripe invoice line items.
@@ -38,10 +38,7 @@ export class Invoice {
    */
   #refreshed = false
 
-  constructor(
-    owner: WithManagesInvoices['prototype'],
-    invoice: Stripe.Invoice | Stripe.UpcomingInvoice
-  ) {
+  constructor(owner: ManagesInvoicesI, invoice: Stripe.Invoice) {
     if (owner.stripeId !== invoice.customer) {
       throw InvalidInvoiceError.invalidOwner(invoice, owner)
     }
@@ -196,7 +193,12 @@ export class Invoice {
 
     await this.refreshWithExpandedData()
 
-    return this.#invoice.discounts.map((discount) => new Discount(discount as Stripe.Discount))
+    return this.#invoice.discounts
+      .filter(
+        (d): d is Stripe.Discount =>
+          typeof d === 'object' && d !== null && !('deleted' in d && d.deleted)
+      )
+      .map((discount) => new Discount(discount))
   }
 
   /**
@@ -244,7 +246,8 @@ export class Invoice {
    * Get the total tax amount.
    */
   tax(): string {
-    return this.formatAmount(this.#invoice.tax ?? 0)
+    const totalTax = (this.#invoice.total_taxes ?? []).reduce((sum, t) => sum + t.amount, 0)
+    return this.formatAmount(totalTax)
   }
 
   /**
@@ -268,10 +271,10 @@ export class Invoice {
 
     await this.refreshWithExpandedData()
 
-    this.#taxes = this.#invoice.total_tax_amounts.map(
-      (taxAmount) =>
-        new Tax(taxAmount.amount, this.#invoice.currency, taxAmount.tax_rate as Stripe.TaxRate)
-    )
+    this.#taxes = (this.#invoice.total_taxes ?? []).map((totalTax) => {
+      const taxRateId = totalTax.tax_rate_details?.tax_rate
+      return new Tax(totalTax.amount, this.#invoice.currency, taxRateId ?? null)
+    })
 
     return this.#taxes
   }
@@ -316,7 +319,7 @@ export class Invoice {
    */
   async invoiceItems(): Promise<InvoiceLineItem[]> {
     const lines = await this.invoiceLineItems()
-    return lines.filter((l) => l.type === 'invoiceitem')
+    return lines.filter((l) => l.parent?.type === 'invoice_item_details')
   }
 
   /**
@@ -324,7 +327,7 @@ export class Invoice {
    */
   async subscriptions(): Promise<InvoiceLineItem[]> {
     const lines = await this.invoiceLineItems()
-    return lines.filter((l) => l.type === 'subscription')
+    return lines.filter((l) => l.parent?.type === 'subscription_item_details')
   }
 
   /**
@@ -338,12 +341,8 @@ export class Invoice {
     await this.refreshWithExpandedData()
 
     const items = []
-    const lines =
-      'id' in this.#invoice
-        ? this.#owner.stripe.invoices.listLineItems(this.#invoice.id)
-        : this.#owner.stripe.invoices.listUpcomingLines()
 
-    for await (const line of lines) {
+    for await (const line of this.#owner.stripe.invoices.listLineItems(this.#invoice.id)) {
       items.push(new InvoiceLineItem(this, line))
     }
 
@@ -358,10 +357,6 @@ export class Invoice {
     amount: number,
     params: Partial<Stripe.InvoiceItemCreateParams> = {}
   ): Promise<Stripe.InvoiceItem> {
-    if (!('id' in this.#invoice)) {
-      throw new Error() // TODO: Handle that
-    }
-
     const item = await this.#owner.tab(description, amount, {
       invoice: this.#invoice.id,
       ...params,
@@ -379,10 +374,6 @@ export class Invoice {
     quantity = 1,
     params: Partial<Stripe.InvoiceItemCreateParams>
   ): Promise<Stripe.InvoiceItem> {
-    if (!('id' in this.#invoice)) {
-      throw new Error() // TODO: Handle that
-    }
-
     const item = this.#owner.tabPrice(price, quantity, { invoice: this.#invoice.id, ...params })
     await this.refresh()
     return item
@@ -392,10 +383,7 @@ export class Invoice {
    * Refresh the invoice.
    */
   async refresh(): Promise<void> {
-    this.#invoice =
-      'id' in this.#invoice
-        ? await this.#owner.stripe.invoices.retrieve(this.#invoice.id)
-        : await this.#owner.stripe.invoices.retrieveUpcoming()
+    this.#invoice = await this.#owner.stripe.invoices.retrieve(this.#invoice.id)
   }
 
   /**
@@ -409,18 +397,14 @@ export class Invoice {
     const expand = [
       'account_tax_ids',
       'discounts',
-      'lines.data.tax_amounts.tax_rate',
+      'lines.data.taxes.tax_rate_details.tax_rate',
       'total_discount_amounts.discount',
-      'total_tax_amounts.tax_rate',
+      'total_taxes.tax_rate_details.tax_rate',
     ]
 
-    if ('id' in this.#invoice) {
-      this.#invoice = await this.#owner.stripe.invoices.retrieve(this.#invoice.id, {
-        expand,
-      })
-    } else {
-      this.#invoice = await this.#owner.stripe.invoices.retrieveUpcoming({ expand })
-    }
+    this.#invoice = await this.#owner.stripe.invoices.retrieve(this.#invoice.id, {
+      expand,
+    })
 
     this.#refreshed = true
   }
@@ -450,10 +434,6 @@ export class Invoice {
    * Finalize the Stripe invoice.
    */
   async finalize(params: Stripe.InvoiceFinalizeInvoiceParams = {}): Promise<void> {
-    if (!('id' in this.#invoice)) {
-      throw new Error() // TODO: ERror
-    }
-
     this.#invoice = await this.#owner.stripe.invoices.finalizeInvoice(this.#invoice.id, params)
   }
 
@@ -461,10 +441,6 @@ export class Invoice {
    * Pay the Stripe invoice.
    */
   async pay(params: Stripe.InvoicePayParams = {}): Promise<void> {
-    if (!('id' in this.#invoice)) {
-      throw new Error() // TODO: ERror
-    }
-
     this.#invoice = await this.#owner.stripe.invoices.pay(this.#invoice.id, params)
   }
 
@@ -472,10 +448,6 @@ export class Invoice {
    * Send the Stripe invoice to the customer.
    */
   async send(params: Stripe.InvoiceSendInvoiceParams = {}): Promise<void> {
-    if (!('id' in this.#invoice)) {
-      throw new Error() // TODO: ERror
-    }
-
     this.#invoice = await this.#owner.stripe.invoices.sendInvoice(this.#invoice.id, params)
   }
 
@@ -483,10 +455,6 @@ export class Invoice {
    * Void the Stripe invoice.
    */
   async void(params: Stripe.InvoiceVoidInvoiceParams = {}): Promise<void> {
-    if (!('id' in this.#invoice)) {
-      throw new Error() // TODO: ERror
-    }
-
     this.#invoice = await this.#owner.stripe.invoices.voidInvoice(this.#invoice.id, params)
   }
 
@@ -494,10 +462,6 @@ export class Invoice {
    * Mark an invoice as uncollectible.
    */
   async markUncollectible(params: Stripe.InvoiceMarkUncollectibleParams = {}): Promise<void> {
-    if (!('id' in this.#invoice)) {
-      throw new Error() // TODO: ERror
-    }
-
     this.#invoice = await this.#owner.stripe.invoices.markUncollectible(this.#invoice.id, params)
   }
 
@@ -505,10 +469,6 @@ export class Invoice {
    * Delete the Stripe invoice.
    */
   async delete(params: Stripe.InvoiceDeleteParams = {}): Promise<void> {
-    if (!('id' in this.#invoice)) {
-      throw new Error() // TODO: ERror
-    }
-
     await this.#owner.stripe.invoices.del(this.#invoice.id, params)
   }
 
@@ -550,14 +510,14 @@ export class Invoice {
   /**
    * Get the Stripe model instance.
    */
-  owner(): WithManagesInvoices['prototype'] {
+  owner(): ManagesInvoicesI {
     return this.#owner
   }
 
   /**
    * Get the Stripe invoice instance.
    */
-  asStripeInvoice(): Stripe.Invoice | Stripe.UpcomingInvoice {
+  asStripeInvoice(): Stripe.Invoice {
     return this.#invoice
   }
 }

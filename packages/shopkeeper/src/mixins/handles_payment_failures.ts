@@ -3,6 +3,7 @@ import type Subscription from '../models/subscription.js'
 import { IncompletePaymentError } from '../errors/incomplete_payment.js'
 import { checkStripeError } from '../utils/errors.js'
 import { Payment } from '../payment.js'
+import shopkeeper from '../../services/shopkeeper.js'
 
 type Constructor = new (...args: any[]) => {}
 
@@ -32,25 +33,24 @@ export function HandlesPaymentFailures<Model extends Constructor>(superclass: Mo
         } catch (e) {
           if (e instanceof IncompletePaymentError) {
             if (e.payment.requiresConfirmation()) {
-              let paymentIntent: Stripe.PaymentIntent
               try {
-                paymentIntent = await e.payment
-                  .confirm({
-                    ...this.paymentConfirmationOptions,
-                    expand: ['invoice.subscription'],
-                    payment_method:
-                      typeof paymentMethod === 'string' ? paymentMethod : paymentMethod?.id,
-                  })
-                  .then((p) => p.asStripePaymentIntent())
+                await e.payment.confirm({
+                  ...this.paymentConfirmationOptions,
+                  payment_method:
+                    typeof paymentMethod === 'string' ? paymentMethod : paymentMethod?.id,
+                })
               } catch (e2) {
                 checkStripeError(e2, 'StripeCardError')
-                paymentIntent = await e.payment.asStripePaymentIntent(['invoice.subscription'])
               }
 
-              subscription.stripeStatus = (paymentIntent.invoice as any).subscription.status
+              const stripeSubscription = await shopkeeper.stripe.subscriptions.retrieve(
+                subscription.stripeId
+              )
+              subscription.stripeStatus = stripeSubscription.status
               await subscription.save()
 
               if (subscription.hasIncompletePayment()) {
+                const paymentIntent = await e.payment.asStripePaymentIntent()
                 new Payment(paymentIntent).validate()
               }
             }

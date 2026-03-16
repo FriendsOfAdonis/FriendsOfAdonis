@@ -170,14 +170,16 @@ export function ManagesPaymentMethods<Model extends Constructor>(superclass: Mod
         'invoice_settings.default_payment_method',
       ])
 
-      if (customer.invoice_settings.default_payment_method) {
-        return new PaymentMethod(
-          this,
-          customer.invoice_settings.default_payment_method as Stripe.PaymentMethod
-        )
+      const defaultPm = customer.invoice_settings.default_payment_method
+      if (defaultPm && typeof defaultPm !== 'string') {
+        return new PaymentMethod(this, defaultPm)
       }
 
-      return customer.default_source as Stripe.CustomerSource | null
+      const defaultSource = customer.default_source
+      if (!defaultSource || typeof defaultSource === 'string') {
+        return null
+      }
+      return defaultSource
     }
 
     async updateDefaultPaymentMethod(
@@ -232,7 +234,14 @@ export function ManagesPaymentMethods<Model extends Constructor>(superclass: Mod
         this.pmLastFour = paymentMethod.card.last4
       } else {
         this.pmType = paymentMethod.type
-        this.pmLastFour = (paymentMethod as any)[paymentMethod.type].last4
+        const pmData: unknown = Reflect.get(paymentMethod, paymentMethod.type)
+        this.pmLastFour =
+          pmData &&
+          typeof pmData === 'object' &&
+          'last4' in pmData &&
+          typeof pmData.last4 === 'string'
+            ? pmData.last4
+            : null
       }
     }
 
