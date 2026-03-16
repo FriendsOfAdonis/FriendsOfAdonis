@@ -3,34 +3,25 @@
 import { type NormalizeConstructor } from '@adonisjs/core/types/helpers'
 import { type BaseModel } from '@adonisjs/lucid/orm'
 import { compose } from '@adonisjs/core/helpers'
-import { ManagesCustomer } from './manages_customer.js'
-import { ManagesPaymentMethods } from './manages_payment_methods.js'
+import { managesCustomer } from './manages_customer.js'
+import { managesPaymentMethods } from './manages_payment_methods.js'
 import { HandlesTaxes } from './handles_taxes.js'
-import { ManagesInvoices } from './manages_invoices.js'
-import { ManagesSubscriptions } from './manages_subscriptions.js'
-import { ManagesStripe } from './manages_stripe.js'
-import { PerformCharges } from './performs_charges.js'
+import { managesInvoices } from './manages_invoices.js'
+import { managesSubscriptions } from './manages_subscriptions.js'
+import { managesStripe } from './manages_stripe.js'
+import { performCharges } from './performs_charges.js'
 
-export function Billable<Model extends NormalizeConstructor<typeof BaseModel>>(superclass: Model) {
-  class WithBillableImpl1 extends compose(
-    superclass,
-    ManagesStripe(true),
-    HandlesTaxes,
-    ManagesCustomer,
-    ManagesPaymentMethods,
-    ManagesInvoices
-  ) {}
-
-  class WithBillableImpl2 extends compose(
-    WithBillableImpl1,
-    ManagesSubscriptions,
-    PerformCharges
-  ) {}
-
-  WithBillableImpl2.boot()
-  WithBillableImpl2.$addColumn('stripeId', {})
-
-  return WithBillableImpl2
+export function billable() {
+  return <Model extends NormalizeConstructor<typeof BaseModel>>(superclass: Model) => {
+    return class EntityMixin extends compose(
+      superclass,
+      managesStripe(true),
+      HandlesTaxes,
+      managesCustomer(),
+      managesPaymentMethods(),
+      managesInvoices(),
+      managesSubscriptions(),
+      performCharges()
+    ) {}
+  }
 }
-
-export type WithBillable = ReturnType<typeof Billable>
