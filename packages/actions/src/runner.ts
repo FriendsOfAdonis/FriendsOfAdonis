@@ -1,13 +1,14 @@
 import { type ContainerResolver } from '@adonisjs/core/container'
 import { type BaseAction } from './base_action.ts'
 import { type ContainerBindings } from '@adonisjs/core/types'
+import Hooks from '@poppinss/hooks'
 
 /**
  * Type definition for ActionsRunner hooks.
  * Used for instrumenting action execution with OpenTelemetry.
  */
 export type ActionsRunnerHooks = {
-  run: [[action: BaseAction], [result: unknown]]
+  execute: [[action: BaseAction], [result: unknown]]
 }
 
 /**
@@ -15,13 +16,47 @@ export type ActionsRunnerHooks = {
  * with dependency injection support.
  */
 export class ActionsRunner {
-  #defaultResolver: ContainerResolver<ContainerBindings>
+  #resolver: ContainerResolver<ContainerBindings>
+
+  #hooks: Hooks<ActionsRunnerHooks>
 
   /**
    * @param resolver - The container resolver used for dependency injection
    */
   constructor(resolver: ContainerResolver<ContainerBindings>) {
-    this.#defaultResolver = resolver
+    this.#resolver = resolver
+    this.#hooks = new Hooks()
+  }
+
+  /**
+   * This method re-define a property to wrap the original method with configured middlewares.
+   *
+   * This is allow hooking into actions execution lifecycle without
+   * touching the actual property which would break its metadata.
+   */
+  async wrap<
+    Action extends BaseAction,
+    Property extends keyof Action & string,
+    Method extends (...args: any[]) => any,
+  >(action: Action, property: Property, original: Method) {
+    const actionClass = action.constructor as typeof BaseAction
+    const logger = await this.#resolver.make('logger')
+
+    action.logger = logger.child({ action: actionClass.displayName })
+
+    Object.defineProperty(action, property, {
+      configurable: true,
+      enumerable: false,
+      value: async (...args: Parameters<Method>) => {
+        const runner = this.#hooks.runner('execute')
+
+        await runner.run(action)
+        const output = await original.apply(action, args)
+        await runner.cleanup(output)
+
+        return output
+      },
+    })
   }
 
   /**
@@ -43,7 +78,7 @@ export class ActionsRunner {
    */
   async resolve<T extends typeof BaseAction>(
     Action: T,
-    resolver: ContainerResolver<ContainerBindings> = this.#defaultResolver
+    resolver: ContainerResolver<ContainerBindings> = this.#resolver
   ) {
     const action = await resolver.make(Action)
     const logger = await resolver.make('logger')

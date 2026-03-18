@@ -1,0 +1,70 @@
+---
+icon: FishingHook
+title: Hooks
+description: Hook into the Actions execution workflow
+---
+
+Hooks allow you to inspect, modify, or extend the execution behavior without touching the action itself.
+
+## Configuration
+
+You can define hooks in a preload (e.g `start/kernel.ts`):
+
+```ts title="start/kernel.ts"
+import { actions } from '@foadonis/actions/services/main'
+
+actions.hook('execute', (context) => {
+  if (context.handler === 'asJob') {
+    action.logger.info(
+      { jobId: context.jobId, attempt: context.attempt },
+      `Processing job ${actionClass.displayName}`
+  }
+})
+```
+
+## Execution Context
+
+The execution context contains the informations about what is going to be executed allowing
+you to modify the behavior based on the context.
+
+| Parameter | Description                                    |
+| --------- | ---------------------------------------------- |
+| `action`  | The resolved action instance                   |
+| `method`  | The method name that will be executed          |
+| `handler` | The actual function executed                   |
+| `args`    | The arguments passed to the method, as a tuple |
+
+## Common Use Cases
+
+### Scoped Logger
+
+Replace the default logger with one scoped to the HTTP request:
+
+```ts title="config/actions.ts"
+import { defineConfig } from '@foadonis/actions'
+
+actions.hook('execute', (context) => {
+  const start = performance.now()
+  if (context.method === 'asController') {
+    const [httpContext] = context.args
+    action.logger = httpContext.logger
+  }
+})
+```
+
+### Execution Timing
+
+Log how long each action takes to execute by returning a cleanup function:
+
+```ts title="config/actions.ts"
+import { defineConfig } from '@foadonis/actions'
+
+actions.hook('execute', (context) => {
+  const start = performance.now()
+
+  return () => {
+    const duration = performance.now() - start
+    action.logger.info({ duration }, `${actionClass.displayName} completed`)
+  }
+})
+```

@@ -1,32 +1,26 @@
 ---
-title: "Using Actions as Listeners"
-description: "Use actions as event listeners"
+icon: Ear
+title: 'Actions as Listeners'
+description: 'Use actions as event listeners'
 ---
 
-The `AsListener` interface allows you to trigger actions in response to events. This is useful for decoupling side effects from your main business logic.
+The `AsListener` mixins allows an actions to be executed in response of events. This is useful for decoupling side effects from your main business logic.
 
 ## Basic Example
 
-Implement the `AsListener` interface and define the `asListener` method:
+Use the `compose` helper to apply the `AsJob` mixin and define the `asJob` method:
 
 ```ts title="app/actions/send_welcome_email_action.ts"
-import { BaseAction, type AsListener } from '@foadonis/actions'
+import { BaseAction, AsListener } from '@foadonis/actions'
 import mail from '@adonisjs/mail/services/main'
 import User from '#models/user'
 
-export default class SendWelcomeEmailAction extends BaseAction implements AsListener<User> {
-  async handle(user: User) {
-    await mail.send((message) => {
-      message
-        .to(user.email)
-        .subject('Welcome!')
-        .htmlView('emails/welcome', { user })
-    })
-
-    this.logger.info(`Welcome email sent to ${user.email}`)
+export default class SendWelcomeEmailAction extends compose(BaseAction, AsListener()) {
+  async handle(user: User, subject: string, body: string) {
+    await mailer.send(user.email, subject, body)
   }
 
-  async asListener(user: User) {
+  async asListener({ user }: UserCreated) {
     await this.handle(user)
   }
 }
@@ -65,13 +59,13 @@ import { BaseAction, type AsListener } from '@foadonis/actions'
 import mail from '@adonisjs/mail/services/main'
 import UserRegistered from '#events/user_registered'
 
-export default class SendWelcomeEmailAction extends BaseAction implements AsListener<UserRegistered> {
+export default class SendWelcomeEmailAction
+  extends BaseAction
+  implements AsListener<UserRegistered>
+{
   async handle(email: string) {
     await mail.send((message) => {
-      message
-        .to(email)
-        .subject('Welcome!')
-        .htmlView('emails/welcome', { email })
+      message.to(email).subject('Welcome!').htmlView('emails/welcome', { email })
     })
 
     this.logger.info(`Welcome email sent to ${email}`)

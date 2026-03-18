@@ -1,0 +1,218 @@
+---
+icon: Timer
+title: 'Actions as Jobs'
+description: 'Use actions as jobs'
+---
+
+The `AsJob` mixin allows an action to be dispatched and scheduled as a job using [@adonisjs/queue](https://docs.adonisjs.com/guides/digging-deeper/queues). This is useful for offloading long-running or resource-intensive work to a background queue.
+
+<Callout>
+  You can refer directly to the [official @adonisjs/queue
+  documentation](https://docs.adonisjs.com/guides/digging-deeper/queues) for more information about
+  job options, apis, etc.
+</Callout>
+
+## Setup
+
+First, make sure [`@adonisjs/queue`](https://docs.adonisjs.com/guides/digging-deeper/queues) is configured in your project:
+
+```sh
+node ace add @adonisjs/queue
+```
+
+Then, add your actions directory to the `locations` array in your queue configuration:
+
+```ts title="config/queue.ts"
+import { defineConfig, drivers } from '@adonisjs/queue'
+
+export default defineConfig({
+  default: 'database',
+
+  adapters: {
+    database: drivers.database({}),
+  },
+
+  locations: ['./app/actions/**/*.ts'], // [!code ++]
+})
+```
+
+## Basic Example
+
+Use the `compose` helper to apply the `AsJob` mixin and define the `asJob` method:
+
+```ts title="app/actions/send_welcome_email_action.ts"
+import { compose } from '@adonisjs/core/helpers'
+import { BaseAction } from '@foadonis/actions'
+import { AsJob } from '@foadonis/actions/queue'
+import mail from '@adonisjs/mail/services/main'
+import User from '#models/user'
+
+interface SendWelcomeEmailPayload {
+  userId: string
+}
+
+export default class SendWelcomeEmailAction extends compose(
+  BaseAction,
+  AsJob<SendWelcomeEmailPayload>()
+) {
+  async handle(user: User) {
+    await mail.send((message) => {
+      message.to(user.email).subject('Welcome!').htmlView('emails/welcome', { user })
+    })
+  }
+
+  async asJob({ userId }: SendWelcomeEmailPayload) {
+    const user = await User.findOrFail(userId)
+    await this.handle(user)
+  }
+}
+```
+
+The `asJob` method receives a serializable payload. Since jobs are processed asynchronously by a worker, you cannot pass complex objects like model instances directly — pass identifiers instead and fetch the data inside `asJob`.
+
+## Job Options
+
+Pass options to the `AsJob` mixin to configure the job defaults:
+
+```ts
+export default class SendEmailAction extends compose(
+  BaseAction,
+  AsJob<SendEmailPayload>({
+    queue: 'emails',
+    priority: 1,
+    timeout: 30,
+  })
+) {
+  // ...
+}
+```
+
+## Dispatching
+
+Use the static `dispatch` method to add a job to the queue:
+
+```ts
+import SendEmailAction from '#actions/send_email_action'
+
+await SendEmailAction.dispatch({
+  userId: '1',
+  subject: 'Hello',
+  body: 'Welcome to the platform!',
+})
+```
+
+The `dispatch` method returns a `JobDispatcher` that supports fluent configuration:
+
+```ts
+await SendEmailAction.dispatch({ userId: '1', subject: 'Hello', body: 'Welcome!' })
+  .toQueue('high-priority')
+  .priority(1)
+  .in('5m')
+  .run()
+```
+
+| Method           | Description                                               |
+| ---------------- | --------------------------------------------------------- |
+| `.toQueue(name)` | Target a specific queue (default: `'default'`)            |
+| `.priority(n)`   | Set priority (1-10, lower = higher priority)              |
+| `.in(delay)`     | Delay execution (`'5s'`, `'1h'`, `'7d'`, or milliseconds) |
+| `.group(id)`     | Assign the job to a group for monitoring                  |
+| `.with(adapter)` | Use a specific adapter                                    |
+
+### Batch Dispatching
+
+Use `dispatchMany` to dispatch multiple jobs at once:
+
+```ts
+await SendEmailAction.dispatchMany([
+  { userId: '1', subject: 'Newsletter', body: 'January edition' },
+  { userId: '2', subject: 'Newsletter', body: 'January edition' },
+])
+  .group('newsletter-jan-2025')
+  .toQueue('emails')
+```
+
+This is more efficient than calling `dispatch` multiple times as it uses batched operations.
+
+## Scheduling
+
+Use the static `schedule` method to create recurring jobs. Schedules are typically defined in `start/scheduler.ts`:
+
+```ts title="start/scheduler.ts"
+import CleanupAction from '#actions/cleanup_action'
+
+await CleanupAction.schedule({ days: 30 }).cron('0 0 * * *')
+```
+
+You can also use interval-based scheduling:
+
+```ts title="start/scheduler.ts"
+import SyncAction from '#actions/sync_action'
+
+await SyncAction.schedule({ source: 'api' }).every('5m')
+```
+
+## Error Handling
+
+Implement the `asJobFailed` method to handle permanent failures after all retries are exhausted:
+
+```ts title="app/actions/process_payment_action.ts"
+import { compose } from '@adonisjs/core/helpers'
+import { BaseAction } from '@foadonis/actions'
+import { AsJob } from '@foadonis/actions/queue'
+import type { JobContext } from '@adonisjs/queue/types'
+
+interface ProcessPaymentPayload {
+  orderId: string
+  amount: number
+}
+
+export default class ProcessPaymentAction extends compose(
+  BaseAction,
+  AsJob<ProcessPaymentPayload>()
+) {
+  async handle(order: Order, amount: number) {
+    // Process payment...
+  }
+
+  async asJob({ orderId, amount }: ProcessPaymentPayload) {
+    const order = await Order.findOrFail(orderId)
+    await this.handle(order, amount)
+  }
+
+  async asJobFailed(error: Error, { orderId }: ProcessPaymentPayload, context: JobContext) {
+    this.logger.error(`Payment failed for order ${orderId}: ${error.message}`)
+    // Notify admin, update order status, etc.
+  }
+}
+```
+
+## Logger
+
+When an action is executed as a job, a child logger is created with the job context:
+
+```ts title="app/actions/send_welcome_email_action.ts"
+import { compose } from '@adonisjs/core/helpers'
+import { BaseAction } from '@foadonis/actions'
+import { AsJob } from '@foadonis/actions/queue'
+
+export default class SendWelcomeEmailAction extends compose(BaseAction, AsJob) {
+  async handle(user: User) {
+    this.logger.info('Sending email to %s', user.email)
+    await mailer.send(user.email, 'Welcome', 'Welcome to FriendsOfAdonis!')
+  }
+
+  asJob({ userId }: SendWelcomeEmailPayload) {
+    const user = auth.getUserOrFail()
+    await this.handle(user)
+  }
+}
+```
+
+```ansi
+[11:40:00.395] [32mINFO[m (adonisjs_app/66438): [36mSending email to contact@example.org[m
+    [35maction[m: "SendWelcomeEmailAction"
+    [35mjob_name[m: "SendWelcomeEmailAction"
+    [35mjob_id[m: "359fe5f8-8b34-49df-826b-638645bf3d68"
+    [35mqueue[m: "default"
+```

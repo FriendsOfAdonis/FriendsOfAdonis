@@ -1,0 +1,103 @@
+---
+icon: Play
+title: Using Actions
+---
+
+## Creating Actions
+
+Actions can be created using the make command and are stored (by default) inside the `app/actions` folder.
+
+```bash
+node ace make:action <name>
+
+# Example
+node ace make:action SendWelcomeEmail
+```
+
+An action is simply a class that extend `BaseAction` and implement the `handle` method:
+
+```ts title="app/actions/send_welcome_email_action.ts"
+import { BaseAction } from '@foadonis/actions'
+
+export default class SendWelcomeEmailAction extends BaseAction {
+  async handle(user: User) {
+    // Your business logic
+  }
+}
+```
+
+<Callout>
+  To ensure that autoloading works for `AsJob` and `AsCommand`, the class must always be default
+  exported and the file should be suffixed with `_action.ts`.
+</Callout>
+
+## Executing Actions
+
+Actions can be executed anywhere in your application using the static method `run`.
+This run method creates a new instance of your action by resolving it from the application container.
+
+```ts title="app/actions/send_welcome_email_action.ts"
+import { BaseAction } from '@foadonis/actions'
+
+export default class SendWelcomeEmailAction extends BaseAction {
+  async handle(user: User) {
+    this.logger.info('Sending email to %s', user.email)
+    await mailer.send(user.email, 'Welcome', 'Welcome to FriendsOfAdonis!')
+  }
+}
+```
+
+```ts
+const user = await User.findOrFail(userId)
+await SendWelcomeEmailAction.run(user)
+```
+
+## Logging
+
+Each action is hydrated automatically with a [child logger](https://docs.adonisjs.com/guides/digging-deeper/logger#child-loggers) containing the name of the action.
+
+```ts title="app/actions/send_welcome_email_action.ts"
+import { BaseAction } from '@foadonis/actions'
+import { inject } from '@adonisjs/core'
+
+@inject()
+export default class SendWelcomeEmailAction extends BaseAction {
+  async handle(user: User) {
+    this.logger.info('Sending email to %s', user.email)
+    await mailer.send(user.email, 'Welcome', 'Welcome to FriendsOfAdonis!')
+  }
+}
+```
+
+This would log the following:
+
+```ansi
+[11:40:00.395] [32mINFO[m (adonisjs_app/66438): [36mSending email to contact@example.org[m
+    [35maction[m: "SendWelcomeEmailAction"
+```
+
+## Dependency Injection
+
+Services can be injected in the constructor when using the `@inject()` decorator.
+
+```ts title="app/actions/send_welcome_email_action.ts"
+import { BaseAction } from '@foadonis/actions'
+import { inject } from '@adonisjs/core'
+
+@inject()
+export default class SendWelcomeEmailAction extends BaseAction {
+  constructor(private mailer: MailService) {
+    super()
+  }
+
+  async handle(user: User) {
+    await this.mailer.send(user.email, 'Welcome', 'Welcome to FriendsOfAdonis!')
+  }
+}
+```
+
+Services are automatically resolved from the application container:
+
+```typescript
+await SendWelcomeEmailAction.run(user)
+```

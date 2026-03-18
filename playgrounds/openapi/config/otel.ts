@@ -5,8 +5,4 @@ export default defineConfig({
   serviceName: env.get('APP_NAME'),
   serviceVersion: env.get('APP_VERSION'),
   environment: env.get('APP_ENV'),
-
-  instrumentations: {
-    '@opentelemetry/instrumentation-pg': { enabled: false },
-  },
 })

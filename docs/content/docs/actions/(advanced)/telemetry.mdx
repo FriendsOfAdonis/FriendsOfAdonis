@@ -1,4 +1,5 @@
 ---
+icon: Eye
 title: 'Telemetry'
 description: 'OpenTelemetry instrumentation for actions'
 ---
@@ -9,17 +10,13 @@ description: 'OpenTelemetry instrumentation for actions'
 
 First, make sure you have `@adonisjs/otel` installed and configured. See the [AdonisJS OpenTelemetry guide](https://docs.adonisjs.com/guides/digging-deeper/opentelemetry) for setup instructions.
 
-Add the `ActionsInstrumentation` to your `bin/otel.ts` file:
+Then add the telemetry hook to automatically span your actions.
 
-```ts title="bin/otel.ts"
-import { init } from '@adonisjs/otel/init'
-import { ActionsInstrumentation } from '@foadonis/actions/instrumentation'
+```ts title="start/kernel.ts"
+import actions from '@foadonis/actions/services/main'
+import { telemetryHook } from '@foadonis/actions/otel'
 
-await init(import.meta.dirname, {
-  instrumentations: {
-    '@foadonis/actions/instrumentation': new ActionsInstrumentation(),
-  },
-})
+actions.hook('execute', telemetryHook)
 ```
 
 That's it. Your actions will now be traced automatically, creating spans with the action name and capturing any errors that occur during execution.

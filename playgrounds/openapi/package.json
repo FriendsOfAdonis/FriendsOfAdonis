@@ -32,10 +32,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@adonisjs-community/girouette": "^1.0.0",
     "@adonisjs/auth": "catalog:",
     "@adonisjs/bouncer": "catalog:",
     "@adonisjs/core": "catalog:",
     "@adonisjs/otel": "1.0.0-next.4",
+    "@adonisjs/queue": "^0.5.1",
     "@adonisjs/session": "catalog:",
     "@foadonis/actions": "workspace:*",
     "@foadonis/crypt": "workspace:*",

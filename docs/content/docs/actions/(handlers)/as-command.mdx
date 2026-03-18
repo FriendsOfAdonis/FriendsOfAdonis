@@ -1,0 +1,119 @@
+---
+icon: Terminal
+title: 'Actions as Commands'
+description: 'Use actions as CLI commands'
+---
+
+The `AsCommand` mixin allows an action to be executed using the CLI as an [Ace Commands](https://docs.adonisjs.com/guides/ace/creating-commands).
+
+## Setup
+
+Inside `bin/console.ts` configure the ActionCommandsLoader. This will make your actions **auto-discovered** by Ace.
+
+```ts
+import { ActionCommandsLoader } from '@foadonis/actions'
+
+new Ignitor(APP_ROOT, { importer: IMPORTER })
+  .tap((app) => {
+    app.booting(async () => {
+      await import('#start/env')
+    })
+    app.listen('SIGTERM', () => app.terminate())
+    app.listenIf(app.managedByPm2, 'SIGINT', () => app.terminate())
+  })
+  .ace()
+  .configure(ActionCommandsLoader.configure) // [!code ++]
+  .handle(process.argv.splice(2))
+  .catch((error) => {
+    process.exitCode = 1
+    prettyPrintError(error)
+  })
+```
+
+## Basic Example
+
+Use the `compose` helper to apply the `AsCommand` mixin and define the `asCommand` method:
+
+```ts title="app/actions/send_email_action.ts"
+import { compose } from '@adonisjs/core/helpers'
+import { BaseAction, AsCommand } from '@foadonis/actions'
+import { type BaseCommand } from '@adonisjs/core/ace'
+
+export default class SendEmailAction extends compose(BaseAction, AsCommand()) {
+  async handle(user: User, subject: string, body: string) {
+    await mailer.send(user.email, subject, body)
+  }
+
+  async asCommand(command: BaseCommand) {
+    const email = await command.prompt.ask('Enter user email')
+    const user = await User.findByOrFail({ email })
+
+    const subject = await command.prompt.ask('Subject')
+    const body = await command.prompt.ask('Body')
+
+    await this.handle(user, subject, body)
+
+    command.logger.success(`Email sent successfuly`)
+  }
+}
+```
+
+The command is automatically registered based on the action name. Run it with:
+
+```sh
+node ace action:send-email
+```
+
+## Command options
+
+You can pass options to the `AsCommand` mixing to configure the command.
+
+```ts title="app/actions/send_email_action.ts"
+import { compose } from '@adonisjs/core/helpers'
+import { BaseAction, AsCommand } from '@foadonis/actions'
+import { type BaseCommand } from '@adonisjs/core/ace'
+
+export default class SendEmailAction extends compose(
+  BaseAction,
+  AsCommand({
+    name: 'mails:send',
+    description: 'Send an email to a user',
+  })
+) {
+  async handle(user: User, subject: string, body: string) {}
+  async asCommand(command: BaseCommand) {}
+}
+```
+
+## Terminal I/O
+
+Use the command's prompts and logger for interactive input and formatted output:
+
+```ts title="app/actions/create_user_action.ts"
+import { BaseAction, type AsCommand } from '@foadonis/actions'
+import { type BaseCommand } from '@adonisjs/core/ace'
+import User from '#models/user'
+
+export default class CreateUserAction extends BaseAction implements AsCommand {
+  static commandName = 'users:create'
+  static description = 'Create a new user interactively'
+
+  async handle(email: string, password: string) {
+    const user = await User.create({ email, password })
+    return user
+  }
+
+  async asCommand(command: BaseCommand) {
+    const email = await command.prompt.ask('Enter email')
+    const password = await command.prompt.secure('Enter password')
+
+    const user = await this.handle(email, password)
+
+    command.logger.success(`User ${user.email} created successfully`)
+  }
+}
+```
+
+```sh
+node ace users:create
+```

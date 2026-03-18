@@ -5,6 +5,18 @@ __metadata:
   version: 8
   cacheKey: 10c0
 
+"@adonisjs-community/girouette@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "@adonisjs-community/girouette@npm:1.0.0"
+  dependencies:
+    deepmerge: "npm:^4.3.1"
+    reflect-metadata: "npm:^0.2.2"
+  peerDependencies:
+    "@adonisjs/core": ^7.0.0-next.17
+  checksum: 10c0/92f9808b9c2f9d4d368fd2631193414cff712e9b30823c6a765145e9fedeba85afdc3dcf1fba5220cc649b9ab7638187a397d47dee363874e647aa890929dabd
+  languageName: node
+  linkType: hard
+
 "@adonisjs/ace@npm:^13.4.0":
   version: 13.4.0
   resolution: "@adonisjs/ace@npm:13.4.0"
@@ -732,6 +744,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@adonisjs/queue@npm:^0.5.1":
+  version: 0.5.1
+  resolution: "@adonisjs/queue@npm:0.5.1"
+  dependencies:
+    "@boringnode/queue": "npm:^0.5.0"
+    "@poppinss/utils": "npm:^7.0.1"
+  peerDependencies:
+    "@adonisjs/assembler": ^8.0.0
+    "@adonisjs/core": ^7.0.0
+    "@adonisjs/lucid": ^20.0.0 || ^21.0.0 || ^22.0.0
+    "@adonisjs/redis": ^8.0.0 || ^9.0.0 || ^10.0.0
+  peerDependenciesMeta:
+    "@adonisjs/lucid":
+      optional: true
+    "@adonisjs/redis":
+      optional: true
+  checksum: 10c0/cfbc2d36b84495e632028e34e0f437a9a4ccde7eb17fc8b69c490ac2961b1f3115e4a7588ac07e03b1047e440c987906e829b89e4e8a5fed88d25e1cbc45e09f
+  languageName: node
+  linkType: hard
+
 "@adonisjs/repl@npm:^4.1.2":
   version: 4.1.2
   resolution: "@adonisjs/repl@npm:4.1.2"
@@ -1421,6 +1453,25 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@boringnode/queue@npm:^0.5.0":
+  version: 0.5.0
+  resolution: "@boringnode/queue@npm:0.5.0"
+  dependencies:
+    "@lukeed/ms": "npm:^2.0.2"
+    "@poppinss/utils": "npm:^7.0.1"
+    cron-parser: "npm:^5.5.0"
+  peerDependencies:
+    ioredis: ^5.0.0
+    knex: ^3.0.0
+  peerDependenciesMeta:
+    ioredis:
+      optional: true
+    knex:
+      optional: true
+  checksum: 10c0/7cceacc972cb18d630964844bdc92e915174139eec7ee119deb0cb3c1e4477aefc9291b427405da2850555a4fecd8c0e29e2b1d0c71fbd9d2ab63289a128d841
+  languageName: node
+  linkType: hard
+
 "@changesets/apply-release-plan@npm:^7.0.14":
   version: 7.0.14
   resolution: "@changesets/apply-release-plan@npm:7.0.14"
@@ -2008,6 +2059,7 @@ __metadata:
   dependencies:
     "@adonisjs/assembler": "catalog:"
     "@adonisjs/core": "catalog:"
+    "@adonisjs/queue": "npm:^0.5.1"
     "@japa/assert": "npm:^4.2.0"
     "@japa/expect-type": "npm:^2.0.4"
     "@japa/file-system": "npm:^3.0.0"
@@ -2029,9 +2081,12 @@ __metadata:
     youch: "catalog:"
   peerDependencies:
     "@adonisjs/core": ^6.2.0 || ^7.0.0
+    "@adonisjs/queue": ^0.5.1
     "@opentelemetry/api": ^1.9.0
     "@opentelemetry/instrumentation": ^0.211.0
   peerDependenciesMeta:
+    "@adonisjs/queue":
+      optional: true
     "@opentelemetry/api":
       optional: true
     "@opentelemetry/instrumentation":
@@ -5804,7 +5859,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@poppinss/utils@npm:^7.0.0":
+"@poppinss/utils@npm:^7.0.0, @poppinss/utils@npm:^7.0.1":
   version: 7.0.1
   resolution: "@poppinss/utils@npm:7.0.1"
   dependencies:
@@ -9560,6 +9615,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"cron-parser@npm:^5.5.0":
+  version: 5.5.0
+  resolution: "cron-parser@npm:5.5.0"
+  dependencies:
+    luxon: "npm:^3.7.1"
+  checksum: 10c0/ffbda13dcfca26cd79c07d7cb4aa317c3634119696f3690dedf4f3baceacade5b1459fc160f65563b3a367ec1b020a2fd065fa49c4b6d937536ba3d637191cd2
+  languageName: node
+  linkType: hard
+
 "cross-inspect@npm:1.0.1":
   version: 1.0.1
   resolution: "cross-inspect@npm:1.0.1"
@@ -12921,7 +12985,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"luxon@npm:^3.7.2":
+"luxon@npm:^3.7.1, luxon@npm:^3.7.2":
   version: 3.7.2
   resolution: "luxon@npm:3.7.2"
   checksum: 10c0/ed8f0f637826c08c343a29dd478b00628be93bba6f068417b1d8896b61cb61c6deacbe1df1e057dbd9298334044afa150f9aaabbeb3181418ac8520acfdc2ae2
@@ -15276,11 +15340,13 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "playground-openapi@workspace:playgrounds/openapi"
   dependencies:
+    "@adonisjs-community/girouette": "npm:^1.0.0"
     "@adonisjs/assembler": "catalog:"
     "@adonisjs/auth": "catalog:"
     "@adonisjs/bouncer": "catalog:"
     "@adonisjs/core": "catalog:"
     "@adonisjs/otel": "npm:1.0.0-next.4"
+    "@adonisjs/queue": "npm:^0.5.1"
     "@adonisjs/session": "catalog:"
     "@foadonis/actions": "workspace:*"
     "@foadonis/crypt": "workspace:*"
