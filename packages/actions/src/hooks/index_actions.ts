@@ -5,7 +5,7 @@ export interface IndexActionsOptions {
   /**
    * Source directory for resolvers
    *
-   * @default 'app/acitons'
+   * @default 'app/actions'
    * */
   source?: string
 
@@ -20,6 +20,15 @@ export interface IndexActionsOptions {
    * Glob patterns for matching resolver files
    */
   glob?: string[]
+
+  /**
+   * Directory segments to skip when building the actions tree.
+   *
+   * For example, if your actions live in `app/identity/actions/login.ts`
+   * and you want the generated tree to be `Identity.Login` instead of
+   * `Identity.Actions.Login`, set `skipSegments: ['actions']`.
+   */
+  skipSegments?: string[]
 }
 
 /**
@@ -30,6 +39,7 @@ export function indexActions({
   source = 'app/actions',
   importAlias = '#actions',
   glob = ['**/*_action.ts'],
+  skipSegments = ['actions'],
 }: IndexActionsOptions = {}): AllHooks['init'][number] {
   return {
     run(_, __, indexGenerator) {
@@ -45,11 +55,16 @@ export function indexActions({
               if (typeof entry === 'string') {
                 buffer.write(`${name}: loader(() => import('${helpers.toImportPath(entry)}')),`)
                 continue
-              } else {
-                buffer.write(`${name}: {`).indent()
-                handleEntry(entry)
-                buffer.dedent().write(`},`)
               }
+
+              if (skipSegments.includes(key)) {
+                handleEntry(entry)
+                continue
+              }
+
+              buffer.write(`${name}: {`).indent()
+              handleEntry(entry)
+              buffer.dedent().write(`},`)
             }
           }
 
