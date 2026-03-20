@@ -1,6 +1,6 @@
 import UserRegistered from '#events/user_registered'
-import { type HttpContext } from '@adonisjs/http-server'
-import { type AsController, BaseAction } from '@foadonis/actions'
+import { compose } from '@adonisjs/core/helpers'
+import { AsController, BaseAction } from '@foadonis/actions'
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@foadonis/openapi/decorators'
 import vine from '@vinejs/vine'
 
@@ -9,7 +9,7 @@ const Schema = vine.create({
 })
 
 @ApiTags('Recipe')
-export default class CreateRecipeAction extends BaseAction implements AsController {
+export default class CreateRecipeAction extends compose(BaseAction, AsController()) {
   handle(hello: string) {
     this.logger.info(`Hello world: ${hello}`)
     UserRegistered.dispatch('recipe created')
@@ -23,7 +23,7 @@ export default class CreateRecipeAction extends BaseAction implements AsControll
         test: vine.string(),
       }),
   })
-  asController(context: HttpContext) {
+  asController() {
     return this.handle('from http test')
   }
 }
