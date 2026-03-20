@@ -6,6 +6,7 @@ on:
       - main
       - next
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -13,12 +14,12 @@ concurrency:
 
 jobs:
   test:
+    if: github.event.pull_request.draft != true
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest]
         node-version:
-          - 20.x
           - 22.x
           - 24.x
           - 25.x
