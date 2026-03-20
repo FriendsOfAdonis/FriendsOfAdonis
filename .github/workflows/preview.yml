@@ -34,12 +34,12 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: 🔨 Build changed packages
-        run: yarn build --affected
+        run: yarn build --filter="[origin/main...$GITHUB_SHA]" --filter="!./playgrounds/*"
 
       - name: 📦 Get changed packages
         id: changed
         run: |
-          PACKAGES=$(yarn turbo ls --affected --output=json | jq -r '[.packages.items[] | select(.name | startswith("@foadonis/")) | select(.name != "@foadonis/shopkeeper") | "./\(.path)"] | join(" ")')
+          PACKAGES=$(yarn turbo ls --filter="[origin/main...$GITHUB_SHA]" --filter="!./playgrounds/*" --output=json | jq -r '[.packages.items[] | select(.name | startswith("@foadonis/")) | select(.name != "@foadonis/shopkeeper") | "./\(.path)"] | join(" ")')
           echo "packages=$PACKAGES" >> "$GITHUB_OUTPUT"
 
       - name: 📦 Publish previews

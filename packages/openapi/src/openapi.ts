@@ -50,7 +50,6 @@ export class OpenAPI {
    * @returns OpenAPI compliant document.
    */
   async buildDocument() {
-    console.log('Test for release')
     if (this.#document && this.#isProduction) {
       return this.#document
     }
