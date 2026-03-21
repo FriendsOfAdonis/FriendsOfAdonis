@@ -12,6 +12,7 @@
     "(guides)/operations",
     "(guides)/validators",
     "(guides)/transformers",
+    "(guides)/lucid-schemas",
     "(guides)/frontend",
     "---References---",
     "(references)/configuration",

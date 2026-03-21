@@ -14,6 +14,10 @@ const dbConfig = defineConfig({
         naturalSort: true,
         paths: ['database/migrations'],
       },
+      schemaGeneration: {
+        enabled: true,
+        rulesPaths: ['@foadonis/openapi/lucid/schema_rules'],
+      },
     },
   },
 })
