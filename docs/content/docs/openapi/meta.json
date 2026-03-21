@@ -6,6 +6,7 @@
   "pages": [
     "index",
     "getting-started",
+    "migration",
     "--- Guides ---",
     "(guides)/types-and-parameters",
     "(guides)/operations",

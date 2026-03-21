@@ -1,0 +1,258 @@
+---
+icon: ArrowUpFromLine
+title: Migration from V1
+description: 'Migrate from @foadonis/openapi V1 to V2. Updated configuration, controller-based routing, and multiple document support.'
+---
+
+This guide covers all breaking changes introduced in `@foadonis/openapi` V2 and how to update your application.
+
+## What changed
+
+V2 introduces support for **multiple OpenAPI documents**. This required restructuring the configuration and replacing the route-based API with a controller-based one.
+
+| Area               | V1                                     | V2                                            |
+| ------------------ | -------------------------------------- | --------------------------------------------- |
+| Config shape       | Flat (`ui`, `document`, `controllers`) | Nested under `docs` map                       |
+| UI selection       | Global in config                       | Per-controller                                |
+| Route registration | `openapi.registerRoutes()`             | `openapi.registerController()`                |
+| Controller         | Built-in (hidden)                      | User-created, extends `BaseOpenAPIController` |
+| Tagger             | Global in config                       | Per-document                                  |
+| Route filtering    | Not supported                          | Per-document `filter` option                  |
+
+## Step 1: Update the configuration
+
+The configuration moved from a flat structure to a `docs` map where each key is a named document.
+
+```ts tab="Before" title="config/openapi.ts"
+import { defineConfig } from '@foadonis/openapi'
+
+export default defineConfig({
+  ui: 'scalar',
+  document: {
+    info: {
+      title: 'My API',
+      version: '1.0.0',
+    },
+  },
+  controllers: [],
+  loaders: [],
+})
+```
+
+```ts tab="After" title="config/openapi.ts"
+import { defineConfig } from '@foadonis/openapi'
+import { type InferOpenAPIDocuments } from '@foadonis/openapi/types'
+
+const openapiConfig = defineConfig({
+  // Loaders remain at the top level
+  loaders: [],
+
+  docs: {
+    default: {
+      document: {
+        info: {
+          title: 'My API',
+          version: '1.0.0',
+        },
+      },
+      controllers: [],
+    },
+  },
+})
+
+export default openapiConfig
+
+// Optional: enable typed document names
+declare module '@foadonis/openapi/types' {
+  interface OpenAPIDocuments extends InferOpenAPIDocuments<typeof openapiConfig> {}
+}
+```
+
+Key changes:
+
+- **`ui`** is removed from config — it moves to the controller (see Step 2)
+- **`document`**, **`controllers`**, and **`tagger`** move inside a named document entry under `docs`
+- **`loaders`** stays at the top level (shared across all documents)
+- A new **`filter`** option is available per-document to control which routes are included
+
+## Step 2: Create a controller
+
+V2 no longer ships a built-in controller. Create one that extends `BaseOpenAPIController`:
+
+```ts title="app/controllers/openapi_controller.ts"
+import { BaseOpenAPIController } from '@foadonis/openapi'
+
+export default class OpenAPIController extends BaseOpenAPIController {
+  constructor() {
+    super({ document: 'default', ui: 'scalar' })
+  }
+}
+```
+
+The `document` value must match a key from your `docs` config. The `ui` option accepts `'scalar'`, `'swagger'`, or `'rapidoc'`.
+
+## Step 3: Update route registration
+
+Replace `registerRoutes()` with `registerController()`:
+
+```ts tab="After" title="start/routes.ts"
+import openapi from '@foadonis/openapi/services/main'
+import { controllers } from '#generated/controllers'
+
+openapi.registerController('/api', controllers.OpenApi).as('openapi')
+```
+
+```ts tab="Before" title="start/routes.ts"
+import openapi from '@foadonis/openapi/services/main'
+
+openapi.registerRoutes()
+```
+
+<Callout type="info">
+  The first argument is the base path. This registers three routes: `/api` (UI), `/api.json`, and
+  `/api.yaml`.
+</Callout>
+
+## Step 4: Update tagger (if customized)
+
+If you had a custom `tagger` in your config, move it inside the document entry:
+
+```ts tab="After" title="config/openapi.ts"
+const openapiConfig = defineConfig({
+  docs: {
+    default: {
+      document: { info: { title: 'My API', version: '1.0.0' } },
+      tagger: (_route, target) => [target.name.replace('Controller', '')],
+    },
+  },
+})
+
+export default openapiConfig
+```
+
+```ts tab="Before" title="config/openapi.ts"
+export default defineConfig({
+  ui: 'scalar',
+  document: { info: { title: 'My API', version: '1.0.0' } },
+  tagger: (_route, target) => [target.name.replace('Controller', '')],
+})
+```
+
+## AI migration prompt
+
+The following codeblock can be provided to an AI agent to automatically migrate your codebase:
+
+````md
+You are migrating an AdonisJS application from `@foadonis/openapi` V1 to V2. Apply the following changes:
+
+## 1. `config/openapi.ts`
+
+- The `defineConfig()` shape has changed. Wrap `document`, `controllers`, and `tagger` inside a named key under `docs`.
+- Remove the `ui` property from config entirely.
+- Keep `loaders` at the top level.
+- Export the config as a named variable (not default directly) so it can be used for type inference.
+- Add module augmentation at the bottom of the file.
+
+Before:
+
+```ts
+import { defineConfig } from '@foadonis/openapi'
+
+export default defineConfig({
+  ui: 'scalar',
+  document: {
+    info: { title: 'My API', version: '1.0.0' },
+  },
+  controllers: [
+    /* ... */
+  ],
+  loaders: [
+    /* ... */
+  ],
+  tagger: (route, target) => [
+    /* ... */
+  ],
+})
+```
+
+After:
+
+```ts
+import { defineConfig } from '@foadonis/openapi'
+import { type InferOpenAPIDocuments } from '@foadonis/openapi/types'
+
+const openapiConfig = defineConfig({
+  loaders: [
+    /* ... */
+  ],
+
+  docs: {
+    default: {
+      document: {
+        info: { title: 'My API', version: '1.0.0' },
+      },
+      controllers: [
+        /* ... */
+      ],
+      tagger: (route, target) => [
+        /* ... */
+      ],
+    },
+  },
+})
+
+export default openapiConfig
+
+declare module '@foadonis/openapi/types' {
+  interface OpenAPIDocuments extends InferOpenAPIDocuments<typeof openapiConfig> {}
+}
+```
+
+## 2. Create `app/controllers/openapi_controller.ts`
+
+Create a new controller file. Use the `ui` value that was previously in the config (default to `'scalar'` if not set). Use `'default'` as the document name (matching the key in the `docs` config).
+
+```ts
+import { BaseOpenAPIController } from '@foadonis/openapi'
+
+export default class OpenAPIController extends BaseOpenAPIController {
+  constructor() {
+    super({ document: 'default', ui: 'scalar' })
+  }
+}
+```
+
+## 3. `start/routes.ts`
+
+- Replace any call to `openapi.registerRoutes(path?)` with `openapi.registerController(path, controller)`.
+- Add the import for `controllers` from `#generated/controllers`.
+- If `registerRoutes()` was called with a custom path, use that same path as the first argument to `registerController()`.
+- If no path was provided, use `'/api'` as the default.
+
+Before:
+
+```ts
+import openapi from '@foadonis/openapi/services/main'
+
+openapi.registerRoutes()
+// or: openapi.registerRoutes('/docs')
+```
+
+After:
+
+```ts
+import openapi from '@foadonis/openapi/services/main'
+import { controllers } from '#generated/controllers'
+
+openapi.registerController('/api', controllers.OpenApi).as('openapi')
+// or: openapi.registerController('/docs', controllers.OpenApi).as('openapi')
+```
+
+## Rules
+
+- Preserve all existing document metadata (title, version, description, etc.) exactly as-is.
+- Preserve all existing loaders, controllers, and tagger logic — only move them to the new structure.
+- Do not remove any custom configuration that the user had — only restructure it.
+- If the user had no `ui` in config, default to `'scalar'` in the controller.
+- If the user had no custom path in `registerRoutes()`, use `'/api'` in `registerController()`.
+````
