@@ -1,7 +1,7 @@
-import { type OpenAPIConfig } from './types.js'
+import { type OpenAPIConfig, type OpenAPIDocumentConfig } from './types.js'
 import { type HttpRouterService } from '@adonisjs/core/types'
 import { generateDocument } from '@martin.xyz/openapi-decorators'
-import { RouterLoader } from './loader.js'
+import { RouterLoader } from './router_loader.ts'
 import { type Logger } from '@adonisjs/core/logger'
 import { LuxonTypeLoader } from './loaders/luxon.js'
 import {
@@ -10,77 +10,68 @@ import {
   generateSwaggerUI,
 } from '@martin.xyz/openapi-decorators/ui'
 import { type OpenAPIDocument } from '@martin.xyz/openapi-decorators/types'
-import stringHelpers from '@adonisjs/core/helpers/string'
-import {
-  JSONSchemaTypeLoader,
-  StandardJSONSchemaTypeLoader,
-} from '@martin.xyz/openapi-decorators/loaders'
+import { type Constructor, type LazyImport } from '@adonisjs/core/types/common'
+import { type BaseOpenAPIController } from './controllers/base_openapi_controller.ts'
 
-const OpenAPIController = () => import('./controllers/openapi_controller.js')
-
-export class OpenAPI {
+export class OpenAPI<Documents extends Record<string, OpenAPIDocumentConfig>> {
   #router: HttpRouterService
-  #document?: OpenAPIDocument
-  #routerLoader: RouterLoader
   #logger: Logger
-  #isProduction: boolean
-  #config: OpenAPIConfig
+  #config: OpenAPIConfig<Documents>
 
-  constructor(
-    config: OpenAPIConfig,
-    router: HttpRouterService,
-    logger: Logger,
-    isProduction: boolean
-  ) {
+  #documents = new Map<keyof Documents, OpenAPIDocument>()
+
+  constructor(config: OpenAPIConfig<Documents>, router: HttpRouterService, logger: Logger) {
     this.#router = router
     this.#logger = logger
-    this.#routerLoader = new RouterLoader(
-      router,
-      logger,
-      config.tagger ??
-        ((_, target) => [stringHelpers.create(target.name).removeSuffix('Controller').toString()])
-    )
-    this.#isProduction = isProduction
     this.#config = config
   }
 
   /**
-   * Builds the OpenAPIDocument.
+   * Retrieves an OpenAPI Document.
+   * The document is built if it does not exist.
    *
-   * @returns OpenAPI compliant document.
+   * @param document - The document name as configured in `config/openapi.ts`
+   * @param force - Force re-generating the document
+   *
+   * @returns The generated OpenAPI document
    */
-  async buildDocument() {
-    if (this.#document && this.#isProduction) {
-      return this.#document
+  async document(document: keyof Documents, force = false) {
+    if (!force) {
+      const existing = this.#documents.get(document)
+      if (existing) return existing
     }
 
-    const controllers = await this.#routerLoader.load()
-    const customTypeLoaders = this.#config.loaders ?? []
-
-    this.#document = await generateDocument({
-      controllers: [...controllers, ...(this.#config.controllers ?? [])],
-      customLogger: this.#logger,
-      loaders: [
-        ...customTypeLoaders,
-        LuxonTypeLoader,
-        StandardJSONSchemaTypeLoader,
-        JSONSchemaTypeLoader,
-      ],
-      document: this.#config.document,
+    const config = this.#config.docs[document]
+    const loader = new RouterLoader(this.#router, {
+      logger: this.#logger,
+      tagger: config.tagger,
+      filter: config.filter,
     })
 
-    return this.#document
+    const controllers = await loader.load()
+    const customTypeLoaders = this.#config.loaders ?? []
+
+    const output = await generateDocument({
+      controllers: [...controllers, ...(config.controllers ?? [])],
+      customLogger: this.#logger,
+      document: config.document,
+      loaders: [...customTypeLoaders, LuxonTypeLoader],
+    })
+
+    this.#documents.set(document, output)
+
+    return output
   }
 
   /**
-   * Generates HTML do display the OpenAPI documentation UI.
+   * Generates the HTML to display the OpenAPI documentation UI.
    *
-   * @param path - path or url to the api documentation.
+   * @param ui - Documentation UI to generate
+   * @param path - Path or url to the api documentation
    *
-   * @returns the html content for displaying the documentation UI.
+   * @returns The html content for displaying the documentation UI
    */
-  generateUi(path = '/api'): string {
-    const ui = this.#config.ui
+  ui(ui: 'scalar' | 'swagger' | 'rapidoc', path: string): string {
     switch (ui) {
       case 'scalar':
         return generateScalarUI(path)
@@ -92,26 +83,24 @@ export class OpenAPI {
   }
 
   /**
-   * Registers Json, Yaml and UI OpenAPI routes.
-   * - /api
-   * - /api.json
-   * - /api.yaml
+   * Registers the routes for serving the OpenAPI documentation.
    *
-   * @param path - endpoint for accesing the specs.
-   * @param routeHandlerModifier - modifier to apply middlewares, etc.
+   * @param pattern - The route pattern
+   * @param Controller - The lazy-import of the OpenAPI controller
    *
-   * @returns the routes group.
+   * @returns - The group containing the routes
    *
    * @example
-   * openapi.registerRoutes()
-   * openapi.registerRoutes("/api", (route) => route.use(middlewares.auth()))
+   * ```ts
+   * openapi.registerController('/api/v1', controllers.OpenApi)
+   * ```
    */
-  registerRoutes(path = '/api') {
+  registerController(pattern: string, Controller: LazyImport<Constructor<BaseOpenAPIController>>) {
     const group = this.#router
       .group(() => {
-        this.#router.get(path, [OpenAPIController, 'html']).as('html')
-        this.#router.get(`${path}.json`, [OpenAPIController, 'json']).as('json')
-        this.#router.get(`${path}.yaml`, [OpenAPIController, 'yaml']).as('yaml')
+        this.#router.get(pattern, [Controller, 'html']).as('html')
+        this.#router.get(`${pattern}.json`, [Controller, 'json']).as('json')
+        this.#router.get(`${pattern}.yaml`, [Controller, 'yaml']).as('yaml')
       })
       .as('openapi')
 

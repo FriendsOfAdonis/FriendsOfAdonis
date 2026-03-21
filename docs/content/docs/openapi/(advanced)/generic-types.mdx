@@ -37,6 +37,11 @@ class UsersController {
 
 In the following example we will create a mixin to create schemas for [Lucid pagination](https://lucid.adonisjs.com/docs/pagination).
 
+<Callout type="info">
+  When using the [Transformers feature](/docs/openapi/transformers) the paginated schema is
+  automatically provided.
+</Callout>
+
 ```ts title="app/controllers/users_controller.ts" twoslash
 // @noErrors
 import { HttpContext } from '@adonisjs/core/http'

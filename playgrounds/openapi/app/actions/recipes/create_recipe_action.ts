@@ -1,5 +1,4 @@
 import UserRegistered from '#events/user_registered'
-import { compose } from '@adonisjs/core/helpers'
 import { AsController, BaseAction } from '@foadonis/actions'
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@foadonis/openapi/decorators'
 import vine from '@vinejs/vine'
@@ -9,7 +8,7 @@ const Schema = vine.create({
 })
 
 @ApiTags('Recipe')
-export default class CreateRecipeAction extends compose(BaseAction, AsController()) {
+export default class CreateRecipeAction extends BaseAction implements AsController {
   handle(hello: string) {
     this.logger.info(`Hello world: ${hello}`)
     UserRegistered.dispatch('recipe created')

@@ -1,10 +1,17 @@
 import { HttpContext } from '@adonisjs/core/http'
 import app from '@adonisjs/core/services/app'
-import router from '@adonisjs/core/services/router'
 import { ApiOperation, ApiResponse } from '@martin.xyz/openapi-decorators/decorators'
 import YAML from 'yaml'
+import { OpenAPIDocuments } from '../types.ts'
 
-export default class OpenAPIController {
+export type OpenAPIControllerOptions = {
+  document: keyof OpenAPIDocuments
+  ui: 'scalar' | 'swagger' | 'rapidoc'
+}
+
+export abstract class BaseOpenAPIController {
+  constructor(protected options: OpenAPIControllerOptions) {}
+
   @ApiOperation({
     summary: 'Documentation UI',
     description: 'Displays the OpenAPI documentation UI.',
@@ -14,12 +21,12 @@ export default class OpenAPIController {
     type: 'string',
     mediaType: 'text/html',
   })
-  async html({ response }: HttpContext) {
+  async html({ request, response }: HttpContext) {
     const openapi = await app.container.make('openapi')
 
-    const url = router.makeUrl('openapi.json')
+    const url = `${request.parsedUrl.pathname}.json`
 
-    const content = openapi.generateUi(url)
+    const content = openapi.ui(this.options.ui, url)
 
     return response.status(200).header('Content-Type', 'text/html').send(content)
   }
@@ -35,7 +42,7 @@ export default class OpenAPIController {
   })
   async json({ response }: HttpContext) {
     const openapi = await app.container.make('openapi')
-    const document = await openapi.buildDocument()
+    const document = await openapi.document(this.options.document, !app.inProduction)
 
     const body = JSON.stringify(document)
 
@@ -53,7 +60,7 @@ export default class OpenAPIController {
   })
   async yaml({ response }: HttpContext) {
     const openapi = await app.container.make('openapi')
-    const document = await openapi.buildDocument()
+    const document = await openapi.document(this.options.document, !app.inProduction)
 
     const body = YAML.stringify(document)
 

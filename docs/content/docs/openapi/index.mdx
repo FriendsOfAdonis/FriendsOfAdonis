@@ -4,7 +4,7 @@ description: 'Generate OpenAPI V3 specifications from your AdonisJS application 
 icon: Album
 ---
 
-Build OpenAPI compliant APIs using AdonisJS.
+Document your AdonisJS API with OpenAPI using TypeScript decorators. Generate interactive documentation, type-safe frontend clients, and more.
 
 <Tabs items={["app/models/post.ts", "app/controllers/posts_controller.ts"]}>
 
@@ -53,9 +53,33 @@ export default class PostsController {
 
 ## Features
 
-✔ [OpenAPI V3](https://spec.openapis.org/oas/v3.0.0.html) specifications  
-✔ Fully typesafe  
-✔ Automatically infer types  
+✔ Serve and generate multiple [OpenAPI V3](https://spec.openapis.org/oas/v3.0.0.html) documents  
+✔ Compatible with [HTTP Transformers](/docs/openapi/transformers)  
+✔ Compatible with [Request Validators](/docs/openapi/validators)  
 ✔ Automatically loads your controller from Adonis Router  
 ✔ Supports [Scalar](https://scalar.com/), [Swagger UI](https://swagger.io/tools/swagger-ui/) and [Rapidoc](https://rapidocweb.com/)  
 ✔ Supports schema generation from [Luxon](https://moment.github.io/luxon/) and [VineJS](https://vinejs.dev/docs/introduction)
+
+## Comparisons
+
+### Tuyau
+
+[Tuyau](https://docs.adonisjs.com/guides/frontend/api-client) is a type-safe HTTP client for AdonisJS. It analyzes your routes and generates a type registry that maps each route to its request and response types, giving you end-to-end type safety without writing any schema.
+
+Tuyau shines for internal consumption: it provides instant autocompletion and type checking with zero configuration. However, it requires your backend and frontend to share the same monorepo (since it relies on generated TypeScript types) and is limited to TypeScript consumers.
+
+**If your API is only consumed by TypeScript code within the same repository and you don't need external documentation, Tuyau may be all you need.**
+
+### GraphQL
+
+[GraphQL](https://graphql.org/) is a query language for APIs that lets clients request exactly the data they need. It comes with its own type system, introspection, and tooling ecosystem.
+
+GraphQL is a fundamentally different paradigm from REST. It requires dedicated server infrastructure (resolvers, schemas, subscriptions) and a different mental model for both backend and frontend developers. If you are already building a REST API with AdonisJS, OpenAPI documents your existing routes, there is no need to rewrite your API layer.
+
+**If you need fine-grained client queries, real-time subscriptions, or are already invested in the GraphQL ecosystem, consider [`@foadonis/graphql`](/docs/graphql).**
+
+### adonis-autoswagger
+
+[adonis-autoswagger](https://github.com/ad-on-is/adonis-autoswagger) generates Swagger documentation by parsing your AdonisJS routes, controllers, and validators automatically with minimal configuration.
+
+While adonis-autoswagger requires little setup, it is no longer actively maintained. It also relies on code analysis and JSDoc comments which can be fragile and limited in expressiveness. `@foadonis/openapi` uses TypeScript decorators that give you full control over the generated specification and are checked at compile time.

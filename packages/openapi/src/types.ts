@@ -4,10 +4,23 @@ import { type ExtractTransformerResource } from './loaders/transformer.ts'
 import { type Next } from '@adonisjs/core/types/transformers'
 import { type ContainerResolver } from '@adonisjs/core/container'
 import { type OpenAPIV3_1 } from 'openapi-types'
+import { type OpenAPI } from './openapi.ts'
 
 type GenerateDocumentParameters = Parameters<typeof generateDocument>[0]
 
-export type OpenAPIConfig = {
+export type OpenAPIConfig<KnownDocuments extends Record<string, OpenAPIDocumentConfig>> = {
+  /**
+   * Maps of OpenAPI documents configuration.
+   */
+  docs: KnownDocuments
+
+  /**
+   * Custom type loaders.
+   */
+  loaders?: GenerateDocumentParameters['loaders']
+}
+
+export type OpenAPIDocumentConfig = {
   /**
    * Base OpenAPI document.
    * It gets deeply merged into the generated OpenAPI document
@@ -16,19 +29,17 @@ export type OpenAPIConfig = {
   document: GenerateDocumentParameters['document']
 
   /**
-   * User interface integration to use.
-   */
-  ui: 'scalar' | 'swagger' | 'rapidoc'
-
-  /**
-   * Additional controllers to load into your schema.
+   * Additional controllers to be loaded for your schema.
    */
   controllers?: GenerateDocumentParameters['controllers']
 
   /**
-   * Custom type loaders.
+   * Filter operations loaded in the schema.
+   *
+   * @example
+   * (_route, target) => true
    */
-  loaders?: GenerateDocumentParameters['loaders']
+  filter?: OperationFilterFn
 
   /**
    * Customize controllers auto-tagging.
@@ -39,11 +50,19 @@ export type OpenAPIConfig = {
   tagger?: OperationTaggerFn
 }
 
+export type InferOpenAPIDocuments<
+  Config extends OpenAPIConfig<Record<string, OpenAPIDocumentConfig>>,
+> = Config['docs']
+
+export interface OpenAPIDocuments {}
+
 export type OperationTaggerFn = (
   route: RouteJSON,
   target: Function,
   propertyKey: string
 ) => string[]
+
+export type OperationFilterFn = (route: RouteJSON, target: Function, propertyKey: string) => boolean
 
 declare module '@adonisjs/core/transformers' {
   namespace BaseTransformer {
@@ -100,3 +119,7 @@ declare module '@adonisjs/core/transformers' {
     ): Promise<OpenAPIV3_1.SchemaObject>
   }
 }
+
+export interface OpenAPIService extends OpenAPI<
+  OpenAPIDocuments extends Record<string, OpenAPIDocumentConfig> ? OpenAPIDocuments : never
+> {}

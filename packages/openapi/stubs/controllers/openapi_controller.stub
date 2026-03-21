@@ -1,0 +1,10 @@
+{{{
+  exports({ to: app.httpControllersPath('openapi_controller.ts') })
+}}}
+import { BaseOpenAPIController } from '@foadonis/openapi'
+
+export default class OpenAPIController extends BaseOpenAPIController {
+  constructor() {
+    super({ document: 'v1', ui: 'scalar' })
+  }
+}

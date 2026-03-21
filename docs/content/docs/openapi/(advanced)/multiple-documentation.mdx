@@ -1,0 +1,87 @@
+---
+title: Multiple Documents
+---
+
+Since V2, it is now possible to serve multiple OpenAPI documents. Allowing you to have multiple versions, internal/external APIs, etc.
+
+## Setup
+
+You can setup as many documents as you wish. The following guide explains how to do versioned APIs.
+
+### Configure your Documents
+
+Inside `config/openapi.ts` configure your documents. You can use the `filter` option to filter what routes you want to be part of the document.
+
+```ts title="config/openapi.ts"
+import { defineConfig } from '@foadonis/openapi'
+import { type InferOpenAPIDocuments } from '@foadonis/openapi/types'
+
+const openapiConfig = defineConfig({
+  docs: {
+    v1: {
+      document: {
+        info: {
+          title: 'My API',
+          version: '1.0.0',
+        },
+      },
+
+      filter: (route) => {
+        return route.pattern.startsWith('/api/v1')
+      },
+    },
+
+    v2: {
+      document: {
+        info: {
+          title: 'My API',
+          version: '2.0.0',
+        },
+      },
+
+      filter: (route) => {
+        return route.pattern.startsWith('/api/v2')
+      },
+    },
+  },
+})
+
+export default openapiConfig
+
+declare module '@foadonis/openapi/types' {
+  interface OpenAPIDocuments extends InferOpenAPIDocuments<typeof openapiConfig> {}
+}
+```
+
+### Create the Controllers
+
+Create a controller for each document you want to serve. You must provide the name of document as configure in `config/openapi.ts` as well as the UI you want to use.
+
+```ts tab="v1/openapi_controller.ts" title="app/controllers/v1/openapi_controller.ts"
+import { BaseOpenAPIController } from '@foadonis/openapi'
+
+export default class OpenAPIController extends BaseOpenAPIController {
+  constructor() {
+    super({ document: 'v1', ui: 'scalar' })
+  }
+}
+```
+
+```ts tab="v2/openapi_controller.ts" title="app/controllers/v2/openapi_controller.ts"
+import { BaseOpenAPIController } from '@foadonis/openapi'
+
+export default class OpenAPIController extends BaseOpenAPIController {
+  constructor() {
+    super({ document: 'v2', ui: 'scalar' })
+  }
+}
+```
+
+### Register the Routes
+
+Register the controllers inside `routes.ts` by using the `openapi.registerController` method.
+
+```ts
+openapi.registerController('/api/v1', controllers.OpenapiV1).as('openapi.v1')
+openapi.registerController('/api/v2', controllers.OpenapiV2).as('openapi.v2')
+```
