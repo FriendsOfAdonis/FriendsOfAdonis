@@ -50,9 +50,14 @@ export function HandlesPaymentFailures<Model extends Constructor>(superclass: Mo
               await subscription.save()
 
               if (subscription.hasIncompletePayment()) {
-                const paymentIntent = await e.payment.asStripePaymentIntent()
+                // Re-fetch from Stripe since confirm() throws before updating the local reference
+                const paymentIntent = await shopkeeper.stripe.paymentIntents.retrieve(
+                  e.payment.paymentIntent.id
+                )
                 new Payment(paymentIntent).validate()
               }
+            } else {
+              throw e
             }
           } else {
             throw e

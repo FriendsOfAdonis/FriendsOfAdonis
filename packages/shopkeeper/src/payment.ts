@@ -1,13 +1,13 @@
 import type Stripe from 'stripe'
 import shopkeeper from '../services/shopkeeper.js'
-import { type BillableI } from './contracts.js'
+import { type BillableContract } from './contracts.js'
 import { IncompletePaymentError } from './errors/incomplete_payment.js'
 import { InvalidCustomerError } from './errors/invalid_customer.js'
 
 export class Payment {
   #paymentIntent: Stripe.PaymentIntent
 
-  #customer?: BillableI | null
+  #customer?: BillableContract | null
 
   constructor(paymentIntent: Stripe.PaymentIntent) {
     this.#paymentIntent = paymentIntent
@@ -139,7 +139,7 @@ export class Payment {
   /**
    * Retrieve the related customer for the payment intent if one exists.
    */
-  async customer(): Promise<BillableI | null> {
+  async customer(): Promise<BillableContract | null> {
     if (this.#customer !== undefined) {
       return this.#customer
     }
@@ -152,7 +152,7 @@ export class Payment {
     return this.#customer
   }
 
-  async customerOrFail(): Promise<BillableI> {
+  async customerOrFail(): Promise<BillableContract> {
     const customer = await this.customer()
     if (!customer) {
       throw new InvalidCustomerError(

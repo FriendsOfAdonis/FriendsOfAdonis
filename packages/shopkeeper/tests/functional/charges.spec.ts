@@ -50,7 +50,7 @@ test.group('Charges', () => {
     assert.equal(found?.paymentIntent.id, payment.paymentIntent.id)
   })
 
-  test('customer can be charged and invoiced immediatly', async ({ assert }) => {
+  test('customer can be charged and invoiced immediately', async ({ assert }) => {
     const user = await createCustomer('customer_can_be_charged_and_invoiced_immediately')
     await user.createAsStripeCustomer()
     await user.updateDefaultPaymentMethod('pm_card_visa')
@@ -70,10 +70,9 @@ test.group('Charges', () => {
     await user.updateDefaultPaymentMethod('pm_card_visa')
 
     const invoice = await user.invoiceFor('Adonis Cloud', 1000)
-    const stripeInvoice = await shopkeeper.stripe.invoices.retrieve(
-      invoice.asStripeInvoice().id,
-      { expand: ['payments.data.payment.payment_intent'] }
-    )
+    const stripeInvoice = await shopkeeper.stripe.invoices.retrieve(invoice.asStripeInvoice().id, {
+      expand: ['payments.data.payment.payment_intent'],
+    })
     const pi = stripeInvoice.payments?.data?.[0]?.payment?.payment_intent
     const piId = typeof pi === 'string' ? pi : pi?.id
     const refund = await user.refund(piId!)

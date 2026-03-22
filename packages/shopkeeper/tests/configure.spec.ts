@@ -4,6 +4,7 @@ import { createApp } from './app.js'
 
 test.group('Configure', () => {
   test('create migration files', async ({ assert, fs }) => {
+    await fs.remove('database/migrations')
     const { ace } = await createApp()
 
     await fs.create('.env', '')

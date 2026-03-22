@@ -1,5 +1,5 @@
 import type Stripe from 'stripe'
-import { type ManagesInvoicesI } from './contracts.js'
+import { type ManagesInvoicesContract } from './contracts.js'
 import { Tax } from './tax.js'
 import { Discount } from './discount.js'
 import { InvalidInvoiceError } from './errors/invalid_invoice.js'
@@ -11,7 +11,7 @@ export class Invoice {
   /**
    * The Stripe model instance.
    */
-  #owner: ManagesInvoicesI
+  #owner: ManagesInvoicesContract
 
   /**
    * The Stripe invoice instance.
@@ -38,7 +38,7 @@ export class Invoice {
    */
   #refreshed = false
 
-  constructor(owner: ManagesInvoicesI, invoice: Stripe.Invoice) {
+  constructor(owner: ManagesInvoicesContract, invoice: Stripe.Invoice) {
     if (owner.stripeId !== invoice.customer) {
       throw InvalidInvoiceError.invalidOwner(invoice, owner)
     }
@@ -342,7 +342,9 @@ export class Invoice {
 
     const items = []
 
-    for await (const line of this.#owner.stripe.invoices.listLineItems(this.#invoice.id)) {
+    for await (const line of this.#owner.stripe.invoices.listLineItems(this.#invoice.id, {
+      expand: ['data.pricing.price_details.price'],
+    })) {
       items.push(new InvoiceLineItem(this, line))
     }
 
@@ -397,9 +399,8 @@ export class Invoice {
     const expand = [
       'account_tax_ids',
       'discounts',
-      'lines.data.taxes.tax_rate_details.tax_rate',
+      'discounts.source.coupon',
       'total_discount_amounts.discount',
-      'total_taxes.tax_rate_details.tax_rate',
     ]
 
     this.#invoice = await this.#owner.stripe.invoices.retrieve(this.#invoice.id, {
@@ -510,7 +511,7 @@ export class Invoice {
   /**
    * Get the Stripe model instance.
    */
-  owner(): ManagesInvoicesI {
+  owner(): ManagesInvoicesContract {
     return this.#owner
   }
 

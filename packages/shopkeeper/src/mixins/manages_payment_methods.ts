@@ -2,16 +2,16 @@ import type Stripe from 'stripe'
 import type { BaseModel } from '@adonisjs/lucid/orm'
 import { column } from '@adonisjs/lucid/orm'
 import { PaymentMethod } from '../payment_method.js'
-import type { ManagesCustomerI, ManagesPaymentMethodsI } from '../contracts.js'
+import type { ManagesCustomerContract, ManagesPaymentMethodsContract } from '../contracts.js'
 import type { NormalizeConstructor } from '@adonisjs/core/types/helpers'
 
 export type ManagesPaymentMethodsClass<
   T extends NormalizeConstructor<typeof BaseModel> = NormalizeConstructor<typeof BaseModel>,
-> = T & { new (...args: any[]): ManagesPaymentMethodsI }
+> = T & { new (...args: any[]): ManagesPaymentMethodsContract }
 
 export function managesPaymentMethods() {
   return <
-    T extends NormalizeConstructor<typeof BaseModel> & { new (...args: any[]): ManagesCustomerI },
+    T extends NormalizeConstructor<typeof BaseModel> & { new (...args: any[]): ManagesCustomerContract },
   >(
     superclass: T
   ): ManagesPaymentMethodsClass<T> => {
