@@ -1,7 +1,7 @@
 import { Payment } from '../payment.js'
 import { Checkout } from '../checkout.js'
 import type Stripe from 'stripe'
-import type { ManagesCustomerI, PerformsChargesI } from '../contracts.js'
+import type { ManagesCustomerContract, PerformsChargesContract } from '../contracts.js'
 import type { NormalizeConstructor } from '@adonisjs/core/types/helpers'
 import type { BaseModel } from '@adonisjs/lucid/orm'
 import { AllowsCoupon, type AllowsCouponRow } from './allows_coupons.js'
@@ -9,11 +9,11 @@ import { compose } from '@adonisjs/core/helpers'
 
 export type PerformsChargesClass<
   T extends NormalizeConstructor<typeof BaseModel> = NormalizeConstructor<typeof BaseModel>,
-> = T & { new (...args: any[]): PerformsChargesI & AllowsCouponRow }
+> = T & { new (...args: any[]): PerformsChargesContract & AllowsCouponRow }
 
 export function performCharges() {
   return <
-    T extends NormalizeConstructor<typeof BaseModel> & { new (...args: any[]): ManagesCustomerI },
+    T extends NormalizeConstructor<typeof BaseModel> & { new (...args: any[]): ManagesCustomerContract },
   >(
     superclass: T
   ): PerformsChargesClass<T> => {

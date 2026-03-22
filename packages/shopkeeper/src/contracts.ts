@@ -12,7 +12,7 @@ import type { CustomerBalanceTransaction } from './customer_balance_transaction.
 import type { SubscriptionBuilder } from './subscription_builder.js'
 import type Subscription from './models/subscription.js'
 
-export interface ManagesStripeI {
+export interface ManagesStripeContract {
   stripeId: string | null
 
   hasStripeId(): boolean
@@ -20,7 +20,7 @@ export interface ManagesStripeI {
   get stripe(): Stripe
 }
 
-export interface HandlesTaxesI {
+export interface HandlesTaxesContract {
   customerIpAddress: string | null
   estimationBillingAddress: Partial<Stripe.Address>
   collectTaxIds: boolean
@@ -32,7 +32,7 @@ export interface HandlesTaxesI {
   withTaxIdsCollect(): void
 }
 
-export interface ManagesCustomerI extends ManagesStripeI {
+export interface ManagesCustomerContract extends ManagesStripeContract {
   createAsStripeCustomer(params?: Stripe.CustomerCreateParams): Promise<Stripe.Customer>
   updateStripeCustomer(params?: Stripe.CustomerUpdateParams): Promise<Stripe.Customer>
   createOrGetStripeCustomer(params?: Stripe.CustomerCreateParams): Promise<Stripe.Customer>
@@ -91,7 +91,7 @@ export interface ManagesCustomerI extends ManagesStripeI {
   reverseChargeApplies(): Promise<boolean>
 }
 
-export interface ManagesPaymentMethodsI extends ManagesCustomerI {
+export interface ManagesPaymentMethodsContract extends ManagesCustomerContract {
   pmType: string | null
   pmLastFour: string | null
 
@@ -116,7 +116,7 @@ export interface ManagesPaymentMethodsI extends ManagesCustomerI {
   findPaymentMethod(paymentMethod: string): Promise<PaymentMethod | null>
 }
 
-export interface ManagesInvoicesI extends ManagesCustomerI, HandlesTaxesI {
+export interface ManagesInvoicesContract extends ManagesCustomerContract, HandlesTaxesContract {
   tab(
     description: string,
     amount?: number,
@@ -148,7 +148,7 @@ export interface ManagesInvoicesI extends ManagesCustomerI, HandlesTaxesI {
   invoicesIncludingPending(params?: Stripe.InvoiceListParams): Promise<Invoice[]>
 }
 
-export interface ManagesSubscriptionsI {
+export interface ManagesSubscriptionsContract {
   trialEndsAt: DateTime | null
   subscriptions: HasMany<typeof Subscription>
 
@@ -223,7 +223,7 @@ export interface ManagesSubscriptionsI {
   applyPromotionCode(promotionCodeId: string, subscriptionTypes?: string | string[]): Promise<void>
 }
 
-export interface PerformsChargesI extends ManagesCustomerI {
+export interface PerformsChargesContract extends ManagesCustomerContract {
   charge(
     amount: number,
     paymentMethod: string,
@@ -265,7 +265,7 @@ export interface PerformsChargesI extends ManagesCustomerI {
   ): Promise<Checkout>
 }
 
-export interface AllowsCouponI {
+export interface AllowsCouponContract {
   couponId?: string
   promotionCodeId?: string
   allowPromotionCodes: boolean
@@ -281,14 +281,14 @@ export interface AllowsCouponI {
  * Used by wrapper classes (Invoice, Payment, Checkout, etc.) to reference
  * the owner without creating circular type dependencies.
  */
-export interface BillableI
+export interface BillableContract
   extends
-    ManagesStripeI,
-    HandlesTaxesI,
-    ManagesCustomerI,
-    ManagesPaymentMethodsI,
-    ManagesInvoicesI,
-    ManagesSubscriptionsI,
-    PerformsChargesI {}
+    ManagesStripeContract,
+    HandlesTaxesContract,
+    ManagesCustomerContract,
+    ManagesPaymentMethodsContract,
+    ManagesInvoicesContract,
+    ManagesSubscriptionsContract,
+    PerformsChargesContract {}
 
-export type BillableModel = LucidModel & { new (...args: any[]): BillableI }
+export type BillableModel = LucidModel & { new (...args: any[]): BillableContract }

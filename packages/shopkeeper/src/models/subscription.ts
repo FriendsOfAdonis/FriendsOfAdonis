@@ -19,6 +19,7 @@ import { Prorates } from '../mixins/prorates.js'
 import is from '@adonisjs/core/helpers/is'
 import SubscriptionItem from './subscription_item.js'
 import { InvalidArgumentError } from '../errors/invalid_argument.js'
+import { checkStripeError } from '../utils/errors.js'
 
 type SwapPricesParam =
   | string
@@ -276,7 +277,7 @@ export default class Subscription extends compose(
     stripeSubscription = await this.updateStripeSubscription({
       payment_behavior: this.paymentBehavior(),
       proration_behavior: this.prorateBehavior(),
-      expand: ['latest_invoice.payment_intent'],
+      off_session: true,
       items: [
         {
           id: si,
@@ -464,6 +465,28 @@ export default class Subscription extends compose(
     // Delete items that aren't attached to the subscription anymore
     await this.related('items').query().delete().whereNotIn('stripeId', subscriptionItemIds)
 
+    // When using always_invoice proration, the invoice is created as open and
+    // must be paid explicitly since off_session is not used (it interferes with
+    // proration calculation in Stripe v20).
+    if (this.prorateBehavior() === 'always_invoice') {
+      const latestInvoiceId =
+        typeof stripeSubscription.latest_invoice === 'string'
+          ? stripeSubscription.latest_invoice
+          : stripeSubscription.latest_invoice?.id
+
+      if (latestInvoiceId) {
+        try {
+          const latestInvoice = await this.stripe.invoices.retrieve(latestInvoiceId)
+          if (latestInvoice.status === 'open') {
+            await this.stripe.invoices.pay(latestInvoiceId, { off_session: true })
+          }
+        } catch (e) {
+          // Payment failure will be handled by handlePaymentFailure below
+          checkStripeError(e, 'StripeCardError')
+        }
+      }
+    }
+
     await this.handlePaymentFailure(this)
 
     return this
@@ -574,7 +597,6 @@ export default class Subscription extends compose(
     const stripeItem = await item.asStripeSubscriptionItem()
 
     await this.stripe.subscriptionItems.del(stripeItem.id, {
-      clear_usage: stripeItem.price.recurring?.usage_type === 'metered' ? true : undefined,
       proration_behavior: this.prorateBehavior(),
     })
 
@@ -763,12 +785,11 @@ export default class Subscription extends compose(
         billing_cycle_anchor: swapOptions.billing_cycle_anchor,
         cancel_at_period_end: swapOptions.cancel_at_period_end,
         items: swapOptions.items?.map(
-          ({ id, price, quantity, deleted, clear_usage, tax_rates, price_data }) => ({
+          ({ id, price, quantity, deleted, tax_rates, price_data }) => ({
             id,
             price,
             quantity,
             deleted,
-            clear_usage,
             tax_rates,
             price_data,
           })
@@ -840,11 +861,16 @@ export default class Subscription extends compose(
    * Get the latest payment for a Subscription.
    */
   async latestPayment(): Promise<Payment | null> {
-    const subscription = await this.asStripeSubscription([
-      'latest_invoice.payments.data.payment.payment_intent',
-    ])
-    const invoice = subscription.latest_invoice
-    if (!invoice || typeof invoice === 'string') return null
+    const subscription = await this.asStripeSubscription()
+    const invoiceId =
+      typeof subscription.latest_invoice === 'string'
+        ? subscription.latest_invoice
+        : subscription.latest_invoice?.id
+    if (!invoiceId) return null
+
+    const invoice = await shopkeeper.stripe.invoices.retrieve(invoiceId, {
+      expand: ['payments.data.payment.payment_intent'],
+    })
 
     const invoicePayment = invoice.payments?.data?.[0]
     if (!invoicePayment?.payment?.payment_intent) return null
@@ -857,7 +883,12 @@ export default class Subscription extends compose(
    * The discount that applies to the subscription, if applicable.
    */
   async discount(): Promise<Discount | null> {
-    const subscription = await this.asStripeSubscription(['discounts', 'discounts.promotion_code'])
+    const subscription = await this.asStripeSubscription([
+      'discounts',
+      'discounts.promotion_code',
+      'discounts.source.coupon',
+      'discounts.promotion_code.promotion.coupon',
+    ])
     const firstDiscount = subscription.discounts[0]
     return firstDiscount && typeof firstDiscount !== 'string' ? new Discount(firstDiscount) : null
   }
@@ -959,17 +990,36 @@ export default class Subscription extends compose(
   ): Promise<Map<string, Stripe.SubscriptionUpdateParams.Item>> {
     const stripeSubscription = await this.asStripeSubscription()
 
+    // Collect existing items that are not in the swap prices
+    const existingItemsToRemove: Stripe.SubscriptionItem[] = []
     for (const stripeSubscriptionItem of stripeSubscription.items.data) {
       const price = stripeSubscriptionItem.price
-      const item = items.get(price.id) || {}
-      if (!items.has(price.id)) {
-        item.deleted = true
-        if (price.recurring?.usage_type === 'metered') {
-          item.clear_usage = true
-        }
+      if (items.has(price.id)) {
+        // Price exists in swap — attach the subscription item id
+        const item = items.get(price.id)!
+        items.set(price.id, { ...item, id: stripeSubscriptionItem.id })
+      } else {
+        existingItemsToRemove.push(stripeSubscriptionItem)
       }
+    }
 
-      items.set(price.id, { ...item, id: stripeSubscriptionItem.id })
+    // For non-metered items not in the swap, try to reuse their subscription item
+    // IDs by assigning them to new prices that don't have an id yet. This converts
+    // a delete+create into an update operation, which ensures proper proration
+    // credits in Stripe v20.
+    // Note: metered items cannot be reused because Stripe does not allow changing
+    // the usage type (metered ↔ licensed) on an existing subscription item.
+    const newPricesWithoutId = [...items.entries()].filter(([, v]) => !v.id && !v.deleted)
+    for (const existingItem of existingItemsToRemove) {
+      const isMetered = existingItem.price.recurring?.usage_type === 'metered'
+      if (!isMetered && newPricesWithoutId.length > 0) {
+        // Reuse this non-metered subscription item for a new price
+        const [priceId, priceItem] = newPricesWithoutId.shift()!
+        items.set(priceId, { ...priceItem, id: existingItem.id })
+      } else {
+        // Metered items or no reuse target — mark for deletion
+        items.set(existingItem.price.id, { deleted: true, id: existingItem.id })
+      }
     }
 
     return items
@@ -982,12 +1032,15 @@ export default class Subscription extends compose(
     items: Map<string, Stripe.SubscriptionUpdateParams.Item>,
     params: Stripe.SubscriptionUpdateParams = {}
   ): Stripe.SubscriptionUpdateParams {
+    const prorationBehavior = this.prorateBehavior()
+
     let payload: Stripe.SubscriptionUpdateParams = {
       items: [...items.values()],
       payment_behavior: this.paymentBehavior(),
-      proration_behavior: this.prorateBehavior(),
+      proration_behavior: prorationBehavior,
       discounts: this.promotionCodeId ? [{ promotion_code: this.promotionCodeId }] : undefined,
-      expand: ['latest_invoice.payment_intent'],
+      // Don't use off_session with always_invoice, as it interferes with proration calculation
+      off_session: prorationBehavior !== 'always_invoice' ? true : undefined,
     }
 
     if (payload.payment_behavior !== 'pending_if_incomplete') {
@@ -998,7 +1051,7 @@ export default class Subscription extends compose(
       ...payload,
       ...params,
       billing_cycle_anchor: this.billingCycleAnchor,
-      trial_end: this.onTrial() ? this.trialEndsAt!.toUnixInteger() : 'now',
+      trial_end: this.onTrial() ? this.trialEndsAt!.toUnixInteger() : undefined,
     }
 
     return payload

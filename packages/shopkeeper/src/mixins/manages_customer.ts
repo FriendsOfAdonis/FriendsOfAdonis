@@ -8,17 +8,17 @@ import app from '@adonisjs/core/services/app'
 import { Discount } from '../discount.js'
 import { PromotionCode } from '../promotion_code.js'
 import { CustomerBalanceTransaction } from '../customer_balance_transaction.js'
-import type { ManagesCustomerI, ManagesStripeI } from '../contracts.js'
+import type { ManagesCustomerContract, ManagesStripeContract } from '../contracts.js'
 import type { NormalizeConstructor } from '@adonisjs/core/types/helpers'
 import type { BaseModel } from '@adonisjs/lucid/orm'
 
 export type ManagesCustomerClass<
   T extends NormalizeConstructor<typeof BaseModel> = NormalizeConstructor<typeof BaseModel>,
-> = T & { new (...args: any[]): ManagesCustomerI }
+> = T & { new (...args: any[]): ManagesCustomerContract }
 
 export function managesCustomer() {
   return <
-    T extends NormalizeConstructor<typeof BaseModel> & { new (...args: any[]): ManagesStripeI },
+    T extends NormalizeConstructor<typeof BaseModel> & { new (...args: any[]): ManagesStripeContract },
   >(
     superclass: T
   ): ManagesCustomerClass<T> => {
@@ -155,7 +155,10 @@ export function managesCustomer() {
       }
 
       async discount(): Promise<Discount | null> {
-        const customer = await this.asStripeCustomer(['discount.promotion_code'])
+        const customer = await this.asStripeCustomer([
+          'discount.promotion_code',
+          'discount.source.coupon',
+        ])
         return customer.discount ? new Discount(customer.discount) : null
       }
 
@@ -166,6 +169,7 @@ export function managesCustomer() {
         const codes = await this.stripe.promotionCodes.list({
           code,
           limit: 1,
+          expand: ['data.promotion.coupon'],
           ...params,
         })
 

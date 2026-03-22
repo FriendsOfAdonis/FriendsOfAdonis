@@ -2,16 +2,16 @@ import { compose } from '@adonisjs/core/helpers'
 import { Empty } from './types.js'
 import { AllowsCoupon } from './mixins/allows_coupons.js'
 import { HandlesTaxes } from './mixins/handles_taxes.js'
-import { type ManagesCustomerI } from './contracts.js'
+import { type ManagesCustomerContract } from './contracts.js'
 import { type SubscriptionBuilder } from './subscription_builder.js'
 import type Stripe from 'stripe'
 import { Checkout } from './checkout.js'
 import shopkeeper from '../services/shopkeeper.js'
 
 export class CheckoutBuilder extends compose(Empty, AllowsCoupon, HandlesTaxes) {
-  #owner?: ManagesCustomerI
+  #owner?: ManagesCustomerContract
 
-  constructor(owner?: ManagesCustomerI, parentInstance?: SubscriptionBuilder) {
+  constructor(owner?: ManagesCustomerContract, parentInstance?: SubscriptionBuilder) {
     super()
     this.#owner = owner
 
@@ -31,7 +31,7 @@ export class CheckoutBuilder extends compose(Empty, AllowsCoupon, HandlesTaxes) 
   /**
    * Create a new checkout builder instance.
    */
-  static make(owner?: ManagesCustomerI, instance?: SubscriptionBuilder) {
+  static make(owner?: ManagesCustomerContract, instance?: SubscriptionBuilder) {
     return new this(owner, instance)
   }
 
