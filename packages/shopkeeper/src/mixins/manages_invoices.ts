@@ -5,7 +5,7 @@ import { Payment } from '../payment.js'
 import shopkeeper from '../../services/shopkeeper.js'
 import { checkStripeError } from '../utils/errors.js'
 import { InvalidInvoiceError } from '../errors/invalid_invoice.js'
-import type { ManagesCustomerI, ManagesInvoicesI } from '../contracts.js'
+import type { ManagesCustomerContract, ManagesInvoicesContract } from '../contracts.js'
 import type { HandlesTaxesRow } from './handles_taxes.js'
 import type { NormalizeConstructor } from '@adonisjs/core/types/helpers'
 import type { BaseModel } from '@adonisjs/lucid/orm'
@@ -18,12 +18,12 @@ type TabItemParams = Partial<
 
 export type ManagesInvoicesClass<
   T extends NormalizeConstructor<typeof BaseModel> = NormalizeConstructor<typeof BaseModel>,
-> = T & { new (...args: any[]): ManagesInvoicesI }
+> = T & { new (...args: any[]): ManagesInvoicesContract }
 
 export function managesInvoices() {
   return <
     T extends NormalizeConstructor<typeof BaseModel> & {
-      new (...args: any[]): ManagesCustomerI & HandlesTaxesRow
+      new (...args: any[]): ManagesCustomerContract & HandlesTaxesRow
     },
   >(
     superclass: T
@@ -184,6 +184,25 @@ export function managesInvoices() {
           automatic_tax: this.automaticTaxPayload(),
           customer: stripeId,
           ...params,
+        }
+
+        // createPreview requires at least one of: subscription, schedule,
+        // subscription_details.items, schedule_details.phases, or invoice_items.
+        // Auto-detect the customer's subscription if none is provided.
+        if (
+          !options.subscription &&
+          !options.subscription_details?.items &&
+          !options.schedule &&
+          !options.schedule_details?.phases &&
+          !options.invoice_items
+        ) {
+          const subs = await this.stripe.subscriptions.list({
+            customer: stripeId,
+            limit: 1,
+          })
+          if (subs.data[0]) {
+            options.subscription = subs.data[0].id
+          }
         }
 
         try {

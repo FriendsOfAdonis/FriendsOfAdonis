@@ -1,20 +1,20 @@
 import { Exception } from '@adonisjs/core/exceptions'
 import type Stripe from 'stripe'
 import { InvalidPaymentError } from './errors/invalid_payment.js'
-import { type ManagesPaymentMethodsI } from './contracts.js'
+import { type ManagesPaymentMethodsContract } from './contracts.js'
 
 export class PaymentMethod {
   /**
    * The Stripe model instance.
    */
-  #owner: ManagesPaymentMethodsI
+  #owner: ManagesPaymentMethodsContract
 
   /**
    * The Stripe PaymentMethod instance.
    */
   #paymentMethod: Stripe.PaymentMethod
 
-  constructor(owner: ManagesPaymentMethodsI, paymentMethod: Stripe.PaymentMethod) {
+  constructor(owner: ManagesPaymentMethodsContract, paymentMethod: Stripe.PaymentMethod) {
     if (!paymentMethod.customer) {
       throw new Exception('The payment method is not attached to a customer.')
     }
@@ -39,7 +39,7 @@ export class PaymentMethod {
   /**
    * Get the Stripe model instance.
    */
-  owner(): ManagesPaymentMethodsI {
+  owner(): ManagesPaymentMethodsContract {
     return this.#owner
   }
 

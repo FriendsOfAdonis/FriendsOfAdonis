@@ -1,5 +1,5 @@
 import type Stripe from 'stripe'
-import { type ManagesCustomerI } from './contracts.js'
+import { type ManagesCustomerContract } from './contracts.js'
 import { type SubscriptionBuilder } from './subscription_builder.js'
 import { CheckoutBuilder } from './checkout_builder.js'
 import shopkeeper from '../services/shopkeeper.js'
@@ -11,7 +11,7 @@ export class Checkout {
    */
   #session: Stripe.Checkout.Session
 
-  constructor(_owner: ManagesCustomerI | null, session: Stripe.Checkout.Session) {
+  constructor(_owner: ManagesCustomerContract | null, session: Stripe.Checkout.Session) {
     this.#session = session
   }
 
@@ -29,7 +29,7 @@ export class Checkout {
     return new CheckoutBuilder()
   }
 
-  static customer(owner: ManagesCustomerI, parentInstance?: SubscriptionBuilder) {
+  static customer(owner: ManagesCustomerContract, parentInstance?: SubscriptionBuilder) {
     return new CheckoutBuilder(owner, parentInstance)
   }
 
@@ -37,7 +37,7 @@ export class Checkout {
    * Begin a new checkout session.
    */
   static async create(
-    owner?: ManagesCustomerI,
+    owner?: ManagesCustomerContract,
     sessionParams: Stripe.Checkout.SessionCreateParams = {},
     customerParams: Stripe.CustomerCreateParams = {}
   ): Promise<Checkout> {

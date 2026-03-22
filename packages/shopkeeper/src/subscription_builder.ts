@@ -7,9 +7,9 @@ import { compose } from '@adonisjs/core/helpers'
 import { HandlesTaxes } from './mixins/handles_taxes.js'
 import { Empty } from './types.js'
 import {
-  type ManagesCustomerI,
-  type ManagesPaymentMethodsI,
-  type ManagesSubscriptionsI,
+  type ManagesCustomerContract,
+  type ManagesPaymentMethodsContract,
+  type ManagesSubscriptionsContract,
 } from './contracts.js'
 import { AllowsCoupon } from './mixins/allows_coupons.js'
 import { HandlesPaymentFailures } from './mixins/handles_payment_failures.js'
@@ -17,7 +17,7 @@ import { InteractWithPaymentBehavior } from './mixins/interacts_with_payment_beh
 import { Prorates } from './mixins/prorates.js'
 import shopkeeper from '../services/shopkeeper.js'
 
-type SubscriptionBuilderOwner = ManagesSubscriptionsI & ManagesCustomerI & ManagesPaymentMethodsI
+type SubscriptionBuilderOwner = ManagesSubscriptionsContract & ManagesCustomerContract & ManagesPaymentMethodsContract
 
 export class SubscriptionBuilder extends compose(
   Empty,
@@ -350,7 +350,6 @@ export class SubscriptionBuilder extends compose(
       automatic_tax: this.automaticTaxPayload(),
       billing_cycle_anchor: this.#billingCycleAnchor,
       discounts: discounts.length > 0 ? discounts : undefined,
-      expand: ['latest_invoice.payment_intent'],
       metadata: this.#metadata,
       items: this.#items,
       payment_behavior: this.paymentBehavior(),

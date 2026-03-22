@@ -469,7 +469,7 @@ test.group('Subscriptions', (group) => {
     assert.isFalse(subscription.ended())
 
     const invoice = await subscription.invoices().then((i) => i[0])
-    const period = await invoice.invoiceItems().then((i) => i[0].period)
+    const period = await invoice.invoiceLineItems().then((i) => i[0].period)
 
     assert.equal(DateTime.fromSeconds(period.start).toISODate(), DateTime.now().toISODate())
     assert.equal(
@@ -603,7 +603,10 @@ test.group('Subscriptions', (group) => {
       await user.invoices().then((i) => (i[0].asStripeInvoice() as Stripe.Invoice).id),
       stripeInvoice.id
     )
-    assert.equal(await user.invoices().then((i) => i[0].rawTotal()), 1000)
+    // In Stripe v20, proration is based on what was actually billed for the current
+    // period. Since the customer was already billed 2000 (premiumPrice) and we're
+    // switching back to premiumPrice, the net proration is 0.
+    assert.equal(await user.invoices().then((i) => i[0].rawTotal()), 0)
     assert.equal(await user.upcomingInvoice().then((i) => i?.rawTotal()), 2000)
 
     await subscription.prorate().swap(price.id)
