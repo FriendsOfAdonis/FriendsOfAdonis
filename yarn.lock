@@ -3002,6 +3002,7 @@ __metadata:
     "@japa/api-client": "npm:^3.2.1"
     "@japa/assert": "npm:^4.2.0"
     "@japa/expect": "npm:^3.0.7"
+    "@japa/expect-type": "npm:^2.0.4"
     "@japa/file-system": "npm:^3.0.0"
     "@japa/plugin-adonisjs": "npm:^5.1.0"
     "@japa/runner": "npm:^5.3.0"

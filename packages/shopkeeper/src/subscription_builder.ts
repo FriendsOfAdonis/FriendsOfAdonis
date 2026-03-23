@@ -15,7 +15,8 @@ import { AllowsCoupon } from './mixins/allows_coupons.js'
 import { HandlesPaymentFailures } from './mixins/handles_payment_failures.js'
 import { InteractWithPaymentBehavior } from './mixins/interacts_with_payment_behavior.js'
 import { Prorates } from './mixins/prorates.js'
-import shopkeeper from '../services/shopkeeper.js'
+import app from '@adonisjs/core/services/app'
+import { Shopkeeper } from './shopkeeper.js'
 
 type SubscriptionBuilderOwner = ManagesSubscriptionsContract & ManagesCustomerContract & ManagesPaymentMethodsContract
 
@@ -193,7 +194,8 @@ export class SubscriptionBuilder extends compose(
 
     const stripeCustomer = await this.getStripeCustomer(paymentMethod, customerParams)
 
-    const stripeSuscription = await shopkeeper.stripe.subscriptions.create({
+    const { stripe } = await app.container.make(Shopkeeper)
+    const stripeSuscription = await stripe.subscriptions.create({
       customer: stripeCustomer.id,
       ...this.buildPayload(),
       ...subscriptionParams,

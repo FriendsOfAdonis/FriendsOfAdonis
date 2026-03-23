@@ -3,7 +3,6 @@ import type Subscription from '../models/subscription.js'
 import { IncompletePaymentError } from '../errors/incomplete_payment.js'
 import { checkStripeError } from '../utils/errors.js'
 import { Payment } from '../payment.js'
-import shopkeeper from '../../services/shopkeeper.js'
 
 type Constructor = new (...args: any[]) => {}
 
@@ -43,7 +42,7 @@ export function HandlesPaymentFailures<Model extends Constructor>(superclass: Mo
                 checkStripeError(e2, 'StripeCardError')
               }
 
-              const stripeSubscription = await shopkeeper.stripe.subscriptions.retrieve(
+              const stripeSubscription = await subscription.stripe.subscriptions.retrieve(
                 subscription.stripeId
               )
               subscription.stripeStatus = stripeSubscription.status
@@ -51,7 +50,7 @@ export function HandlesPaymentFailures<Model extends Constructor>(superclass: Mo
 
               if (subscription.hasIncompletePayment()) {
                 // Re-fetch from Stripe since confirm() throws before updating the local reference
-                const paymentIntent = await shopkeeper.stripe.paymentIntents.retrieve(
+                const paymentIntent = await subscription.stripe.paymentIntents.retrieve(
                   e.payment.paymentIntent.id
                 )
                 new Payment(paymentIntent).validate()

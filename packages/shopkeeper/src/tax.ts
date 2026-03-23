@@ -1,4 +1,4 @@
-import shopkeeper from '../services/shopkeeper.js'
+import { Shopkeeper } from './shopkeeper.js'
 
 export class Tax {
   /**
@@ -47,7 +47,7 @@ export class Tax {
    * Format the given amount into a displayable currency.
    */
   formatAmount(amount: number): string {
-    return shopkeeper.formatAmount(amount, this.#currency)
+    return Shopkeeper.formatAmount(amount, this.#currency)
   }
 
   /**

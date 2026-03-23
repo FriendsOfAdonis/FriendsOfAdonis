@@ -2,7 +2,7 @@ import type Stripe from 'stripe'
 import { Invoice } from '../invoice.js'
 import { Exception } from '@adonisjs/core/exceptions'
 import { Payment } from '../payment.js'
-import shopkeeper from '../../services/shopkeeper.js'
+import app from '@adonisjs/core/services/app'
 import { checkStripeError } from '../utils/errors.js'
 import { InvalidInvoiceError } from '../errors/invalid_invoice.js'
 import type { ManagesCustomerContract, ManagesInvoicesContract } from '../contracts.js'
@@ -161,7 +161,7 @@ export function managesInvoices() {
         const options: Stripe.InvoiceCreateParams = {
           automatic_tax: this.automaticTaxPayload(),
           customer: customer.id,
-          currency: customer.currency ?? shopkeeper.currency,
+          currency: customer.currency ?? app.config.get('shopkeeper.currency'),
           ...params,
         }
 

@@ -12,6 +12,8 @@ import { Payment } from '../payment.js'
 import { Discount } from '../discount.js'
 import { SubscriptionUpdateFailureError } from '../errors/subscription_update_failure.js'
 import shopkeeper from '../../services/shopkeeper.js'
+import app from '@adonisjs/core/services/app'
+import { type ShopkeeperConfig } from '../types.js'
 import { AllowsCoupon } from '../mixins/allows_coupons.js'
 import { HandlesPaymentFailures } from '../mixins/handles_payment_failures.js'
 import { InteractWithPaymentBehavior } from '../mixins/interacts_with_payment_behavior.js'
@@ -143,9 +145,10 @@ export default class Subscription extends compose(
   active(): boolean {
     return (
       !this.ended() &&
-      (!shopkeeper.config.keepIncompleteSubscriptionsActive ||
+      (!app.config.get<ShopkeeperConfig>('shopkeeper').keepIncompleteSubscriptionsActive ||
         this.stripeStatus !== 'incomplete') &&
-      (!shopkeeper.config.keepPastDueSubscriptionsActive || this.stripeStatus !== 'past_due') &&
+      (!app.config.get<ShopkeeperConfig>('shopkeeper').keepPastDueSubscriptionsActive ||
+        this.stripeStatus !== 'past_due') &&
       this.stripeStatus !== 'unpaid'
     )
   }
@@ -868,7 +871,7 @@ export default class Subscription extends compose(
         : subscription.latest_invoice?.id
     if (!invoiceId) return null
 
-    const invoice = await shopkeeper.stripe.invoices.retrieve(invoiceId, {
+    const invoice = await this.stripe.invoices.retrieve(invoiceId, {
       expand: ['payments.data.payment.payment_intent'],
     })
 
