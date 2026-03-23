@@ -1,8 +1,9 @@
 import type Stripe from 'stripe'
+import app from '@adonisjs/core/services/app'
 import { type ManagesCustomerContract } from './contracts.js'
 import { type SubscriptionBuilder } from './subscription_builder.js'
 import { CheckoutBuilder } from './checkout_builder.js'
-import shopkeeper from '../services/shopkeeper.js'
+import { Shopkeeper } from './shopkeeper.js'
 import router from '@adonisjs/core/services/router'
 
 export class Checkout {
@@ -13,13 +14,6 @@ export class Checkout {
 
   constructor(_owner: ManagesCustomerContract | null, session: Stripe.Checkout.Session) {
     this.#session = session
-  }
-
-  /**
-   * Get the Checkout Session as a Stripe Checkout Session object.
-   */
-  asStripeSession(): Stripe.Checkout.Session {
-    return this.#session
   }
 
   /**
@@ -41,6 +35,7 @@ export class Checkout {
     sessionParams: Stripe.Checkout.SessionCreateParams = {},
     customerParams: Stripe.CustomerCreateParams = {}
   ): Promise<Checkout> {
+    const shopkeeper = await app.container.make(Shopkeeper)
     const stripe = owner?.stripe ?? shopkeeper.stripe
     const data: Stripe.Checkout.SessionCreateParams = {
       mode: 'payment',
@@ -95,5 +90,12 @@ export class Checkout {
     const session = await stripe.checkout.sessions.create(data)
 
     return new this(owner ?? null, session)
+  }
+
+  /**
+   * Get the Checkout Session as a Stripe Checkout Session object.
+   */
+  asStripeSession(): Stripe.Checkout.Session {
+    return this.#session
   }
 }

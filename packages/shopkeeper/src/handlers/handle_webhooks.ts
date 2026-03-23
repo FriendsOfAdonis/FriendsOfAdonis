@@ -1,9 +1,10 @@
+import type Stripe from 'stripe'
 import { type HttpContext } from '@adonisjs/core/http'
 import emitter from '@adonisjs/core/services/emitter'
-import type Stripe from 'stripe'
+import { isStripeEvent } from '../utils/errors.js'
 
-function assertStripeEvent(body: object): asserts body is Stripe.Event {
-  if (!('type' in body) || !('data' in body) || !('id' in body)) {
+function assertStripeEvent(body: unknown): asserts body is Stripe.Event {
+  if (!isStripeEvent(body)) {
     throw new Error('Invalid Stripe event payload')
   }
 }

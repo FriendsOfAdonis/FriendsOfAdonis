@@ -2,7 +2,7 @@
 
 import { InvalidCustomerError } from '../errors/invalid_customer.js'
 import { CustomerAlreadyCreatedError } from '../errors/customer_already_created.js'
-import shopkeeper from '../../services/shopkeeper.js'
+import { Shopkeeper } from '../shopkeeper.js'
 import type Stripe from 'stripe'
 import app from '@adonisjs/core/services/app'
 import { Discount } from '../discount.js'
@@ -255,7 +255,7 @@ export function managesCustomer() {
       }
 
       formatAmount(amount: number): string {
-        return shopkeeper.formatAmount(amount, this.preferredCurrency())
+        return Shopkeeper.formatAmount(amount, this.preferredCurrency())
       }
 
       async billingPortalUrl(

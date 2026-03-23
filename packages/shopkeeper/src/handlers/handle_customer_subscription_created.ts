@@ -1,10 +1,12 @@
 import type Stripe from 'stripe'
-import shopkeeper from '../../services/shopkeeper.js'
+import app from '@adonisjs/core/services/app'
+import { Shopkeeper } from '../shopkeeper.js'
 import { DateTime } from 'luxon'
 
 export async function handleCustomerSubscriptionCreated(
   payload: Stripe.CustomerSubscriptionCreatedEvent
 ) {
+  const shopkeeper = await app.container.make(Shopkeeper)
   const user = await shopkeeper.findBillable(payload.data.object.customer)
 
   if (!user) return

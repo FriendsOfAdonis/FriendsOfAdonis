@@ -4,7 +4,7 @@ import { Tax } from './tax.js'
 import { Discount } from './discount.js'
 import { InvalidInvoiceError } from './errors/invalid_invoice.js'
 import { DateTime, type Zone } from 'luxon'
-import shopkeeper from '../services/shopkeeper.js'
+import { Shopkeeper } from './shopkeeper.js'
 import { InvoiceLineItem } from './invoice_line_item.js'
 
 export class Invoice {
@@ -414,7 +414,7 @@ export class Invoice {
    * Format the given amount into a displayable currency.
    */
   formatAmount(amount: number): string {
-    return shopkeeper.formatAmount(amount, this.#invoice.currency)
+    return Shopkeeper.formatAmount(amount, this.#invoice.currency)
   }
 
   /**
