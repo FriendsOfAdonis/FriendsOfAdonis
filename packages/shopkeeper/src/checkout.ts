@@ -1,5 +1,4 @@
 import type Stripe from 'stripe'
-import app from '@adonisjs/core/services/app'
 import { type ManagesCustomerContract } from './contracts.js'
 import { type SubscriptionBuilder } from './subscription_builder.js'
 import { CheckoutBuilder } from './checkout_builder.js'
@@ -35,8 +34,7 @@ export class Checkout {
     sessionParams: Stripe.Checkout.SessionCreateParams = {},
     customerParams: Stripe.CustomerCreateParams = {}
   ): Promise<Checkout> {
-    const shopkeeper = await app.container.make(Shopkeeper)
-    const stripe = owner?.stripe ?? shopkeeper.stripe
+    const stripe = await Shopkeeper.resolveStripe()
     const data: Stripe.Checkout.SessionCreateParams = {
       mode: 'payment',
       ...sessionParams,

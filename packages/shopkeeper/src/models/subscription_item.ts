@@ -8,6 +8,7 @@ import { Prorates } from '../mixins/prorates.js'
 import Stripe from 'stripe'
 import { managesStripe } from '../mixins/manages_stripe.js'
 import { DateTime } from 'luxon'
+import { Shopkeeper } from '../shopkeeper.js'
 import shopkeeper from '../../services/shopkeeper.js'
 
 export default class SubscriptionItem extends compose(
@@ -60,7 +61,9 @@ export default class SubscriptionItem extends compose(
    * Decrement the quantity of the subscription item.
    */
   decrementQuantity(count = 1): Promise<this> {
-    // TODO: Handle error -1
+    if ((this.quantity ?? 0) - count < 0) {
+      throw new Error('Quantity cannot be negative')
+    }
     return this.updateQuantity((this.quantity ?? 0) - count)
   }
 
@@ -161,7 +164,8 @@ export default class SubscriptionItem extends compose(
 
     const customerId = this.subscription.user.stripeIdOrFail()
 
-    return this.stripe.billing.meterEvents.create({
+    const stripe = await Shopkeeper.resolveStripe()
+    return stripe.billing.meterEvents.create({
       event_name: eventName,
       payload: {
         stripe_customer_id: customerId,
@@ -184,7 +188,8 @@ export default class SubscriptionItem extends compose(
 
     const customerId = this.subscription.user.stripeIdOrFail()
 
-    const response = await this.stripe.billing.meters.listEventSummaries(meterId, {
+    const stripe = await Shopkeeper.resolveStripe()
+    const response = await stripe.billing.meters.listEventSummaries(meterId, {
       customer: customerId,
       ...params,
     })
@@ -194,16 +199,18 @@ export default class SubscriptionItem extends compose(
   /**
    * Update the underlying Stripe subscription item information for the model.
    */
-  updateStripeSubscriptionItem(
+  async updateStripeSubscriptionItem(
     params: Stripe.SubscriptionItemUpdateParams = {}
   ): Promise<Stripe.SubscriptionItem> {
-    return this.stripe.subscriptionItems.update(this.stripeId, params)
+    const stripe = await Shopkeeper.resolveStripe()
+    return stripe.subscriptionItems.update(this.stripeId, params)
   }
 
   /**
    * Get the subscription as a Stripe subscription item object.
    */
-  asStripeSubscriptionItem(expand: string[] = []): Promise<Stripe.SubscriptionItem> {
-    return this.stripe.subscriptionItems.retrieve(this.stripeId, { expand })
+  async asStripeSubscriptionItem(expand: string[] = []): Promise<Stripe.SubscriptionItem> {
+    const stripe = await Shopkeeper.resolveStripe()
+    return stripe.subscriptionItems.retrieve(this.stripeId, { expand })
   }
 }

@@ -12,12 +12,10 @@ import type { CustomerBalanceTransaction } from './customer_balance_transaction.
 import type { SubscriptionBuilder } from './subscription_builder.js'
 import type Subscription from './models/subscription.js'
 
-export interface ManagesStripeContract {
-  stripeId: string | null
-
+export interface ManagesStripeContract<Optional extends boolean = true> {
+  stripeId: Optional extends false ? string : string | null
   hasStripeId(): boolean
   stripeIdOrFail(): string
-  get stripe(): Stripe
 }
 
 export interface HandlesTaxesContract {
