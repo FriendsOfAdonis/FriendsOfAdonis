@@ -2,9 +2,9 @@ import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import Subscription from './subscription.js'
 import { compose } from '@adonisjs/core/helpers'
-import { HandlesPaymentFailures } from '../mixins/handles_payment_failures.js'
-import { InteractWithPaymentBehavior } from '../mixins/interacts_with_payment_behavior.js'
-import { Prorates } from '../mixins/prorates.js'
+import { handlesPaymentFailures } from '../mixins/handles_payment_failures.js'
+import { interactWithPaymentBehavior } from '../mixins/interacts_with_payment_behavior.js'
+import { prorates } from '../mixins/prorates.js'
 import Stripe from 'stripe'
 import { managesStripe } from '../mixins/manages_stripe.js'
 import { DateTime } from 'luxon'
@@ -14,9 +14,9 @@ import shopkeeper from '../../services/shopkeeper.js'
 export default class SubscriptionItem extends compose(
   BaseModel,
   managesStripe(false),
-  HandlesPaymentFailures,
-  InteractWithPaymentBehavior,
-  Prorates
+  handlesPaymentFailures(),
+  interactWithPaymentBehavior(),
+  prorates()
 ) {
   @column({ isPrimary: true })
   declare id: number

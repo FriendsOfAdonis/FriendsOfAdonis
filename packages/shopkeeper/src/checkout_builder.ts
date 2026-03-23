@@ -1,14 +1,14 @@
 import { compose } from '@adonisjs/core/helpers'
 import app from '@adonisjs/core/services/app'
 import { Empty, type ShopkeeperConfig } from './types.js'
-import { AllowsCoupon } from './mixins/allows_coupons.js'
-import { HandlesTaxes } from './mixins/handles_taxes.js'
+import { allowsCoupon } from './mixins/allows_coupons.js'
+import { handlesTaxes } from './mixins/handles_taxes.js'
 import { type ManagesCustomerContract } from './contracts.js'
 import { type SubscriptionBuilder } from './subscription_builder.js'
 import type Stripe from 'stripe'
 import { Checkout } from './checkout.js'
 
-export class CheckoutBuilder extends compose(Empty, AllowsCoupon, HandlesTaxes) {
+export class CheckoutBuilder extends compose(Empty, allowsCoupon(), handlesTaxes()) {
   #owner?: ManagesCustomerContract
 
   constructor(owner?: ManagesCustomerContract, parentInstance?: SubscriptionBuilder) {

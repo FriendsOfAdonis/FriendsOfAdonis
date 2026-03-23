@@ -4,17 +4,17 @@ import { Exception } from '@adonisjs/core/exceptions'
 import { Checkout } from './checkout.js'
 import type Subscription from './models/subscription.js'
 import { compose } from '@adonisjs/core/helpers'
-import { HandlesTaxes } from './mixins/handles_taxes.js'
+import { handlesTaxes } from './mixins/handles_taxes.js'
 import { Empty } from './types.js'
 import {
   type ManagesCustomerContract,
   type ManagesPaymentMethodsContract,
   type ManagesSubscriptionsContract,
 } from './contracts.js'
-import { AllowsCoupon } from './mixins/allows_coupons.js'
-import { HandlesPaymentFailures } from './mixins/handles_payment_failures.js'
-import { InteractWithPaymentBehavior } from './mixins/interacts_with_payment_behavior.js'
-import { Prorates } from './mixins/prorates.js'
+import { allowsCoupon } from './mixins/allows_coupons.js'
+import { handlesPaymentFailures } from './mixins/handles_payment_failures.js'
+import { interactWithPaymentBehavior } from './mixins/interacts_with_payment_behavior.js'
+import { prorates } from './mixins/prorates.js'
 import app from '@adonisjs/core/services/app'
 import { Shopkeeper } from './shopkeeper.js'
 
@@ -24,11 +24,11 @@ type SubscriptionBuilderOwner = ManagesSubscriptionsContract &
 
 export class SubscriptionBuilder extends compose(
   Empty,
-  AllowsCoupon,
-  HandlesPaymentFailures,
-  HandlesTaxes,
-  InteractWithPaymentBehavior,
-  Prorates
+  allowsCoupon(),
+  handlesPaymentFailures(),
+  handlesTaxes(),
+  interactWithPaymentBehavior(),
+  prorates()
 ) {
   /**
    * The model that is subscribing.

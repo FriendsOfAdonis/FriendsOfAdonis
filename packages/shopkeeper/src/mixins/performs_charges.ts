@@ -9,7 +9,7 @@ import type {
 } from '../contracts.js'
 import type { NormalizeConstructor } from '@adonisjs/core/types/helpers'
 import type { BaseModel } from '@adonisjs/lucid/orm'
-import { AllowsCoupon } from './allows_coupons.js'
+import { allowsCoupon } from './allows_coupons.js'
 import { compose } from '@adonisjs/core/helpers'
 
 export type PerformsChargesClass<
@@ -24,7 +24,7 @@ export function performCharges() {
   >(
     superclass: T
   ): PerformsChargesClass<T> => {
-    class EntityMixin extends compose(superclass, AllowsCoupon) {
+    class EntityMixin extends compose(superclass, allowsCoupon()) {
       /**
        * Make a "one off" charge on the customer for the given amount.
        */

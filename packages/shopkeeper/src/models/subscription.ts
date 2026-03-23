@@ -15,10 +15,10 @@ import { Shopkeeper } from '../shopkeeper.js'
 import shopkeeper from '../../services/shopkeeper.js'
 import app from '@adonisjs/core/services/app'
 import { type ShopkeeperConfig } from '../types.js'
-import { AllowsCoupon } from '../mixins/allows_coupons.js'
-import { HandlesPaymentFailures } from '../mixins/handles_payment_failures.js'
-import { InteractWithPaymentBehavior } from '../mixins/interacts_with_payment_behavior.js'
-import { Prorates } from '../mixins/prorates.js'
+import { allowsCoupon } from '../mixins/allows_coupons.js'
+import { handlesPaymentFailures } from '../mixins/handles_payment_failures.js'
+import { interactWithPaymentBehavior } from '../mixins/interacts_with_payment_behavior.js'
+import { prorates } from '../mixins/prorates.js'
 import is from '@adonisjs/core/helpers/is'
 import SubscriptionItem from './subscription_item.js'
 import { InvalidArgumentError } from '../errors/invalid_argument.js'
@@ -33,10 +33,10 @@ type SwapPricesParam =
 export default class Subscription extends compose(
   BaseModel,
   managesStripe(false),
-  AllowsCoupon,
-  HandlesPaymentFailures,
-  InteractWithPaymentBehavior,
-  Prorates
+  allowsCoupon(),
+  handlesPaymentFailures(),
+  interactWithPaymentBehavior(),
+  prorates()
 ) {
   @column({ isPrimary: true })
   declare id: number

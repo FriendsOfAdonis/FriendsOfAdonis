@@ -5,7 +5,7 @@ import { type BaseModel } from '@adonisjs/lucid/orm'
 import { compose } from '@adonisjs/core/helpers'
 import { managesCustomer } from './manages_customer.js'
 import { managesPaymentMethods } from './manages_payment_methods.js'
-import { HandlesTaxes } from './handles_taxes.js'
+import { handlesTaxes } from './handles_taxes.js'
 import { managesInvoices } from './manages_invoices.js'
 import { managesSubscriptions } from './manages_subscriptions.js'
 import { managesStripe } from './manages_stripe.js'
@@ -16,7 +16,7 @@ export function billable() {
     return class EntityMixin extends compose(
       superclass,
       managesStripe(true),
-      HandlesTaxes,
+      handlesTaxes(),
       managesCustomer(),
       managesPaymentMethods(),
       managesInvoices(),
