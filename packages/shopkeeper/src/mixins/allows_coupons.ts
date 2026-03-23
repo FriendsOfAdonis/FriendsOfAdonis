@@ -1,19 +1,10 @@
 import type Stripe from 'stripe'
+import type { AllowsCouponContract } from '../contracts.js'
 
 type Constructor = new (...args: any[]) => {}
 
-export interface AllowsCouponRow {
-  couponId?: string
-  promotionCodeId?: string
-  allowPromotionCodes: boolean
-  withCoupon(couponId: string): this
-  withPromotionCode(promotionCodeId: string): this
-  withAllowPromotionsCodes(): this
-  checkoutDiscounts(): Stripe.Checkout.SessionCreateParams.Discount[] | undefined
-}
-
 export type AllowsCouponClass<T extends Constructor = Constructor> = T & {
-  new (...args: any[]): AllowsCouponRow
+  new (...args: any[]): AllowsCouponContract
 }
 
 export function AllowsCoupon<T extends Constructor>(superclass: T): AllowsCouponClass<T> {

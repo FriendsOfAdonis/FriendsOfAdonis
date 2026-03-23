@@ -5,8 +5,12 @@ import { Payment } from '../payment.js'
 import app from '@adonisjs/core/services/app'
 import { checkStripeError } from '../utils/errors.js'
 import { InvalidInvoiceError } from '../errors/invalid_invoice.js'
-import type { ManagesCustomerContract, ManagesInvoicesContract } from '../contracts.js'
-import type { HandlesTaxesRow } from './handles_taxes.js'
+import { Shopkeeper } from '../shopkeeper.js'
+import type {
+  HandlesTaxesContract,
+  ManagesCustomerContract,
+  ManagesInvoicesContract,
+} from '../contracts.js'
 import type { NormalizeConstructor } from '@adonisjs/core/types/helpers'
 import type { BaseModel } from '@adonisjs/lucid/orm'
 
@@ -23,7 +27,7 @@ export type ManagesInvoicesClass<
 export function managesInvoices() {
   return <
     T extends NormalizeConstructor<typeof BaseModel> & {
-      new (...args: any[]): ManagesCustomerContract & HandlesTaxesRow
+      new (...args: any[]): ManagesCustomerContract & HandlesTaxesContract
     },
   >(
     superclass: T
@@ -32,7 +36,7 @@ export function managesInvoices() {
       /**
        * Add an invoice item to the customer's upcoming invoice.
        */
-      tab(
+      async tab(
         description: string,
         amount?: number,
         params: TabItemParams = {}
@@ -66,7 +70,8 @@ export function managesInvoices() {
           options.amount = amount
         }
 
-        return this.stripe.invoiceItems.create(options)
+        const stripe = await Shopkeeper.resolveStripe()
+        return stripe.invoiceItems.create(options)
       }
 
       /**
@@ -92,7 +97,8 @@ export function managesInvoices() {
       ): Promise<Stripe.InvoiceItem> {
         const stripeId = this.stripeIdOrFail()
 
-        return this.stripe.invoiceItems.create({
+        const stripe = await Shopkeeper.resolveStripe()
+        return stripe.invoiceItems.create({
           customer: stripeId,
           pricing: { price },
           quantity,
@@ -169,7 +175,8 @@ export function managesInvoices() {
           options.currency = undefined
         }
 
-        const invoice = await this.stripe.invoices.create(options)
+        const stripe = await Shopkeeper.resolveStripe()
+        const invoice = await stripe.invoices.create(options)
         return new Invoice(this, invoice)
       }
 
@@ -186,6 +193,8 @@ export function managesInvoices() {
           ...params,
         }
 
+        const stripe = await Shopkeeper.resolveStripe()
+
         // createPreview requires at least one of: subscription, schedule,
         // subscription_details.items, schedule_details.phases, or invoice_items.
         // Auto-detect the customer's subscription if none is provided.
@@ -196,7 +205,7 @@ export function managesInvoices() {
           !options.schedule_details?.phases &&
           !options.invoice_items
         ) {
-          const subs = await this.stripe.subscriptions.list({
+          const subs = await stripe.subscriptions.list({
             customer: stripeId,
             limit: 1,
           })
@@ -206,7 +215,7 @@ export function managesInvoices() {
         }
 
         try {
-          const invoice = await this.stripe.invoices.createPreview(options)
+          const invoice = await stripe.invoices.createPreview(options)
           return new Invoice(this, invoice)
         } catch (e) {
           checkStripeError(e, 'StripeInvalidRequestError')
@@ -220,7 +229,8 @@ export function managesInvoices() {
        */
       async findInvoice(id: string): Promise<Invoice | null> {
         try {
-          const invoice = await this.stripe.invoices.retrieve(id)
+          const stripe = await Shopkeeper.resolveStripe()
+          const invoice = await stripe.invoices.retrieve(id)
           return new Invoice(this, invoice)
         } catch (e) {
           checkStripeError(e, 'StripeInvalidRequestError')
@@ -261,7 +271,8 @@ export function managesInvoices() {
 
         const invoices = []
 
-        const stripeInvoices = await this.stripe.invoices.list({ customer: stripeId, ...params })
+        const stripe = await Shopkeeper.resolveStripe()
+        const stripeInvoices = await stripe.invoices.list({ customer: stripeId, ...params })
 
         for (const invoice of stripeInvoices.data) {
           if (invoice.status === 'paid' || includePending) {

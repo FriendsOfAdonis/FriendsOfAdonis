@@ -1,6 +1,7 @@
 import { test } from '@japa/runner'
 import { createCustomer } from '../utils.js'
 import { InvalidCustomerError } from '../../src/errors/invalid_customer.js'
+import { Shopkeeper } from '../../src/shopkeeper.js'
 import { Invoice } from '../../src/invoice.js'
 import type Stripe from 'stripe'
 import { InvalidInvoiceError } from '../../src/errors/invalid_invoice.js'
@@ -42,7 +43,8 @@ test.group('Invoices', () => {
     await user.createAsStripeCustomer()
     await user.updateDefaultPaymentMethod('pm_card_visa')
 
-    const price = await user.stripe.prices.create({
+    const stripe = await Shopkeeper.resolveStripe()
+    const price = await stripe.prices.create({
       currency: user.preferredCurrency(),
       product_data: {
         name: 'Koala',
@@ -61,7 +63,8 @@ test.group('Invoices', () => {
     await user.createAsStripeCustomer()
     await user.updateDefaultPaymentMethod('pm_card_visa')
 
-    const product = await user.stripe.products.create({
+    const stripe = await Shopkeeper.resolveStripe()
+    const product = await stripe.products.create({
       name: 'Fixing bugs',
       type: 'service',
     })

@@ -79,6 +79,11 @@ export class Shopkeeper {
     return this.#config.currency
   }
 
+  static async resolveStripe(): Promise<Stripe> {
+    const instance = await app.container.make(Shopkeeper)
+    return instance.stripe
+  }
+
   /**
    * Format the given amount into a displayable currency (static utility).
    * Reads currencyLocale from app config — no instance needed.
