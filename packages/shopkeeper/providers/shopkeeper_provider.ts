@@ -6,8 +6,6 @@ import { handleCustomerSubscriptionUpdated } from '../src/handlers/handle_custom
 import { handleCustomerSubscriptionDeleted } from '../src/handlers/handle_customer_subscription_deleted.js'
 import { handleWebhook } from '../src/handlers/handle_webhooks.js'
 import { InvalidConfigurationError } from '../src/errors/invalid_configuration.js'
-import BodyParserMiddleware from '@adonisjs/core/bodyparser_middleware'
-import { defineConfig } from '@adonisjs/core/bodyparser'
 
 export default class ShopkeeperProvider {
   #config: Required<ShopkeeperConfig>
@@ -37,25 +35,9 @@ export default class ShopkeeperProvider {
     if (this.#config.registerRoutes) {
       const router = await this.app.container.make('router')
 
-      const middleware = new BodyParserMiddleware(
-        defineConfig({
-          allowedMethods: ['POST'],
-          json: {
-            convertEmptyStringsToNull: true,
-            types: [
-              'application/json',
-              'application/json-patch+json',
-              'application/vnd.api+json',
-              'application/csp-report',
-            ],
-          },
-        })
-      )
-
       const route = router
         .post('/stripe/webhook', (ctx) => handleWebhook(ctx))
         .as('shopkeeper.webhook')
-        .use((ctx, next) => middleware.handle(ctx, next))
 
       if (this.#config.webhook.secret) {
         const middlewares = router.named({
