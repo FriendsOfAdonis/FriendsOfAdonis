@@ -294,5 +294,3 @@ export function managesInvoices() {
     return EntityMixin
   }
 }
-
-export type WithManagesInvoices = ReturnType<ReturnType<typeof managesInvoices>>

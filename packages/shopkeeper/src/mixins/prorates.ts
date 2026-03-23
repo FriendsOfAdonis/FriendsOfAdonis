@@ -1,6 +1,5 @@
 import type Stripe from 'stripe'
-
-type Constructor = new (...args: any[]) => {}
+import { type Constructor } from '../types.js'
 
 export function Prorates<Model extends Constructor>(superclass: Model) {
   return class ProratesImpl extends superclass {
@@ -51,5 +50,3 @@ export function Prorates<Model extends Constructor>(superclass: Model) {
     }
   }
 }
-
-export type WithProrates = ReturnType<typeof Prorates>['prototype']

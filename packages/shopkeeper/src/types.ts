@@ -6,6 +6,8 @@ import type Subscription from './models/subscription.js'
 import type SubscriptionItem from './models/subscription_item.js'
 import { type NormalizeConstructor } from '@poppinss/utils/types'
 
+export type Constructor<T = {}> = new (...args: any[]) => T
+
 // I'm sure there is a better way but i'll figure out later
 export class Empty {}
 

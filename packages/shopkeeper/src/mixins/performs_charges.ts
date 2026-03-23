@@ -18,7 +18,9 @@ export type PerformsChargesClass<
 
 export function performCharges() {
   return <
-    T extends NormalizeConstructor<typeof BaseModel> & { new (...args: any[]): ManagesCustomerContract },
+    T extends NormalizeConstructor<typeof BaseModel> & {
+      new (...args: any[]): ManagesCustomerContract
+    },
   >(
     superclass: T
   ): PerformsChargesClass<T> => {
@@ -165,5 +167,3 @@ export function performCharges() {
     return EntityMixin
   }
 }
-
-export type WithPerformCharges = PerformsChargesClass

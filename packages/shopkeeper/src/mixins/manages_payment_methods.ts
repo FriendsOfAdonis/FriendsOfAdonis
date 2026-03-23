@@ -236,5 +236,3 @@ export function managesPaymentMethods() {
     return EntityMixin
   }
 }
-
-export type WithManagesPaymentMethods = ManagesPaymentMethodsClass
