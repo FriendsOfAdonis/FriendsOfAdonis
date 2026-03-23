@@ -1,11 +1,9 @@
 import type Stripe from 'stripe'
 import app from '@adonisjs/core/services/app'
-import { type ShopkeeperConfig } from '../types.js'
+import { type Constructor, type ShopkeeperConfig } from '../types.js'
 import type { HandlesTaxesContract } from '../contracts.js'
 
-type Constructor = new (...args: any[]) => {}
-
-export type HandlesTaxesClass<T extends Constructor = Constructor> = T & {
+export type HandlesTaxesClass<T extends Constructor> = T & {
   new (...args: any[]): HandlesTaxesContract
 }
 
@@ -70,5 +68,3 @@ export function HandlesTaxes<T extends Constructor>(superclass: T): HandlesTaxes
 
   return WithHandlesTaxes
 }
-
-export type WithHandlesTaxes = HandlesTaxesClass

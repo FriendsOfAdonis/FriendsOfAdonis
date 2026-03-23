@@ -18,7 +18,9 @@ import { Prorates } from './mixins/prorates.js'
 import app from '@adonisjs/core/services/app'
 import { Shopkeeper } from './shopkeeper.js'
 
-type SubscriptionBuilderOwner = ManagesSubscriptionsContract & ManagesCustomerContract & ManagesPaymentMethodsContract
+type SubscriptionBuilderOwner = ManagesSubscriptionsContract &
+  ManagesCustomerContract &
+  ManagesPaymentMethodsContract
 
 export class SubscriptionBuilder extends compose(
   Empty,
@@ -335,7 +337,6 @@ export class SubscriptionBuilder extends compose(
     return customer
   }
 
-  // TODO:
   /**
    * Build the payload for subscription creation.
    */

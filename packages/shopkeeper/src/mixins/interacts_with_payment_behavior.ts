@@ -1,6 +1,5 @@
 import type Stripe from 'stripe'
-
-type Constructor = new (...args: any[]) => {}
+import { type Constructor } from '../types.js'
 
 export function InteractWithPaymentBehavior<Model extends Constructor>(superclass: Model) {
   return class InteractWithPaymentBehaviorImpl extends superclass {
@@ -57,7 +56,3 @@ export function InteractWithPaymentBehavior<Model extends Constructor>(superclas
     }
   }
 }
-
-export type WithInteractWithPaymentBehavior = ReturnType<
-  typeof InteractWithPaymentBehavior
->['prototype']

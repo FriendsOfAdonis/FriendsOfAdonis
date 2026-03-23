@@ -31,5 +31,3 @@ export function managesStripe<Optional extends boolean>(_optional: Optional) {
     return EntityMixin
   }
 }
-
-export type WithManagesStripe<Optional extends boolean = true> = ManagesStripeClass<Optional>

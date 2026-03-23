@@ -198,5 +198,3 @@ export function managesSubscriptions() {
     return EntityMixin
   }
 }
-
-export type WithManagesSubscriptions = ManagesSubscriptionsClass

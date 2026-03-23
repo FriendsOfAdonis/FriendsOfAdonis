@@ -1,9 +1,8 @@
 import type Stripe from 'stripe'
 import type { AllowsCouponContract } from '../contracts.js'
+import { type Constructor } from '../types.js'
 
-type Constructor = new (...args: any[]) => {}
-
-export type AllowsCouponClass<T extends Constructor = Constructor> = T & {
+export type AllowsCouponClass<T extends Constructor> = T & {
   new (...args: any[]): AllowsCouponContract
 }
 
@@ -64,5 +63,3 @@ export function AllowsCoupon<T extends Constructor>(superclass: T): AllowsCoupon
 
   return AllowsCouponImpl
 }
-
-export type WithAllowsCoupon = AllowsCouponClass
