@@ -276,4 +276,5 @@ test.group('Webhook', (group) => {
 
     assert.empty(await user.related('subscriptions').query())
   })
+
 })
