@@ -1,4 +1,5 @@
 import Stripe from 'stripe'
+import app from '@adonisjs/core/services/app'
 import { type ShopkeeperConfig } from './types.js'
 import { type BillableModel } from './contracts.js'
 import { type NormalizeConstructor } from '@poppinss/utils/types'
@@ -76,5 +77,14 @@ export class Shopkeeper {
 
   public get currency(): string {
     return this.#config.currency
+  }
+
+  /**
+   * Format the given amount into a displayable currency (static utility).
+   * Reads currencyLocale from app config — no instance needed.
+   */
+  static formatAmount(amount: number, currency?: string): string {
+    const locale = app.config.get<ShopkeeperConfig>('shopkeeper').currencyLocale
+    return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount / 100)
   }
 }

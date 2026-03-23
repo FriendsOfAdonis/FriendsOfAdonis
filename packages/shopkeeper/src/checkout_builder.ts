@@ -1,12 +1,12 @@
 import { compose } from '@adonisjs/core/helpers'
-import { Empty } from './types.js'
+import app from '@adonisjs/core/services/app'
+import { Empty, type ShopkeeperConfig } from './types.js'
 import { AllowsCoupon } from './mixins/allows_coupons.js'
 import { HandlesTaxes } from './mixins/handles_taxes.js'
 import { type ManagesCustomerContract } from './contracts.js'
 import { type SubscriptionBuilder } from './subscription_builder.js'
 import type Stripe from 'stripe'
 import { Checkout } from './checkout.js'
-import shopkeeper from '../services/shopkeeper.js'
 
 export class CheckoutBuilder extends compose(Empty, AllowsCoupon, HandlesTaxes) {
   #owner?: ManagesCustomerContract
@@ -71,7 +71,7 @@ export class CheckoutBuilder extends compose(Empty, AllowsCoupon, HandlesTaxes) 
             }
           ),
           tax_id_collection:
-            (shopkeeper.config.calculateTaxes ?? this.collectTaxIds)
+            (app.config.get<ShopkeeperConfig>('shopkeeper').calculateTaxes ?? this.collectTaxIds)
               ? { enabled: true }
               : undefined,
         },
