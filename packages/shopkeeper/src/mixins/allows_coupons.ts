@@ -6,8 +6,9 @@ export type AllowsCouponClass<T extends Constructor> = T & {
   new (...args: any[]): AllowsCouponContract
 }
 
-export function AllowsCoupon<T extends Constructor>(superclass: T): AllowsCouponClass<T> {
-  class AllowsCouponImpl extends superclass {
+export function allowsCoupon() {
+  return <T extends Constructor>(superclass: T): AllowsCouponClass<T> => {
+    class AllowsCouponImpl extends superclass {
     /**
      * The coupon ID being applied.
      */
@@ -61,5 +62,6 @@ export function AllowsCoupon<T extends Constructor>(superclass: T): AllowsCoupon
     }
   }
 
-  return AllowsCouponImpl
+    return AllowsCouponImpl
+  }
 }

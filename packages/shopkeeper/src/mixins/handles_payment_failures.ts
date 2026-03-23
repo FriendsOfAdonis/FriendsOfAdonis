@@ -6,8 +6,9 @@ import { Payment } from '../payment.js'
 import { Shopkeeper } from '../shopkeeper.js'
 import { type Constructor } from '../types.js'
 
-export function HandlesPaymentFailures<Model extends Constructor>(superclass: Model) {
-  return class HandlesPaymentFailuresImpl extends superclass {
+export function handlesPaymentFailures() {
+  return <Model extends Constructor>(superclass: Model) => {
+    return class HandlesPaymentFailuresImpl extends superclass {
     /**
      * Indicates if incomplete payments should be confirmed automatically.
      */
@@ -82,6 +83,7 @@ export function HandlesPaymentFailures<Model extends Constructor>(superclass: Mo
     withPaymentConfirmationOptions(params: Stripe.PaymentIntentConfirmParams): this {
       this.paymentConfirmationOptions = params
       return this
+    }
     }
   }
 }

@@ -7,8 +7,9 @@ export type HandlesTaxesClass<T extends Constructor> = T & {
   new (...args: any[]): HandlesTaxesContract
 }
 
-export function HandlesTaxes<T extends Constructor>(superclass: T): HandlesTaxesClass<T> {
-  class WithHandlesTaxes extends superclass {
+export function handlesTaxes() {
+  return <T extends Constructor>(superclass: T): HandlesTaxesClass<T> => {
+    class WithHandlesTaxes extends superclass {
     /**
      * The IP address of the customer used to determine the tax location.
      */
@@ -66,5 +67,6 @@ export function HandlesTaxes<T extends Constructor>(superclass: T): HandlesTaxes
     }
   }
 
-  return WithHandlesTaxes
+    return WithHandlesTaxes
+  }
 }

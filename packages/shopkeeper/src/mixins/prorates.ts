@@ -1,8 +1,9 @@
 import type Stripe from 'stripe'
 import { type Constructor } from '../types.js'
 
-export function Prorates<Model extends Constructor>(superclass: Model) {
-  return class ProratesImpl extends superclass {
+export function prorates() {
+  return <Model extends Constructor>(superclass: Model) => {
+    return class ProratesImpl extends superclass {
     /**
      * Indicates if the price change should be prorated.
      */
@@ -47,6 +48,7 @@ export function Prorates<Model extends Constructor>(superclass: Model) {
      */
     prorateBehavior(): Stripe.SubscriptionCreateParams.ProrationBehavior {
       return this.#prorationBehaviour
+    }
     }
   }
 }

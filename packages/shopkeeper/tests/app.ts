@@ -18,6 +18,10 @@ export async function createApp() {
     .merge(appConfig)
     .withCoreConfig()
     .withCoreProviders()
+    .preload(async (app) => {
+      const server = await app.container.make('server')
+      server.use([() => import('@adonisjs/core/bodyparser_middleware')])
+    })
     .create(BASE_URL, {
       importer: (filePath) => {
         if (filePath.startsWith('./') || filePath.startsWith('../')) {
