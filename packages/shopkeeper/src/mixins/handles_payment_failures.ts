@@ -4,8 +4,7 @@ import { IncompletePaymentError } from '../errors/incomplete_payment.js'
 import { checkStripeError } from '../utils/errors.js'
 import { Payment } from '../payment.js'
 import { Shopkeeper } from '../shopkeeper.js'
-
-type Constructor = new (...args: any[]) => {}
+import { type Constructor } from '../types.js'
 
 export function HandlesPaymentFailures<Model extends Constructor>(superclass: Model) {
   return class HandlesPaymentFailuresImpl extends superclass {
@@ -86,5 +85,3 @@ export function HandlesPaymentFailures<Model extends Constructor>(superclass: Mo
     }
   }
 }
-
-export type WithHandlesPaymentFailures = ReturnType<typeof HandlesPaymentFailures>['prototype']

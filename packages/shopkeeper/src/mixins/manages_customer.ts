@@ -338,5 +338,3 @@ export function managesCustomer() {
     return EntityMixin
   }
 }
-
-export type WithManagesCustomer = ManagesCustomerClass
