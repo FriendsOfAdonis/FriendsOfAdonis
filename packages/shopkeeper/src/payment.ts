@@ -174,8 +174,8 @@ export class Payment {
    */
   async asStripePaymentIntent(expand?: string[]): Promise<Stripe.PaymentIntent> {
     if (expand) {
-      const customer = await this.customerOrFail()
-      return customer.stripe.paymentIntents.retrieve(this.#paymentIntent.id, { expand })
+      const stripe = await Shopkeeper.resolveStripe()
+      return stripe.paymentIntents.retrieve(this.#paymentIntent.id, { expand })
     }
 
     return this.#paymentIntent

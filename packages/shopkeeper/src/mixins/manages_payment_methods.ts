@@ -2,6 +2,7 @@ import type Stripe from 'stripe'
 import type { BaseModel } from '@adonisjs/lucid/orm'
 import { column } from '@adonisjs/lucid/orm'
 import { PaymentMethod } from '../payment_method.js'
+import { Shopkeeper } from '../shopkeeper.js'
 import type { ManagesCustomerContract, ManagesPaymentMethodsContract } from '../contracts.js'
 import type { NormalizeConstructor } from '@adonisjs/core/types/helpers'
 
@@ -11,7 +12,9 @@ export type ManagesPaymentMethodsClass<
 
 export function managesPaymentMethods() {
   return <
-    T extends NormalizeConstructor<typeof BaseModel> & { new (...args: any[]): ManagesCustomerContract },
+    T extends NormalizeConstructor<typeof BaseModel> & {
+      new (...args: any[]): ManagesCustomerContract
+    },
   >(
     superclass: T
   ): ManagesPaymentMethodsClass<T> => {
@@ -22,20 +25,24 @@ export function managesPaymentMethods() {
       @column()
       declare pmLastFour: string | null
 
-      createSetupIntent(params: Stripe.SetupIntentCreateParams = {}): Promise<Stripe.SetupIntent> {
+      async createSetupIntent(
+        params: Stripe.SetupIntentCreateParams = {}
+      ): Promise<Stripe.SetupIntent> {
         if (this.stripeId) {
           params.customer = this.stripeId
         }
 
-        return this.stripe.setupIntents.create(params)
+        const stripe = await Shopkeeper.resolveStripe()
+        return stripe.setupIntents.create(params)
       }
 
-      findSetupIntent(
+      async findSetupIntent(
         id: string,
         params?: Stripe.SetupIntentRetrieveParams,
         options?: Stripe.RequestOptions
       ): Promise<Stripe.SetupIntent> {
-        return this.stripe.setupIntents.retrieve(id, params, options)
+        const stripe = await Shopkeeper.resolveStripe()
+        return stripe.setupIntents.retrieve(id, params, options)
       }
 
       hasDefaultPaymentMethod(): boolean {
@@ -55,7 +62,8 @@ export function managesPaymentMethods() {
           return []
         }
 
-        const paymentMethods = await this.stripe.paymentMethods.list({
+        const stripe = await Shopkeeper.resolveStripe()
+        const paymentMethods = await stripe.paymentMethods.list({
           customer: this.stripeId,
           type,
           limit: 24,
@@ -70,7 +78,8 @@ export function managesPaymentMethods() {
         let stripePaymentMethod = await this.resolveStripePaymentMethod(paymentMethod)
 
         if (stripePaymentMethod.customer !== this.stripeId) {
-          stripePaymentMethod = await this.stripe.paymentMethods.attach(stripePaymentMethod.id, {
+          const stripe = await Shopkeeper.resolveStripe()
+          stripePaymentMethod = await stripe.paymentMethods.attach(stripePaymentMethod.id, {
             customer: stripeId,
           })
         }
@@ -90,7 +99,8 @@ export function managesPaymentMethods() {
 
         const defaultPaymentMethod = customer.invoice_settings.default_payment_method
 
-        await this.stripe.paymentMethods.detach(stripePaymentMethod.id)
+        const stripe = await Shopkeeper.resolveStripe()
+        await stripe.paymentMethods.detach(stripePaymentMethod.id)
 
         if (stripePaymentMethod.id === defaultPaymentMethod) {
           this.pmType = null
@@ -215,7 +225,8 @@ export function managesPaymentMethods() {
         paymentMethod: string | Stripe.PaymentMethod
       ): Promise<Stripe.PaymentMethod> {
         if (typeof paymentMethod === 'string') {
-          return this.stripe.paymentMethods.retrieve(paymentMethod)
+          const stripe = await Shopkeeper.resolveStripe()
+          return stripe.paymentMethods.retrieve(paymentMethod)
         }
 
         return paymentMethod

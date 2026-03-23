@@ -18,7 +18,9 @@ export type ManagesCustomerClass<
 
 export function managesCustomer() {
   return <
-    T extends NormalizeConstructor<typeof BaseModel> & { new (...args: any[]): ManagesStripeContract },
+    T extends NormalizeConstructor<typeof BaseModel> & {
+      new (...args: any[]): ManagesStripeContract
+    },
   >(
     superclass: T
   ): ManagesCustomerClass<T> => {
@@ -56,7 +58,8 @@ export function managesCustomer() {
           p.metadata = this.stripeMetadata()
         }
 
-        const customer = await this.stripe.customers.create(p)
+        const stripe = await Shopkeeper.resolveStripe()
+        const customer = await stripe.customers.create(p)
 
         this.stripeId = customer.id
 
@@ -65,9 +68,10 @@ export function managesCustomer() {
         return customer
       }
 
-      updateStripeCustomer(params: Stripe.CustomerUpdateParams): Promise<Stripe.Customer> {
+      async updateStripeCustomer(params: Stripe.CustomerUpdateParams): Promise<Stripe.Customer> {
+        const stripe = await Shopkeeper.resolveStripe()
         const stripeId = this.stripeIdOrFail()
-        return this.stripe.customers.update(stripeId, params)
+        return stripe.customers.update(stripeId, params)
       }
 
       createOrGetStripeCustomer(params: Stripe.CustomerCreateParams): Promise<Stripe.Customer> {
@@ -97,8 +101,9 @@ export function managesCustomer() {
       }
 
       async asStripeCustomer(expand?: string[]): Promise<Stripe.Customer> {
+        const stripe = await Shopkeeper.resolveStripe()
         const stripeId = this.stripeIdOrFail()
-        const customer = await this.stripe.customers.retrieve(stripeId, { expand })
+        const customer = await stripe.customers.retrieve(stripeId, { expand })
 
         if (customer.deleted) {
           throw new InvalidCustomerError()
@@ -166,7 +171,8 @@ export function managesCustomer() {
         code: string,
         params: Stripe.PromotionCodeListParams = {}
       ): Promise<PromotionCode | null> {
-        const codes = await this.stripe.promotionCodes.list({
+        const stripe = await Shopkeeper.resolveStripe()
+        const codes = await stripe.promotionCodes.list({
           code,
           limit: 1,
           expand: ['data.promotion.coupon'],
@@ -207,7 +213,8 @@ export function managesCustomer() {
           return []
         }
 
-        const transactions = await this.stripe.customers.listBalanceTransactions(this.stripeId, {
+        const stripe = await Shopkeeper.resolveStripe()
+        const transactions = await stripe.customers.listBalanceTransactions(this.stripeId, {
           limit,
           ...params,
         })
@@ -240,7 +247,8 @@ export function managesCustomer() {
           throw new InvalidCustomerError()
         }
 
-        const transaction = await this.stripe.customers.createBalanceTransaction(this.stripeId, {
+        const stripe = await Shopkeeper.resolveStripe()
+        const transaction = await stripe.customers.createBalanceTransaction(this.stripeId, {
           amount,
           currency: this.preferredCurrency(),
           description,
@@ -266,7 +274,8 @@ export function managesCustomer() {
           throw new InvalidCustomerError()
         }
 
-        return this.stripe.billingPortal.sessions
+        const stripe = await Shopkeeper.resolveStripe()
+        return stripe.billingPortal.sessions
           .create({
             customer: this.stripeId,
             return_url: returnUrl,
@@ -276,34 +285,38 @@ export function managesCustomer() {
       }
 
       async taxIds(params?: Stripe.CustomerListTaxIdsParams): Promise<Stripe.TaxId[]> {
+        const stripe = await Shopkeeper.resolveStripe()
         const stripeId = this.stripeIdOrFail()
-        const res = await this.stripe.customers.listTaxIds(stripeId, params)
+        const res = await stripe.customers.listTaxIds(stripeId, params)
         return res.data
       }
 
       async findTaxId(id: string): Promise<Stripe.TaxId | null> {
+        const stripe = await Shopkeeper.resolveStripe()
         const stripeId = this.stripeIdOrFail()
         try {
-          return await this.stripe.customers.retrieveTaxId(stripeId, id)
+          return await stripe.customers.retrieveTaxId(stripeId, id)
         } catch {
           return null
         }
       }
 
-      createTaxId(
+      async createTaxId(
         type: Stripe.CustomerCreateTaxIdParams.Type,
         value: string
       ): Promise<Stripe.TaxId> {
+        const stripe = await Shopkeeper.resolveStripe()
         const stripeId = this.stripeIdOrFail()
-        return this.stripe.customers.createTaxId(stripeId, {
+        return stripe.customers.createTaxId(stripeId, {
           type,
           value,
         })
       }
 
       async deleteTaxId(id: string): Promise<void> {
+        const stripe = await Shopkeeper.resolveStripe()
         const stripeId = this.stripeIdOrFail()
-        await this.stripe.customers.deleteTaxId(stripeId, id)
+        await stripe.customers.deleteTaxId(stripeId, id)
       }
 
       async isNotTaxExempt(): Promise<boolean> {

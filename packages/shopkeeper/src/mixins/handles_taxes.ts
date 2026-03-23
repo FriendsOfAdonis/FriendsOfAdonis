@@ -1,22 +1,12 @@
 import type Stripe from 'stripe'
 import app from '@adonisjs/core/services/app'
 import { type ShopkeeperConfig } from '../types.js'
+import type { HandlesTaxesContract } from '../contracts.js'
 
 type Constructor = new (...args: any[]) => {}
 
-export type HandlesTaxesRow = {
-  customerIpAddress: string | null
-  estimationBillingAddress: Partial<Stripe.Address>
-  collectTaxIds: boolean
-  withTaxIpAddress(ipAddress: string): void
-  withTaxAddress(country: string, postalCode?: string, state?: string): void
-  automaticTaxPayload(): Stripe.InvoiceCreateParams.AutomaticTax
-  isAutomaticTaxEnabled(): boolean
-  withTaxIdsCollect(): void
-}
-
 export type HandlesTaxesClass<T extends Constructor = Constructor> = T & {
-  new (...args: any[]): HandlesTaxesRow
+  new (...args: any[]): HandlesTaxesContract
 }
 
 export function HandlesTaxes<T extends Constructor>(superclass: T): HandlesTaxesClass<T> {

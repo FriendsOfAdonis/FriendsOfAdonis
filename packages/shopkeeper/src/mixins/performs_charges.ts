@@ -1,15 +1,20 @@
 import { Payment } from '../payment.js'
 import { Checkout } from '../checkout.js'
+import { Shopkeeper } from '../shopkeeper.js'
 import type Stripe from 'stripe'
-import type { ManagesCustomerContract, PerformsChargesContract } from '../contracts.js'
+import type {
+  AllowsCouponContract,
+  ManagesCustomerContract,
+  PerformsChargesContract,
+} from '../contracts.js'
 import type { NormalizeConstructor } from '@adonisjs/core/types/helpers'
 import type { BaseModel } from '@adonisjs/lucid/orm'
-import { AllowsCoupon, type AllowsCouponRow } from './allows_coupons.js'
+import { AllowsCoupon } from './allows_coupons.js'
 import { compose } from '@adonisjs/core/helpers'
 
 export type PerformsChargesClass<
   T extends NormalizeConstructor<typeof BaseModel> = NormalizeConstructor<typeof BaseModel>,
-> = T & { new (...args: any[]): PerformsChargesContract & AllowsCouponRow }
+> = T & { new (...args: any[]): PerformsChargesContract & AllowsCouponContract }
 
 export function performCharges() {
   return <
@@ -74,8 +79,9 @@ export function performCharges() {
         amount: number,
         params: Partial<Stripe.PaymentIntentCreateParams> = {}
       ): Promise<Payment> {
+        const stripe = await Shopkeeper.resolveStripe()
         return new Payment(
-          await this.stripe.paymentIntents.create({
+          await stripe.paymentIntents.create({
             customer: this.stripeId ?? undefined,
             currency: this.preferredCurrency(),
             amount,
@@ -88,18 +94,20 @@ export function performCharges() {
        * Find a payment intent by ID.
        */
       async findPayment(id: string): Promise<Payment | null> {
-        const payment = await this.stripe.paymentIntents.retrieve(id)
+        const stripe = await Shopkeeper.resolveStripe()
+        const payment = await stripe.paymentIntents.retrieve(id)
         return payment ? new Payment(payment) : null
       }
 
       /**
        * Refund a customer for a charge.
        */
-      refund(
+      async refund(
         paymentIntent: string,
         params: Omit<Stripe.RefundCreateParams, 'payment_intent'> = {}
       ): Promise<Stripe.Refund> {
-        return this.stripe.refunds.create({
+        const stripe = await Shopkeeper.resolveStripe()
+        return stripe.refunds.create({
           payment_intent: paymentIntent,
           ...params,
         })
