@@ -1,4 +1,27 @@
-# @foadonis/shopkeeper
+# @foadonis/shopkeeper## 0.2.0
+
+### Breaking Changes
+
+- **Stripe SDK `^17` → `^20.4.1`** — types invoice, discount, tax, line items, metered billing
+- **Peers: `@adonisjs/core ^7.0.1`, `@adonisjs/lucid ^22.1.1`**
+- **`Billable` → `billable()`** — mixin renommé en factory : `compose(BaseModel, billable())`
+- **Getter `this.stripe` supprimé** des modèles — utiliser `await Shopkeeper.resolveStripe()`
+- **`CustomerBalanceTransaction`** — constructeur sans `owner`, `invoice()` → `invoiceId()`
+- **`Tax`** — constructeur prend `taxRateId: string | null`, `isInclusive()` supprimé, `taxRate()` → `taxRateId()`
+- **`Invoice`** — n'accepte plus `Stripe.UpcomingInvoice`, `tax`/`total_tax_amounts` → `total_taxes`, line items filtrés via `parent.type`
+- **`InvoiceLineItem.hasTaxRates()`** — utilise `item.taxes` (Stripe v20)
+- **Types `With*` supprimés** — remplacés par les interfaces `*Contract` dans `contracts.ts`
+- **Mixins class-style → factory** — `HandlesTaxes`, `AllowsCoupon`, `HandlesPaymentFailures`, `InteractWithPaymentBehavior`, `Prorates` → `handlesTaxes()`, `allowsCoupon()`, `handlesPaymentFailures()`, `interactWithPaymentBehavior()`, `prorates()`
+- **Metered billing → Billing Meters v2** — `reportUsage()` via `meterEvents.create()`, prix liés à un `Meter`
+
+### Améliorations
+
+- `Shopkeeper.resolveStripe()` / `Shopkeeper.formatAmount()` — helpers statiques
+- Webhook middleware avec injection IoC et erreurs typées (`InvalidWebhookError`)
+- `checkStripeError()` accepte `unknown`, nouveau type guard `isStripeEvent()`
+- Contracts centralisés (`ManagesStripeContract`, `BillableContract`, etc.)
+- Subscription swap réutilise les item IDs pour des prorations correctes (Stripe v20)
+- Suppression de tous les `as` assertions et `any`
 
 ## 0.1.7
 

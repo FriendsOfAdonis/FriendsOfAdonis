@@ -1,8 +1,9 @@
 import type Stripe from 'stripe'
 import { type Constructor } from '../types.js'
 
-export function InteractWithPaymentBehavior<Model extends Constructor>(superclass: Model) {
-  return class InteractWithPaymentBehaviorImpl extends superclass {
+export function interactWithPaymentBehavior() {
+  return <Model extends Constructor>(superclass: Model) => {
+    return class InteractWithPaymentBehaviorImpl extends superclass {
     /**
      * Set the payment behavior for any subscription updates.
      */
@@ -53,6 +54,7 @@ export function InteractWithPaymentBehavior<Model extends Constructor>(superclas
     setPaymentBehavior(paymentBehavior: Stripe.SubscriptionCreateParams.PaymentBehavior): this {
       this.#paymentBehavior = paymentBehavior
       return this
+    }
     }
   }
 }
