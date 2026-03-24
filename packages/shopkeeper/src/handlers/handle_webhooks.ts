@@ -23,13 +23,11 @@ export async function handleWebhook(ctx: HttpContext) {
     return ctx.response.ok({ received: true })
   }
 
-  await db.transaction(async (trx) => {
-    await trx.table('stripe_webhook_events').insert({
-      event_id: payload.id,
-      created_at: new Date(),
-    })
+  await emitter.emit(`stripe:${payload.type}`, payload)
+  await emitter.emit(`stripe:${payload.type}:handled`, payload)
 
-    await emitter.emit(`stripe:${payload.type}`, payload)
-    await emitter.emit(`stripe:${payload.type}:handled`, payload)
+  await db.table('stripe_webhook_events').insert({
+    event_id: payload.id,
+    created_at: new Date(),
   })
 }
