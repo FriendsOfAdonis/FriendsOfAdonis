@@ -1,17 +1,15 @@
 # Upgrading to @foadonis/shopkeeper 0.2.0
 
-## Automated migration with Claude Code
-
-Download the [migration command](https://github.com/FriendsOfAdonis/FriendsOfAdonis/blob/main/packages/shopkeeper/.claude/commands/migrate-shopkeeper.md) into your project and run `/migrate-shopkeeper` in Claude Code:
-
-```sh
-mkdir -p .claude/commands && curl -sO --output-dir .claude/commands https://raw.githubusercontent.com/FriendsOfAdonis/FriendsOfAdonis/main/packages/shopkeeper/.claude/commands/migrate-shopkeeper.md
-```
-
 ## 1. Update dependencies
 
+Check which package manager your project uses (`package-lock.json` → npm, `yarn.lock` → yarn, `pnpm-lock.yaml` → pnpm) and run:
+
 ```sh
-npm install @foadonis/shopkeeper@^0.2.0
+npm install @foadonis/shopkeeper@^0.2.0 stripe@^20.4.1
+# or
+yarn add @foadonis/shopkeeper@^0.2.0 stripe@^20.4.1
+# or
+pnpm add @foadonis/shopkeeper@^0.2.0 stripe@^20.4.1
 ```
 
 Peer dependencies: `@adonisjs/core ^7.0.1`, `@adonisjs/lucid ^22.1.1`, `luxon ^3.5.0`.
@@ -19,7 +17,7 @@ Peer dependencies: `@adonisjs/core ^7.0.1`, `@adonisjs/lucid ^22.1.1`, `luxon ^3
 ## 2. Generate and run the new migration
 
 ```sh
-node ace shopkeeper:migration
+node ace configure @foadonis/shopkeeper
 node ace migration:run
 ```
 
