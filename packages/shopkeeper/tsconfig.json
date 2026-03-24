@@ -6,5 +6,4 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true
   },
-  "exclude": ["tests/tmp"]
 }
