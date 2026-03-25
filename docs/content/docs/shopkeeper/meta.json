@@ -4,17 +4,15 @@
   "icon": "CircleDollarSign",
   "root": true,
   "pages": [
-    "---Guide---",
     "index",
     "getting-started",
-    "------",
-    "customers",
-    "payment-methods",
-    "subscriptions",
-    "subscription-trials",
-    "webhooks",
-    "checkout",
-    "single-charges",
-    "invoices"
+    "--- Guide ---",
+    "(guides)/customers",
+    "(guides)/payment-methods",
+    "(guides)/subscriptions",
+    "(guides)/webhooks",
+    "(guides)/checkout",
+    "(guides)/single-charges",
+    "(guides)/invoices"
   ]
 }

@@ -1,0 +1,6 @@
+{
+  "title": "Subscriptions",
+  "description": "Manage subscriptions with Shopkeeper",
+  "icon": "Repeat",
+  "pages": ["index", "subscription-trials"]
+}
