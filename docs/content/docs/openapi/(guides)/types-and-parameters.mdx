@@ -166,3 +166,37 @@ enum ApiEnum {
 
 @ApiQuery({ name: "api", enum: ApiEnum })
 ```
+
+### With schema reference
+
+When using the `enum` option, the enum is attached directly to the schema.
+
+By using `registerEnumType` method, the enum is instead added to the [components](https://swagger.io/docs/specification/v3_0/components/) as a named schema. This is useful when using code generation tools.
+
+```ts
+import { registerEnumType } from '@foadonis/openapi/decorators'
+
+enum PostStatus {
+  PUBLISHED = "PUBLISHED"
+  DRAFT = "DRAFT"
+}
+
+registerEnumType(PostStatus, {
+  name: "PostStatus",
+  description: "The status of a Post"
+})
+```
+
+```ts
+class Post {
+  @ApiProperty()
+  declare title: string
+
+  @ApiProperty({ type: () => PostStatus })
+  declare enum: PostStatus
+}
+```
+
+<Callout type="warning">
+  When referencing an enum you **must use a thunk** `() => My Enum`
+</Callout>

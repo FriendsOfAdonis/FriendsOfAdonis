@@ -20,10 +20,7 @@
     "./lucid": "./build/modules/lucid/main.js",
     "./lucid/schema_rules": "./build/modules/lucid/rules.js",
     "./types": "./build/src/types.js",
-    "./decorators": {
-      "import": "./build/src/decorators.js",
-      "types": "./build/src/decorators.d.ts"
-    }
+    "./decorators": "./build/src/decorators.js"
   },
   "scripts": {
     "clean": "del-cli build",
@@ -94,7 +91,7 @@
     "luxon": "^3.5.0"
   },
   "dependencies": {
-    "@martin.xyz/openapi-decorators": "^0.1.2",
+    "@martin.xyz/openapi-decorators": "^0.2.0",
     "@standard-schema/spec": "^1.1.0",
     "yaml": "^2.8.2"
   },
