@@ -1,75 +1,75 @@
 ---
-icon: CircleDollarSign
 title: Single Charges
+icon: CircleDollarSign
 ---
 
-## Simple Charge
+Beyond subscriptions, Shopkeeper lets you make one-off charges, create invoices for individual items, and issue refunds. This guide covers all the ways to charge customers outside of a subscription.
 
-If you would like to make a one-time charge against a customer, you may use the `charge` method on a billable model instance. You will need to [provide a payment method identifier](#payment-methods-for-single-charges) as the second argument to the `charge` method:
+## Simple charge
+
+To make a one-off charge against a customer's payment method:
 
 ```ts
-router.post('/purchase', async ({ request, auth }) => {
+router.post('/purchase', async ({ auth, request }) => {
   const user = auth.getUserOrFail()
-  const paymentMethodId = request.get('paymentMethodId')
+  const paymentMethodId = request.input('paymentMethodId')
 
-  const stripeCharge = await user.charge(100, paymentMethodId)
-
-  // ...
+  const payment = await user.charge(100, paymentMethodId)
 })
 ```
 
-The `charge` method accepts an array as its third argument, allowing you to pass any options you wish to the underlying Stripe charge creation. More information regarding the options available to you when creating charges may be found in the [Stripe documentation](https://stripe.com/docs/api/charges/create):
+<Callout type="warn">
+The `charge` method accepts amounts in the smallest currency unit. For example, $10.00 USD is `1000` (cents).
+</Callout>
+
+You can pass additional [Stripe charge options](https://stripe.com/docs/api/charges/create) as a third argument:
 
 ```ts
-await user.charge(100, paymentMethod, {
-  custom_option: value,
+await user.charge(100, paymentMethodId, {
+  description: 'One-time setup fee',
+  metadata: { order_id: '12345' },
 })
 ```
 
-You may also use the `charge` method without an underlying customer or user. To accomplish this, invoke the `charge` method on a new instance of your application's billable model:
-
-```ts
-await new User().charge(100, paymentMethod)
-```
-
-The `charge` method will throw an exception if the charge fails. If the charge is successful, an instance of Shopkeeper's `Payment` will be returned from the method:
+The `charge` method returns a Shopkeeper `Payment` instance on success, or throws an exception if the charge fails:
 
 ```ts
 try {
-  const payment = await user.charge(100, paymentMethod)
-} catch (e) {
-  // ...
+  const payment = await user.charge(100, paymentMethodId)
+} catch (error) {
+  // Handle the failed charge
 }
 ```
 
-:::warning
-
-The `charge` method accepts the payment amount in the lowest denominator of the currency used by your application. For example, if customers are paying in United States Dollars, amounts should be specified in pennies.
-
-:::
-
-## Charge With Invoice
-
-Sometimes you may need to make a one-time charge and offer a PDF invoice to your customer. The `invoicePrice` method lets you do just that. For example, let's invoice a customer for five new shirts:
+You can also charge without an existing customer by using a new model instance:
 
 ```ts
+const payment = await new User().charge(100, paymentMethodId)
+```
+
+## Charge with invoice
+
+If you need to generate an invoice for a one-off charge, use `invoicePrice`. This charges the customer's default payment method and creates a downloadable invoice:
+
+```ts
+// Invoice for 5 t-shirts
 await user.invoicePrice('price_tshirt', 5)
 ```
 
-The invoice will be immediately charged against the user's default payment method. The `invoicePrice` method also accepts an array as its third argument. This array contains the billing options for the invoice item. The fourth argument accepted by the method is also an array which should contain the billing options for the invoice itself:
+You can pass additional options for both the invoice item and the invoice itself:
 
 ```ts
 await user.invoicePrice(
   'price_tshirt',
   5,
-  {
-    discounts: [{ coupon: 'SUMMER21SALE' }],
-  },
+  { discounts: [{ coupon: 'SUMMER21SALE' }] },
   { default_tax_rates: ['txr_id'] }
 )
 ```
 
-Similarly to `invoicePrice`, you may use the `tabPrice` method to create a one-time charge for multiple items (up to 250 items per invoice) by adding them to the customer's "tab" and then invoicing the customer. For example, we may invoice a customer for five shirts and two mugs:
+## Charge tabs
+
+To build up a "tab" of multiple items before invoicing, use `tabPrice`:
 
 ```ts
 await user.tabPrice('price_tshirt', 5)
@@ -77,62 +77,62 @@ await user.tabPrice('price_mug', 2)
 await user.invoice()
 ```
 
-Alternatively, you may use the `invoiceFor` method to make a "one-off" charge against the customer's default payment method:
+For ad-hoc amounts without a pre-defined Stripe price, use `invoiceFor`:
 
 ```ts
 await user.invoiceFor('One Time Fee', 500)
 ```
 
-Although the `invoiceFor` method is available for you to use, it is recommended that you use the `invoicePrice` and `tabPrice` methods with pre-defined prices. By doing so, you will have access to better analytics and data within your Stripe dashboard regarding your sales on a per-product basis.
+<Callout>
+Using `invoicePrice` and `tabPrice` with pre-defined prices is recommended over `invoiceFor`, as it gives you better analytics in the Stripe dashboard.
+</Callout>
 
-:::warning
+<Callout type="warn">
+The `invoice`, `invoicePrice`, and `invoiceFor` methods create Stripe invoices that automatically retry failed charges. If you don't want retries, close the invoice via the Stripe API after the first failed attempt.
+</Callout>
 
-The `invoice`, `invoicePrice`, and `invoiceFor` methods will create a Stripe invoice which will retry failed billing attempts. If you do not want invoices to retry failed charges, you will need to close them using the Stripe API after the first failed charge.
+## Payment intents
 
-:::
-
-## Creating Payment Intents
-
-You can create a new Stripe payment intent by invoking the `pay` method on a billable model instance. Calling this method will create a payment intent that is wrapped in a Shopkeeper's `Payment` instance:
+For more control over the payment flow, you can create a [payment intent](https://stripe.com/docs/payments/payment-intents) directly:
 
 ```ts
-router.post('/pay', async ({ request, auth }) => {
+router.post('/pay', async ({ auth, request }) => {
   const user = auth.getUserOrFail()
-  const amount = request.get('amount')
-
-  const payment = await user.pay(amount)
+  const payment = await user.pay(request.input('amount'))
 
   return payment.clientSecret()
 })
 ```
 
-After creating the payment intent, you can return the client secret to your application's frontend so that the user can complete the payment in their browser. To read more about building entire payment flows using Stripe payment intents, please consult the [Stripe documentation](https://stripe.com/docs/payments/accept-a-payment?platform=web).
+The client secret is returned to your frontend, where the customer completes the payment using [Stripe.js](https://stripe.com/docs/payments/accept-a-payment?platform=web).
 
-When using the `pay` method, the default payment methods that are enabled within your Stripe dashboard will be available to the customer. Alternatively, if you only want to allow for some specific payment methods to be used, you may use the `payWith` method:
+To restrict which payment methods are available:
 
 ```ts
-router.post('/pay', async ({ request, auth }) => {
-  const user = auth.getUserOrFail()
-  const amount = request.get('amount')
+const payment = await user.payWith(1000, ['card', 'bancontact'])
 
-  const payment = await user.pay(amount, ['card', 'bancontact'])
-
-  return payment.clientSecret()
-})
+return payment.clientSecret()
 ```
 
-:::warning
+<Callout type="warn">
+The `pay` and `payWith` methods accept amounts in the smallest currency unit (e.g., cents for USD).
+</Callout>
 
-The `pay` and `payWith` methods accept the payment amount in the lowest denominator of the currency used by your application. For example, if customers are paying in United States Dollars, amounts should be specified in pennies.
+## Refunds
 
-:::
-
-## Refunding Charges
-
-If you need to refund a Stripe charge, you may use the `refund` method. This method accepts the Stripe [payment intent ID](#payment-methods-for-single-charges) as its first argument:
+To refund a charge, use the `refund` method with the payment intent ID:
 
 ```ts
-const payment = await user.charge(100, paymentMethodId)
+const payment = await user.charge(1000, paymentMethodId)
 
+// Full refund
 await user.refund(payment.id)
 ```
+
+## Going further
+
+- [Accepting Payments](/docs/shopkeeper/accepting-payments): Checkout-based payment flows
+- [Managing Payment Methods](/docs/shopkeeper/managing-payment-methods): Storing and retrieving payment methods
+- [Invoices & Receipts](/docs/shopkeeper/invoices-and-receipts): Listing and displaying invoices
+- [Stripe Charges documentation](https://stripe.com/docs/payments/charges-api): Stripe's guide to charges
+- [Stripe Payment Intents documentation](https://stripe.com/docs/payments/payment-intents): Stripe's guide to payment intents
