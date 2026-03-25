@@ -6,13 +6,18 @@
   "pages": [
     "index",
     "getting-started",
-    "--- Guide ---",
-    "(guides)/customers",
-    "(guides)/payment-methods",
-    "(guides)/subscriptions",
-    "(guides)/webhooks",
-    "(guides)/checkout",
+    "--- Payments ---",
+    "(guides)/accepting-payments",
     "(guides)/single-charges",
-    "(guides)/invoices"
+    "(guides)/invoices-and-receipts",
+    "--- Subscriptions ---",
+    "(guides)/managing-subscriptions",
+    "(guides)/offering-trials",
+    "(guides)/metered-billing",
+    "--- Configuration ---",
+    "(guides)/handling-webhooks",
+    "(guides)/managing-customers",
+    "(guides)/managing-payment-methods",
+    "(guides)/taxes"
   ]
 }

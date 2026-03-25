@@ -4,27 +4,42 @@ summary: "Adonis Shopkeeper provides an expressive, fluent interface to Stripe's
 icon: Album
 ---
 
-Adonis Shopkeeper provides an expressive, fluent interface to Stripe's subscription billing services. It handles almost all of the boilerplate subscription billing code you are dreading writing. In addition to basic subscription management, Shopkeeper can handle coupons, swapping subscription, subscription "quantities", cancellation grace periods, and even generate invoice PDFs.
-
-This library is a port of [Laravel Cashier](https://laravel.com/docs/11.x/billing).
+Adonis Shopkeeper provides an expressive, fluent interface to [Stripe's](https://stripe.com) billing services. It handles the boilerplate subscription billing code you are dreading writing, so you can focus on building your product.
 
 ```ts
-export class BillingController {
+import router from '@adonisjs/core/services/router'
+import { urlFor } from '@adonisjs/core/services/url_builder'
 
-  async checkout({ auth, request, view }: HttpContext) {
-    const user = auth.getUserOrFail()
-    
-    const checkout = await user
-      .newSubscription()
-      .price('price_tshirt')
-      .quantity(5)
-      .checkout()
+router.get('/subscribe', async ({ auth, response }) => {
+  const user = auth.getUserOrFail()
 
-    return view.render('pages/checkout', {
-      checkout
+  const checkout = await user
+    .newSubscription('default', 'price_monthly')
+    .allowPromotionCodes()
+    .checkout({
+      success_url: urlFor('checkout.success'),
+      cancel_url: urlFor('checkout.cancel'),
     })
-  }
 
-}
+  return response.redirect().status(303).toPath(checkout.session.url)
+})
 ```
 
+## Features
+
+Shopkeeper takes care of the most common billing scenarios out of the box:
+
+- **Stripe Checkout:** Redirect your customers to Stripe's hosted payment page with a few lines of code
+- **Subscriptions:** Create, swap, cancel, and resume subscriptions
+- **Trial periods:** Offer free trials with or without collecting a payment method
+- **One-off charges:** Charge customers for individual products or services
+- **Invoices:** Retrieve and display invoices for your customers
+- **Webhooks:** Automatically sync subscription state with idempotent webhook handling
+- **Payment methods:** Store, update, and manage customer payment methods
+- **Coupons & promotions:** Apply discounts and promotion codes to subscriptions and checkouts
+- **Metered billing:** Charge customers based on usage during a billing cycle
+- **Taxes:** Handle tax rates manually or automatically with [Stripe Tax](https://stripe.com/tax)
+
+## Next steps
+
+Ready to get started? Head over to the [Getting Started](/docs/shopkeeper/getting-started) guide to install Shopkeeper and accept your first payment in minutes.
