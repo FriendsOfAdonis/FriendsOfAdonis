@@ -1,0 +1,342 @@
+---
+title: Managing Subscriptions
+icon: Repeat
+---
+
+Once your customers are subscribed, you will need to let them check their subscription status, change plans, cancel, and more. This guide walks you through the most common subscription operations.
+
+## Subscription types
+
+Every subscription has a **type**, which is a string you choose when creating it (e.g., `default`, `premium`, `swimming`). This type is for your internal use only and should not be shown to customers. If your app offers a single subscription, calling it `default` is a good convention.
+
+```ts
+// Create a subscription with type "default"
+await user.newSubscription('default', 'price_monthly').checkout()
+
+// Later, retrieve it by type
+const subscription = await user.subscription('default')
+```
+
+## Checking subscription status
+
+The `subscribed` method returns `true` if the customer has an active subscription, including during trial and grace periods:
+
+```ts
+if (await user.subscribed('default')) {
+  // User has an active subscription
+}
+```
+
+This makes a great candidate for a route middleware to restrict access to paying customers:
+
+```ts title="app/middleware/subscribed_middleware.ts"
+import { HttpContext } from '@adonisjs/core/http'
+import { NextFn } from '@adonisjs/core/types/http'
+
+export default class SubscribedMiddleware {
+  async handle({ auth, response }: HttpContext, next: NextFn) {
+    const user = auth.getUserOrFail()
+
+    if (!(await user.subscribed('default'))) {
+      return response.redirect().toRoute('pricing')
+    }
+
+    return next()
+  }
+}
+```
+
+You can also check if a customer is subscribed to a specific product or price:
+
+```ts
+// Check by Stripe product ID
+if (await user.subscribedToProduct('prod_premium', 'default')) {
+  // ...
+}
+
+// Check by Stripe price ID
+if (await user.subscribedToPrice('price_monthly', 'default')) {
+  // ...
+}
+```
+
+### Trial and grace period
+
+To check if a customer is currently on a trial:
+
+```ts
+const subscription = await user.subscription('default')
+
+if (subscription.onTrial()) {
+  // Show a "You're on a free trial" banner
+}
+```
+
+To check if a customer has cancelled but is still within their grace period:
+
+```ts
+if (subscription.onGracePeriod()) {
+  // Subscription is cancelled but still active until the end of the billing cycle
+}
+```
+
+Other useful status checks:
+
+```ts
+subscription.recurring()    // Active and not on trial
+subscription.canceled()     // Has been cancelled
+subscription.ended()        // Cancelled and grace period has expired
+subscription.hasExpiredTrial() // Trial has expired
+```
+
+## Changing plans
+
+When a customer wants to switch to a different plan, use the `swap` method with the new Stripe price ID:
+
+```ts
+const subscription = await user.subscription('default')
+
+await subscription.swap('price_yearly')
+```
+
+By default, Stripe prorates the charges. If you want to skip proration:
+
+```ts
+await subscription.noProrate().swap('price_yearly')
+```
+
+If you need to invoice the customer immediately instead of waiting for the next billing cycle:
+
+```ts
+await subscription.swapAndInvoice('price_yearly')
+```
+
+If the customer is on a trial and you want to end it when swapping:
+
+```ts
+await subscription.skipTrial().swap('price_yearly')
+```
+
+For more information on proration, see the [Stripe proration documentation](https://stripe.com/docs/billing/subscriptions/prorations).
+
+## Updating quantities
+
+Some subscriptions are quantity-based (e.g., $10/month per seat). You can adjust the quantity with:
+
+```ts
+const subscription = await user.subscription('default')
+
+await subscription.incrementQuantity()    // +1
+await subscription.incrementQuantity(5)   // +5
+await subscription.decrementQuantity()    // -1
+await subscription.decrementQuantity(3)   // -3
+await subscription.updateQuantity(10)     // Set to exactly 10
+```
+
+To update quantities without proration:
+
+```ts
+await subscription.noProrate().updateQuantity(10)
+```
+
+For more information on quantities, see the [Stripe quantities documentation](https://stripe.com/docs/subscriptions/quantities).
+
+## Cancelling
+
+To cancel a subscription at the end of the current billing cycle:
+
+```ts
+const subscription = await user.subscription('default')
+
+await subscription.cancel()
+```
+
+The customer keeps access until the billing period ends. During this time, `subscribed` still returns `true` and `onGracePeriod` returns `true`.
+
+To cancel immediately:
+
+```ts
+await subscription.cancelNow()
+```
+
+To cancel immediately and invoice any remaining usage or pending proration:
+
+```ts
+await subscription.cancelNowAndInvoice()
+```
+
+To cancel at a specific date:
+
+```ts
+import { DateTime } from 'luxon'
+
+await subscription.cancelAt(DateTime.now().plus({ days: 14 }))
+```
+
+<Callout type="warn">
+Always cancel a customer's subscriptions before deleting their account.
+</Callout>
+
+## Resuming
+
+If a customer cancelled their subscription and is still within the grace period, you can resume it:
+
+```ts
+const subscription = await user.subscription('default')
+
+await subscription.resume()
+```
+
+The customer will not be billed again immediately. Their original billing cycle continues as before.
+
+## Incomplete and past due subscriptions
+
+Sometimes a payment requires additional action from the customer (e.g., 3D Secure confirmation). In this case, the subscription is marked as `incomplete` or `past_due`.
+
+```ts
+if (await user.hasIncompletePayment('default')) {
+  // Prompt the customer to confirm their payment
+}
+
+const subscription = await user.subscription('default')
+if (subscription.hasIncompletePayment()) {
+  // ...
+}
+```
+
+By default, incomplete and past due subscriptions are not considered active. If you want to keep them active while the customer resolves payment, update your configuration:
+
+```ts title="config/shopkeeper.ts"
+import { defineConfig } from '@foadonis/shopkeeper'
+
+export default defineConfig({
+  keepPastDueSubscriptionsActive: true,
+  keepIncompleteSubscriptionsActive: true,
+  // ...
+})
+```
+
+<Callout type="warn">
+A subscription in `incomplete` state cannot be modified. Calling `swap` or `updateQuantity` will throw an exception until the payment is confirmed.
+</Callout>
+
+## Multiple subscriptions
+
+A customer can have multiple subscriptions at the same time. Just use different types when creating them:
+
+```ts
+// Subscribe to swimming
+await user.newSubscription('swimming', 'price_swimming_monthly').checkout()
+
+// Subscribe to gym, independently
+await user.newSubscription('gym', 'price_gym_monthly').checkout()
+
+// Manage them separately
+const swimming = await user.subscription('swimming')
+await swimming.swap('price_swimming_yearly')
+
+const gym = await user.subscription('gym')
+await gym.cancel()
+```
+
+## Subscriptions with multiple products
+
+Stripe supports [subscriptions with multiple products](https://stripe.com/docs/billing/subscriptions/multiple-products). For example, a helpdesk app might have a base price of $10/month with a $15/month live chat add-on.
+
+Pass an array of prices when creating the subscription:
+
+```ts
+await user
+  .newSubscription('default', ['price_helpdesk', 'price_chat'])
+  .create(paymentMethodId)
+```
+
+To set a quantity on a specific price:
+
+```ts
+await user
+  .newSubscription('default', ['price_helpdesk', 'price_chat'])
+  .quantity(5, 'price_chat')
+  .create(paymentMethodId)
+```
+
+### Adding and removing prices
+
+Add a price to an existing subscription:
+
+```ts
+const subscription = await user.subscription('default')
+
+// Add and bill on the next cycle
+await subscription.addPrice('price_chat')
+
+// Add and invoice immediately
+await subscription.addPriceAndInvoice('price_chat')
+
+// Add with a specific quantity
+await subscription.addPrice('price_chat', 5)
+```
+
+Remove a price:
+
+```ts
+await subscription.removePrice('price_chat')
+```
+
+<Callout type="warn">
+You cannot remove the last price on a subscription. Cancel the subscription instead.
+</Callout>
+
+### Swapping prices on multi-product subscriptions
+
+To replace some prices while keeping others:
+
+```ts
+const subscription = await user.subscription('default')
+
+// Replace price_basic with price_pro, keep price_chat
+await subscription.swap(['price_pro', 'price_chat'])
+
+// With quantities
+await subscription.swap({
+  price_pro: { quantity: 5 },
+  price_chat: {},
+})
+```
+
+To swap a single price while preserving metadata on other items:
+
+```ts
+const item = await subscription.findItemOrFail('price_basic')
+await item.swap('price_pro')
+```
+
+### Accessing subscription items
+
+When a subscription has multiple prices, individual items are stored in the `subscription_items` table:
+
+```ts
+const subscription = await user.subscription('default')
+await subscription.load('items')
+
+const item = subscription.items[0]
+item.stripePrice  // Price ID
+item.quantity     // Quantity
+```
+
+You can also find a specific item:
+
+```ts
+const item = await subscription.findItemOrFail('price_chat')
+```
+
+<Callout type="warn">
+When a subscription has multiple prices, the `stripePrice` and `quantity` attributes on the `Subscription` model are `null`. Use the `items` relationship to access individual price details.
+</Callout>
+
+## Going further
+
+- [Managing Customers](/docs/shopkeeper/managing-customers): Customer management, billing portal, and tax IDs
+- [Offering Trials](/docs/shopkeeper/offering-trials): Free trial periods with and without a payment method
+- [Metered Billing](/docs/shopkeeper/metered-billing): Charge based on usage instead of a fixed price
+- [Stripe Subscriptions documentation](https://stripe.com/docs/billing/subscriptions/overview): Stripe's own guide to subscriptions
