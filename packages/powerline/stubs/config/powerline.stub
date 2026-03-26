@@ -1,0 +1,12 @@
+{{{
+  exports({ to: app.configPath('powerline.ts') })
+}}}
+import { defineConfig } from '@foadonis/powerline'
+
+export default defineConfig({
+  path: '/',
+  heartbeat: {
+    interval: 30_000,
+    timeout: 10_000,
+  },
+})

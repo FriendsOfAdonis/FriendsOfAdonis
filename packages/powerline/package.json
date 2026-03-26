@@ -1,0 +1,99 @@
+{
+  "name": "@foadonis/powerline",
+  "description": "Websocket module for AdonisJS",
+  "version": "0.0.0",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "type": "module",
+  "files": [
+    "build",
+    "!build/bin",
+    "!build/tests"
+  ],
+  "exports": {
+    ".": "./build/index.js",
+    "./commands": "./build/commands/main.js",
+    "./powerline_provider": "./build/providers/powerline_provider.js",
+    "./services/main": "./build/services/main.js",
+    "./client": "./build/modules/client/index.js",
+    "./types": "./build/src/types.js"
+  },
+  "scripts": {
+    "clean": "del-cli build",
+    "copy:templates": "cpy \"stubs/**/*.stub\" build/stubs",
+    "index:commands": "adonis-kit index build/commands",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "quick:test": "node --import=./tsnode.esm.js --enable-source-maps bin/test.ts",
+    "test": "c8 yarn quick:test",
+    "build": "yarn clean && tsc && yarn copy:templates && yarn index:commands",
+    "dev": "tsc --watch",
+    "version": "yarn build"
+  },
+  "keywords": [
+    "adonis",
+    "adonisjs",
+    "powerline",
+    "websocket",
+    "typescript"
+  ],
+  "author": {
+    "name": "Martin Paucot",
+    "email": "contact@martin-paucot.fr"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FriendsOfAdonis/FriendsOfAdonis",
+    "directory": "packages/powerline"
+  },
+  "bugs": {
+    "url": "https://github.com/FriendsOfAdonis/FriendsOfAdonis/issues"
+  },
+  "homepage": "https://friendsofadonis.com/docs/powerline",
+  "license": "MIT",
+  "devDependencies": {
+    "@adonisjs/assembler": "catalog:",
+    "@adonisjs/core": "catalog:",
+    "@foadonis/eslint-config": "workspace:*",
+    "@japa/assert": "^4.2.0",
+    "@japa/expect-type": "^2.0.4",
+    "@japa/file-system": "^3.0.0",
+    "@japa/runner": "^4.5.0",
+    "@swc/core": "1.15.5",
+    "@types/luxon": "^3.7.1",
+    "@types/node": "^25.0.2",
+    "@types/sinon": "^21.0.0",
+    "@types/ws": "^8",
+    "c8": "^11.0.0",
+    "cpy-cli": "^7.0.0",
+    "del-cli": "^7.0.0",
+    "eslint": "catalog:",
+    "prettier": "^3.7.4",
+    "ts-node": "^10.9.2",
+    "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "@adonisjs/core": "^7.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "latest"
+  },
+  "c8": {
+    "reporter": [
+      "text",
+      "html"
+    ],
+    "exclude": [
+      "tests/**"
+    ]
+  },
+  "dependencies": {
+    "@poppinss/macroable": "^1.1.2",
+    "@poppinss/middleware": "^3.2.7",
+    "emittery": "^2.0.0",
+    "ws": "^8.20.0"
+  }
+}

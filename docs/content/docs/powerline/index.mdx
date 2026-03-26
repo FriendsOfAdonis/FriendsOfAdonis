@@ -1,0 +1,25 @@
+---
+title: Introduction
+summary: 'Adonis Powerline provides an expressive, fluent interface to use WebSocket with AdonisJS'
+icon: Album
+---
+
+Adonis Powerline provides an expressive, fluent interface for working with WebSocket on AdonisJS.
+
+```ts title="Server"
+powerline.listen('chat:sendMessage', (event, socket) => {
+  const { auth } = socket.ctx
+  const user = auth.getUserOrFail()
+
+  powerline.broadcast('chat:message', {
+    user: user.name,
+    content: event.content,
+  })
+})
+```
+
+```ts title="Client"
+const socket = new ClientSocket()
+
+socket.send('chat:sendMessage', { content: 'Hello world' })
+```

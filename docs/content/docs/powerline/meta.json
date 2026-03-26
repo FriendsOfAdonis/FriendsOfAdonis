@@ -1,0 +1,20 @@
+{
+  "title": "Powerline",
+  "description": "Fluent and type-safe WebSocket for AdonisJS",
+  "icon": "Unplug",
+  "root": true,
+  "pages": [
+    "---Guide---",
+    "index",
+    "getting-started",
+    "------",
+    "customers",
+    "payment-methods",
+    "subscriptions",
+    "subscription-trials",
+    "webhooks",
+    "checkout",
+    "single-charges",
+    "invoices"
+  ]
+}

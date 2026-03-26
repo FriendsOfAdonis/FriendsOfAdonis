@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /home/mpaucot/workspace/FriendsOfAdonis/packages/powerline -name *.md -type f)",
+      "Bash(yarn test:*)",
+      "Bash(npm list:*)",
+      "Bash(wc:*)",
+      "Read(//home/mpaucot/workspace/FriendsOfAdonis/packages/openapi/src/**)",
+      "Bash(yarn:*)"
+    ]
+  }
+}

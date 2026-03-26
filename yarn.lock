@@ -2808,6 +2808,40 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@foadonis/powerline@workspace:*, @foadonis/powerline@workspace:packages/powerline":
+  version: 0.0.0-use.local
+  resolution: "@foadonis/powerline@workspace:packages/powerline"
+  dependencies:
+    "@adonisjs/assembler": "catalog:"
+    "@adonisjs/core": "catalog:"
+    "@adonisjs/lucid": "catalog:"
+    "@foadonis/eslint-config": "workspace:*"
+    "@japa/assert": "npm:^4.2.0"
+    "@japa/expect-type": "npm:^2.0.4"
+    "@japa/file-system": "npm:^3.0.0"
+    "@japa/runner": "npm:^4.5.0"
+    "@poppinss/macroable": "npm:^1.1.2"
+    "@poppinss/middleware": "npm:^3.2.7"
+    "@swc/core": "npm:1.15.5"
+    "@types/luxon": "npm:^3.7.1"
+    "@types/node": "npm:^25.0.2"
+    "@types/sinon": "npm:^21.0.0"
+    "@types/ws": "npm:^8"
+    c8: "npm:^11.0.0"
+    cpy-cli: "npm:^7.0.0"
+    del-cli: "npm:^7.0.0"
+    emittery: "npm:^2.0.0"
+    eslint: "catalog:"
+    prettier: "npm:^3.7.4"
+    ts-node: "npm:^10.9.2"
+    typescript: "catalog:"
+    ws: "npm:^8.20.0"
+  peerDependencies:
+    "@adonisjs/core": ^7.0.0
+    "@adonisjs/lucid": ^22.0.0
+  languageName: unknown
+  linkType: soft
+
 "@foadonis/shopkeeper@workspace:packages/shopkeeper":
   version: 0.0.0-use.local
   resolution: "@foadonis/shopkeeper@workspace:packages/shopkeeper"
@@ -6122,6 +6156,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@poppinss/macroable@npm:^1.1.2":
+  version: 1.1.2
+  resolution: "@poppinss/macroable@npm:1.1.2"
+  checksum: 10c0/70ff049095309c696660b6c2993c963a938fa3348bee83cf22659a5b34208ee02e24d6f18aff33af1b4c900dce7d8613bdb1abf188b26bc2775757cd03b1505a
+  languageName: node
+  linkType: hard
+
 "@poppinss/matchit@npm:^3.1.2, @poppinss/matchit@npm:^3.2.0":
   version: 3.2.0
   resolution: "@poppinss/matchit@npm:3.2.0"
@@ -8496,7 +8537,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/ws@npm:^8.18.1":
+"@types/ws@npm:^8, @types/ws@npm:^8.18.1":
   version: 8.18.1
   resolution: "@types/ws@npm:8.18.1"
   dependencies:
@@ -11783,6 +11824,13 @@ __metadata:
   version: 1.2.0
   resolution: "emittery@npm:1.2.0"
   checksum: 10c0/3b16d67b2cbbc19d44fa124684039956dc94c376cefa8c7b29f4c934d9d370e6819f642cddaa343b83b1fc03fda554a1498e12f5861caf9d6f6394ff4b6e808a
+  languageName: node
+  linkType: hard
+
+"emittery@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "emittery@npm:2.0.0"
+  checksum: 10c0/b8b5836e9fd368670e1ce5cb948feef30351ecebfbf589ac807c1f6b38c90d6556b2d48883f9b3c371fad59c92519b333dc3919a8ff5e351aea0f8b424203826
   languageName: node
   linkType: hard
 
@@ -18927,6 +18975,7 @@ __metadata:
     "@foadonis/crypt": "workspace:*"
     "@foadonis/eslint-config": "workspace:*"
     "@foadonis/openapi": "workspace:*"
+    "@foadonis/powerline": "workspace:*"
     "@foadonis/typescript-config": "workspace:*"
     "@poppinss/ts-exec": "catalog:"
     "@swc/core": "npm:1.15.5"
@@ -22953,6 +23002,21 @@ __metadata:
     utf-8-validate:
       optional: true
   checksum: 10c0/4741d9b9bc3f9c791880882414f96e36b8b254e34d4b503279d6400d9a4b87a033834856dbdd94ee4b637944df17ea8afc4bce0ff4a1560d2166be8855da5b04
+  languageName: node
+  linkType: hard
+
+"ws@npm:^8.20.0":
+  version: 8.20.0
+  resolution: "ws@npm:8.20.0"
+  peerDependencies:
+    bufferutil: ^4.0.1
+    utf-8-validate: ">=5.0.2"
+  peerDependenciesMeta:
+    bufferutil:
+      optional: true
+    utf-8-validate:
+      optional: true
+  checksum: 10c0/956ac5f11738c914089b65878b9223692ace77337ba55379ae68e1ecbeae9b47a0c6eb9403688f609999a58c80d83d99865fe0029b229d308b08c1ef93d4ea14
   languageName: node
   linkType: hard
 

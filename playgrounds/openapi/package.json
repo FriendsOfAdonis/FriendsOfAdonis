@@ -56,6 +56,7 @@
     "@foadonis/actions": "workspace:*",
     "@foadonis/crypt": "workspace:*",
     "@foadonis/openapi": "workspace:*",
+    "@foadonis/powerline": "workspace:*",
     "@vinejs/vine": "catalog:",
     "better-sqlite3": "^12.5.0",
     "class-validator": "^0.14.3",
