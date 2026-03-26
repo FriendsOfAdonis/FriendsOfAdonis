@@ -1,7 +1,6 @@
 /// <reference types="@poppinss/hooks" />
 
 import { InvalidCustomerError } from '../errors/invalid_customer.js'
-import { CustomerAlreadyCreatedError } from '../errors/customer_already_created.js'
 import { Shopkeeper } from '../shopkeeper.js'
 import type Stripe from 'stripe'
 import app from '@adonisjs/core/services/app'
@@ -11,6 +10,7 @@ import { CustomerBalanceTransaction } from '../customer_balance_transaction.js'
 import type { ManagesCustomerContract, ManagesStripeContract } from '../contracts.js'
 import type { NormalizeConstructor } from '@adonisjs/core/types/helpers'
 import type { BaseModel } from '@adonisjs/lucid/orm'
+import { CustomerAlreadyCreatedError } from '../errors/customer_already_created.js'
 
 export type ManagesCustomerClass<
   T extends NormalizeConstructor<typeof BaseModel> = NormalizeConstructor<typeof BaseModel>,
@@ -31,7 +31,7 @@ export function managesCustomer() {
         const p = { ...params }
 
         if (this.hasStripeId()) {
-          throw new CustomerAlreadyCreatedError()
+          throw CustomerAlreadyCreatedError.alreadyCreated(this)
         }
 
         if (!p.name) {

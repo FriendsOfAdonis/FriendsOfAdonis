@@ -1,14 +1,7 @@
-import type Stripe from 'stripe'
 import { type HttpContext } from '@adonisjs/core/http'
 import emitter from '@adonisjs/core/services/emitter'
 import db from '@adonisjs/lucid/services/db'
-import { isStripeEvent } from '../utils/errors.js'
-
-function assertStripeEvent(body: unknown): asserts body is Stripe.Event {
-  if (!isStripeEvent(body)) {
-    throw new Error('Invalid Stripe event payload')
-  }
-}
+import { assertStripeEvent } from '../utils/errors.js'
 
 export async function handleWebhook(ctx: HttpContext) {
   const payload = ctx.request.body()

@@ -7,8 +7,10 @@ import { type ManagesCustomerContract } from './contracts.js'
 import { type SubscriptionBuilder } from './subscription_builder.js'
 import type Stripe from 'stripe'
 import { Checkout } from './checkout.js'
+import { type Shopkeeper } from './shopkeeper.js'
 
 export class CheckoutBuilder extends compose(Empty, allowsCoupon(), handlesTaxes()) {
+  static shopkeeper: Shopkeeper
   #owner?: ManagesCustomerContract
 
   constructor(owner?: ManagesCustomerContract, parentInstance?: SubscriptionBuilder) {
@@ -26,6 +28,10 @@ export class CheckoutBuilder extends compose(Empty, allowsCoupon(), handlesTaxes
       this.estimationBillingAddress = parentInstance.estimationBillingAddress
       this.collectTaxIds = parentInstance.collectTaxIds
     }
+  }
+
+  static useShopkeeper(shopkeeper: Shopkeeper) {
+    this.shopkeeper = shopkeeper
   }
 
   /**

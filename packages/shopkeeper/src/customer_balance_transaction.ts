@@ -2,6 +2,7 @@ import type Stripe from 'stripe'
 import { Shopkeeper } from './shopkeeper.js'
 
 export class CustomerBalanceTransaction {
+  static shopkeeper: Shopkeeper
   /**
    * The Stripe CustomerBalanceTransaction instance.
    */
