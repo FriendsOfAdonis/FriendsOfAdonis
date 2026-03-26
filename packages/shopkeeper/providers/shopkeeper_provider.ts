@@ -6,8 +6,9 @@ import { handleCustomerSubscriptionUpdated } from '../src/handlers/handle_custom
 import { handleCustomerSubscriptionDeleted } from '../src/handlers/handle_customer_subscription_deleted.js'
 import { handleWebhook } from '../src/handlers/handle_webhooks.js'
 import { InvalidConfigurationError } from '../src/errors/invalid_configuration.js'
+import { Coupon } from '../src/coupon.js'
 
-export default class ShopkeeperProvider {
+export default class Shop2keeperProvider {
   #config: Required<ShopkeeperConfig>
 
   constructor(protected app: ApplicationService) {
@@ -24,11 +25,15 @@ export default class ShopkeeperProvider {
 
       return new Shopkeeper(this.#config, customerModel, subscriptionModel, subscriptionItemModel)
     })
+    this.app.container.alias('shopkeeper', Shopkeeper)
   }
 
   async boot() {
     await this.registerRoutes()
     await this.registerWebhookListeners()
+
+    const shopkeeper = await this.app.container.make(Shopkeeper)
+    Coupon.useShopkeeper(shopkeeper)
   }
 
   async registerRoutes() {
@@ -56,5 +61,11 @@ export default class ShopkeeperProvider {
     emitter.on('stripe:customer.subscription.created', handleCustomerSubscriptionCreated)
     emitter.on('stripe:customer.subscription.updated', handleCustomerSubscriptionUpdated)
     emitter.on('stripe:customer.subscription.deleted', handleCustomerSubscriptionDeleted)
+  }
+}
+
+declare module '@adonisjs/core/types' {
+  export interface ContainerBindings {
+    shopkeeper: Shopkeeper
   }
 }

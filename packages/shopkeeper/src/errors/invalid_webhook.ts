@@ -21,4 +21,11 @@ export class InvalidWebhookError extends Exception {
       status: 400,
     })
   }
+
+  static invalidPayload() {
+    return new InvalidWebhookError('Invalid Stripe event payload.', {
+      code: 'E_STRIPE_WEBHOOK_INVALID_SIGNATURE',
+      status: 400,
+    })
+  }
 }

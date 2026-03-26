@@ -35,30 +35,6 @@ export class Shopkeeper {
     return this.#config
   }
 
-  /**
-   * Format the given amount into a displayable currency.
-   */
-  public formatAmount(amount: number, currency?: string): string {
-    return Intl.NumberFormat(this.config.currencyLocale, { style: 'currency', currency }).format(
-      amount / 100
-    )
-  }
-
-  /**
-   * Get the customer instance by its Stripe ID.
-   */
-  public async findBillable(
-    customer: Stripe.Customer | Stripe.DeletedCustomer | string
-  ): Promise<InstanceType<BillableModel> | null> {
-    const stripeId = typeof customer === 'string' ? customer : customer.id
-
-    const billable = await this.customerModel.findBy({
-      stripeId,
-    })
-
-    return billable
-  }
-
   public get customerModel(): BillableModel {
     return this.#customerModel
   }
@@ -85,11 +61,25 @@ export class Shopkeeper {
   }
 
   /**
-   * Format the given amount into a displayable currency (static utility).
-   * Reads currencyLocale from app config — no instance needed.
+   * Get the customer instance by its Stripe ID.
    */
-  static formatAmount(amount: number, currency?: string): string {
-    const locale = app.config.get<ShopkeeperConfig>('shopkeeper').currencyLocale
+  public async findBillable(
+    customer: Stripe.Customer | Stripe.DeletedCustomer | string
+  ): Promise<InstanceType<BillableModel> | null> {
+    const stripeId = typeof customer === 'string' ? customer : customer.id
+
+    const billable = await this.customerModel.findBy({
+      stripeId,
+    })
+
+    return billable
+  }
+
+  /**
+   * Format the given amount into a displayable currency.
+   */
+  public formatAmount(amount: number, currency?: string): string {
+    const locale = this.#config.currencyLocale
     return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount / 100)
   }
 }

@@ -24,6 +24,6 @@ test.group('Configure', () => {
 
     const files = await fs.readDir('database/migrations')
 
-    assert.lengthOf(files, 3)
+    assert.lengthOf(files, 4)
   })
 })
