@@ -11,7 +11,7 @@ export type Constructor<T = {}> = new (...args: any[]) => T
 // I'm sure there is a better way but i'll figure out later
 export class Empty {}
 
-type LazyImport<DefaultExport> = () => Promise<{
+export type LazyImport<DefaultExport> = () => Promise<{
   default: DefaultExport
 }>
 
