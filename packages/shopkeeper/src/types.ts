@@ -5,6 +5,7 @@ import { type BillableModel } from './contracts.js'
 import type Subscription from './models/subscription.js'
 import type SubscriptionItem from './models/subscription_item.js'
 import { type NormalizeConstructor } from '@poppinss/utils/types'
+import { type Secret } from '@adonisjs/core/helpers'
 
 export type Constructor<T = {}> = new (...args: any[]) => T
 
@@ -19,12 +20,12 @@ export type ShopkeeperConfig = {
   /**
    * The Stripe publishable key.
    */
-  key: string
+  key: Secret<string>
 
   /**
    * The Stripe secret key.
    */
-  secret: string
+  secret: Secret<string>
 
   /**
    * Webhook configuration.
@@ -36,7 +37,7 @@ export type ShopkeeperConfig = {
      *
      * In production, this is a required parameter.
      */
-    secret?: string
+    secret?: Secret<string>
 
     /**
      * Signature timing shift tolerance.
@@ -47,6 +48,11 @@ export type ShopkeeperConfig = {
      * List of events that will be configured on the generated webhook using `node ace shopkeeper:webhook`.
      */
     events?: StripeEventTypes[]
+
+    /**
+     * Enforce webhook secret to be defined.
+     */
+    enforceSecret: boolean
   }
 
   /**
@@ -109,6 +115,14 @@ export type ShopkeeperConfig = {
    * Defines the configuration used to create the Stripe SDK Instance.
    */
   stripe?: Stripe.StripeConfig
+}
+
+export interface ResolvedConfig extends Omit<ShopkeeperConfig, 'models'> {
+  models: {
+    customerModel: BillableModel
+    subscriptionModel: NormalizeConstructor<typeof Subscription>
+    subscriptionItemModel: NormalizeConstructor<typeof SubscriptionItem>
+  }
 }
 
 export type StripeEventTypes = Stripe.Event['type']

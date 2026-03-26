@@ -340,7 +340,7 @@ export class Invoice {
 
     await this.refreshWithExpandedData()
 
-    const stripe = await Shopkeeper.resolveStripe()
+    const stripe = Shopkeeper.stripe
     const items = []
 
     for await (const line of stripe.invoices.listLineItems(this.#invoice.id, {
@@ -386,7 +386,7 @@ export class Invoice {
    * Refresh the invoice.
    */
   async refresh(): Promise<void> {
-    const stripe = await Shopkeeper.resolveStripe()
+    const stripe = Shopkeeper.stripe
     this.#invoice = await stripe.invoices.retrieve(this.#invoice.id)
   }
 
@@ -405,7 +405,7 @@ export class Invoice {
       'total_discount_amounts.discount',
     ]
 
-    const stripe = await Shopkeeper.resolveStripe()
+    const stripe = Shopkeeper.stripe
     this.#invoice = await stripe.invoices.retrieve(this.#invoice.id, {
       expand,
     })
@@ -417,7 +417,7 @@ export class Invoice {
    * Format the given amount into a displayable currency.
    */
   formatAmount(amount: number): string {
-    return Shopkeeper.formatAmount(amount, this.#invoice.currency)
+    return Shopkeeper.formatter.formatAmount(amount, this.#invoice.currency)
   }
 
   /**
@@ -438,7 +438,7 @@ export class Invoice {
    * Finalize the Stripe invoice.
    */
   async finalize(params: Stripe.InvoiceFinalizeInvoiceParams = {}): Promise<void> {
-    const stripe = await Shopkeeper.resolveStripe()
+    const stripe = Shopkeeper.stripe
     this.#invoice = await stripe.invoices.finalizeInvoice(this.#invoice.id, params)
   }
 
@@ -446,7 +446,7 @@ export class Invoice {
    * Pay the Stripe invoice.
    */
   async pay(params: Stripe.InvoicePayParams = {}): Promise<void> {
-    const stripe = await Shopkeeper.resolveStripe()
+    const stripe = Shopkeeper.stripe
     this.#invoice = await stripe.invoices.pay(this.#invoice.id, params)
   }
 
@@ -454,7 +454,7 @@ export class Invoice {
    * Send the Stripe invoice to the customer.
    */
   async send(params: Stripe.InvoiceSendInvoiceParams = {}): Promise<void> {
-    const stripe = await Shopkeeper.resolveStripe()
+    const stripe = Shopkeeper.stripe
     this.#invoice = await stripe.invoices.sendInvoice(this.#invoice.id, params)
   }
 
@@ -462,7 +462,7 @@ export class Invoice {
    * Void the Stripe invoice.
    */
   async void(params: Stripe.InvoiceVoidInvoiceParams = {}): Promise<void> {
-    const stripe = await Shopkeeper.resolveStripe()
+    const stripe = Shopkeeper.stripe
     this.#invoice = await stripe.invoices.voidInvoice(this.#invoice.id, params)
   }
 
@@ -470,7 +470,7 @@ export class Invoice {
    * Mark an invoice as uncollectible.
    */
   async markUncollectible(params: Stripe.InvoiceMarkUncollectibleParams = {}): Promise<void> {
-    const stripe = await Shopkeeper.resolveStripe()
+    const stripe = Shopkeeper.stripe
     this.#invoice = await stripe.invoices.markUncollectible(this.#invoice.id, params)
   }
 
@@ -478,7 +478,7 @@ export class Invoice {
    * Delete the Stripe invoice.
    */
   async delete(params: Stripe.InvoiceDeleteParams = {}): Promise<void> {
-    const stripe = await Shopkeeper.resolveStripe()
+    const stripe = Shopkeeper.stripe
     await stripe.invoices.del(this.#invoice.id, params)
   }
 

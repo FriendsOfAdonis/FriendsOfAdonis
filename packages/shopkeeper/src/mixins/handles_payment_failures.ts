@@ -43,7 +43,7 @@ export function handlesPaymentFailures() {
                 checkStripeError(e2, 'StripeCardError')
               }
 
-              const stripe = await Shopkeeper.resolveStripe()
+              const stripe = Shopkeeper.stripe
 
               const stripeSubscription = await stripe.subscriptions.retrieve(subscription.stripeId)
               subscription.stripeStatus = stripeSubscription.status
