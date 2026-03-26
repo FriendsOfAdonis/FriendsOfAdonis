@@ -1,5 +1,6 @@
 import type Stripe from 'stripe'
 import { Coupon } from './coupon.js'
+import { UnexpandedEntity } from './errors/unexpanded_entity.js'
 
 export class PromotionCode {
   /**
@@ -17,7 +18,7 @@ export class PromotionCode {
   coupon(): Coupon {
     const coupon = this.#promotionCode.promotion.coupon
     if (!coupon || typeof coupon === 'string') {
-      throw new Error('Promotion code coupon was not expanded')
+      throw UnexpandedEntity.notExpanded('coupon')
     }
     return new Coupon(coupon)
   }

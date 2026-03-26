@@ -1,4 +1,5 @@
 import type Stripe from 'stripe'
+import { InvalidWebhookError } from '../errors/invalid_webhook.js'
 
 type NarrowedStripeError<T extends Stripe.errors.StripeError['type']> =
   Stripe.errors.StripeError & {
@@ -50,4 +51,10 @@ export function checkStripeError<T extends Stripe.errors.StripeError['type']>(
   }
 
   return err
+}
+
+export function assertStripeEvent(body: unknown): asserts body is Stripe.Event {
+  if (!isStripeEvent(body)) {
+    throw InvalidWebhookError.invalidPayload()
+  }
 }

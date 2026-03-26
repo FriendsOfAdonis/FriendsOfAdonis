@@ -11,7 +11,7 @@ export class Checkout {
    */
   #session: Stripe.Checkout.Session
 
-  constructor(_owner: ManagesCustomerContract | null, session: Stripe.Checkout.Session) {
+  constructor(session: Stripe.Checkout.Session) {
     this.#session = session
   }
 
@@ -87,7 +87,7 @@ export class Checkout {
 
     const session = await stripe.checkout.sessions.create(data)
 
-    return new this(owner ?? null, session)
+    return new this(session)
   }
 
   /**

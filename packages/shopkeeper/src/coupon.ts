@@ -1,7 +1,9 @@
 import type Stripe from 'stripe'
-import { Shopkeeper } from './shopkeeper.js'
+import { type Shopkeeper } from './shopkeeper.js'
 
 export class Coupon {
+  static shopkeeper: Shopkeeper
+
   /**
    * The Stripe Coupon instance.
    */
@@ -9,6 +11,10 @@ export class Coupon {
 
   constructor(coupon: Stripe.Coupon) {
     this.#coupon = coupon
+  }
+
+  static useShopkeeper(shopkeeper: Shopkeeper) {
+    this.shopkeeper = shopkeeper
   }
 
   /**
@@ -50,7 +56,7 @@ export class Coupon {
    * Format the given amount into a displayable currency.
    */
   formatAmount(amount: number): string {
-    return Shopkeeper.formatAmount(amount, this.#coupon.currency ?? undefined)
+    return Coupon.shopkeeper.formatAmount(amount, this.#coupon.currency ?? undefined)
   }
 
   /**
