@@ -58,7 +58,7 @@ export function managesCustomer() {
           p.metadata = this.stripeMetadata()
         }
 
-        const stripe = await Shopkeeper.resolveStripe()
+        const stripe = Shopkeeper.stripe
         const customer = await stripe.customers.create(p)
 
         this.stripeId = customer.id
@@ -69,7 +69,7 @@ export function managesCustomer() {
       }
 
       async updateStripeCustomer(params: Stripe.CustomerUpdateParams): Promise<Stripe.Customer> {
-        const stripe = await Shopkeeper.resolveStripe()
+        const stripe = Shopkeeper.stripe
         const stripeId = this.stripeIdOrFail()
         return stripe.customers.update(stripeId, params)
       }
@@ -101,7 +101,7 @@ export function managesCustomer() {
       }
 
       async asStripeCustomer(expand?: string[]): Promise<Stripe.Customer> {
-        const stripe = await Shopkeeper.resolveStripe()
+        const stripe = Shopkeeper.stripe
         const stripeId = this.stripeIdOrFail()
         const customer = await stripe.customers.retrieve(stripeId, { expand })
 
@@ -171,7 +171,7 @@ export function managesCustomer() {
         code: string,
         params: Stripe.PromotionCodeListParams = {}
       ): Promise<PromotionCode | null> {
-        const stripe = await Shopkeeper.resolveStripe()
+        const stripe = Shopkeeper.stripe
         const codes = await stripe.promotionCodes.list({
           code,
           limit: 1,
@@ -213,7 +213,7 @@ export function managesCustomer() {
           return []
         }
 
-        const stripe = await Shopkeeper.resolveStripe()
+        const stripe = Shopkeeper.stripe
         const transactions = await stripe.customers.listBalanceTransactions(this.stripeId, {
           limit,
           ...params,
@@ -247,7 +247,7 @@ export function managesCustomer() {
           throw new InvalidCustomerError()
         }
 
-        const stripe = await Shopkeeper.resolveStripe()
+        const stripe = Shopkeeper.stripe
         const transaction = await stripe.customers.createBalanceTransaction(this.stripeId, {
           amount,
           currency: this.preferredCurrency(),
@@ -263,7 +263,7 @@ export function managesCustomer() {
       }
 
       formatAmount(amount: number): string {
-        return Shopkeeper.formatAmount(amount, this.preferredCurrency())
+        return Shopkeeper.formatter.formatAmount(amount, this.preferredCurrency())
       }
 
       async billingPortalUrl(
@@ -274,7 +274,7 @@ export function managesCustomer() {
           throw new InvalidCustomerError()
         }
 
-        const stripe = await Shopkeeper.resolveStripe()
+        const stripe = Shopkeeper.stripe
         return stripe.billingPortal.sessions
           .create({
             customer: this.stripeId,
@@ -285,14 +285,14 @@ export function managesCustomer() {
       }
 
       async taxIds(params?: Stripe.CustomerListTaxIdsParams): Promise<Stripe.TaxId[]> {
-        const stripe = await Shopkeeper.resolveStripe()
+        const stripe = Shopkeeper.stripe
         const stripeId = this.stripeIdOrFail()
         const res = await stripe.customers.listTaxIds(stripeId, params)
         return res.data
       }
 
       async findTaxId(id: string): Promise<Stripe.TaxId | null> {
-        const stripe = await Shopkeeper.resolveStripe()
+        const stripe = Shopkeeper.stripe
         const stripeId = this.stripeIdOrFail()
         try {
           return await stripe.customers.retrieveTaxId(stripeId, id)
@@ -305,7 +305,7 @@ export function managesCustomer() {
         type: Stripe.CustomerCreateTaxIdParams.Type,
         value: string
       ): Promise<Stripe.TaxId> {
-        const stripe = await Shopkeeper.resolveStripe()
+        const stripe = Shopkeeper.stripe
         const stripeId = this.stripeIdOrFail()
         return stripe.customers.createTaxId(stripeId, {
           type,
@@ -314,7 +314,7 @@ export function managesCustomer() {
       }
 
       async deleteTaxId(id: string): Promise<void> {
-        const stripe = await Shopkeeper.resolveStripe()
+        const stripe = Shopkeeper.stripe
         const stripeId = this.stripeIdOrFail()
         await stripe.customers.deleteTaxId(stripeId, id)
       }

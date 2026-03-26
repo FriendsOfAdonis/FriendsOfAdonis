@@ -111,7 +111,7 @@ export class Payment {
    * Format the given amount into a displayable currency.
    */
   formatAmount(amount: number): string {
-    return Shopkeeper.formatAmount(amount, this.#paymentIntent.currency)
+    return Shopkeeper.formatter.formatAmount(amount, this.#paymentIntent.currency)
   }
 
   /**
@@ -174,7 +174,7 @@ export class Payment {
    */
   async asStripePaymentIntent(expand?: string[]): Promise<Stripe.PaymentIntent> {
     if (expand) {
-      const stripe = await Shopkeeper.resolveStripe()
+      const stripe = Shopkeeper.stripe
       return stripe.paymentIntents.retrieve(this.#paymentIntent.id, { expand })
     }
 

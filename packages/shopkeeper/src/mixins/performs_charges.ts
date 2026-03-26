@@ -81,7 +81,7 @@ export function performCharges() {
         amount: number,
         params: Partial<Stripe.PaymentIntentCreateParams> = {}
       ): Promise<Payment> {
-        const stripe = await Shopkeeper.resolveStripe()
+        const stripe = Shopkeeper.stripe
         return new Payment(
           await stripe.paymentIntents.create({
             customer: this.stripeId ?? undefined,
@@ -96,7 +96,7 @@ export function performCharges() {
        * Find a payment intent by ID.
        */
       async findPayment(id: string): Promise<Payment | null> {
-        const stripe = await Shopkeeper.resolveStripe()
+        const stripe = Shopkeeper.stripe
         const payment = await stripe.paymentIntents.retrieve(id)
         return payment ? new Payment(payment) : null
       }
@@ -108,7 +108,7 @@ export function performCharges() {
         paymentIntent: string,
         params: Omit<Stripe.RefundCreateParams, 'payment_intent'> = {}
       ): Promise<Stripe.Refund> {
-        const stripe = await Shopkeeper.resolveStripe()
+        const stripe = Shopkeeper.stripe
         return stripe.refunds.create({
           payment_intent: paymentIntent,
           ...params,

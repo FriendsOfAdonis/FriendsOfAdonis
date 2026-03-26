@@ -2,7 +2,6 @@ import type Stripe from 'stripe'
 import { Shopkeeper } from './shopkeeper.js'
 
 export class CustomerBalanceTransaction {
-  static shopkeeper: Shopkeeper
   /**
    * The Stripe CustomerBalanceTransaction instance.
    */
@@ -44,7 +43,7 @@ export class CustomerBalanceTransaction {
    * Format the given amount into a displayable currency.
    */
   formatAmount(amount: number): string {
-    return Shopkeeper.formatAmount(amount, this.#transaction.currency)
+    return Shopkeeper.formatter.formatAmount(amount, this.#transaction.currency)
   }
 
   /**

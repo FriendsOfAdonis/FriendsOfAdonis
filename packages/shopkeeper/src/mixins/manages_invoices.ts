@@ -70,7 +70,7 @@ export function managesInvoices() {
           options.amount = amount
         }
 
-        const stripe = await Shopkeeper.resolveStripe()
+        const stripe = Shopkeeper.stripe
         return stripe.invoiceItems.create(options)
       }
 
@@ -97,7 +97,7 @@ export function managesInvoices() {
       ): Promise<Stripe.InvoiceItem> {
         const stripeId = this.stripeIdOrFail()
 
-        const stripe = await Shopkeeper.resolveStripe()
+        const stripe = Shopkeeper.stripe
         return stripe.invoiceItems.create({
           customer: stripeId,
           pricing: { price },
@@ -175,7 +175,7 @@ export function managesInvoices() {
           options.currency = undefined
         }
 
-        const stripe = await Shopkeeper.resolveStripe()
+        const stripe = Shopkeeper.stripe
         const invoice = await stripe.invoices.create(options)
         return new Invoice(this, invoice)
       }
@@ -193,7 +193,7 @@ export function managesInvoices() {
           ...params,
         }
 
-        const stripe = await Shopkeeper.resolveStripe()
+        const stripe = Shopkeeper.stripe
 
         // createPreview requires at least one of: subscription, schedule,
         // subscription_details.items, schedule_details.phases, or invoice_items.
@@ -229,7 +229,7 @@ export function managesInvoices() {
        */
       async findInvoice(id: string): Promise<Invoice | null> {
         try {
-          const stripe = await Shopkeeper.resolveStripe()
+          const stripe = Shopkeeper.stripe
           const invoice = await stripe.invoices.retrieve(id)
           return new Invoice(this, invoice)
         } catch (e) {
@@ -271,7 +271,7 @@ export function managesInvoices() {
 
         const invoices = []
 
-        const stripe = await Shopkeeper.resolveStripe()
+        const stripe = Shopkeeper.stripe
         const stripeInvoices = await stripe.invoices.list({ customer: stripeId, ...params })
 
         for (const invoice of stripeInvoices.data) {
