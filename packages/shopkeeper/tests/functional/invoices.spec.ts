@@ -43,7 +43,7 @@ test.group('Invoices', () => {
     await user.createAsStripeCustomer()
     await user.updateDefaultPaymentMethod('pm_card_visa')
 
-    const stripe = await Shopkeeper.resolveStripe()
+    const stripe = Shopkeeper.stripe
     const price = await stripe.prices.create({
       currency: user.preferredCurrency(),
       product_data: {
@@ -63,7 +63,7 @@ test.group('Invoices', () => {
     await user.createAsStripeCustomer()
     await user.updateDefaultPaymentMethod('pm_card_visa')
 
-    const stripe = await Shopkeeper.resolveStripe()
+    const stripe = Shopkeeper.stripe
     const product = await stripe.products.create({
       name: 'Fixing bugs',
       type: 'service',

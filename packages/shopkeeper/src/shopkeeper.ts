@@ -1,50 +1,54 @@
 import Stripe from 'stripe'
-import app from '@adonisjs/core/services/app'
-import { type ShopkeeperConfig } from './types.js'
-import { type BillableModel } from './contracts.js'
+import { type ResolvedConfig } from './types.ts'
+import { type BillableModel } from './contracts.ts'
 import { type NormalizeConstructor } from '@poppinss/utils/types'
 import type Subscription from './models/subscription.js'
-import type SubscriptionItem from './models/subscription_item.js'
+import type SubscriptionItem from './models/subscription_item.ts'
+import { type EmitterService, type HttpRouterService } from '@adonisjs/core/types'
+import { CurrencyFormatter } from './currency_formatter.ts'
+
+const CustomerSubscriptionCreatedListener = () =>
+  import('./handlers/customer_subscription_created_listener.ts')
+const ShopkeeperWebhookController = () => import('./controllers/shopkeeper_webhook_controller.ts')
 
 export class Shopkeeper {
-  readonly #config: ShopkeeperConfig
-  readonly #stripe: Stripe
-  #customerModel: BillableModel
-  #subscriptionModel: NormalizeConstructor<typeof Subscription>
-  #subscriptionItemModel: NormalizeConstructor<typeof SubscriptionItem>
+  /**
+   * @internal
+   */
+  static $instance: Shopkeeper
 
-  constructor(
-    config: ShopkeeperConfig,
-    customerModel: BillableModel,
-    subscriptionModel: NormalizeConstructor<typeof Subscription>,
-    subscriptionItemModel: NormalizeConstructor<typeof SubscriptionItem>
-  ) {
+  #config: ResolvedConfig
+  #stripe: Stripe
+  #router: HttpRouterService
+  #emitter: EmitterService
+
+  constructor(config: ResolvedConfig, router: HttpRouterService, emitter: EmitterService) {
     this.#config = config
-    this.#customerModel = customerModel
-    this.#subscriptionModel = subscriptionModel
-    this.#subscriptionItemModel = subscriptionItemModel
+    this.#stripe = new Stripe(config.secret.release(), config.stripe)
+    this.#router = router
+    this.#emitter = emitter
 
-    this.#stripe = new Stripe(config.secret, config.stripe)
+    Shopkeeper.$instance = this
   }
 
   public get stripe(): Stripe {
     return this.#stripe
   }
 
-  public get config(): ShopkeeperConfig {
+  public get config(): ResolvedConfig {
     return this.#config
   }
 
   public get customerModel(): BillableModel {
-    return this.#customerModel
+    return this.config.models.customerModel
   }
 
   public get subscriptionModel(): NormalizeConstructor<typeof Subscription> {
-    return this.#subscriptionModel
+    return this.config.models.subscriptionModel
   }
 
   public get subscriptionItemModel(): NormalizeConstructor<typeof SubscriptionItem> {
-    return this.#subscriptionItemModel
+    return this.config.models.subscriptionItemModel
   }
 
   public get calculateTaxes(): boolean {
@@ -53,11 +57,6 @@ export class Shopkeeper {
 
   public get currency(): string {
     return this.#config.currency
-  }
-
-  static async resolveStripe(): Promise<Stripe> {
-    const instance = await app.container.make(Shopkeeper)
-    return instance.stripe
   }
 
   /**
@@ -81,5 +80,21 @@ export class Shopkeeper {
   public formatAmount(amount: number, currency?: string): string {
     const locale = this.#config.currencyLocale
     return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount / 100)
+  }
+
+  public registerRoute() {
+    const middlewares = this.#router.named({
+      stripeWebhook: () => import('./middlewares/stripe_webhook_middleware.ts'),
+    })
+
+    return this.#router
+      .post('/stripe/webhook', [ShopkeeperWebhookController, 'handle'])
+      .use(middlewares.stripeWebhook())
+      .as('shopkeeper.webhook')
+  }
+
+  public registerListeners() {
+    this.#emitter.on('stripe:customer.subscription.created', CustomerSubscriptionCreatedListener)
+    // emitter.on('stripe:customer.subscription.deleted', handleCustomerSubscriptionDeleted)
   }
 }
