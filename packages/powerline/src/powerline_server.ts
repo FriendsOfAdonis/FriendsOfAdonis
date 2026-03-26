@@ -19,6 +19,7 @@ import type {
 import Emittery from 'emittery'
 import { PowerlineNotInitializedError, PowerlineNoServerError } from './errors.ts'
 import { debug } from './debug.ts'
+import powerline from '../services/main.ts'
 
 export class Powerline<Messages extends PowerlineMessages = PowerlineMessages> {
   #http: HttpServerService
@@ -157,6 +158,8 @@ export class Powerline<Messages extends PowerlineMessages = PowerlineMessages> {
   /**
    * Creates an HttpContext from a WebSocket connection IncomingMessage.
    * As there is no ServerResponse in this context, a mock one is created.
+   *
+   * TODO: Create proxy around response to throw error
    *
    * @param req - The WebSocket connection IncomingMessage
    * @returns The created HttpContext

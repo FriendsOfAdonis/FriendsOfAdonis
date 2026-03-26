@@ -148,3 +148,8 @@ export class ClientSocket<Messages extends PowerlineMessages = PowerlineMessages
     this.socket.close()
   }
 }
+
+const socket = new ClientSocket('ws://localhost:3333')
+
+socket.send('powerline:ping', {})
+const message = await socket.wait('powerline:pong')
