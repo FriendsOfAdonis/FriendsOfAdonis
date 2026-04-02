@@ -164,7 +164,7 @@ export default class SubscriptionItem extends compose(
 
     const customerId = this.subscription.user.stripeIdOrFail()
 
-    const stripe = Shopkeeper.stripe
+    const stripe = Shopkeeper.$instance.stripe
     return stripe.billing.meterEvents.create({
       event_name: eventName,
       payload: {
@@ -188,7 +188,7 @@ export default class SubscriptionItem extends compose(
 
     const customerId = this.subscription.user.stripeIdOrFail()
 
-    const stripe = Shopkeeper.stripe
+    const stripe = Shopkeeper.$instance.stripe
     const response = await stripe.billing.meters.listEventSummaries(meterId, {
       customer: customerId,
       ...params,
@@ -202,7 +202,7 @@ export default class SubscriptionItem extends compose(
   async updateStripeSubscriptionItem(
     params: Stripe.SubscriptionItemUpdateParams = {}
   ): Promise<Stripe.SubscriptionItem> {
-    const stripe = Shopkeeper.stripe
+    const stripe = Shopkeeper.$instance.stripe
     return stripe.subscriptionItems.update(this.stripeId, params)
   }
 
@@ -210,7 +210,7 @@ export default class SubscriptionItem extends compose(
    * Get the subscription as a Stripe subscription item object.
    */
   async asStripeSubscriptionItem(expand: string[] = []): Promise<Stripe.SubscriptionItem> {
-    const stripe = Shopkeeper.stripe
+    const stripe = Shopkeeper.$instance.stripe
     return stripe.subscriptionItems.retrieve(this.stripeId, { expand })
   }
 }

@@ -32,7 +32,7 @@ export function managesPaymentMethods() {
           params.customer = this.stripeId
         }
 
-        const stripe = Shopkeeper.stripe
+        const stripe = Shopkeeper.$instance.stripe
         return stripe.setupIntents.create(params)
       }
 
@@ -41,7 +41,7 @@ export function managesPaymentMethods() {
         params?: Stripe.SetupIntentRetrieveParams,
         options?: Stripe.RequestOptions
       ): Promise<Stripe.SetupIntent> {
-        const stripe = Shopkeeper.stripe
+        const stripe = Shopkeeper.$instance.stripe
         return stripe.setupIntents.retrieve(id, params, options)
       }
 
@@ -62,7 +62,7 @@ export function managesPaymentMethods() {
           return []
         }
 
-        const stripe = Shopkeeper.stripe
+        const stripe = Shopkeeper.$instance.stripe
         const paymentMethods = await stripe.paymentMethods.list({
           customer: this.stripeId,
           type,
@@ -78,7 +78,7 @@ export function managesPaymentMethods() {
         let stripePaymentMethod = await this.resolveStripePaymentMethod(paymentMethod)
 
         if (stripePaymentMethod.customer !== this.stripeId) {
-          const stripe = Shopkeeper.stripe
+          const stripe = Shopkeeper.$instance.stripe
           stripePaymentMethod = await stripe.paymentMethods.attach(stripePaymentMethod.id, {
             customer: stripeId,
           })
@@ -99,7 +99,7 @@ export function managesPaymentMethods() {
 
         const defaultPaymentMethod = customer.invoice_settings.default_payment_method
 
-        const stripe = Shopkeeper.stripe
+        const stripe = Shopkeeper.$instance.stripe
         await stripe.paymentMethods.detach(stripePaymentMethod.id)
 
         if (stripePaymentMethod.id === defaultPaymentMethod) {
@@ -225,7 +225,7 @@ export function managesPaymentMethods() {
         paymentMethod: string | Stripe.PaymentMethod
       ): Promise<Stripe.PaymentMethod> {
         if (typeof paymentMethod === 'string') {
-          const stripe = Shopkeeper.stripe
+          const stripe = Shopkeeper.$instance.stripe
           return stripe.paymentMethods.retrieve(paymentMethod)
         }
 

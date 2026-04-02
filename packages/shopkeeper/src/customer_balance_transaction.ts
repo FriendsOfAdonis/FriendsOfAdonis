@@ -43,7 +43,7 @@ export class CustomerBalanceTransaction {
    * Format the given amount into a displayable currency.
    */
   formatAmount(amount: number): string {
-    return Shopkeeper.formatter.formatAmount(amount, this.#transaction.currency)
+    return Shopkeeper.$instance.formatAmount(amount, this.#transaction.currency)
   }
 
   /**

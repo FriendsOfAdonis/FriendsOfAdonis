@@ -2,10 +2,13 @@ import type Stripe from 'stripe'
 import { Shopkeeper } from '../shopkeeper.js'
 import { DateTime } from 'luxon'
 import { inject } from '@adonisjs/core'
+import { BaseListener } from './base_listener.js'
 
 @inject()
-export default class StripeCustomerSubscriptionCreatedListener {
-  constructor(private shopkeeper: Shopkeeper) {}
+export default class StripeCustomerSubscriptionCreatedListener extends BaseListener {
+  constructor(private shopkeeper: Shopkeeper) {
+    super()
+  }
 
   async handle(payload: Stripe.CustomerSubscriptionCreatedEvent) {
     const user = await this.shopkeeper.findBillable(payload.data.object.customer)

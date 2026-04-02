@@ -34,7 +34,7 @@ export class Checkout {
     sessionParams: Stripe.Checkout.SessionCreateParams = {},
     customerParams: Stripe.CustomerCreateParams = {}
   ): Promise<Checkout> {
-    const stripe = Shopkeeper.stripe
+    const stripe = Shopkeeper.$instance.stripe
     const data: Stripe.Checkout.SessionCreateParams = {
       mode: 'payment',
       ...sessionParams,

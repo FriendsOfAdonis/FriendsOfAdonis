@@ -1,5 +1,4 @@
 import type Stripe from 'stripe'
-import app from '@adonisjs/core/services/app'
 import { Shopkeeper } from './shopkeeper.js'
 import { type BillableContract } from './contracts.js'
 import { IncompletePaymentError } from './errors/incomplete_payment.js'
@@ -46,7 +45,7 @@ export class Payment {
    * Capture a payment that is being held for the customer.
    */
   async capture(params: Stripe.PaymentIntentCaptureParams = {}): Promise<void> {
-    const { stripe } = await app.container.make(Shopkeeper)
+    const stripe = Shopkeeper.$instance.stripe
     this.#paymentIntent = await stripe.paymentIntents.capture(this.#paymentIntent.id, params)
   }
 
@@ -82,7 +81,7 @@ export class Payment {
    * Cancel the payment.
    */
   async cancel(params: Stripe.PaymentIntentCancelParams = {}): Promise<void> {
-    const { stripe } = await app.container.make(Shopkeeper)
+    const stripe = Shopkeeper.$instance.stripe
     this.#paymentIntent = await stripe.paymentIntents.cancel(this.#paymentIntent.id, params)
   }
 
@@ -111,7 +110,7 @@ export class Payment {
    * Format the given amount into a displayable currency.
    */
   formatAmount(amount: number): string {
-    return Shopkeeper.formatter.formatAmount(amount, this.#paymentIntent.currency)
+    return Shopkeeper.$instance.formatAmount(amount, this.#paymentIntent.currency)
   }
 
   /**
@@ -145,7 +144,7 @@ export class Payment {
       return null
     }
 
-    const shopkeeper = await app.container.make(Shopkeeper)
+    const shopkeeper = Shopkeeper.$instance
     this.#customer = await shopkeeper.findBillable(this.#paymentIntent.customer)
     return this.#customer
   }
@@ -164,7 +163,7 @@ export class Payment {
    * Confirms the payment intent.
    */
   async confirm(params: Stripe.PaymentIntentConfirmParams = {}): Promise<this> {
-    const { stripe } = await app.container.make(Shopkeeper)
+    const stripe = Shopkeeper.$instance.stripe
     this.#paymentIntent = await stripe.paymentIntents.confirm(this.#paymentIntent.id, params)
     return this
   }
@@ -174,7 +173,7 @@ export class Payment {
    */
   async asStripePaymentIntent(expand?: string[]): Promise<Stripe.PaymentIntent> {
     if (expand) {
-      const stripe = Shopkeeper.stripe
+      const stripe = Shopkeeper.$instance.stripe
       return stripe.paymentIntents.retrieve(this.#paymentIntent.id, { expand })
     }
 

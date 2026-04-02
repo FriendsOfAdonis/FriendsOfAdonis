@@ -1,8 +1,8 @@
 import { type HttpContext } from '@adonisjs/core/http'
 import { type NextFn } from '@adonisjs/core/types/http'
-import { type Shopkeeper } from '../shopkeeper.js'
+import { Shopkeeper } from '../shopkeeper.js'
 import { InvalidWebhookError } from '../errors/invalid_webhook.js'
-import { type Logger } from '@adonisjs/core/logger'
+import { Logger } from '@adonisjs/core/logger'
 import { inject } from '@adonisjs/core'
 
 @inject()
@@ -13,18 +13,18 @@ export default class StripeWebhookMiddleware {
   ) {}
 
   async handle({ request }: HttpContext, next: NextFn) {
-    const signature = request.header('stripe-signature')
-    const body = request.raw()
-
-    if (!body || !signature) {
-      throw InvalidWebhookError.missingSignature()
-    }
-
     const secret = this.shopkeeper.config.webhook.secret
 
     if (!secret) {
       this.logger.warn(`No Stripe Webhook secret configured. This will fail in production.`)
       return next()
+    }
+
+    const signature = request.header('stripe-signature')
+    const body = request.raw()
+
+    if (!body || !signature) {
+      throw InvalidWebhookError.missingSignature()
     }
 
     const valid = this.shopkeeper.stripe.webhooks.signature.verifyHeader(
