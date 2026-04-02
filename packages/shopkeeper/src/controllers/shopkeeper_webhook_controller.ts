@@ -1,28 +1,13 @@
 import { type HttpContext } from '@adonisjs/core/http'
 import { assertStripeEvent } from '../utils/errors.ts'
-import db from '@adonisjs/lucid/services/db'
 import emitter from '@adonisjs/core/services/emitter'
 
 export default class ShopkeeperWebhookController {
-  async handle({ request, response }: HttpContext) {
+  async handle({ request }: HttpContext) {
     const payload = request.body()
     assertStripeEvent(payload)
 
-    const alreadyProcessed = await db
-      .from('stripe_webhook_events')
-      .where('event_id', payload.id)
-      .first()
-
-    if (alreadyProcessed) {
-      return response.ok({ received: true })
-    }
-
     await emitter.emit(`stripe:${payload.type}`, payload)
     await emitter.emit(`stripe:${payload.type}:handled`, payload)
-
-    await db.table('stripe_webhook_events').insert({
-      event_id: payload.id,
-      created_at: new Date(),
-    })
   }
 }
