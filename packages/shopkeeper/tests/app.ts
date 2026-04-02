@@ -1,3 +1,4 @@
+import 'reflect-metadata'
 import { IgnitorFactory } from '@adonisjs/core/factories'
 import appConfig from './app_config.js'
 import { Shopkeeper } from '../src/shopkeeper.js'
@@ -39,6 +40,9 @@ export async function createApp() {
 
   ace = await app.container.make('ace')
   shopkeeper = await app.container.make(Shopkeeper)
+
+  shopkeeper.registerRoutes()
+  shopkeeper.registerWebhookListeners()
 
   return { app, ace, shopkeeper }
 }

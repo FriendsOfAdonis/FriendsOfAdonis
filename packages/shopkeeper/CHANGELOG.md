@@ -1,28 +1,4 @@
-# @foadonis/shopkeeper## 0.2.0
-
-### Breaking Changes
-
-- **Stripe SDK `^17` → `^20.4.1`** — invoice, discount, tax, line items, metered billing types
-- **Peers: `@adonisjs/core ^7.0.1`, `@adonisjs/lucid ^22.1.1`**
-- **Getter `this.stripe` removed** from models — use `await Shopkeeper.resolveStripe()`
-- **`CustomerBalanceTransaction`** — constructor without `owner`, `invoice()` → `invoiceId()`
-- **`Tax`** — constructor takes `taxRateId: string | null`, `isInclusive()` removed, `taxRate()` → `taxRateId()`
-- **`Invoice`** — no longer accepts `Stripe.UpcomingInvoice`, `tax`/`total_tax_amounts` → `total_taxes`, line items filtered via `parent.type`
-- **`InvoiceLineItem.hasTaxRates()`** — uses `item.taxes` (Stripe v20)
-- **`With*` types removed** — replaced by `*Contract` interfaces in `contracts.ts`
-- **Class-style mixins → factory** — `Billable`, `HandlesTaxes`, `AllowsCoupon`, `HandlesPaymentFailures`, `InteractWithPaymentBehavior`, `Prorates` → `billable()`, `handlesTaxes()`, `allowsCoupon()`, `handlesPaymentFailures()`, `interactWithPaymentBehavior()`, `prorates()`
-- **Metered billing → Billing Meters v2** — `reportUsage()` via `meterEvents.create()`, prices linked to a `Meter`
-- **New migration required: `stripe_webhook_events`** — idempotency table for webhooks, generated via `node ace configure`
-
-### Improvements
-
-- `Shopkeeper.resolveStripe()` / `Shopkeeper.formatAmount()` — static helpers
-- Webhook middleware with IoC injection and typed errors (`InvalidWebhookError`)
-- `checkStripeError()` accepts `unknown`, new `isStripeEvent()` type guard
-- Centralized contracts (`ManagesStripeContract`, `BillableContract`, etc.)
-- Subscription swap reuses item IDs for correct prorations (Stripe v20)
-- Removed all `as` assertions and `any`
-- **Idempotent webhooks** — already processed events (by `event.id`) are skipped, handlers run inside a DB transaction
+# @foadonis/shopkeeper
 
 ## 0.1.7
 

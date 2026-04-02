@@ -5,10 +5,13 @@ import { type NormalizeConstructor } from '@poppinss/utils/types'
 import type Subscription from './models/subscription.js'
 import type SubscriptionItem from './models/subscription_item.ts'
 import { type EmitterService, type HttpRouterService } from '@adonisjs/core/types'
-import { CurrencyFormatter } from './currency_formatter.ts'
 
 const CustomerSubscriptionCreatedListener = () =>
   import('./handlers/customer_subscription_created_listener.ts')
+const CustomerSubscriptionDeletedListener = () =>
+  import('./handlers/customer_subscription_deleted_listener.ts')
+const CustomerSubscriptionUpdatedListener = () =>
+  import('./handlers/customer_subscription_updated_listener.ts')
 const ShopkeeperWebhookController = () => import('./controllers/shopkeeper_webhook_controller.ts')
 
 export class Shopkeeper {
@@ -82,7 +85,7 @@ export class Shopkeeper {
     return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount / 100)
   }
 
-  public registerRoute() {
+  public registerRoutes() {
     const middlewares = this.#router.named({
       stripeWebhook: () => import('./middlewares/stripe_webhook_middleware.ts'),
     })
@@ -93,8 +96,9 @@ export class Shopkeeper {
       .as('shopkeeper.webhook')
   }
 
-  public registerListeners() {
-    this.#emitter.on('stripe:customer.subscription.created', CustomerSubscriptionCreatedListener)
-    // emitter.on('stripe:customer.subscription.deleted', handleCustomerSubscriptionDeleted)
+  public registerWebhookListeners() {
+    this.#emitter.on('stripe:customer.subscription.created', [CustomerSubscriptionCreatedListener, 'handle'])
+    this.#emitter.on('stripe:customer.subscription.deleted', [CustomerSubscriptionDeletedListener, 'handle'])
+    this.#emitter.on('stripe:customer.subscription.updated', [CustomerSubscriptionUpdatedListener, 'handle'])
   }
 }

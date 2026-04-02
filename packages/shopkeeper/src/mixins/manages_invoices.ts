@@ -2,7 +2,6 @@ import type Stripe from 'stripe'
 import { Invoice } from '../invoice.js'
 import { Exception } from '@adonisjs/core/exceptions'
 import { Payment } from '../payment.js'
-import app from '@adonisjs/core/services/app'
 import { checkStripeError } from '../utils/errors.js'
 import { InvalidInvoiceError } from '../errors/invalid_invoice.js'
 import { Shopkeeper } from '../shopkeeper.js'
@@ -70,7 +69,7 @@ export function managesInvoices() {
           options.amount = amount
         }
 
-        const stripe = Shopkeeper.stripe
+        const stripe = Shopkeeper.$instance.stripe
         return stripe.invoiceItems.create(options)
       }
 
@@ -97,7 +96,7 @@ export function managesInvoices() {
       ): Promise<Stripe.InvoiceItem> {
         const stripeId = this.stripeIdOrFail()
 
-        const stripe = Shopkeeper.stripe
+        const stripe = Shopkeeper.$instance.stripe
         return stripe.invoiceItems.create({
           customer: stripeId,
           pricing: { price },
@@ -167,7 +166,7 @@ export function managesInvoices() {
         const options: Stripe.InvoiceCreateParams = {
           automatic_tax: this.automaticTaxPayload(),
           customer: customer.id,
-          currency: customer.currency ?? app.config.get('shopkeeper.currency'),
+          currency: customer.currency ?? Shopkeeper.$instance.currency,
           ...params,
         }
 
@@ -175,7 +174,7 @@ export function managesInvoices() {
           options.currency = undefined
         }
 
-        const stripe = Shopkeeper.stripe
+        const stripe = Shopkeeper.$instance.stripe
         const invoice = await stripe.invoices.create(options)
         return new Invoice(this, invoice)
       }
@@ -193,7 +192,7 @@ export function managesInvoices() {
           ...params,
         }
 
-        const stripe = Shopkeeper.stripe
+        const stripe = Shopkeeper.$instance.stripe
 
         // createPreview requires at least one of: subscription, schedule,
         // subscription_details.items, schedule_details.phases, or invoice_items.
@@ -229,7 +228,7 @@ export function managesInvoices() {
        */
       async findInvoice(id: string): Promise<Invoice | null> {
         try {
-          const stripe = Shopkeeper.stripe
+          const stripe = Shopkeeper.$instance.stripe
           const invoice = await stripe.invoices.retrieve(id)
           return new Invoice(this, invoice)
         } catch (e) {
@@ -271,7 +270,7 @@ export function managesInvoices() {
 
         const invoices = []
 
-        const stripe = Shopkeeper.stripe
+        const stripe = Shopkeeper.$instance.stripe
         const stripeInvoices = await stripe.invoices.list({ customer: stripeId, ...params })
 
         for (const invoice of stripeInvoices.data) {

@@ -9,81 +9,83 @@ import { type Constructor } from '../types.js'
 export function handlesPaymentFailures() {
   return <Model extends Constructor>(superclass: Model) => {
     return class HandlesPaymentFailuresImpl extends superclass {
-    /**
-     * Indicates if incomplete payments should be confirmed automatically.
-     */
-    confirmIncompletePayment = true
+      /**
+       * Indicates if incomplete payments should be confirmed automatically.
+       */
+      confirmIncompletePayment = true
 
-    /**
-     * The options to be used when confirming a payment intent.
-     */
-    paymentConfirmationOptions: Stripe.PaymentIntentConfirmParams = {}
+      /**
+       * The options to be used when confirming a payment intent.
+       */
+      paymentConfirmationOptions: Stripe.PaymentIntentConfirmParams = {}
 
-    /**
-     * Handle a failed payment for the given subscription.
-     */
-    async handlePaymentFailure(
-      subscription: Subscription,
-      paymentMethod?: Stripe.PaymentMethod | string
-    ): Promise<void> {
-      if (this.confirmIncompletePayment && subscription.hasIncompletePayment()) {
-        try {
-          const payment = await subscription.latestPayment()
-          payment!.validate()
-        } catch (e) {
-          if (e instanceof IncompletePaymentError) {
-            if (e.payment.requiresConfirmation()) {
-              try {
-                await e.payment.confirm({
-                  ...this.paymentConfirmationOptions,
-                  payment_method:
-                    typeof paymentMethod === 'string' ? paymentMethod : paymentMethod?.id,
-                })
-              } catch (e2) {
-                checkStripeError(e2, 'StripeCardError')
-              }
+      /**
+       * Handle a failed payment for the given subscription.
+       */
+      async handlePaymentFailure(
+        subscription: Subscription,
+        paymentMethod?: Stripe.PaymentMethod | string
+      ): Promise<void> {
+        if (this.confirmIncompletePayment && subscription.hasIncompletePayment()) {
+          try {
+            const payment = await subscription.latestPayment()
+            payment!.validate()
+          } catch (e) {
+            if (e instanceof IncompletePaymentError) {
+              if (e.payment.requiresConfirmation()) {
+                try {
+                  await e.payment.confirm({
+                    ...this.paymentConfirmationOptions,
+                    payment_method:
+                      typeof paymentMethod === 'string' ? paymentMethod : paymentMethod?.id,
+                  })
+                } catch (e2) {
+                  checkStripeError(e2, 'StripeCardError')
+                }
 
-              const stripe = Shopkeeper.stripe
+                const stripe = Shopkeeper.$instance.stripe
 
-              const stripeSubscription = await stripe.subscriptions.retrieve(subscription.stripeId)
-              subscription.stripeStatus = stripeSubscription.status
-              await subscription.save()
-
-              if (subscription.hasIncompletePayment()) {
-                // Re-fetch from Stripe since confirm() throws before updating the local reference
-                const paymentIntent = await stripe.paymentIntents.retrieve(
-                  e.payment.paymentIntent.id
+                const stripeSubscription = await stripe.subscriptions.retrieve(
+                  subscription.stripeId
                 )
-                new Payment(paymentIntent).validate()
+                subscription.stripeStatus = stripeSubscription.status
+                await subscription.save()
+
+                if (subscription.hasIncompletePayment()) {
+                  // Re-fetch from Stripe since confirm() throws before updating the local reference
+                  const paymentIntent = await stripe.paymentIntents.retrieve(
+                    e.payment.paymentIntent.id
+                  )
+                  new Payment(paymentIntent).validate()
+                }
+              } else {
+                throw e
               }
             } else {
               throw e
             }
-          } else {
-            throw e
           }
         }
+
+        this.confirmIncompletePayment = true
+        this.paymentConfirmationOptions = {}
       }
 
-      this.confirmIncompletePayment = true
-      this.paymentConfirmationOptions = {}
-    }
+      /**
+       * Prevent automatic confirmation of incomplete payments.
+       */
+      ignoreIncompletePayments(): this {
+        this.confirmIncompletePayment = false
+        return this
+      }
 
-    /**
-     * Prevent automatic confirmation of incomplete payments.
-     */
-    ignoreIncompletePayments(): this {
-      this.confirmIncompletePayment = false
-      return this
-    }
-
-    /**
-     * Specify the options to be used when confirming a payment intent.
-     */
-    withPaymentConfirmationOptions(params: Stripe.PaymentIntentConfirmParams): this {
-      this.paymentConfirmationOptions = params
-      return this
-    }
+      /**
+       * Specify the options to be used when confirming a payment intent.
+       */
+      withPaymentConfirmationOptions(params: Stripe.PaymentIntentConfirmParams): this {
+        this.paymentConfirmationOptions = params
+        return this
+      }
     }
   }
 }
