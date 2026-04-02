@@ -13,7 +13,7 @@ export default class extends BaseSchema {
       table.string('event_id').primary()
       table.timestamp('created_at').notNullable()
       table.json('event_payload').notNullable()
-    })go
+    })
   }
 
   async down() {

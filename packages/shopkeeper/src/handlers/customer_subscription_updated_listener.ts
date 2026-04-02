@@ -32,7 +32,8 @@ export default class StripeCustomerSubscriptionCreatedListener extends BaseListe
       return
     }
 
-    subscription.type = subscription.type ?? data.metadata?.type ?? data.metadata?.name ?? 'default'
+    subscription.type =
+      subscription.type ?? data.metadata?.type ?? data.metadata?.name ?? 'default'
 
     const firstItem = data.items.data[0]
     const isSinglePrice = data.items.data.length === 1
