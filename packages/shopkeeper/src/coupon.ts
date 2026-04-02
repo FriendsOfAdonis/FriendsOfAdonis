@@ -50,7 +50,7 @@ export class Coupon {
    * Format the given amount into a displayable currency.
    */
   formatAmount(amount: number): string {
-    return Shopkeeper.formatter.formatAmount(amount, this.#coupon.currency ?? undefined)
+    return Shopkeeper.$instance.formatAmount(amount, this.#coupon.currency ?? undefined)
   }
 
   /**

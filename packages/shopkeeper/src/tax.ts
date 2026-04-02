@@ -47,7 +47,7 @@ export class Tax {
    * Format the given amount into a displayable currency.
    */
   formatAmount(amount: number): string {
-    return Shopkeeper.formatter.formatAmount(amount, this.#currency)
+    return Shopkeeper.$instance.formatAmount(amount, this.#currency)
   }
 
   /**

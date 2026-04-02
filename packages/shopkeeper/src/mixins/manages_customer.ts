@@ -3,7 +3,6 @@
 import { InvalidCustomerError } from '../errors/invalid_customer.js'
 import { Shopkeeper } from '../shopkeeper.js'
 import type Stripe from 'stripe'
-import app from '@adonisjs/core/services/app'
 import { Discount } from '../discount.js'
 import { PromotionCode } from '../promotion_code.js'
 import { CustomerBalanceTransaction } from '../customer_balance_transaction.js'
@@ -58,7 +57,7 @@ export function managesCustomer() {
           p.metadata = this.stripeMetadata()
         }
 
-        const stripe = Shopkeeper.stripe
+        const stripe = Shopkeeper.$instance.stripe
         const customer = await stripe.customers.create(p)
 
         this.stripeId = customer.id
@@ -69,7 +68,7 @@ export function managesCustomer() {
       }
 
       async updateStripeCustomer(params: Stripe.CustomerUpdateParams): Promise<Stripe.Customer> {
-        const stripe = Shopkeeper.stripe
+        const stripe = Shopkeeper.$instance.stripe
         const stripeId = this.stripeIdOrFail()
         return stripe.customers.update(stripeId, params)
       }
@@ -101,7 +100,7 @@ export function managesCustomer() {
       }
 
       async asStripeCustomer(expand?: string[]): Promise<Stripe.Customer> {
-        const stripe = Shopkeeper.stripe
+        const stripe = Shopkeeper.$instance.stripe
         const stripeId = this.stripeIdOrFail()
         const customer = await stripe.customers.retrieve(stripeId, { expand })
 
@@ -171,7 +170,7 @@ export function managesCustomer() {
         code: string,
         params: Stripe.PromotionCodeListParams = {}
       ): Promise<PromotionCode | null> {
-        const stripe = Shopkeeper.stripe
+        const stripe = Shopkeeper.$instance.stripe
         const codes = await stripe.promotionCodes.list({
           code,
           limit: 1,
@@ -213,7 +212,7 @@ export function managesCustomer() {
           return []
         }
 
-        const stripe = Shopkeeper.stripe
+        const stripe = Shopkeeper.$instance.stripe
         const transactions = await stripe.customers.listBalanceTransactions(this.stripeId, {
           limit,
           ...params,
@@ -247,7 +246,7 @@ export function managesCustomer() {
           throw new InvalidCustomerError()
         }
 
-        const stripe = Shopkeeper.stripe
+        const stripe = Shopkeeper.$instance.stripe
         const transaction = await stripe.customers.createBalanceTransaction(this.stripeId, {
           amount,
           currency: this.preferredCurrency(),
@@ -259,11 +258,11 @@ export function managesCustomer() {
       }
 
       preferredCurrency(): string {
-        return app.config.get('shopkeeper.currency')
+        return Shopkeeper.$instance.currency
       }
 
       formatAmount(amount: number): string {
-        return Shopkeeper.formatter.formatAmount(amount, this.preferredCurrency())
+        return Shopkeeper.$instance.formatAmount(amount, this.preferredCurrency())
       }
 
       async billingPortalUrl(
@@ -274,7 +273,7 @@ export function managesCustomer() {
           throw new InvalidCustomerError()
         }
 
-        const stripe = Shopkeeper.stripe
+        const stripe = Shopkeeper.$instance.stripe
         return stripe.billingPortal.sessions
           .create({
             customer: this.stripeId,
@@ -285,14 +284,14 @@ export function managesCustomer() {
       }
 
       async taxIds(params?: Stripe.CustomerListTaxIdsParams): Promise<Stripe.TaxId[]> {
-        const stripe = Shopkeeper.stripe
+        const stripe = Shopkeeper.$instance.stripe
         const stripeId = this.stripeIdOrFail()
         const res = await stripe.customers.listTaxIds(stripeId, params)
         return res.data
       }
 
       async findTaxId(id: string): Promise<Stripe.TaxId | null> {
-        const stripe = Shopkeeper.stripe
+        const stripe = Shopkeeper.$instance.stripe
         const stripeId = this.stripeIdOrFail()
         try {
           return await stripe.customers.retrieveTaxId(stripeId, id)
@@ -305,7 +304,7 @@ export function managesCustomer() {
         type: Stripe.CustomerCreateTaxIdParams.Type,
         value: string
       ): Promise<Stripe.TaxId> {
-        const stripe = Shopkeeper.stripe
+        const stripe = Shopkeeper.$instance.stripe
         const stripeId = this.stripeIdOrFail()
         return stripe.customers.createTaxId(stripeId, {
           type,
@@ -314,7 +313,7 @@ export function managesCustomer() {
       }
 
       async deleteTaxId(id: string): Promise<void> {
-        const stripe = Shopkeeper.stripe
+        const stripe = Shopkeeper.$instance.stripe
         const stripeId = this.stripeIdOrFail()
         await stripe.customers.deleteTaxId(stripeId, id)
       }

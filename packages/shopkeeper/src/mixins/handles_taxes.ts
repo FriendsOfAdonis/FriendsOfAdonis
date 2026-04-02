@@ -1,7 +1,7 @@
 import type Stripe from 'stripe'
-import app from '@adonisjs/core/services/app'
-import { type Constructor, type ShopkeeperConfig } from '../types.js'
+import { type Constructor } from '../types.js'
 import type { HandlesTaxesContract } from '../contracts.js'
+import { Shopkeeper } from '../shopkeeper.js'
 
 export type HandlesTaxesClass<T extends Constructor> = T & {
   new (...args: any[]): HandlesTaxesContract
@@ -56,7 +56,7 @@ export function handlesTaxes() {
        * Determine if automatic tax is enabled.
        */
       isAutomaticTaxEnabled(): boolean {
-        return app.config.get<ShopkeeperConfig>('shopkeeper').calculateTaxes
+        return Shopkeeper.$instance.config.calculateTaxes
       }
 
       /**

@@ -13,8 +13,6 @@ import { Discount } from '../discount.js'
 import { SubscriptionUpdateFailureError } from '../errors/subscription_update_failure.js'
 import { Shopkeeper } from '../shopkeeper.js'
 import shopkeeper from '../../services/shopkeeper.js'
-import app from '@adonisjs/core/services/app'
-import { type ShopkeeperConfig } from '../types.js'
 import { allowsCoupon } from '../mixins/allows_coupons.js'
 import { handlesPaymentFailures } from '../mixins/handles_payment_failures.js'
 import { interactWithPaymentBehavior } from '../mixins/interacts_with_payment_behavior.js'
@@ -59,7 +57,7 @@ export default class Subscription extends compose(
   @column()
   declare quantity: number | null
 
-  @hasMany(() => shopkeeper.subscriptionItemModel)
+  @hasMany(() => Shopkeeper.$instance.subscriptionItemModel)
   declare items: HasMany<typeof SubscriptionItem>
 
   @column.dateTime()
@@ -144,12 +142,11 @@ export default class Subscription extends compose(
    * Determine if the subscription is active.
    */
   active(): boolean {
+    const config = Shopkeeper.$instance.config
     return (
       !this.ended() &&
-      (!app.config.get<ShopkeeperConfig>('shopkeeper').keepIncompleteSubscriptionsActive ||
-        this.stripeStatus !== 'incomplete') &&
-      (!app.config.get<ShopkeeperConfig>('shopkeeper').keepPastDueSubscriptionsActive ||
-        this.stripeStatus !== 'past_due') &&
+      (!config.keepIncompleteSubscriptionsActive || this.stripeStatus !== 'incomplete') &&
+      (!config.keepPastDueSubscriptionsActive || this.stripeStatus !== 'past_due') &&
       this.stripeStatus !== 'unpaid'
     )
   }
@@ -427,7 +424,7 @@ export default class Subscription extends compose(
 
     this.guardAgainstIncomplete()
 
-    const stripe = Shopkeeper.stripe
+    const stripe = Shopkeeper.$instance.stripe
 
     const items = await this.mergeItemsThatShouldBeDeletedDuringSwap(
       await this.parseSwapPrices(prices)
@@ -525,7 +522,7 @@ export default class Subscription extends compose(
       throw SubscriptionUpdateFailureError.duplicatePrice(this, price)
     }
 
-    const stripe = Shopkeeper.stripe
+    const stripe = Shopkeeper.$instance.stripe
     const stripeSubscriptionItem = await stripe.subscriptionItems.create({
       subscription: this.stripeId,
       price,
@@ -603,7 +600,7 @@ export default class Subscription extends compose(
     const item = await this.findItemOrFail(price)
     const stripeItem = await item.asStripeSubscriptionItem()
 
-    const stripe = Shopkeeper.stripe
+    const stripe = Shopkeeper.$instance.stripe
     await stripe.subscriptionItems.del(stripeItem.id, {
       proration_behavior: this.prorateBehavior(),
     })
@@ -665,7 +662,7 @@ export default class Subscription extends compose(
    * Cancel the subscription immediately without invoicing.
    */
   async cancelNow(): Promise<this> {
-    const stripe = Shopkeeper.stripe
+    const stripe = Shopkeeper.$instance.stripe
     await stripe.subscriptions.cancel(this.stripeId, {
       prorate: this.prorateBehavior() === 'create_prorations',
     })
@@ -678,7 +675,7 @@ export default class Subscription extends compose(
    * Cancel the subscription immediately and invoice.
    */
   async cancelNowAndInvoice() {
-    const stripe = Shopkeeper.stripe
+    const stripe = Shopkeeper.$instance.stripe
     await stripe.subscriptions.cancel(this.stripeId, {
       invoice_now: true,
       prorate: this.prorateBehavior() === 'create_prorations',
@@ -878,7 +875,7 @@ export default class Subscription extends compose(
         : subscription.latest_invoice?.id
     if (!invoiceId) return null
 
-    const stripe = Shopkeeper.stripe
+    const stripe = Shopkeeper.$instance.stripe
     const invoice = await stripe.invoices.retrieve(invoiceId, {
       expand: ['payments.data.payment.payment_intent'],
     })
@@ -948,7 +945,7 @@ export default class Subscription extends compose(
   async updateStripeSubscription(
     params: Stripe.SubscriptionUpdateParams
   ): Promise<Stripe.Subscription> {
-    const stripe = Shopkeeper.stripe
+    const stripe = Shopkeeper.$instance.stripe
     return stripe.subscriptions.update(this.stripeId, params)
   }
 
@@ -956,7 +953,7 @@ export default class Subscription extends compose(
    * Get the subscription as a Stripe subscription object.
    */
   async asStripeSubscription(expand: string[] = []): Promise<Stripe.Subscription> {
-    const stripe = Shopkeeper.stripe
+    const stripe = Shopkeeper.$instance.stripe
     return stripe.subscriptions.retrieve(this.stripeId, { expand })
   }
 
