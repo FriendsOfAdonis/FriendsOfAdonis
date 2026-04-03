@@ -75,7 +75,21 @@ The `STRIPE_WEBHOOK_SECRET` environment variable is mandatory in production. It 
 
 ### Webhooks
 
-Shopkeeper automatically registers a webhook endpoint at `/stripe/webhook` to keep your application in sync with Stripe. For convenience, you can use the `shopkeeper:webhook` Ace command to create the webhook in Stripe with all the required events:
+Register the Shopkeeper webhook route and listeners in your application:
+
+```ts title="start/routes.ts"
+import shopkeeper from '@foadonis/shopkeeper/services/main'
+
+shopkeeper.registerRoutes()
+```
+
+```ts title="start/events.ts"
+import shopkeeper from '@foadonis/shopkeeper/services/main'
+
+shopkeeper.registerWebhookListeners()
+```
+
+Then, use the `shopkeeper:webhook` Ace command to create the webhook in Stripe with all the required events:
 
 ```sh
 node ace shopkeeper:webhook
