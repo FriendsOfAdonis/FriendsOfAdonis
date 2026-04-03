@@ -3,31 +3,43 @@ title: Handling Webhooks
 icon: Webhook
 ---
 
-Stripe uses [webhooks](https://stripe.com/docs/webhooks) to notify your application when events happen, like a subscription being cancelled or a payment failing. Shopkeeper listens to these events and automatically keeps your database in sync.
+Stripe uses [webhooks](https://stripe.com/docs/webhooks) to notify your application when events happen, like a subscription being cancelled or a payment failing. Shopkeeper provides the tools to handle these events and keep your database in sync.
 
-## How it works
+## Setup
 
-Shopkeeper registers a webhook endpoint at `/stripe/webhook` that receives events from Stripe. Out of the box, it handles:
+Shopkeeper requires you to register its webhook route and event listeners explicitly in your application.
 
-- Subscription creation, updates, and deletion
-- Customer updates and deletion
-- Payment method changes
-- Failed payment retries and invoice events
+### Register the webhook route
 
-You don't need to write any code for these. Shopkeeper processes the events and updates your database accordingly.
+Add the following to your `start/routes.ts` file:
 
-## Required events
+```ts title="start/routes.ts"
+import shopkeeper from '@foadonis/shopkeeper/services/main'
 
-For Shopkeeper to work correctly, the following webhook events must be enabled in Stripe:
+shopkeeper.registerRoutes()
+```
+
+This registers a `POST /stripe/webhook` endpoint that receives events from Stripe.
+
+### Register the webhook listeners
+
+Add the following to your `start/events.ts` file:
+
+```ts title="start/events.ts"
+import shopkeeper from '@foadonis/shopkeeper/services/main'
+
+shopkeeper.registerWebhookListeners()
+```
+
+This registers the built-in listeners that keep your database in sync with Stripe. Out of the box, Shopkeeper handles:
 
 - `customer.subscription.created`
 - `customer.subscription.updated`
 - `customer.subscription.deleted`
-- `customer.updated`
-- `customer.deleted`
-- `payment_method.automatically_updated`
-- `invoice.payment_action_required`
-- `invoice.payment_succeeded`
+
+## Required events
+
+For Shopkeeper to work correctly, the above webhook events must be enabled in Stripe.
 
 ## Creating the webhook
 
@@ -75,7 +87,7 @@ stripe trigger customer.subscription.created
 
 ## Handling custom events
 
-If you need to react to events beyond what Shopkeeper handles automatically, you can listen to them via the AdonisJS [Event Emitter](https://docs.adonisjs.com/guides/digging-deeper/emitter).
+If you need to react to events beyond what Shopkeeper handles by default, you can listen to them via the AdonisJS [Event Emitter](https://docs.adonisjs.com/guides/digging-deeper/emitter).
 
 Shopkeeper emits events using the naming convention `stripe:<eventType>`:
 
@@ -91,7 +103,7 @@ emitter.on(
 )
 ```
 
-Events with the `:handled` suffix are emitted after Shopkeeper has finished processing the event. This is useful when you need to run logic that depends on the database being up to date:
+Events with the `:handled` suffix are emitted after all listeners have finished processing:
 
 ```ts title="start/events.ts"
 emitter.on(
@@ -104,9 +116,31 @@ emitter.on(
 
 ## Idempotent handling
 
-Shopkeeper stores processed webhook events in the `stripe_webhook_events` table to prevent duplicate processing. If Stripe retries a webhook delivery, Shopkeeper will recognize the event and skip it.
+Shopkeeper provides an opt-in `webhookAudit` method to prevent duplicate processing and ensure transactional safety. When used, it:
 
-This is handled automatically. The `stripe_webhook_events` table is created by the migration included with Shopkeeper.
+- Checks if the event has already been processed (stored in the `stripe_webhook_events` table)
+- Wraps your logic and the event recording in a single database transaction
+- Rolls back everything if your logic throws, so the event can be retried
+
+```ts title="app/listeners/my_webhook_listener.ts"
+import shopkeeper from '@foadonis/shopkeeper/services/main'
+import type Stripe from 'stripe'
+
+export default class MyWebhookListener {
+  async handle(event: Stripe.CheckoutSessionCompletedEvent) {
+    await shopkeeper.webhookAudit(event, async (trx) => {
+      // Your business logic here.
+      // Use trx for database operations to ensure atomicity.
+    })
+  }
+}
+```
+
+`webhookAudit` returns `false` if the event was already processed, and `true` if it was handled successfully.
+
+<Callout>
+The built-in subscription listeners do **not** use `webhookAudit` by default. You can wrap them or your own listeners as needed.
+</Callout>
 
 ## Webhook signature verification
 
