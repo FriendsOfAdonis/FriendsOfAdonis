@@ -3,7 +3,7 @@ import { type Shopkeeper } from '../src/shopkeeper.js'
 
 let shopkeeper: Shopkeeper
 
-app.booted(async () => {
+await app.booted(async () => {
   shopkeeper = await app.container.make('shopkeeper')
 })
 
