@@ -2688,7 +2688,7 @@ __metadata:
     "@japa/expect-type": "npm:^2.0.4"
     "@japa/file-system": "npm:^3.0.0"
     "@japa/runner": "npm:^4.5.0"
-    "@martin.xyz/openapi-decorators": "npm:^0.1.2"
+    "@martin.xyz/openapi-decorators": "npm:^0.2.0"
     "@standard-schema/spec": "npm:^1.1.0"
     "@swc/core": "npm:1.15.5"
     "@types/luxon": "npm:^3.7.1"
@@ -3714,9 +3714,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@martin.xyz/openapi-decorators@npm:^0.1.2":
-  version: 0.1.2
-  resolution: "@martin.xyz/openapi-decorators@npm:0.1.2"
+"@martin.xyz/openapi-decorators@npm:^0.2.0":
+  version: 0.2.0
+  resolution: "@martin.xyz/openapi-decorators@npm:0.2.0"
   dependencies:
     "@standard-schema/spec": "npm:^1.1.0"
     deepmerge: "npm:^4.3.1"
@@ -3724,7 +3724,7 @@ __metadata:
     type-fest: "npm:^5.3.1"
   peerDependencies:
     reflect-metadata: ^0.2.2
-  checksum: 10c0/e2eb62e5c7fb3032b2eb7062580032d6205c6eae7923af229cc34394bd8ad614f8bf80c0963a7485f1919cd4688a7b36009f8b7d5d9977345200a919d0645265
+  checksum: 10c0/2c6ce695b796372e78f6767f53ec0b45d70cbdc3a35b9aa6421691c2aa647ca6813a3a6f6b31ae7b23b755f8b7ae443b8a44d8b20187fd839205e076c0e52b05
   languageName: node
   linkType: hard
 

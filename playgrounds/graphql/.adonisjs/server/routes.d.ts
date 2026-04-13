@@ -4,22 +4,22 @@ type ParamValue = string | number | bigint | boolean
 
 export type ScannedRoutes = {
   ALL: {
-    'graphql': { paramsTuple?: []; params?: {} }
+    graphql: { paramsTuple?: []; params?: {} }
   }
   GET: {
-    'graphql': { paramsTuple?: []; params?: {} }
+    graphql: { paramsTuple?: []; params?: {} }
   }
   POST: {
-    'graphql': { paramsTuple?: []; params?: {} }
+    graphql: { paramsTuple?: []; params?: {} }
   }
   PATCH: {
-    'graphql': { paramsTuple?: []; params?: {} }
+    graphql: { paramsTuple?: []; params?: {} }
   }
   HEAD: {
-    'graphql': { paramsTuple?: []; params?: {} }
+    graphql: { paramsTuple?: []; params?: {} }
   }
   OPTIONS: {
-    'graphql': { paramsTuple?: []; params?: {} }
+    graphql: { paramsTuple?: []; params?: {} }
   }
 }
 declare module '@adonisjs/core/types/http' {
