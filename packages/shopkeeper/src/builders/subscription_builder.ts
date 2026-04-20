@@ -1,34 +1,42 @@
 import { DateTime } from 'luxon'
 import type Stripe from 'stripe'
 import { Exception } from '@adonisjs/core/exceptions'
-import { Checkout } from './checkout.js'
-import type Subscription from './models/subscription.js'
+import { Checkout } from '../checkout.js'
+import { type CheckoutBuilder } from './checkout_builder.js'
+import type Subscription from '../models/subscription.js'
 import { compose } from '@adonisjs/core/helpers'
-import { handlesTaxes } from './mixins/handles_taxes.js'
-import { Empty } from './types.js'
+import { handlesTaxes } from '../mixins/handles_taxes.js'
+import { Empty } from '../types.js'
 import {
   type ManagesCustomerContract,
   type ManagesPaymentMethodsContract,
   type ManagesSubscriptionsContract,
-} from './contracts.js'
-import { allowsCoupon } from './mixins/allows_coupons.js'
-import { handlesPaymentFailures } from './mixins/handles_payment_failures.js'
-import { interactWithPaymentBehavior } from './mixins/interacts_with_payment_behavior.js'
-import { prorates } from './mixins/prorates.js'
-import { Shopkeeper } from './shopkeeper.js'
+} from '../contracts.js'
+import type { LucidRow } from '@adonisjs/lucid/types/model'
+import { allowsCoupon } from '../mixins/allows_coupons.js'
+import { handlesPaymentFailures } from '../mixins/handles_payment_failures.js'
+import { interactWithPaymentBehavior } from '../mixins/interacts_with_payment_behavior.js'
+import { prorates } from '../mixins/prorates.js'
+import { Shopkeeper } from '../shopkeeper.js'
 
-type SubscriptionBuilderOwner = ManagesSubscriptionsContract &
-  ManagesCustomerContract &
-  ManagesPaymentMethodsContract
+interface SubscriptionBuilderOwner
+  extends
+    ManagesSubscriptionsContract,
+    ManagesCustomerContract,
+    ManagesPaymentMethodsContract,
+    LucidRow {}
 
-export class SubscriptionBuilder extends compose(
-  Empty,
-  allowsCoupon(),
-  handlesPaymentFailures(),
-  handlesTaxes(),
-  interactWithPaymentBehavior(),
-  prorates()
-) {
+export class SubscriptionBuilder
+  extends compose(
+    Empty,
+    allowsCoupon(),
+    handlesPaymentFailures(),
+    handlesTaxes(),
+    interactWithPaymentBehavior(),
+    prorates()
+  )
+  implements PromiseLike<Subscription>
+{
   /**
    * The model that is subscribing.
    */
@@ -228,7 +236,6 @@ export class SubscriptionBuilder extends compose(
    */
   async createSubscription(stripeSubscription: Stripe.Subscription): Promise<Subscription> {
     let subscription = await this.#owner
-      // @ts-expect-error -- Lucid relation method not in SubscriptionBuilderOwner
       .related('subscriptions')
       .query()
       .where('stripeId', stripeSubscription.id)
@@ -241,7 +248,6 @@ export class SubscriptionBuilder extends compose(
     const firstItem = stripeSubscription.items.data[0]
     const isSinglePrice = stripeSubscription.items.data.length === 1
 
-    // @ts-expect-error -- Lucid relation method not in SubscriptionBuilderOwner
     subscription = await this.#owner.related('subscriptions').create({
       type: this.#type,
       stripeId: stripeSubscription.id,
@@ -268,10 +274,10 @@ export class SubscriptionBuilder extends compose(
   /**
    * Begin a new Checkout Session.
    */
-  async checkout(
+  checkout(
     sessionParams: Stripe.Checkout.SessionCreateParams = {},
     customerParams: Stripe.CustomerCreateParams = {}
-  ): Promise<Checkout> {
+  ): CheckoutBuilder {
     if (this.#items.length <= 0) {
       throw new Exception('At least one price is required when starting subscriptions.')
     }
@@ -284,13 +290,30 @@ export class SubscriptionBuilder extends compose(
 
     const billingCycleAnchor = trialEnd ? this.#billingCycleAnchor : null
 
-    return Checkout.customer(this.#owner, this).create(
-      [],
-      {
-        line_items: this.#items.map((item) => ({
-          ...item,
-          tax_rates: Array.isArray(item.tax_rates) ? item.tax_rates : undefined,
-        })),
+    const builder = Checkout.customer(this.#owner)
+
+    if (this.couponId) builder.withCoupon(this.couponId)
+    if (this.promotionCodeId) builder.withPromotionCode(this.promotionCodeId)
+    if (this.allowPromotionCodes) builder.withAllowPromotionsCodes()
+    if (this.customerIpAddress) builder.withTaxIpAddress(this.customerIpAddress)
+    if (this.estimationBillingAddress?.country) {
+      builder.withTaxAddress(
+        this.estimationBillingAddress.country,
+        this.estimationBillingAddress.postal_code ?? undefined,
+        this.estimationBillingAddress.state ?? undefined
+      )
+    }
+    if (this.collectTaxIds) builder.withTaxIdsCollect()
+
+    for (const item of this.#items) {
+      builder.addRawLineItem({
+        ...item,
+        tax_rates: Array.isArray(item.tax_rates) ? item.tax_rates : undefined,
+      })
+    }
+
+    return builder
+      .sessionParams({
         mode: 'subscription',
         subscription_data: {
           default_tax_rates: this.getTaxRatesForPayload() ?? undefined,
@@ -315,9 +338,8 @@ export class SubscriptionBuilder extends compose(
           },
         },
         ...sessionParams,
-      },
-      customerParams
-    )
+      })
+      .customerParams(customerParams)
   }
 
   /**
@@ -377,7 +399,6 @@ export class SubscriptionBuilder extends compose(
   /**
    * Get the price tax rates for the Stripe payload.
    */
-  // TODO: Type
   getTaxRatesForPayload(): string[] | null {
     return this.#owner.taxRates() ?? null
   }
@@ -394,5 +415,15 @@ export class SubscriptionBuilder extends compose(
    */
   getItems() {
     return this.#items
+  }
+
+  /**
+   * PromiseLike implementation — resolves by calling create() with no payment method.
+   */
+  then<TResult1 = Subscription, TResult2 = never>(
+    onfulfilled?: ((value: Subscription) => TResult1 | PromiseLike<TResult1>) | null,
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null
+  ): Promise<TResult1 | TResult2> {
+    return this.create().then(onfulfilled, onrejected)
   }
 }

@@ -1,9 +1,6 @@
 import type Stripe from 'stripe'
 import { type ManagesCustomerContract } from './contracts.js'
-import { type SubscriptionBuilder } from './subscription_builder.js'
-import { CheckoutBuilder } from './checkout_builder.js'
-import { Shopkeeper } from './shopkeeper.js'
-import router from '@adonisjs/core/services/router'
+import { CheckoutBuilder } from './builders/checkout_builder.js'
 
 export class Checkout {
   /**
@@ -22,72 +19,11 @@ export class Checkout {
     return new CheckoutBuilder()
   }
 
-  static customer(owner: ManagesCustomerContract, parentInstance?: SubscriptionBuilder) {
-    return new CheckoutBuilder(owner, parentInstance)
-  }
-
   /**
-   * Begin a new checkout session.
+   * Begin a new checkout session for a customer.
    */
-  static async create(
-    owner?: ManagesCustomerContract,
-    sessionParams: Stripe.Checkout.SessionCreateParams = {},
-    customerParams: Stripe.CustomerCreateParams = {}
-  ): Promise<Checkout> {
-    const stripe = Shopkeeper.$instance.stripe
-    const data: Stripe.Checkout.SessionCreateParams = {
-      mode: 'payment',
-      ...sessionParams,
-    }
-
-    if (owner) {
-      const customer = await owner.createOrGetStripeCustomer(customerParams)
-      data.customer = customer.id
-    }
-
-    if (data.customer && data.tax_id_collection?.enabled) {
-      data.customer_update = {
-        ...data.customer_update,
-        address: 'auto',
-        name: 'auto',
-      }
-    }
-
-    if (data.mode === 'payment' && data.invoice_creation?.enabled) {
-      data.invoice_creation = {
-        ...data.invoice_creation,
-        invoice_data: {
-          ...data.invoice_creation.invoice_data,
-          metadata: {
-            ...data.invoice_creation.invoice_data?.metadata,
-            is_on_session_checkout: 'true',
-          },
-        },
-      }
-    } else if (data.mode === 'subscription') {
-      data.subscription_data = {
-        ...data.subscription_data,
-        metadata: {
-          ...data.subscription_data?.metadata,
-          is_on_session_checkout: 'true',
-        },
-      }
-    }
-
-    if (data.ui_mode === 'embedded') {
-      if (data.redirect_on_completion === 'never') {
-        data.return_url = undefined
-      } else {
-        data.return_url = data.return_url ?? router.makeUrl('home')
-      }
-    } else {
-      data.success_url = data.success_url ?? router.makeUrl('home', { checkout: 'success' })
-      data.cancel_url = data.cancel_url ?? router.makeUrl('home', { checkout: 'cancelled' })
-    }
-
-    const session = await stripe.checkout.sessions.create(data)
-
-    return new this(session)
+  static customer(owner: ManagesCustomerContract): CheckoutBuilder {
+    return new CheckoutBuilder(owner)
   }
 
   /**

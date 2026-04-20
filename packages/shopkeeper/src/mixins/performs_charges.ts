@@ -1,5 +1,6 @@
 import { Payment } from '../payment.js'
 import { Checkout } from '../checkout.js'
+import { CheckoutBuilder } from '../builders/checkout_builder.js'
 import { Shopkeeper } from '../shopkeeper.js'
 import type Stripe from 'stripe'
 import type {
@@ -116,18 +117,10 @@ export function performCharges() {
       }
 
       /**
-       * Begin a new checkout session for existing prices.
+       * Begin a new checkout session.
        */
-      checkout(
-        items:
-          | Record<string, number>
-          | string
-          | string[]
-          | Stripe.Checkout.SessionCreateParams.LineItem[],
-        sessionParams: Stripe.Checkout.SessionCreateParams = {},
-        customerParams: Stripe.CustomerCreateParams = {}
-      ): Promise<Checkout> {
-        return Checkout.customer(this).create(items, sessionParams, customerParams)
+      checkout(): CheckoutBuilder {
+        return Checkout.customer(this)
       }
 
       /**
@@ -137,30 +130,22 @@ export function performCharges() {
         amount: number,
         name: string,
         quantity = 1,
-        sessionParams: Stripe.Checkout.SessionCreateParams = {},
-        customerParams: Stripe.CustomerCreateParams = {},
         productData: Omit<
           Stripe.Checkout.SessionCreateParams.LineItem.PriceData.ProductData,
           'name'
         > = {}
-      ): Promise<Checkout> {
-        return this.checkout(
-          [
-            {
-              price_data: {
-                currency: this.preferredCurrency(),
-                product_data: {
-                  ...productData,
-                  name,
-                },
-                unit_amount: amount,
-              },
-              quantity,
+      ): CheckoutBuilder {
+        return this.checkout().addRawLineItem({
+          price_data: {
+            currency: this.preferredCurrency(),
+            product_data: {
+              ...productData,
+              name,
             },
-          ],
-          sessionParams,
-          customerParams
-        )
+            unit_amount: amount,
+          },
+          quantity,
+        })
       }
     }
 
