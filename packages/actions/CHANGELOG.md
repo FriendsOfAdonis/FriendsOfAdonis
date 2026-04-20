@@ -1,5 +1,13 @@
 # @foadonis/actions
 
+## 0.3.0
+
+### Minor Changes
+
+- [#117](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/117) [`c692039`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/c6920398de19e1ba5e98f998863d689eafe7d9a2) Thanks [@RomainLanz](https://github.com/RomainLanz)! - Add `skipSegments` option to `indexActions` to control which path segments are excluded when generating action identifiers.
+
+  The default value is now `['actions']`, meaning `app/identity/actions/login.ts` resolves to `Identity.Login` instead of `Identity.Actions.Login`.
+
 ## 0.2.1
 
 ### Patch Changes
