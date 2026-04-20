@@ -353,31 +353,62 @@ export class Invoice {
   }
 
   /**
-   * Add an invoice item to this invoice.
+   * Add a custom amount item to this invoice.
    */
-  async tab(
+  async addItem(
     description: string,
     amount: number,
-    params: Partial<Stripe.InvoiceItemCreateParams> = {}
+    params: Partial<
+      Omit<Stripe.InvoiceItemCreateParams, 'price_data'> & {
+        price_data?: Omit<Stripe.InvoiceItemCreateParams.PriceData, 'currency'> & {
+          currency?: string
+        }
+      }
+    > = {}
   ): Promise<Stripe.InvoiceItem> {
-    const item = await this.#owner.tab(description, amount, {
-      invoice: this.#invoice.id,
-      ...params,
-    })
+    const stripe = Shopkeeper.$instance.stripe
+    const { price_data, ...restParams } = params
 
+    const options: Stripe.InvoiceItemCreateParams = {
+      customer: this.#owner.stripeIdOrFail(),
+      currency: this.#invoice.currency,
+      description,
+      invoice: this.#invoice.id,
+      ...restParams,
+    }
+
+    if (price_data) {
+      options.price_data = {
+        unit_amount: amount,
+        currency: this.#invoice.currency,
+        ...price_data,
+      }
+    } else {
+      options.amount = amount
+    }
+
+    const item = await stripe.invoiceItems.create(options)
     await this.refresh()
     return item
   }
 
   /**
-   * Add an invoice item for a specific Price ID to this invoice.
+   * Add a price-based item to this invoice.
    */
-  async tabPrice(
+  async addPrice(
     price: string,
     quantity = 1,
-    params: Partial<Stripe.InvoiceItemCreateParams>
+    params: Partial<Stripe.InvoiceItemCreateParams> = {}
   ): Promise<Stripe.InvoiceItem> {
-    const item = this.#owner.tabPrice(price, quantity, { invoice: this.#invoice.id, ...params })
+    const stripe = Shopkeeper.$instance.stripe
+    const item = await stripe.invoiceItems.create({
+      customer: this.#owner.stripeIdOrFail(),
+      pricing: { price },
+      quantity,
+      invoice: this.#invoice.id,
+      ...params,
+    })
+
     await this.refresh()
     return item
   }

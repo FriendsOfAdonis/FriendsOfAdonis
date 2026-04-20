@@ -5,11 +5,12 @@ import type { LucidModel } from '@adonisjs/lucid/types/model'
 import type { Invoice } from './invoice.js'
 import type { Payment } from './payment.js'
 import type { PaymentMethod } from './payment_method.js'
-import type { Checkout } from './checkout.js'
+import type { CheckoutBuilder } from './builders/checkout_builder.js'
 import type { Discount } from './discount.js'
 import type { PromotionCode } from './promotion_code.js'
 import type { CustomerBalanceTransaction } from './customer_balance_transaction.js'
-import type { SubscriptionBuilder } from './subscription_builder.js'
+import type { SubscriptionBuilder } from './builders/subscription_builder.js'
+import type { InvoiceBuilder } from './builders/invoice_builder.js'
 import type Subscription from './models/subscription.js'
 
 export interface ManagesStripeContract<Optional extends boolean = true> {
@@ -115,30 +116,7 @@ export interface ManagesPaymentMethodsContract extends ManagesCustomerContract {
 }
 
 export interface ManagesInvoicesContract extends ManagesCustomerContract, HandlesTaxesContract {
-  tab(
-    description: string,
-    amount?: number,
-    params?: Record<string, unknown>
-  ): Promise<Stripe.InvoiceItem>
-  tabPrice(
-    price: string,
-    quantity?: number,
-    params?: Partial<Stripe.InvoiceItemCreateParams>
-  ): Promise<Stripe.InvoiceItem>
-  invoiceFor(
-    description: string,
-    amount: number,
-    tabParams?: Record<string, unknown>,
-    invoiceParams?: Stripe.InvoiceCreateParams & Stripe.InvoicePayParams
-  ): Promise<Invoice>
-  invoicePrice(
-    price: string,
-    quantity?: number,
-    tabParams?: Partial<Stripe.InvoiceItemCreateParams>,
-    invoiceParams?: Stripe.InvoiceCreateParams & Stripe.InvoicePayParams
-  ): Promise<Invoice>
-  invoice(params?: Stripe.InvoiceCreateParams & Stripe.InvoicePayParams): Promise<Invoice>
-  createInvoice(params?: Stripe.InvoiceCreateParams): Promise<Invoice>
+  invoice(): InvoiceBuilder
   upcomingInvoice(params?: Stripe.InvoiceCreatePreviewParams): Promise<Invoice | null>
   findInvoice(id: string): Promise<Invoice | null>
   findInvoiceOrFail(id: string): Promise<Invoice>
@@ -245,22 +223,16 @@ export interface PerformsChargesContract extends ManagesCustomerContract {
     paymentIntent: string,
     params?: Omit<Stripe.RefundCreateParams, 'payment_intent'>
   ): Promise<Stripe.Refund>
-  checkout(
-    items:
-      | Record<string, number>
-      | string
-      | string[]
-      | Stripe.Checkout.SessionCreateParams.LineItem[],
-    sessionParams?: Stripe.Checkout.SessionCreateParams,
-    customerParams?: Stripe.CustomerCreateParams
-  ): Promise<Checkout>
+  checkout(): CheckoutBuilder
   checkoutCharge(
     amount: number,
     name: string,
     quantity?: number,
-    sessionParams?: Stripe.Checkout.SessionCreateParams,
-    customerParams?: Stripe.CustomerCreateParams
-  ): Promise<Checkout>
+    productData?: Omit<
+      Stripe.Checkout.SessionCreateParams.LineItem.PriceData.ProductData,
+      'name'
+    >
+  ): CheckoutBuilder
 }
 
 export interface AllowsCouponContract {
