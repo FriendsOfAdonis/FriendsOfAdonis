@@ -14,6 +14,7 @@
 
 import type ConfigureCommand from '@adonisjs/core/commands/configure'
 import { stubsRoot } from './stubs/main.js'
+import { type Codemods } from '@adonisjs/core/ace/codemods'
 
 export async function configure(command: ConfigureCommand) {
   const codemods = await command.createCodemods()
@@ -23,8 +24,37 @@ export async function configure(command: ConfigureCommand) {
   })
 
   await codemods.makeUsingStub(stubsRoot, 'config/openapi.stub', {})
+  await codemods.makeUsingStub(stubsRoot, 'controllers/openapi_controller.stub', {})
+
+  await updateRouteFile(command, codemods)
 
   logSuccess(command)
+}
+
+async function updateRouteFile(command: ConfigureCommand, codemods: Codemods) {
+  const project = await codemods.getTsMorphProject()
+  if (!project) return
+
+  const path = command.app.startPath('routes.ts')
+  const sourceFile = project.getSourceFile(path) ?? project.createSourceFile(path)
+  if (!sourceFile) return
+
+  sourceFile.addImportDeclarations([
+    {
+      moduleSpecifier: '#generated/controllers',
+      namedImports: ['controllers'],
+    },
+    {
+      moduleSpecifier: '@foadonis/openapi/services/main',
+      defaultImport: 'openapi',
+    },
+  ])
+
+  sourceFile.addStatements((writer) => {
+    writer.writeLine(`openapi.registerController('/api/v1', controllers.OpenApi)`)
+  })
+
+  await sourceFile.save()
 }
 
 function logSuccess(command: ConfigureCommand) {

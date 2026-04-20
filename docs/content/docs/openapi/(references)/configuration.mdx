@@ -1,24 +1,112 @@
 ---
 title: Configuration
-description: 'Configure the OpenAPI package for AdonisJS. Customize the UI, document metadata, type loaders, and controller discovery.'
+description: 'Configure the OpenAPI package for AdonisJS. Customize document metadata, type loaders, operation filtering, and auto-tagging.'
 ---
+
+The configuration file is located at `config/openapi.ts`. It is created during the [initial setup](/docs/openapi/getting-started) and uses the `defineConfig` helper.
 
 ```ts title="config/openapi.ts" twoslash
 // @noErrors
 import { defineConfig } from '@foadonis/openapi'
 
 export default defineConfig({
-  ui: 'scalar',
-
-  document: {
-    info: {
-      title: 'My API',
-      version: '1.0.0',
+  docs: {
+    default: {
+      document: {
+        info: {
+          title: 'My API',
+          version: '1.0.0',
+        },
+      },
     },
   },
+})
+```
 
-  loaders: [MyCustomLoader],
+## docs
 
-  controllers: [CustomController],
+A map of named OpenAPI documents to generate. Each key becomes a document identifier you can reference in your [OpenAPI controllers](/docs/openapi/getting-started). See [Multiple Documentation](/docs/openapi/multiple-documentation) for more details.
+
+Each document accepts the following options:
+
+### document
+
+The base OpenAPI document object. It gets deeply merged into the generated specification, allowing you to set metadata and extend the final output.
+
+```ts
+docs: {
+  default: {
+    document: {
+      info: {
+        title: 'My API',
+        version: '1.0.0',
+        description: 'A sample API',
+      },
+    },
+  },
+}
+```
+
+### controllers
+
+Additional controllers to include in the document, on top of those automatically discovered from the AdonisJS router.
+
+```ts
+docs: {
+  default: {
+    document: { info: { title: 'My API', version: '1.0.0' } },
+    controllers: [MyCustomController],
+  },
+}
+```
+
+### filter
+
+A function to filter which operations are included in the document. Receives the route, the controller class, and the method name. Return `true` to include the operation.
+
+This is especially useful when generating [multiple documents](/docs/openapi/multiple-documentation) from a single application.
+
+```ts
+docs: {
+  v1: {
+    document: { info: { title: 'My API', version: '1.0.0' } },
+    filter: (route) => route.pattern.startsWith('/api/v1'),
+  },
+}
+```
+
+### tagger
+
+Customize how operations are automatically tagged. By default, tags are derived from the controller name. You can override this to use your own naming convention.
+
+```ts
+import stringHelpers from '@adonisjs/core/helpers/string'
+
+// ...
+docs: {
+  default: {
+    document: { info: { title: 'My API', version: '1.0.0' } },
+    tagger: (_route, target) => {
+      return [stringHelpers.create(target.name).removeSuffix('Controller').toString()]
+    },
+  },
+}
+```
+
+## loaders
+
+Custom type loaders applied to all documents. Loaders allow you to teach the schema generator how to handle custom types (e.g. from third-party libraries).
+
+[Luxon](https://moment.github.io/luxon/) and [VineJS](https://vinejs.dev/docs/introduction) types are supported out of the box.
+
+```ts
+export default defineConfig({
+  loaders: [MyCustomTypeLoader],
+
+  docs: {
+    default: {
+      document: { info: { title: 'My API', version: '1.0.0' } },
+    },
+  },
 })
 ```

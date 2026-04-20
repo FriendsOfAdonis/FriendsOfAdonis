@@ -1,5 +1,4 @@
 import { defineConfig, drivers } from '@foadonis/graphql'
-import { type InferSubscriptionDriver } from '@foadonis/graphql/types'
 
 const graphqlConfig = defineConfig({
   /**

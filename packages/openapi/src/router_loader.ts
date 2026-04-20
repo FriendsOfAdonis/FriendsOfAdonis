@@ -6,18 +6,35 @@ import {
   OperationMetadataStorage,
   OperationParameterMetadataStorage,
 } from '@martin.xyz/openapi-decorators/metadata'
-import { isConstructor, toOpenAPIPath } from './utils.js'
-import { type OperationTaggerFn } from './types.js'
+import { isConstructor, toOpenAPIPath } from './utils.ts'
+import { type OperationFilterFn, type OperationTaggerFn } from './types.ts'
+import stringHelpers from '@adonisjs/core/helpers/string'
 
+export type RouterLoaderOptions = {
+  logger: Logger
+  tagger?: OperationTaggerFn
+  filter?: OperationFilterFn
+}
+
+/**
+ * The Router Loader is in charge of auto-loading controllers and routes
+ * from the HTTP Router.
+ *
+ * It automatically inject API metadata about endpoints.
+ */
 export class RouterLoader {
   #router: HttpRouterService
   #logger: Logger
-  #tagger: OperationTaggerFn
+  #taggerFn: OperationTaggerFn
+  #filterFn: OperationFilterFn
 
-  constructor(router: HttpRouterService, logger: Logger, tagger: OperationTaggerFn) {
+  constructor(router: HttpRouterService, options: RouterLoaderOptions) {
     this.#router = router
-    this.#logger = logger
-    this.#tagger = tagger
+    this.#logger = options.logger
+    this.#taggerFn =
+      options.tagger ??
+      ((_, target) => [stringHelpers.create(target.name).removeSuffix('Controller').toString()])
+    this.#filterFn = options.filter ?? (() => true)
   }
 
   async importRouterController(route: RouteJSON): Promise<[Function, string] | undefined> {
@@ -47,10 +64,14 @@ export class RouterLoader {
 
     const [target, propertyKey] = reference
 
+    if (this.#filterFn(route, target, propertyKey) === false) {
+      return
+    }
+
     // We must manually check for metadata
     if (ExcludeMetadataStorage.getMetadata(target) === true) return target
 
-    const tags = this.#tagger(route, target, propertyKey)
+    const tags = this.#taggerFn(route, target, propertyKey)
 
     // Transform Adonis-style path parameters to OpenAPI-compliant format
     const openAPIPath = toOpenAPIPath(route.pattern)

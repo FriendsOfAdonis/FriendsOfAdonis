@@ -39,5 +39,11 @@ test.group('Configuration', () => {
 
     await assert.fileExists('adonisrc.ts')
     await assert.fileContains('adonisrc.ts', '@foadonis/openapi/openapi_provider')
+
+    await assert.fileExists('app/controllers/openapi_controller.ts')
+    await assert.fileContains('app/controllers/openapi_controller.ts', 'BaseOpenAPIController')
+
+    await assert.fileExists('start/routes.ts')
+    await assert.fileContains('start/routes.ts', 'openapi.registerController')
   }).timeout(30000)
 })

@@ -1,7 +1,7 @@
 import app from '@adonisjs/core/services/app'
-import { type OpenAPI } from '../src/openapi.js'
+import { type OpenAPIService } from '../src/types.ts'
 
-let openapi: OpenAPI
+let openapi: OpenAPIService
 
 await app.booted(async () => {
   openapi = await app.container.make('openapi')
