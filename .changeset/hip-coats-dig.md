@@ -1,5 +1,5 @@
 ---
-'@foadonis/actions': major
+'@foadonis/actions': minor
 ---
 
 Add `skipSegments` option to `indexActions` to control which path segments are excluded when generating action identifiers.
