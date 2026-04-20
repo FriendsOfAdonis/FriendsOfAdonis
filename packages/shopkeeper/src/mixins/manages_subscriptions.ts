@@ -1,7 +1,7 @@
 import { DateTime } from 'luxon'
 import type { BaseModel } from '@adonisjs/lucid/orm'
 import { column, hasMany } from '@adonisjs/lucid/orm'
-import { SubscriptionBuilder } from '../subscription_builder.js'
+import { SubscriptionBuilder } from '../builders/subscription_builder.js'
 import type { ManagesPaymentMethodsContract, ManagesSubscriptionsContract } from '../contracts.js'
 import type { NormalizeConstructor } from '@adonisjs/core/types/helpers'
 import type { HasMany } from '@adonisjs/lucid/types/relations'
