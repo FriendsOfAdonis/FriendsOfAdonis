@@ -21,7 +21,7 @@ export const CONTAINERS = {
       retries: 5,
       startPeriod: 1000,
     }),
-  typesense: new GenericContainer('typesense/typesense:27.0')
+  typesense: new GenericContainer('typesense/typesense:29.0')
     .withCommand(['--api-key=superrandomkey', '--data-dir=/tmp'])
     .withExposedPorts(8108)
     .withHealthCheck({
@@ -154,7 +154,7 @@ async function seedDatabase() {
 
   // To ensure proper order we manually set createdAt
   const toCreate = [
-    ...collection().map((v) => {
+    ...Array.from(collection()).map((v) => {
       date = date.minus({ seconds: 1 })
       return {
         ...v,
@@ -162,6 +162,7 @@ async function seedDatabase() {
       }
     }),
   ]
+
   await User.createMany(toCreate)
 }
 
