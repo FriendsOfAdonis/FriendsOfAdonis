@@ -31,18 +31,22 @@ export default class ActionsProvider {
     executor.hook('execute', (context) => {
       if (context.method === 'asController') {
         const [httpContext] = context.args
-        context.action.logger = httpContext.logger.child({
-          action: context.action.constructor.name,
-        })
+        if (httpContext?.logger) {
+          context.action.logger = httpContext.logger.child({
+            action: context.action.constructor.name,
+          })
+        }
       }
 
       if (context.method === 'asJob') {
         const [, jobContext] = context.args
-        context.action.logger = context.action.logger.child({
-          job_id: jobContext.jobId,
-          job_name: jobContext.name,
-          queue: jobContext.queue,
-        })
+        if (jobContext) {
+          context.action.logger = context.action.logger.child({
+            job_id: jobContext.jobId,
+            job_name: jobContext.name,
+            queue: jobContext.queue,
+          })
+        }
       }
     })
   }
