@@ -55,7 +55,7 @@ const posts = await Post.search('Adonis').take(10).get()
 
 ## Quickstart
 
-[Installation & Getting Started](https://friendsofadonis.github.io/docs/magnify/getting-started)
+[Installation & Getting Started](https://friendsofadonis.com/docs/magnify)
 
 ## License
 
