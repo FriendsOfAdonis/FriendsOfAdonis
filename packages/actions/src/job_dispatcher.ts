@@ -1,3 +1,4 @@
+// oxlint-disable unicorn/no-thenable
 /**
  * This code is taken from @boringnode/queue.
  *

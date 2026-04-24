@@ -3,7 +3,6 @@ export { BaseAction } from './src/base_action.ts'
 export { ActionCommandsLoader } from './src/commands_loader.ts'
 export { indexActions, type IndexActionsOptions } from './src/hooks/index_actions.ts'
 export { loader } from './src/loader.ts'
-export { ActionsRunner } from './src/runner.ts'
 
 export * from './src/define_config.ts'
 

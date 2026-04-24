@@ -104,7 +104,6 @@ export class ActionExecutor {
       | HookHandler<ActionDispatcherHooks[Event][0], ActionDispatcherHooks[Event][1]>
       | HookHandlerProvider<ActionDispatcherHooks[Event][0], ActionDispatcherHooks[Event][1]>
   ) {
-    console.log('adding hook', handler)
     this.#hooks.add(event, handler)
   }
 }

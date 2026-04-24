@@ -744,12 +744,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@adonisjs/queue@npm:^0.5.1":
-  version: 0.5.1
-  resolution: "@adonisjs/queue@npm:0.5.1"
+"@adonisjs/queue@npm:^0.6.0":
+  version: 0.6.0
+  resolution: "@adonisjs/queue@npm:0.6.0"
   dependencies:
     "@boringnode/queue": "npm:^0.5.0"
-    "@poppinss/utils": "npm:^7.0.1"
   peerDependencies:
     "@adonisjs/assembler": ^8.0.0
     "@adonisjs/core": ^7.0.0
@@ -760,7 +759,7 @@ __metadata:
       optional: true
     "@adonisjs/redis":
       optional: true
-  checksum: 10c0/cfbc2d36b84495e632028e34e0f437a9a4ccde7eb17fc8b69c490ac2961b1f3115e4a7588ac07e03b1047e440c987906e829b89e4e8a5fed88d25e1cbc45e09f
+  checksum: 10c0/313fac4d7580e70f575d59c35e2417060aa3a84ee94000817752e66e1635da5cd39d4accf770f831f7c0c00b3b702ecac8afe3ac5b689d60e20966772fcb7841
   languageName: node
   linkType: hard
 
@@ -2059,7 +2058,7 @@ __metadata:
   dependencies:
     "@adonisjs/assembler": "catalog:"
     "@adonisjs/core": "catalog:"
-    "@adonisjs/queue": "npm:^0.5.1"
+    "@adonisjs/queue": "npm:^0.6.0"
     "@japa/assert": "npm:^4.2.0"
     "@japa/expect-type": "npm:^2.0.4"
     "@japa/file-system": "npm:^3.0.0"
@@ -15346,7 +15345,7 @@ __metadata:
     "@adonisjs/bouncer": "catalog:"
     "@adonisjs/core": "catalog:"
     "@adonisjs/otel": "npm:1.0.0-next.4"
-    "@adonisjs/queue": "npm:^0.5.1"
+    "@adonisjs/queue": "npm:^0.6.0"
     "@adonisjs/session": "catalog:"
     "@foadonis/actions": "workspace:*"
     "@foadonis/crypt": "workspace:*"

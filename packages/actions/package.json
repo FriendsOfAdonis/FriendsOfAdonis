@@ -62,7 +62,7 @@
   "devDependencies": {
     "@adonisjs/assembler": "catalog:",
     "@adonisjs/core": "catalog:",
-    "@adonisjs/queue": "^0.5.1",
+    "@adonisjs/queue": "^0.6.0",
     "@japa/assert": "^4.2.0",
     "@japa/expect-type": "^2.0.4",
     "@japa/file-system": "^3.0.0",
