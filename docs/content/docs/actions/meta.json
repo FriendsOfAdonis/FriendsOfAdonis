@@ -15,6 +15,7 @@
     "(handlers)/as-job",
     "---Advanced---",
     "(advanced)/telemetry",
-    "(advanced)/hooks"
+    "(advanced)/hooks",
+    "reference"
   ]
 }

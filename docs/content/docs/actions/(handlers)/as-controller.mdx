@@ -39,8 +39,9 @@ router.post('/mails', actions.SendEmail.asController())
 ```
 
 <Callout>
-  Always rely on the generated barrel file (`#generated/actions`) when using as controller or this
-  will break HMR.
+  Always rely on the generated barrel file (`#generated/actions`) when registering routes —
+  importing the action class directly turns the route into a static reference that AdonisJS HMR
+  cannot swap, so changes to the action won't take effect until you restart the dev server.
 </Callout>
 
 ## Logger
@@ -48,15 +49,17 @@ router.post('/mails', actions.SendEmail.asController())
 When an action is executed as a controller the logger is replaced with the one from the [HttpContext](https://docs.adonisjs.com/guides/basics/http-context):
 
 ```ts title="app/actions/send_welcome_email_action.ts"
-import { BaseAction } from '@foadonis/actions'
+import { compose } from '@adonisjs/core/helpers'
+import { BaseAction, AsController } from '@foadonis/actions'
+import { type HttpContext } from '@adonisjs/core/http'
 
-export default class SendWelcomeEmailAction extends BaseAction {
+export default class SendWelcomeEmailAction extends compose(BaseAction, AsController()) {
   async handle(user: User) {
     this.logger.info('Sending email to %s', user.email)
     await mailer.send(user.email, 'Welcome', 'Welcome to FriendsOfAdonis!')
   }
 
-  asController({ auth }: HttpContext) {
+  async asController({ auth }: HttpContext) {
     const user = auth.getUserOrFail()
     await this.handle(user)
   }
@@ -75,15 +78,18 @@ export default class SendWelcomeEmailAction extends BaseAction {
 The `asController` method is your route handler, you can use decorators from the [@foadonis/openapi](/docs/openapi) package to define your endpoint schema:
 
 ```ts title="app/actions/create_post_action.ts"
-import { BaseAction } from '@foadonis/actions'
+import { compose } from '@adonisjs/core/helpers'
+import { BaseAction, AsController } from '@foadonis/actions'
+import { ApiOperation, ApiSchema, ApiResponse } from '@foadonis/openapi/decorators'
+import { type HttpContext } from '@adonisjs/core/http'
 
-export default class CreatePostAction extends BaseAction {
+export default class CreatePostAction extends compose(BaseAction, AsController()) {
   async handle(user: User) {}
 
   @ApiOperation({ summary: 'Send welcome email' })
   @ApiSchema(createPostValidator)
   @ApiResponse({ type: Post })
-  asController({ auth }: HttpContext) {}
+  async asController({ auth }: HttpContext) {}
 }
 ```
 
@@ -91,12 +97,10 @@ export default class CreatePostAction extends BaseAction {
 
 [Girouette](https://girouette.raphalr.dev/) provides a fluent API for defining your AdonisJS routes using decorators.
 
-In order to use actions with Girouette you need to register your actions as controller:
+In order to use actions with Girouette you need to register your actions as controllers:
 
-```ts title="routes.ts"
-import router from '@adonisjs/core/services/router'
+```ts title="start/routes.ts"
 import girouette from '@adonisjs-community/girouette/services/main'
-
 import { actions } from '#generated/actions'
 import { toGirouetteControllers } from '@foadonis/actions/girouette'
 
@@ -106,13 +110,15 @@ girouette.controllers(toGirouetteControllers(actions))
 You can then define your routes using the provided Girouette decorators:
 
 ```ts title="app/actions/create_post_action.ts"
-import { BaseAction } from '@foadonis/actions'
-import { Get } from '@adonisjs-community/girouette'
+import { compose } from '@adonisjs/core/helpers'
+import { BaseAction, AsController } from '@foadonis/actions'
+import { Post } from '@adonisjs-community/girouette'
+import { type HttpContext } from '@adonisjs/core/http'
 
-export default class CreatePostAction extends BaseAction {
+export default class CreatePostAction extends compose(BaseAction, AsController()) {
   async handle(user: User) {}
 
   @Post('/posts')
-  asController({ auth }: HttpContext) {}
+  async asController({ auth }: HttpContext) {}
 }
 ```

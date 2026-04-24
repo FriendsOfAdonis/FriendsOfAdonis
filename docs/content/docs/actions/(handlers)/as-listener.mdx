@@ -4,20 +4,23 @@ title: 'Actions as Listeners'
 description: 'Use actions as event listeners'
 ---
 
-The `AsListener` mixins allows an actions to be executed in response of events. This is useful for decoupling side effects from your main business logic.
+The `AsListener` mixin allows an action to be executed in response to events. This is useful for decoupling side effects from your main business logic.
 
 ## Basic Example
 
-Use the `compose` helper to apply the `AsJob` mixin and define the `asJob` method:
+Use the `compose` helper to apply the `AsListener` mixin and define the `asListener` method:
 
 ```ts title="app/actions/send_welcome_email_action.ts"
+import { compose } from '@adonisjs/core/helpers'
 import { BaseAction, AsListener } from '@foadonis/actions'
 import mail from '@adonisjs/mail/services/main'
 import User from '#models/user'
 
-export default class SendWelcomeEmailAction extends compose(BaseAction, AsListener()) {
-  async handle(user: User, subject: string, body: string) {
-    await mailer.send(user.email, subject, body)
+export default class SendWelcomeEmailAction extends compose(BaseAction, AsListener<UserCreated>()) {
+  async handle(user: User) {
+    await mail.send((message) => {
+      message.to(user.email).subject('Welcome!').htmlView('emails/welcome', { user })
+    })
   }
 
   async asListener({ user }: UserCreated) {
@@ -52,17 +55,18 @@ export default class UserRegistered extends BaseEvent {
 }
 ```
 
-Then type the `AsListener` interface with the event class:
+Then type the `AsListener` mixin with the event class:
 
 ```ts title="app/actions/send_welcome_email_action.ts"
-import { BaseAction, type AsListener } from '@foadonis/actions'
+import { compose } from '@adonisjs/core/helpers'
+import { BaseAction, AsListener } from '@foadonis/actions'
 import mail from '@adonisjs/mail/services/main'
 import UserRegistered from '#events/user_registered'
 
-export default class SendWelcomeEmailAction
-  extends BaseAction
-  implements AsListener<UserRegistered>
-{
+export default class SendWelcomeEmailAction extends compose(
+  BaseAction,
+  AsListener<UserRegistered>()
+) {
   async handle(email: string) {
     await mail.send((message) => {
       message.to(email).subject('Welcome!').htmlView('emails/welcome', { email })

@@ -20,7 +20,7 @@ First, make sure [`@adonisjs/queue`](https://docs.adonisjs.com/guides/digging-de
 node ace add @adonisjs/queue
 ```
 
-Then, add your actions directory to the `locations` array in your queue configuration:
+Then, add your actions directory to the `locations` array in your queue configuration. The worker uses this list to resolve job classes by name when picking jobs off the queue:
 
 ```ts title="config/queue.ts"
 import { defineConfig, drivers } from '@adonisjs/queue'
@@ -72,7 +72,7 @@ The `asJob` method receives a serializable payload. Since jobs are processed asy
 
 ## Job Options
 
-Pass options to the `AsJob` mixin to configure the job defaults:
+Pass options to the `AsJob` mixin to configure the job defaults. All [`@adonisjs/queue` `JobOptions`](https://docs.adonisjs.com/guides/digging-deeper/queues) are accepted — common ones are listed below.
 
 ```ts
 export default class SendEmailAction extends compose(
@@ -86,6 +86,13 @@ export default class SendEmailAction extends compose(
   // ...
 }
 ```
+
+| Option     | Type                          | Description                                                            |
+| ---------- | ----------------------------- | ---------------------------------------------------------------------- |
+| `name`     | `string`                      | Override the job name used by the worker. Defaults to the class name.  |
+| `queue`    | `string`                      | Default target queue.                                                  |
+| `priority` | `number`                      | Default priority (1–10, lower runs first).                             |
+| `adapter`  | `string \| (() => Adapter)`   | Default adapter.                                                       |
 
 ## Dispatching
 
@@ -118,6 +125,13 @@ await SendEmailAction.dispatch({ userId: '1', subject: 'Hello', body: 'Welcome!'
 | `.in(delay)`     | Delay execution (`'5s'`, `'1h'`, `'7d'`, or milliseconds) |
 | `.group(id)`     | Assign the job to a group for monitoring                  |
 | `.with(adapter)` | Use a specific adapter                                    |
+
+<Callout title="Awaiting the dispatcher">
+  The dispatcher is thenable: `await Action.dispatch(payload)` runs the job without an explicit
+  `.run()`. This also means storing dispatchers in an array and `Promise.all`-ing them dispatches
+  every job. For batched dispatch, prefer [`dispatchMany`](#batch-dispatching) — it issues a single
+  pipelined operation against the adapter.
+</Callout>
 
 ### Batch Dispatching
 
@@ -195,15 +209,23 @@ When an action is executed as a job, a child logger is created with the job cont
 import { compose } from '@adonisjs/core/helpers'
 import { BaseAction } from '@foadonis/actions'
 import { AsJob } from '@foadonis/actions/queue'
+import User from '#models/user'
 
-export default class SendWelcomeEmailAction extends compose(BaseAction, AsJob) {
+interface SendWelcomeEmailPayload {
+  userId: string
+}
+
+export default class SendWelcomeEmailAction extends compose(
+  BaseAction,
+  AsJob<SendWelcomeEmailPayload>()
+) {
   async handle(user: User) {
     this.logger.info('Sending email to %s', user.email)
     await mailer.send(user.email, 'Welcome', 'Welcome to FriendsOfAdonis!')
   }
 
-  asJob({ userId }: SendWelcomeEmailPayload) {
-    const user = auth.getUserOrFail()
+  async asJob({ userId }: SendWelcomeEmailPayload) {
+    const user = await User.findOrFail(userId)
     await this.handle(user)
   }
 }

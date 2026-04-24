@@ -66,7 +66,7 @@ node ace action:send-email
 
 ## Command options
 
-You can pass options to the `AsCommand` mixing to configure the command.
+You can pass options to the `AsCommand` mixin to configure the command.
 
 ```ts title="app/actions/send_email_action.ts"
 import { compose } from '@adonisjs/core/helpers'
@@ -76,7 +76,7 @@ import { type BaseCommand } from '@adonisjs/core/ace'
 export default class SendEmailAction extends compose(
   BaseAction,
   AsCommand({
-    name: 'mails:send',
+    commandName: 'mails:send',
     description: 'Send an email to a user',
   })
 ) {
@@ -85,19 +85,36 @@ export default class SendEmailAction extends compose(
 }
 ```
 
+`AsCommand` accepts a `Partial<CommandMetaData>` from `@adonisjs/core/types/ace`. All fields are optional:
+
+| Option        | Type             | Description                                                                                                    |
+| ------------- | ---------------- | -------------------------------------------------------------------------------------------------------------- |
+| `commandName` | `string`         | The CLI invocation, e.g. `users:create`. Defaults to `action:<dash-cased-name>`.                               |
+| `description` | `string`         | Shown in `node ace list`. Defaults to `Run the action <ActionName>`.                                           |
+| `aliases`     | `string[]`       | Alternate names for the command.                                                                               |
+| `flags`       | `Flag[]`         | Boolean / string flags accepted on the CLI.                                                                    |
+| `args`        | `Arg[]`          | Positional arguments.                                                                                          |
+| `options`     | `CommandOptions` | Command-level options like `staysAlive` and `startApp`.                                                        |
+
+See the [Ace command metadata reference](https://docs.adonisjs.com/guides/ace/creating-commands) for the full shape of `flags`, `args`, and `options`.
+
 ## Terminal I/O
 
 Use the command's prompts and logger for interactive input and formatted output:
 
 ```ts title="app/actions/create_user_action.ts"
-import { BaseAction, type AsCommand } from '@foadonis/actions'
+import { compose } from '@adonisjs/core/helpers'
+import { BaseAction, AsCommand } from '@foadonis/actions'
 import { type BaseCommand } from '@adonisjs/core/ace'
 import User from '#models/user'
 
-export default class CreateUserAction extends BaseAction implements AsCommand {
-  static commandName = 'users:create'
-  static description = 'Create a new user interactively'
-
+export default class CreateUserAction extends compose(
+  BaseAction,
+  AsCommand({
+    commandName: 'users:create',
+    description: 'Create a new user interactively',
+  })
+) {
   async handle(email: string, password: string) {
     const user = await User.create({ email, password })
     return user
