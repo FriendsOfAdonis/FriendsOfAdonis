@@ -14,7 +14,7 @@ test('LuxonLoader', async ({ assert }) => {
   assert.deepEqual(await LuxonTypeLoader(context, new Date() as any), undefined)
 
   function FakeDecorator() {
-    return (_target: Object, _propertyKey: string) => {}
+    return (_target: object, _propertyKey: string) => {}
   }
 
   class Fake {

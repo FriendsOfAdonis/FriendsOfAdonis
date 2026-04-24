@@ -1,44 +1,21 @@
 {
   "name": "@foadonis/magnify",
-  "description": "Plug and play full-text search for your Adonis application.",
   "version": "0.3.2",
-  "engines": {
-    "node": ">=20.6.0"
-  },
-  "type": "module",
-  "files": [
-    "build",
-    "!build/bin",
-    "!build/tests"
-  ],
-  "exports": {
-    ".": "./build/index.js",
-    "./commands": "./build/commands/main.js",
-    "./magnify_provider": "./build/providers/magnify_provider.js",
-    "./services/main": "./build/services/main.js",
-    "./types": "./build/src/types.js"
-  },
-  "scripts": {
-    "clean": "del-cli build",
-    "copy:templates": "cpy \"stubs/**/*.stub\" build/stubs",
-    "index:commands": "adonis-kit index build/commands",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint .",
-    "format": "prettier --write .",
-    "quick:test": "node --import=./tsnode.esm.js --enable-source-maps bin/test.ts",
-    "test": "c8 yarn quick:test",
-    "build": "yarn clean && tsc && yarn copy:templates && yarn index:commands",
-    "dev": "tsc --watch"
-  },
+  "description": "Plug and play full-text search for your Adonis application.",
   "keywords": [
     "adonis",
     "adonisjs",
-    "search",
     "algolia",
-    "typesense",
     "meilisearch",
-    "typescript"
+    "search",
+    "typescript",
+    "typesense"
   ],
+  "homepage": "https://friendsofadonis.com/docs/magnify",
+  "bugs": {
+    "url": "https://github.com/FriendsOfAdonis/FriendsOfAdonis/issues"
+  },
+  "license": "MIT",
   "author": {
     "name": "Martin Paucot",
     "email": "contact@martin-paucot.fr"
@@ -48,17 +25,42 @@
     "url": "https://github.com/FriendsOfAdonis/FriendsOfAdonis",
     "directory": "packages/magnify"
   },
-  "bugs": {
-    "url": "https://github.com/FriendsOfAdonis/FriendsOfAdonis/issues"
+  "files": [
+    "build",
+    "!build/bin",
+    "!build/tests"
+  ],
+  "type": "module",
+  "exports": {
+    ".": "./build/index.js",
+    "./commands": "./build/commands/main.js",
+    "./magnify_provider": "./build/providers/magnify_provider.js",
+    "./services/main": "./build/services/main.js",
+    "./types": "./build/src/types.js"
   },
-  "homepage": "https://friendsofadonis.com/docs/magnify",
-  "license": "MIT",
+  "publishConfig": {
+    "access": "public",
+    "tag": "latest"
+  },
+  "scripts": {
+    "clean": "del-cli build",
+    "copy:templates": "cpy \"stubs/**/*.stub\" build/stubs",
+    "index:commands": "adonis-kit index build/commands",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint",
+    "quick:test": "node --import=./tsnode.esm.js --enable-source-maps bin/test.ts",
+    "test": "c8 yarn quick:test",
+    "build": "yarn clean && tsc && yarn copy:templates && yarn index:commands",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@poppinss/hooks": "^7.3.0"
+  },
   "devDependencies": {
     "@adonisjs/assembler": "catalog:",
     "@adonisjs/core": "catalog:",
     "@adonisjs/lucid": "catalog:",
     "@babel/runtime": "^7.28.4",
-    "@foadonis/eslint-config": "workspace:*",
     "@japa/assert": "^4.2.0",
     "@japa/expect-type": "^2.0.4",
     "@japa/file-system": "^3.0.0",
@@ -72,10 +74,8 @@
     "c8": "^11.0.0",
     "cpy-cli": "^7.0.0",
     "del-cli": "^7.0.0",
-    "eslint": "catalog:",
     "luxon": "^3.7.2",
     "meilisearch": "^0.54.0",
-    "prettier": "catalog:",
     "reflect-metadata": "^0.2.2",
     "sinon": "^21.0.0",
     "testcontainers": "^11.10.0",
@@ -94,20 +94,16 @@
     "meilisearch": "^0.54.0",
     "typesense": "^2.1.0"
   },
-  "publishConfig": {
-    "access": "public",
-    "tag": "latest"
-  },
   "c8": {
+    "exclude": [
+      "tests/**"
+    ],
     "reporter": [
       "text",
       "html"
-    ],
-    "exclude": [
-      "tests/**"
     ]
   },
-  "dependencies": {
-    "@poppinss/hooks": "^7.3.0"
+  "engines": {
+    "node": ">=20.6.0"
   }
 }

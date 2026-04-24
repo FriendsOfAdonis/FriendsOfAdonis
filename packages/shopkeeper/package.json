@@ -1,16 +1,33 @@
 {
   "name": "@foadonis/shopkeeper",
-  "description": "An expressive and fluent interface to Stripe's subscription billing services.",
   "version": "0.1.7",
-  "engines": {
-    "node": ">=20.6.0"
+  "description": "An expressive and fluent interface to Stripe's subscription billing services.",
+  "keywords": [
+    "adonis",
+    "adonisjs",
+    "stripe",
+    "typescript"
+  ],
+  "homepage": "https://friendsofadonis.com/docs/shopkeeper",
+  "bugs": {
+    "url": "https://github.com/FriendsOfAdonis/FriendsOfAdonis/issues"
   },
-  "type": "module",
+  "license": "MIT",
+  "author": {
+    "name": "Martin Paucot",
+    "email": "contact@martin-paucot.fr"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FriendsOfAdonis/FriendsOfAdonis.git",
+    "directory": "packages/shopkeeper"
+  },
   "files": [
     "build",
     "!build/bin",
     "!build/tests"
   ],
+  "type": "module",
   "exports": {
     ".": "./build/index.js",
     "./types": "./build/src/types.js",
@@ -20,35 +37,29 @@
     "./commands": "./build/commands/main.js",
     "./mixins": "./build/src/mixins/main.js"
   },
+  "publishConfig": {
+    "access": "public",
+    "tag": "latest"
+  },
   "scripts": {
     "clean": "del-cli build",
     "copy:templates": "cpy \"stubs/**/*.stub\" build/stubs",
     "copy:resources": "cpy \"resources/**/*.edge\" build",
     "index:commands": "adonis-kit index build/commands",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint .",
-    "format": "prettier --write .",
+    "lint": "oxlint",
     "quick:test": "node --import=./tsnode.esm.js --env-file .env --enable-source-maps bin/test.ts",
     "test": "c8 yarn quick:test",
     "build": "yarn clean && tsc && yarn copy:templates && yarn index:commands",
     "dev": "tsc --watch"
   },
-  "keywords": [
-    "adonis",
-    "adonisjs",
-    "stripe",
-    "typescript"
-  ],
-  "author": {
-    "name": "Martin Paucot",
-    "email": "contact@martin-paucot.fr"
+  "dependencies": {
+    "stripe": "^17.7.0"
   },
-  "license": "MIT",
   "devDependencies": {
     "@adonisjs/assembler": "catalog:",
     "@adonisjs/core": "^6.19.1",
     "@adonisjs/lucid": "^21.8.1",
-    "@foadonis/eslint-config": "workspace:*",
     "@japa/api-client": "^3.2.1",
     "@japa/assert": "^4.2.0",
     "@japa/expect": "^3.0.7",
@@ -61,9 +72,7 @@
     "c8": "^11.0.0",
     "cpy-cli": "^7.0.0",
     "del-cli": "^7.0.0",
-    "eslint": "catalog:",
     "luxon": "^3.7.2",
-    "prettier": "^3.7.4",
     "reflect-metadata": "^0.2.2",
     "sqlite3": "^5.1.7",
     "ts-node": "^10.9.2",
@@ -75,29 +84,16 @@
     "luxon": "^3.5.0",
     "reflect-metadata": "^0.2.2"
   },
-  "publishConfig": {
-    "access": "public",
-    "tag": "latest"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/FriendsOfAdonis/FriendsOfAdonis.git",
-    "directory": "packages/shopkeeper"
-  },
-  "bugs": {
-    "url": "https://github.com/FriendsOfAdonis/FriendsOfAdonis/issues"
-  },
-  "homepage": "https://friendsofadonis.com/docs/shopkeeper",
   "c8": {
+    "exclude": [
+      "tests/**"
+    ],
     "reporter": [
       "text",
       "html"
-    ],
-    "exclude": [
-      "tests/**"
     ]
   },
-  "dependencies": {
-    "stripe": "^17.7.0"
+  "engines": {
+    "node": ">=20.6.0"
   }
 }
