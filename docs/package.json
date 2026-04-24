@@ -6,7 +6,7 @@
     "build": "next build",
     "dev": "next dev",
     "start": "next start",
-    "lint": "eslint .",
+    "lint": "oxlint",
     "mdx": "fumadocs-mdx"
   },
   "dependencies": {
@@ -44,7 +44,6 @@
     "zod": "^4.2.0"
   },
   "devDependencies": {
-    "@foadonis/eslint-config": "workspace:*",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/mdx": "^2.0.13",
     "@types/node": "^25.0.2",

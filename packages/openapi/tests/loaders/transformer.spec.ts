@@ -2,7 +2,7 @@ import { BaseTransformer } from '@adonisjs/core/transformers'
 import { type SimplePaginatorMetaKeys } from '@adonisjs/lucid/types/querybuilder'
 import { test } from '@japa/runner'
 import {
-  TransformerTypeLoader as TransformerTypeLoader,
+  TransformerTypeLoader,
   OpenAPISerializer,
   PaginationMetadataSchema,
   LUCID_PAGINATOR_METADATA_SCHEMA,
@@ -15,7 +15,7 @@ class WrapApiSerializer extends OpenAPISerializer<{
   Wrap: 'data'
   PaginationMetaData: SimplePaginatorMetaKeys
 }> {
-  wrap: 'data' = 'data'
+  wrap: 'data' = 'data' as const
 
   definePaginationMetaData(metaData: unknown): SimplePaginatorMetaKeys {
     if (!this.isLucidPaginatorMetaData(metaData)) {
