@@ -2080,7 +2080,8 @@ __metadata:
     youch: "catalog:"
   peerDependencies:
     "@adonisjs/core": ^6.2.0 || ^7.0.0
-    "@adonisjs/queue": ^0.5.1
+    "@adonisjs/queue": ^0.6.0
+    "@lukeed/ms": ^2.0.0
     "@opentelemetry/api": ^1.9.0
     "@opentelemetry/instrumentation": ^0.211.0
   peerDependenciesMeta:
