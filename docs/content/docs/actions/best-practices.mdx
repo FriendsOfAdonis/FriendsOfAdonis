@@ -138,12 +138,17 @@ The `handle` method should contain your pure business logic, independent of how 
 
 ```ts title="app/actions/delete_user_action.ts" twoslash
 // @noErrors
+import { compose } from '@adonisjs/core/helpers'
 import { BaseAction, AsController, AsCommand } from '@foadonis/actions'
 import { BaseCommand } from '@adonisjs/core/ace'
 import { HttpContext } from '@adonisjs/core/http'
 import User from '#models/user'
 
-export default class DeleteUserAction extends BaseAction implements AsController, AsCommand {
+export default class DeleteUserAction extends compose(
+  BaseAction,
+  AsController(),
+  AsCommand()
+) {
   // ✅ Business logic is context-agnostic
   async handle(user: User) {
     await user.delete()
@@ -187,19 +192,20 @@ By using actions and decoupling business logic from the entrypoint, you get the 
 - **Testable** — Actions can be tested independently without event infrastructure
 - **Direct action calls** — Call other actions directly instead of emitting events, maintaining full traceability
 
-```ts title="app/actions/create_user_action.ts" twoslash
+```ts title="❌ Bad — we lose traceability of the business logic" twoslash
 // @noErrors
 export default class CreateUserAction extends BaseAction {
-  // ❌ Bad: we lose traceability of the business logic
   async handle(data: CreateUserData) {
     const user = await User.create(data)
     await emitter.emit('user:registered', user)
     return user
   }
 }
+```
 
+```ts title="✅ Good — we know that creating a user sends a welcome email" twoslash
+// @noErrors
 export default class CreateUserAction extends BaseAction {
-  // ✅ Good: We know that when creating a user, a welcome email is sent
   async handle(data: CreateUserData) {
     const user = await User.create(data)
     await SendWelcomeEmailAction.run(user)

@@ -8,7 +8,7 @@
 }}}
 import { BaseAction } from '@foadonis/actions'
 
-export default class {{ modelName }}Resolver {
+export default class {{ modelName }}Action extends BaseAction {
   handle() {
     // Your business-logic
   }

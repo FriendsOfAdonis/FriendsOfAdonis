@@ -1,58 +1,33 @@
-import { type BaseCommand } from '@adonisjs/core/ace'
-import { type HttpContext } from '@adonisjs/core/http'
+import { type BaseAction } from './base_action.ts'
+import { type AsCommandContract } from './mixins/as_command.ts'
+import { type AsControllerContract } from './mixins/as_controller.ts'
+import { type AsJobContract } from './mixins/as_job.ts'
+import { type AsListenerContract } from './mixins/as_listener.ts'
 
-/**
- * Make the action runnable as a controller.
- *
- * @example
- * export class MyAction extends BaseAction implements AsController {
- *   public handle() {
- *      // your business logic
- *   }
- *
- *   public asController(context: HttpContext) {
- *      await this.handle()
- *   }
- * }
- */
-export interface AsController {
-  asController(context: HttpContext): any
+export interface ActionsConfig {
+  middlewares: Middlewares
 }
 
-/**
- * Make the action runnable as a command.
- *
- * @example
- * export class MyAction extends BaseAction implements AsCommand {
- *   public static commandName: 'my-action';
- *
- *   public handle() {
- *      // your business logic
- *   }
- *
- *   public asController(command: BaseCommand) {
- *      await this.handle()
- *   }
- * }
- */
-export interface AsCommand {
-  asCommand(command: BaseCommand): any
+type Promisable<T> = T | Promise<T>
+
+export type Middlewares = {
+  [key in keyof Entrypoints]?: MiddlewareFn<Entrypoints[key]>[]
+} & {
+  handle?: MiddlewareFn<any>[]
+} & {
+  [key: string]: MiddlewareFn<any>[] | undefined
 }
 
-/**
- * Make the action runnable as a listener.
- *
- * @example
- * export class MyAction extends BaseAction implements AsListener {
- *   public handle() {
- *      // your business logic
- *   }
- *
- *   public asListener(event: MyEvent) {
- *      await this.handle()
- *   }
- * }
- */
-export interface AsListener<T = unknown> {
-  asListener(event: T): any
+export type MiddlewareFn<Fn extends (...args: any) => any> = (
+  args: Parameters<Fn>,
+  action: BaseAction,
+  actionClass: typeof BaseAction
+) => Promisable<void | ((output: Fn) => Promisable<void>)>
+
+export interface Entrypoints {
+  handle: (...args: any[]) => any
+  asController: AsControllerContract['asController']
+  asCommand: AsCommandContract['asCommand']
+  asListener: AsListenerContract['asListener']
+  asJob: AsJobContract['asJob']
 }

@@ -1,12 +1,14 @@
 import stringHelpers from '@adonisjs/core/helpers/string'
 import { type BaseAction } from './base_action.ts'
-import { type AsCommand, type AsController, type AsListener } from './types.ts'
+import { type AsControllerContract } from './mixins/as_controller.ts'
+import { type AsListenerContract } from './mixins/as_listener.ts'
+import { type AsCommandContract } from './mixins/as_command.ts'
 
 /**
  * Generates a CLI command name from an action class name.
  * Converts "CreateUserAction" to "action:create-user".
  */
-export function commandName(value: string) {
+export function generateCommandName(value: string) {
   return `action:${stringHelpers.create(value).removeExtension().removeSuffix('action').dashCase().toString()}`
 }
 
@@ -30,20 +32,24 @@ export function parseLazyImportSpecifier(thunk: string) {
  */
 export function implementsAsController<T extends BaseAction>(
   action: T
-): action is T & AsController {
+): action is T & AsControllerContract {
   return 'asController' in action
 }
 
 /**
  * Type guard to check if an action implements AsListener.
  */
-export function implementsAsListener<T extends BaseAction>(action: T): action is T & AsListener {
+export function implementsAsListener<T extends BaseAction>(
+  action: T
+): action is T & AsListenerContract {
   return 'asListener' in action
 }
 
 /**
  * Type guard to check if an action implements AsCommand.
  */
-export function implementsAsCommand<T extends BaseAction>(action: T): action is T & AsCommand {
+export function implementsAsCommand<T extends BaseAction>(
+  action: T
+): action is T & AsCommandContract {
   return 'asCommand' in action
 }

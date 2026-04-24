@@ -1,10 +1,7 @@
-import {
-  type UnWrapLazyImport,
-  type LazyImport,
-  type Constructor,
-} from '@adonisjs/core/types/common'
+import type { UnWrapLazyImport, LazyImport, Constructor } from '@adonisjs/core/types/common'
 import { type BaseAction } from './base_action.ts'
-import { type AsController, type AsListener } from './types.ts'
+import { type AsControllerContract } from './mixins/as_controller.ts'
+import { type AsListenerContract } from './mixins/as_listener.ts'
 
 /**
  * Creates an ActionLoader for lazy-loading actions.
@@ -12,8 +9,10 @@ import { type AsController, type AsListener } from './types.ts'
  */
 export function loader<Import extends LazyImport<Constructor<BaseAction>>>(fn: Import) {
   return {
+    $type: 'loader',
     asController: () => [fn, 'asController'] as const,
     asListener: () => [fn, 'asListener'] as const,
+    import: fn,
   } as LoaderMethods<Import>
 }
 
@@ -22,10 +21,20 @@ export function loader<Import extends LazyImport<Constructor<BaseAction>>>(fn: I
  * on which interfaces the loaded action implements.
  */
 export interface LoaderMethods<Import extends LazyImport<Constructor<BaseAction>>> {
-  asController: InstanceType<UnWrapLazyImport<Import>> extends AsController
+  /**
+   * Used for tagging the object to identify loader methods in flattenActions.
+   *
+   * @internal
+   */
+  $type: 'loader'
+
+  asController: InstanceType<UnWrapLazyImport<Import>> extends AsControllerContract
     ? () => [Import, 'asController']
     : never
-  asListener: InstanceType<UnWrapLazyImport<Import>> extends AsListener
+
+  asListener: InstanceType<UnWrapLazyImport<Import>> extends AsListenerContract
     ? () => [Import, 'asListener']
     : never
+
+  import: Import
 }

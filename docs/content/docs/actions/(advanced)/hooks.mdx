@@ -1,0 +1,80 @@
+---
+icon: FishingHook
+title: Hooks
+description: Hook into the Actions execution workflow
+---
+
+Hooks let you inspect, modify, or extend action execution without touching the action itself.
+
+The only event available today is `execute`. It fires once per entrypoint invocation (`handle`, `asController`, `asCommand`, `asListener`, or `asJob`).
+
+## Configuration
+
+Register hooks in a preload file (e.g `start/kernel.ts`):
+
+```ts title="start/kernel.ts"
+import actions from '@foadonis/actions/services/main'
+
+actions.hook('execute', (context) => {
+  if (context.method === 'asJob') {
+    const [, jobContext] = context.args
+    context.action.logger.info(
+      { jobId: jobContext.jobId, attempt: jobContext.attempt },
+      `Processing job ${context.action.constructor.name}`
+    )
+  }
+})
+```
+
+## Execution Context
+
+The execution context contains everything the hook needs to inspect or modify the call.
+
+| Property  | Description                                          |
+| --------- | ---------------------------------------------------- |
+| `action`  | The resolved action instance                         |
+| `method`  | The entrypoint name (`handle`, `asController`, …)    |
+| `handler` | The original function being executed                 |
+| `args`    | The arguments passed to the method, as a tuple       |
+
+## Common Use Cases
+
+### Scoped Logger
+
+Replace the default logger with one scoped to the HTTP request:
+
+```ts title="start/kernel.ts"
+import actions from '@foadonis/actions/services/main'
+
+actions.hook('execute', (context) => {
+  if (context.method === 'asController') {
+    const [httpContext] = context.args
+    context.action.logger = httpContext.logger
+  }
+})
+```
+
+### Execution Timing
+
+Return a cleanup function from the hook to run after the entrypoint finishes:
+
+```ts title="start/kernel.ts"
+import actions from '@foadonis/actions/services/main'
+
+actions.hook('execute', (context) => {
+  const start = performance.now()
+
+  return () => {
+    const duration = performance.now() - start
+    context.action.logger.info(
+      { duration },
+      `${context.action.constructor.name} completed`
+    )
+  }
+})
+```
+
+<Callout type="warn" title="Cleanup runs only on success">
+  The cleanup callback fires after the entrypoint resolves successfully. If the action throws, the
+  cleanup is not invoked. Wrap your own logic in `try/finally` if you need it to run unconditionally.
+</Callout>

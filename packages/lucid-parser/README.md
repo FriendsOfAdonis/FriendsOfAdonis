@@ -29,7 +29,7 @@
 
 ## Quickstart
 
-[Installation & Getting Started](https://friendsofadonis.github.io/docs/lucid-parser/getting-started)
+[Installation & Getting Started](https://friendsofadonis.com/docs/lucid-parser/getting-started)
 
 ## License
 

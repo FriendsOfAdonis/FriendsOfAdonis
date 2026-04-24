@@ -45,8 +45,6 @@ async function updatePackageJson(command: ConfigureCommand) {
   }
 
   await writePackageJSON(path, packageJson)
-
-  logSuccess(command)
 }
 
 function logSuccess(command: ConfigureCommand) {

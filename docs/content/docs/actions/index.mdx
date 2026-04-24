@@ -20,17 +20,48 @@ Without a clear pattern, this leads to duplicated code, inconsistent behavior, a
 
 Actions solve this by extracting your business logic into dedicated classes. Each action has a single responsibility and can be invoked from any entry point in your application.
 
-```ts title="app/actions/create_user_action.ts"
-import { BaseAction } from '@foadonis/actions'
-import User from '#models/user'
+```ts title="app/actions/send_email_action.ts"
+export default class SendWelcomeEmailAction extends compose(
+  BaseAction,
+  AsController(),
+  AsCommand(),
+  AsJob(),
+  AsListener()
+) {
+  async handle(user: User) {
+    await mailer.send(user.email, 'Welcome', 'Welcome to FriendsOfAdonis!')
+  }
 
-export default class CreateUserAction extends BaseAction {
-  async handle(email: string, password: string) {
-    const user = await User.create({ email, password })
-    return user
+  async asController({ auth, response }: HttpContext) {
+    const user = auth.getUserOrFail()
+    await this.handle(user)
+    return response.ok()
+  }
+
+  async asCommand(command: BaseCommand) {
+    const email = await command.prompt.ask('User email')
+    const user = await User.findByOrFail({ email })
+    await this.handle(user)
+  }
+
+  async asJob({ userId }: SendWelcomeEmailPayload) {
+    const user = await User.findOrFail(userId)
+    await this.handle(user)
+  }
+
+  async asListener(event: UserCreated) {
+    await this.handle(event.user)
   }
 }
 ```
+
+The above action can be executed:
+
+- As a basic action with `await SendWelcomeEmailAction.run(user)`
+- As a controller with `router.post(..., actions.SendWelcomeEmail.asController())`
+- As a listener with `emitter.on(UserCreated, actions.SendWelcomeEmail.asListener())`
+- As a command with `node ace action:send-welcome-email`
+- As a job with `await SendWelcomeEmailAction.dispatch({ userId })`
 
 This pattern is inspired by the **UseCase** concept from Clean Architecture, where each use case represents a single action the system can perform.
 
@@ -43,16 +74,17 @@ This pattern is inspired by the **UseCase** concept from Clean Architecture, whe
 
 ## How It Works
 
-An action can serve multiple entry points through dedicated interfaces.
+An action can serve multiple entry points through dedicated mixins.
 
-By implementing `AsController`, `AsCommand`, or `AsListener`, your action becomes usable from that entry point while keeping the core logic in the `handle` method.
+By composing `BaseAction` with `AsController`, `AsCommand`, `AsListener`, or `AsJob`, your action becomes usable from that entry point while keeping the core logic in the `handle` method.
 
 ```ts title="app/actions/create_user_action.ts"
-import { BaseAction, type AsController } from '@foadonis/actions'
+import { compose } from '@adonisjs/core/helpers'
+import { BaseAction, AsController } from '@foadonis/actions'
 import { type HttpContext } from '@adonisjs/core/http'
 import User from '#models/user'
 
-export default class CreateUserAction extends BaseAction implements AsController {
+export default class CreateUserAction extends compose(BaseAction, AsController()) {
   async handle(email: string, password: string) {
     const user = await User.create({ email, password })
     return user
