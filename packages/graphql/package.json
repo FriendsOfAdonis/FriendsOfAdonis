@@ -1,46 +1,21 @@
 {
   "name": "@foadonis/graphql",
-  "description": "Create GraphQL APIs with your Adonis Application.",
   "version": "1.0.1",
-  "engines": {
-    "node": ">=20.6.0"
-  },
-  "type": "module",
-  "files": [
-    "build",
-    "!build/bin",
-    "!build/tests"
-  ],
-  "exports": {
-    ".": "./build/index.js",
-    "./commands": "./build/commands/main.js",
-    "./services/main": "./build/services/main.js",
-    "./graphql_provider": "./build/providers/graphql_provider.js",
-    "./types": "./build/src/types.js"
-  },
-  "scripts": {
-    "clean": "del-cli build",
-    "copy:templates": "cpy \"stubs/**/*.stub\" build/stubs",
-    "index:commands": "adonis-kit index build/commands",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint .",
-    "format": "prettier --write .",
-    "quick:test": "node --import=./tsnode.esm.js --enable-source-maps bin/test.ts",
-    "test": "c8 yarn quick:test",
-    "build": "yarn clean && tsc && yarn copy:templates && yarn index:commands",
-    "dev": "tsc --watch",
-    "version": "yarn build",
-    "prepublishOnly": "yarn build"
-  },
+  "description": "Create GraphQL APIs with your Adonis Application.",
   "keywords": [
     "adonis",
     "adonisjs",
-    "graphql",
-    "gql",
     "api",
     "apollo",
+    "gql",
+    "graphql",
     "typescript"
   ],
+  "homepage": "https://friendsofadonis.com/docs/graphql",
+  "bugs": {
+    "url": "https://github.com/FriendsOfAdonis/FriendsOfAdonis/issues"
+  },
+  "license": "MIT",
   "author": {
     "name": "Martin Paucot",
     "email": "contact@martin-paucot.fr"
@@ -50,18 +25,51 @@
     "url": "https://github.com/FriendsOfAdonis/FriendsOfAdonis",
     "directory": "packages/graphql"
   },
-  "bugs": {
-    "url": "https://github.com/FriendsOfAdonis/FriendsOfAdonis/issues"
+  "files": [
+    "build",
+    "!build/bin",
+    "!build/tests"
+  ],
+  "type": "module",
+  "exports": {
+    ".": "./build/index.js",
+    "./commands": "./build/commands/main.js",
+    "./services/main": "./build/services/main.js",
+    "./graphql_provider": "./build/providers/graphql_provider.js",
+    "./types": "./build/src/types.js"
   },
-  "homepage": "https://friendsofadonis.com/docs/graphql",
-  "license": "MIT",
+  "publishConfig": {
+    "access": "public",
+    "tag": "latest"
+  },
+  "scripts": {
+    "clean": "del-cli build",
+    "copy:templates": "cpy \"stubs/**/*.stub\" build/stubs",
+    "index:commands": "adonis-kit index build/commands",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint",
+    "quick:test": "node --import=./tsnode.esm.js --enable-source-maps bin/test.ts",
+    "test": "c8 yarn quick:test",
+    "build": "yarn clean && tsc && yarn copy:templates && yarn index:commands",
+    "dev": "tsc --watch",
+    "version": "yarn build",
+    "prepublishOnly": "yarn build"
+  },
+  "dependencies": {
+    "@graphql-yoga/subscription": "^5.0.5",
+    "@npmcli/package-json": "^7.0.4",
+    "@poppinss/middleware": "^3.2.7",
+    "graphql-ws": "^6.0.6",
+    "pkg-types": "^2.3.0",
+    "type-graphql": "2.0.0-rc.2",
+    "ws": "^8.18.3"
+  },
   "devDependencies": {
     "@adonisjs/assembler": "catalog:",
     "@adonisjs/auth": "catalog:",
     "@adonisjs/core": "catalog:",
     "@adonisjs/lucid": "catalog:",
     "@apollo/client": "^4.0.11",
-    "@foadonis/eslint-config": "workspace:*",
     "@graphql-yoga/apollo-link": "^5.2.1",
     "@graphql-yoga/redis-event-target": "^3.0.3",
     "@japa/assert": "^4.2.0",
@@ -78,14 +86,12 @@
     "c8": "^11.0.0",
     "cpy-cli": "^7.0.0",
     "del-cli": "^7.0.0",
-    "eslint": "catalog:",
     "graphql": "^16.12.0",
     "graphql-scalars": "^1.25.0",
     "graphql-sse": "^2.6.0",
     "graphql-yoga": "^5.17.1",
     "ioredis": "^5.8.2",
     "luxon": "^3.7.2",
-    "prettier": "catalog:",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "ts-node": "^10.9.2",
@@ -99,15 +105,6 @@
     "graphql-scalars": "^1.24.0",
     "luxon": "^3.5.0"
   },
-  "dependencies": {
-    "@graphql-yoga/subscription": "^5.0.5",
-    "@npmcli/package-json": "^7.0.4",
-    "@poppinss/middleware": "^3.2.7",
-    "graphql-ws": "^6.0.6",
-    "pkg-types": "^2.3.0",
-    "type-graphql": "2.0.0-rc.2",
-    "ws": "^8.18.3"
-  },
   "optionalDependencies": {
     "@adonisjs/auth": "^9.5.1 || ^10.0.0",
     "@adonisjs/bouncer": "^3.1.6 || ^4.0.0",
@@ -116,17 +113,16 @@
     "graphql-yoga": "^5.17.1",
     "ioredis": "^5.8.2"
   },
-  "publishConfig": {
-    "access": "public",
-    "tag": "latest"
-  },
   "c8": {
+    "exclude": [
+      "tests/**"
+    ],
     "reporter": [
       "text",
       "html"
-    ],
-    "exclude": [
-      "tests/**"
     ]
+  },
+  "engines": {
+    "node": ">=20.6.0"
   }
 }

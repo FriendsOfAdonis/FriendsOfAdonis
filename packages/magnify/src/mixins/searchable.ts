@@ -10,9 +10,7 @@ import app from '@adonisjs/core/services/app'
 type Constructor = NormalizeConstructor<typeof BaseModel>
 
 function staticImplements<T>() {
-  return <U extends T>(constructor: U) => {
-    constructor
-  }
+  return <U extends T>(_constructor: U) => {}
 }
 
 export function Searchable<T extends Constructor>(superclass: T) {

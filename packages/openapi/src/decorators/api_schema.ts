@@ -15,7 +15,7 @@ function isValidApiSchema(schema: unknown): schema is OpenAPIV3_1.NonArraySchema
 
 function* iterateSchemaProperties(
   schema: unknown,
-  target: Object,
+  target: object,
   propertyKey: string,
   position: string
 ) {
@@ -31,7 +31,7 @@ function* iterateSchemaProperties(
 }
 
 export function ApiSchema(schema: StandardJSONSchemaV1) {
-  return (target: Object, propertyKey: string, descriptor: PropertyDescriptor) => {
+  return (target: object, propertyKey: string, descriptor: PropertyDescriptor) => {
     const output = schema['~standard'].jsonSchema.input({ target: 'openapi-3.0' }) as unknown
 
     if (isValidApiSchema(output)) {

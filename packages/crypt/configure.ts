@@ -24,7 +24,7 @@ export async function configure(command: ConfigureCommand) {
 
   try {
     await prependRegister(codemods, command.app.startPath('env.ts'))
-  } catch (e) {
+  } catch {
     command.logger.warning(
       'An error occured when injecting crypt in `start/env.ts`. You might have to do it manually.'
     )

@@ -1,41 +1,19 @@
 {
   "name": "@foadonis/autoloader",
-  "description": "Autoload modules with HMR support",
   "version": "0.0.2",
-  "engines": {
-    "node": ">=20.6.0"
-  },
-  "type": "module",
-  "files": [
-    "build",
-    "!build/bin",
-    "!build/tests"
-  ],
-  "exports": {
-    ".": "./build/index.js",
-    "./types": "./build/src/types.js"
-  },
-  "scripts": {
-    "clean": "del-cli build",
-    "copy:templates": "cpy \"stubs/**/*.stub\" build/stubs",
-    "index:commands": "adonis-kit index build/commands",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint .",
-    "format": "prettier --write .",
-    "quick:test": "node --import=./tsnode.esm.js --enable-source-maps bin/test.ts",
-    "test": "c8 yarn quick:test",
-    "build": "yarn clean && tsc && yarn copy:templates && yarn index:commands",
-    "dev": "tsc --watch",
-    "version": "yarn build",
-    "prepublishOnly": "yarn build"
-  },
+  "description": "Autoload modules with HMR support",
   "keywords": [
     "adonis",
     "adonisjs",
-    "hothook",
     "esm",
+    "hothook",
     "typescript"
   ],
+  "homepage": "https://friendsofadonis.com/docs/autoloader",
+  "bugs": {
+    "url": "https://github.com/FriendsOfAdonis/FriendsOfAdonis/issues"
+  },
+  "license": "MIT",
   "author": {
     "name": "Martin Paucot",
     "email": "contact@martin-paucot.fr"
@@ -45,14 +23,42 @@
     "url": "https://github.com/FriendsOfAdonis/FriendsOfAdonis",
     "directory": "packages/autoloader"
   },
-  "bugs": {
-    "url": "https://github.com/FriendsOfAdonis/FriendsOfAdonis/issues"
+  "files": [
+    "build",
+    "!build/bin",
+    "!build/tests"
+  ],
+  "type": "module",
+  "exports": {
+    ".": "./build/index.js",
+    "./types": "./build/src/types.js"
   },
-  "homepage": "https://friendsofadonis.com/docs/autoloader",
-  "license": "MIT",
+  "publishConfig": {
+    "access": "public",
+    "tag": "latest"
+  },
+  "scripts": {
+    "clean": "del-cli build",
+    "copy:templates": "cpy \"stubs/**/*.stub\" build/stubs",
+    "index:commands": "adonis-kit index build/commands",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint",
+    "quick:test": "node --import=./tsnode.esm.js --enable-source-maps bin/test.ts",
+    "test": "c8 yarn quick:test",
+    "build": "yarn clean && tsc && yarn copy:templates && yarn index:commands",
+    "dev": "tsc --watch",
+    "version": "yarn build",
+    "prepublishOnly": "yarn build"
+  },
+  "dependencies": {
+    "@poppinss/hooks": "^7.3.0",
+    "chokidar": "^5.0.0",
+    "fast-glob": "^3.3.3",
+    "globby": "^16.0.0",
+    "picomatch": "^4.0.3"
+  },
   "devDependencies": {
     "@adonisjs/core": "^6.19.1",
-    "@foadonis/eslint-config": "workspace:*",
     "@japa/assert": "^4.2.0",
     "@japa/expect": "^3.0.7",
     "@japa/runner": "^4.5.0",
@@ -62,33 +68,23 @@
     "c8": "^11.0.0",
     "cpy-cli": "^7.0.0",
     "del-cli": "^7.0.0",
-    "eslint": "catalog:",
     "hot-hook": "^0.4.0",
-    "prettier": "^3.7.4",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   },
   "peerDependencies": {
     "hot-hook": "^4.0.0"
   },
-  "publishConfig": {
-    "access": "public",
-    "tag": "latest"
-  },
   "c8": {
+    "exclude": [
+      "tests/**"
+    ],
     "reporter": [
       "text",
       "html"
-    ],
-    "exclude": [
-      "tests/**"
     ]
   },
-  "dependencies": {
-    "@poppinss/hooks": "^7.3.0",
-    "chokidar": "^5.0.0",
-    "fast-glob": "^3.3.3",
-    "globby": "^16.0.0",
-    "picomatch": "^4.0.3"
+  "engines": {
+    "node": ">=20.6.0"
   }
 }

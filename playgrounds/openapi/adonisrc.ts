@@ -40,7 +40,7 @@ export default defineConfig({
     () => import('@adonisjs/core/providers/vinejs_provider'),
     () => import('@foadonis/openapi/openapi_provider'),
     () => import('@foadonis/actions/actions_provider'),
-    () => import('@adonisjs/otel/otel_provider')
+    () => import('@adonisjs/otel/otel_provider'),
   ],
 
   /*
@@ -51,11 +51,7 @@ export default defineConfig({
   | List of modules to import before starting the application.
   |
   */
-  preloads: [
-    () => import('#start/routes'),
-    () => import('#start/kernel'),
-    () => import('#start/events'),
-  ],
+  preloads: [() => import('#start/routes'), () => import('#start/kernel')],
 
   /*
   |--------------------------------------------------------------------------

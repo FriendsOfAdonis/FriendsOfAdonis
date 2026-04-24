@@ -1,0 +1,16 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+
+  "sortPackageJson": {},
+
+  "trailingComma": "es5",
+  "semi": false,
+  "singleQuote": true,
+  "useTabs": false,
+  "quoteProps": "consistent",
+  "bracketSpacing": true,
+  "arrowParens": "always",
+  "printWidth": 100,
+
+  "ignorePatterns": ["**/.adonisjs/**"]
+}

@@ -68,6 +68,7 @@ export class ActionsInstrumentation extends InstrumentationBase<ActionsInstrumen
   }
 
   private _getDispatchPatch() {
+    // oxlint-disable-next-line typescript/no-this-alias
     const instrumentation = this
 
     return (original: ActionsRunner['dispatch']) => {
