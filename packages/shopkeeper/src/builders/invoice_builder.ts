@@ -110,7 +110,7 @@ export class InvoiceBuilder implements PromiseLike<Invoice> {
   /**
    * Mark the invoice to be paid automatically upon creation.
    */
-  pay(params: Stripe.InvoicePayParams = {}): this {
+  charge(params: Stripe.InvoicePayParams = {}): this {
     this.#isDraft = false
     this.#invoiceParams.collection_method = 'charge_automatically'
     this.#payParams = { ...this.#payParams, ...params }
@@ -178,23 +178,21 @@ export class InvoiceBuilder implements PromiseLike<Invoice> {
   }
 
   #buildTabLine(item: TabItem, currency: string): Stripe.InvoiceAddLinesParams.Line {
-    const { price_data: priceData, ...restParams } = item.params
+    const { price_data: priceData, quantity, ...restParams } = item.params
 
-    if (priceData) {
-      return {
-        description: item.description,
-        price_data: {
-          ...priceData,
-          unit_amount: item.amount,
-          currency,
-        },
-        ...restParams,
-      }
-    }
+    const productRef = priceData?.product
+      ? { product: priceData.product }
+      : { product_data: priceData?.product_data ?? { name: item.description } }
 
     return {
-      amount: item.amount,
       description: item.description,
+      quantity: quantity ?? 1,
+      price_data: {
+        ...productRef,
+        ...priceData,
+        unit_amount: item.amount,
+        currency,
+      },
       ...restParams,
     }
   }

@@ -3,7 +3,6 @@ import { createCustomer } from '../utils.js'
 import { InvalidCustomerError } from '../../src/errors/invalid_customer.js'
 import { Shopkeeper } from '../../src/shopkeeper.js'
 import { Invoice } from '../../src/invoice.js'
-import type Stripe from 'stripe'
 import { InvalidInvoiceError } from '../../src/errors/invalid_invoice.js'
 
 test.group('Invoices', () => {
@@ -32,7 +31,7 @@ test.group('Invoices', () => {
     await user.createAsStripeCustomer()
     await user.updateDefaultPaymentMethod('pm_card_visa')
 
-    const invoice = await user.invoice().addItem('Adonis Pin', 12000).pay()
+    const invoice = await user.invoice().addItem('Adonis Pin', 12000).charge()
 
     assert.instanceOf(invoice, Invoice)
     assert.equal(invoice.rawTotal(), 12000)
@@ -52,7 +51,7 @@ test.group('Invoices', () => {
       unit_amount: 8000,
     })
 
-    const invoice = await user.invoice().addPrice(price.id, 2).pay()
+    const invoice = await user.invoice().addPrice(price.id, 2).charge()
 
     assert.instanceOf(invoice, Invoice)
     assert.equal(invoice.rawTotal(), 16000)
@@ -77,7 +76,7 @@ test.group('Invoices', () => {
           tax_behavior: 'exclusive',
         },
       })
-      .pay()
+      .charge()
 
     assert.instanceOf(invoice, Invoice)
     assert.equal(invoice.rawTotal(), 50000)
@@ -94,9 +93,9 @@ test.group('Invoices', () => {
     const user = await createCustomer('customer_can_be_invoiced_with_inline_price_data')
     await user.createAsStripeCustomer()
     await user.updateDefaultPaymentMethod('pm_card_visa')
-    let invoice = await user.invoice().addItem('Fishing', 2000).pay()
+    let invoice = await user.invoice().addItem('Fishing', 2000).charge()
 
-    const stripeInvoice = invoice.asStripeInvoice() as Stripe.Invoice
+    const stripeInvoice = invoice.asStripeInvoice()
 
     const found = await user.findInvoice(stripeInvoice.id)
     assert.instanceOf(found, Invoice)
@@ -116,11 +115,11 @@ test.group('Invoices', () => {
     await otherUser.createAsStripeCustomer()
     await otherUser.updateDefaultPaymentMethod('pm_card_visa')
 
-    const invoice = await user.invoice().addItem('Fishing', 2000).pay()
+    const invoice = await user.invoice().addItem('Fishing', 2000).charge()
 
-    await expect(
-      otherUser.findInvoice((invoice.asStripeInvoice() as Stripe.Invoice).id)
-    ).rejects.toThrow(InvalidInvoiceError)
+    await expect(otherUser.findInvoice(invoice.asStripeInvoice().id)).rejects.toThrow(
+      InvalidInvoiceError
+    )
   })
 
   test('find invoice by id or faild', async ({ assert }) => {
@@ -134,10 +133,10 @@ test.group('Invoices', () => {
     await otherUser.createAsStripeCustomer()
     await otherUser.updateDefaultPaymentMethod('pm_card_visa')
 
-    const invoice = await user.invoice().addItem('Fishing', 2000).pay()
+    const invoice = await user.invoice().addItem('Fishing', 2000).charge()
 
     try {
-      await otherUser.findInvoiceOrFail((invoice.asStripeInvoice() as Stripe.Invoice).id)
+      await otherUser.findInvoiceOrFail(invoice.asStripeInvoice().id)
     } catch (e: any) {
       assert.instanceOf(e, InvalidInvoiceError)
       assert.equal(e.code, '403')
@@ -149,7 +148,7 @@ test.group('Invoices', () => {
     await user.createAsStripeCustomer()
     await user.updateDefaultPaymentMethod('pm_card_visa')
 
-    const invoice = await user.invoice().addItem('Crying', 2000, { quantity: 5 }).pay()
+    const invoice = await user.invoice().addItem('Crying', 2000, { quantity: 5 }).charge()
 
     assert.instanceOf(invoice, Invoice)
     assert.equal(invoice.rawTotal(), 10000)
