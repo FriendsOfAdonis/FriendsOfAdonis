@@ -55,7 +55,7 @@ test.group('Charges', () => {
     await user.createAsStripeCustomer()
     await user.updateDefaultPaymentMethod('pm_card_visa')
 
-    await user.invoice().addItem('Adonis Cloud', 1000).pay()
+    await user.invoice().addItem('Adonis Cloud', 1000).charge()
 
     const invoice = await user.invoices().then((i) => i[0])
     const items = await invoice.invoiceItems()
@@ -69,7 +69,7 @@ test.group('Charges', () => {
     await user.createAsStripeCustomer()
     await user.updateDefaultPaymentMethod('pm_card_visa')
 
-    const invoice = await user.invoice().addItem('Adonis Cloud', 1000).pay()
+    const invoice = await user.invoice().addItem('Adonis Cloud', 1000).charge()
     const stripeInvoice = await shopkeeper.stripe.invoices.retrieve(invoice.asStripeInvoice().id, {
       expand: ['payments.data.payment.payment_intent'],
     })
