@@ -584,25 +584,19 @@ test.group('Subscriptions', (group) => {
       .newSubscription('main', [premiumPrice.id])
       .create('pm_card_visa')
     const invoice = await user.invoices().then((i) => i[0])
-    const stripeInvoice = invoice.asStripeInvoice() as Stripe.Invoice
+    const stripeInvoice = invoice.asStripeInvoice()
 
     assert.equal(invoice.rawTotal(), 2000)
 
     await subscription.noProrate().swap(price.id)
 
     // Assert that no new invoice was created because of no prorating.
-    assert.equal(
-      await user.invoices().then((i) => (i[0].asStripeInvoice() as Stripe.Invoice).id),
-      stripeInvoice.id
-    )
+    assert.equal(await user.invoices().then((i) => i[0].asStripeInvoice().id), stripeInvoice.id)
     assert.equal(await user.upcomingInvoice().then((i) => i?.rawTotal()), 1000)
 
     await subscription.swapAndInvoice([premiumPrice.id])
 
-    assert.notEqual(
-      await user.invoices().then((i) => (i[0].asStripeInvoice() as Stripe.Invoice).id),
-      stripeInvoice.id
-    )
+    assert.notEqual(await user.invoices().then((i) => i[0].asStripeInvoice().id), stripeInvoice.id)
     // In Stripe v20, proration is based on what was actually billed for the current
     // period. Since the customer was already billed 2000 (premiumPrice) and we're
     // switching back to premiumPrice, the net proration is 0.
