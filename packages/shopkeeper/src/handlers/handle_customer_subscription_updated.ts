@@ -13,6 +13,7 @@ export async function handleCustomerSubscriptionUpdated(
   let subscription = await user.related('subscriptions').query().where('stripeId', data.id).first()
   if (!subscription) {
     subscription = new shopkeeper.subscriptionModel()
+    subscription.userId = user.id
     subscription.stripeId = data.id
   }
 
