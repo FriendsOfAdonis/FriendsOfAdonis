@@ -25,7 +25,7 @@ Update your environment variables schema and add them to your `.env` file.
 import { Env } from '@adonisjs/core/env'
 
 export default await Env.create(new URL('../', import.meta.url), {
-  TYPESENSE_NODE_URL: Env.schema.string({ format: 'host' }),
+  TYPESENSE_NODE_URL: Env.schema.string({ format: 'url' }),
   TYPESENSE_API_KEY: Env.schema.string(),
 })
 ```
