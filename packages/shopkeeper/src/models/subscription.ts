@@ -38,7 +38,7 @@ export default class Subscription extends compose(
   declare id: number
 
   @column()
-  declare userId: string
+  declare userId: number
 
   // TODO: Decorate and type
   @belongsTo(() => shopkeeper.customerModel)
