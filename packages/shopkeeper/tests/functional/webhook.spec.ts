@@ -72,12 +72,12 @@ test.group('Webhook', (group) => {
 
     response.assertStatus(200)
 
-    // TODO: Filter quantity
     const subscription = await Subscription.findByOrFail({
       type: 'default',
       userId: user.id,
       stripeId: subscriptionId,
       stripeStatus: 'active',
+      quantity: 10,
     })
 
     await SubscriptionItem.findByOrFail({

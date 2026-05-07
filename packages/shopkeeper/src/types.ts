@@ -127,14 +127,9 @@ export interface ResolvedConfig extends Omit<ShopkeeperConfig, 'models'> {
 
 export type StripeEventTypes = Stripe.Event['type']
 
-// TODO: IT works but it is slow asf
-// type StripeEventName<T extends string> = T extends `stripe:${infer U}`
-//   ? Stripe.Event & { type: U }
-//   : never
-// type StrictStripeEventList = {
-//   [key in `stripe:${StripeEventTypes}`]: StripeEventName<key>
-// }
-
+// Strict event typing (narrowing each event to its specific Stripe.Event subtype)
+// causes significant TS performance degradation due to the large union of Stripe event types.
+// Using relaxed typing as a pragmatic trade-off.
 type RelaxedStripeEventList = {
   [key in `stripe:${StripeEventTypes}` | `stripe:${StripeEventTypes}:handled`]: any
 }
