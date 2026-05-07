@@ -29,30 +29,39 @@ You can also start a metered subscription via Stripe Checkout:
 const checkout = await user
   .newSubscription('default')
   .meteredPrice('price_metered')
-  .checkout()
+  .checkout({
+    success_url: urlFor('checkout.success'),
+    cancel_url: urlFor('checkout.cancel'),
+  })
 ```
 
 ## Reporting usage
 
-As your customers use your product, report their usage to Stripe using the [Billing Meters API](https://stripe.com/docs/billing/subscriptions/usage-based/recording-usage). Shopkeeper provides access to the Stripe client through `Shopkeeper.resolveStripe()`:
+As your customers use your product, report their usage to Stripe. You can use the `reportUsage` method on a subscription:
 
 ```ts
-import Shopkeeper from '@foadonis/shopkeeper/services/shopkeeper'
+const subscription = await user.subscription('default')
 
-const stripe = await Shopkeeper.resolveStripe()
+// Report a single unit of usage
+await subscription.reportUsage('api_calls')
 
-await stripe.billing.meterEvents.create({
-  event_name: 'api_calls',
-  payload: {
-    stripe_customer_id: user.stripeId,
-    value: '1',
-  },
-})
+// Report a larger quantity
+await subscription.reportUsage('api_calls', '150')
 ```
 
-To report a larger quantity at once:
+If the subscription has multiple metered prices, specify which one:
 
 ```ts
+await subscription.reportUsageFor('price_metered', 'api_calls', '150')
+```
+
+You can also use the Stripe SDK directly for more control:
+
+```ts
+import shopkeeper from '@foadonis/shopkeeper/services/shopkeeper'
+
+const stripe = shopkeeper.stripe
+
 await stripe.billing.meterEvents.create({
   event_name: 'api_calls',
   payload: {
@@ -72,13 +81,19 @@ To view a customer's past usage for a subscription:
 
 ```ts
 const subscription = await user.subscription('default')
-const usageRecords = await subscription.usageRecords()
+const usageRecords = await subscription.usageRecords(meterId, {
+  start_time: startTimestamp,
+  end_time: endTimestamp,
+})
 ```
 
 If the subscription has multiple metered prices, specify which one:
 
 ```ts
-const usageRecords = await subscription.usageRecordsFor('price_metered')
+const usageRecords = await subscription.usageRecordsFor('price_metered', meterId, {
+  start_time: startTimestamp,
+  end_time: endTimestamp,
+})
 ```
 
 You can display usage records in a template:

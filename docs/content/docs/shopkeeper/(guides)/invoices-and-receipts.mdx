@@ -43,6 +43,23 @@ You can use the invoice's methods to display billing information. Here's an exam
 </table>
 ```
 
+## Creating invoices
+
+`user.invoice()` returns an `InvoiceBuilder`. By default, invoices are created as **drafts** — they are not finalized or charged until you explicitly call `.charge()` or `.send()`.
+
+```ts
+// Creates a draft invoice (not sent, not charged)
+const invoice = await user.invoice().addPrice('price_tshirt', 5)
+
+// Finalize and email the invoice for manual payment
+await user.invoice().addPrice('price_tshirt', 5).daysUntilDue(30).send()
+
+// Charge the default payment method immediately
+await user.invoice().addPrice('price_tshirt', 5).charge()
+```
+
+See [Single Charges — Charge with invoice](/docs/shopkeeper/single-charges#charge-with-invoice) for more examples.
+
 ## Upcoming invoice
 
 To show a customer what they will be charged next, use the `upcomingInvoice` method:

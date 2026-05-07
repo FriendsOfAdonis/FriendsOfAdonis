@@ -78,13 +78,13 @@ The `STRIPE_WEBHOOK_SECRET` environment variable is mandatory in production. It 
 Register the Shopkeeper webhook route and listeners in your application:
 
 ```ts title="start/routes.ts"
-import shopkeeper from '@foadonis/shopkeeper/services/main'
+import shopkeeper from '@foadonis/shopkeeper/services/shopkeeper'
 
 shopkeeper.registerRoutes()
 ```
 
 ```ts title="start/events.ts"
-import shopkeeper from '@foadonis/shopkeeper/services/main'
+import shopkeeper from '@foadonis/shopkeeper/services/shopkeeper'
 
 shopkeeper.registerWebhookListeners()
 ```
@@ -133,7 +133,7 @@ router.get('/checkout', async ({ auth, response }) => {
       cancel_url: urlFor('checkout.cancel'),
     })
 
-  return response.redirect().status(303).toPath(checkout.session.url)
+  return response.redirect().status(303).toPath(checkout.asStripeSession().url)
 })
 ```
 
