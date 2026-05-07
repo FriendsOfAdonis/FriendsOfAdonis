@@ -129,8 +129,6 @@ export default class Subscription extends compose(
     return this.stripeStatus === 'incomplete'
   }
 
-  // TODO: SCOPES
-
   /**
    * Determine if the subscription is past due.
    */
@@ -269,13 +267,10 @@ export default class Subscription extends compose(
 
     this.guardAgainstMultiplePrices()
 
-    // TODO: quickfix as stripe does not have quantity on subscription
-    // a lot of calls are made here
-    let stripeSubscription = await this.asStripeSubscription()
+    const firstItem = await SubscriptionItem.query().where('subscriptionId', this.id).firstOrFail()
+    const si = firstItem.stripeId
 
-    const si = stripeSubscription.items.data[0].id
-
-    stripeSubscription = await this.updateStripeSubscription({
+    const stripeSubscription = await this.updateStripeSubscription({
       payment_behavior: this.paymentBehavior(),
       proration_behavior: this.prorateBehavior(),
       off_session: true,
@@ -355,7 +350,6 @@ export default class Subscription extends compose(
 
   /**
    * Change the billing cycle anchor on a price change.
-   * TODO: The does not seem to be possible
    */
   anchorBillingCycleOn(
     date: Stripe.SubscriptionUpdateParams.BillingCycleAnchor = 'unchanged'
@@ -994,8 +988,6 @@ export default class Subscription extends compose(
 
   /**
    * Merge the items that should be deleted during swap into the given items collection.
-   *
-   * TODO: Test this properly as im not sure of what i did
    */
   protected async mergeItemsThatShouldBeDeletedDuringSwap(
     items: Map<string, Stripe.SubscriptionUpdateParams.Item>
