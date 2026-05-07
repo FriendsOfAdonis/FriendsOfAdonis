@@ -6,7 +6,7 @@ import { type ManagesCustomerContract } from '../contracts.js'
 import type Stripe from 'stripe'
 import { Checkout } from '../checkout.js'
 import { Shopkeeper } from '../shopkeeper.js'
-import router from '@adonisjs/core/services/router'
+import { InvalidArgumentError } from '../errors/invalid_argument.js'
 
 export class CheckoutBuilder
   extends compose(Empty, allowsCoupon(), handlesTaxes())
@@ -112,16 +112,23 @@ export class CheckoutBuilder
       }
     }
 
-    //TODO: not safe, as "home" url might not exist user-land
     if (data.ui_mode === 'embedded') {
-      if (data.redirect_on_completion === 'never') {
-        data.return_url = undefined
-      } else {
-        data.return_url = data.return_url ?? router.makeUrl('home')
+      if (data.redirect_on_completion !== 'never' && !data.return_url) {
+        throw new InvalidArgumentError(
+          'A return_url is required for embedded checkout sessions. Use .sessionParams({ return_url }) to set one.'
+        )
       }
     } else {
-      data.success_url = data.success_url ?? router.makeUrl('home', { checkout: 'success' })
-      data.cancel_url = data.cancel_url ?? router.makeUrl('home', { checkout: 'cancelled' })
+      if (!data.success_url) {
+        throw new InvalidArgumentError(
+          'A success_url is required for checkout sessions. Use .sessionParams({ success_url }) to set one.'
+        )
+      }
+      if (!data.cancel_url) {
+        throw new InvalidArgumentError(
+          'A cancel_url is required for checkout sessions. Use .sessionParams({ cancel_url }) to set one.'
+        )
+      }
     }
 
     const session = await stripe.checkout.sessions.create(data)
