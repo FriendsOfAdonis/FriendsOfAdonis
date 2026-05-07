@@ -14,7 +14,7 @@ Shopkeeper requires you to register its webhook route and event listeners explic
 Add the following to your `start/routes.ts` file:
 
 ```ts title="start/routes.ts"
-import shopkeeper from '@foadonis/shopkeeper/services/main'
+import shopkeeper from '@foadonis/shopkeeper/services/shopkeeper'
 
 shopkeeper.registerRoutes()
 ```
@@ -26,7 +26,7 @@ This registers a `POST /stripe/webhook` endpoint that receives events from Strip
 Add the following to your `start/events.ts` file:
 
 ```ts title="start/events.ts"
-import shopkeeper from '@foadonis/shopkeeper/services/main'
+import shopkeeper from '@foadonis/shopkeeper/services/shopkeeper'
 
 shopkeeper.registerWebhookListeners()
 ```
@@ -123,7 +123,7 @@ Shopkeeper provides an opt-in `webhookAudit` method to prevent duplicate process
 - Rolls back everything if your logic throws, so the event can be retried
 
 ```ts title="app/listeners/my_webhook_listener.ts"
-import shopkeeper from '@foadonis/shopkeeper/services/main'
+import shopkeeper from '@foadonis/shopkeeper/services/shopkeeper'
 import type Stripe from 'stripe'
 
 export default class MyWebhookListener {

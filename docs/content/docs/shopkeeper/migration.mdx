@@ -1,0 +1,265 @@
+---
+title: Migrate to 0.2.0
+icon: ArrowUp
+---
+
+This guide covers all breaking changes when upgrading from `@foadonis/shopkeeper` 0.1.x to 0.2.0.
+
+## Update dependencies
+
+```sh
+npm install @foadonis/shopkeeper@^0.2.0 stripe@^20.4.1
+# or
+yarn add @foadonis/shopkeeper@^0.2.0 stripe@^20.4.1
+# or
+pnpm add @foadonis/shopkeeper@^0.2.0 stripe@^20.4.1
+```
+
+Peer dependencies: `@adonisjs/core ^7.0.1`, `@adonisjs/lucid ^22.1.1`, `luxon ^3.5.0`.
+
+## Generate and run the new migration
+
+```sh
+node ace configure @foadonis/shopkeeper
+node ace migration:run
+```
+
+This creates the `stripe_webhook_events` table used for idempotent webhook handling.
+
+## Convert mixins to factory pattern
+
+All mixins are now factory functions. Add `()` after each mixin name:
+
+**Before:**
+```ts
+import { Billable } from '@foadonis/shopkeeper/mixins'
+
+class User extends compose(BaseModel, Billable) {}
+```
+
+**After:**
+```ts
+import { billable } from '@foadonis/shopkeeper/mixins'
+
+class User extends compose(BaseModel, billable()) {}
+```
+
+Full rename list:
+
+| Before | After |
+|---|---|
+| `Billable` | `billable()` |
+| `HandlesTaxes` | `handlesTaxes()` |
+| `AllowsCoupon` | `allowsCoupon()` |
+| `HandlesPaymentFailures` | `handlesPaymentFailures()` |
+| `InteractWithPaymentBehavior` | `interactWithPaymentBehavior()` |
+| `Prorates` | `prorates()` |
+
+## Accessing the Stripe SDK
+
+The `stripe` getter has been removed from models. Use the Shopkeeper service instead:
+
+**Before:**
+```ts
+const stripe = this.stripe
+```
+
+**After:**
+```ts
+import shopkeeper from '@foadonis/shopkeeper/services/shopkeeper'
+
+const stripe = shopkeeper.stripe
+```
+
+## Replace `With*` types with `*Contract` interfaces
+
+**Before:**
+```ts
+import type { WithSubscriptions, WithCustomer } from '@foadonis/shopkeeper/types'
+```
+
+**After:**
+```ts
+import type { BillableContract } from '@foadonis/shopkeeper'
+```
+
+## Checkout API
+
+Product checkouts now use a fluent builder instead of positional arguments.
+
+**Before:**
+```ts
+const checkout = await user.checkout('price_tshirt', {
+  success_url: urlFor('checkout.success'),
+  cancel_url: urlFor('checkout.cancel'),
+})
+```
+
+**After:**
+```ts
+const checkout = await user
+  .checkout()
+  .addLineItem('price_tshirt')
+  .sessionParams({
+    success_url: urlFor('checkout.success'),
+    cancel_url: urlFor('checkout.cancel'),
+  })
+```
+
+`success_url` and `cancel_url` are now required — the builder throws `InvalidArgumentError` if they are missing.
+
+Subscription checkouts are unchanged (session params are passed to `.checkout()`):
+
+```ts
+const checkout = await user
+  .newSubscription('default', 'price_monthly')
+  .checkout({
+    success_url: urlFor('checkout.success'),
+    cancel_url: urlFor('checkout.cancel'),
+  })
+```
+
+Guest checkouts now use the builder:
+
+**Before:**
+```ts
+const checkout = await Checkout.create(sessionParams)
+```
+
+**After:**
+```ts
+const checkout = await Checkout.guest()
+  .addLineItem('price_tshirt')
+  .sessionParams({ success_url: '...', cancel_url: '...' })
+```
+
+The `Checkout` object no longer exposes `.session` directly:
+
+**Before:** `checkout.session.url`
+
+**After:** `checkout.asStripeSession().url`
+
+## Invoice API
+
+`invoice()` now returns an `InvoiceBuilder` instead of creating an invoice directly. The following methods have been removed:
+
+- `tab(description, amount, params)`
+- `tabPrice(price, quantity, params)`
+- `invoiceFor(description, amount, tabParams, invoiceParams)`
+- `invoicePrice(price, quantity, tabParams, invoiceParams)`
+
+**Before:**
+```ts
+await user.invoiceFor('One Time Fee', 500)
+```
+
+**After:**
+```ts
+await user.invoice().addItem('One Time Fee', 500).charge()
+```
+
+**Before:**
+```ts
+await user.invoicePrice('price_tshirt', 5)
+```
+
+**After:**
+```ts
+await user.invoice().addPrice('price_tshirt', 5).charge()
+```
+
+**Before:**
+```ts
+await user.tabPrice('price_tshirt', 5)
+await user.tabPrice('price_mug', 2)
+await user.invoice()
+```
+
+**After:**
+```ts
+await user.invoice()
+  .addPrice('price_tshirt', 5)
+  .addPrice('price_mug', 2)
+  .charge()
+```
+
+The builder also supports `draft()`, `send()`, `daysUntilDue()`, `description()`, `withMetadata()`, and `currency()`.
+
+## Config changes
+
+The config now requires `enforceSecret`, `keepPastDueSubscriptionsActive`, and `registerRoutes`:
+
+```ts
+export default defineConfig({
+  // ...
+  webhook: {
+    secret: env.get("STRIPE_WEBHOOK_SECRET"),
+    tolerance: 300,
+    enforceSecret: env.get("NODE_ENV") === "production", // [!code highlight]
+  },
+  keepPastDueSubscriptionsActive: false, // [!code highlight]
+  registerRoutes: true, // [!code highlight]
+})
+```
+
+## Webhook route and listeners
+
+Routes and listeners are now registered explicitly in your start files:
+
+```ts title="start/routes.ts"
+import shopkeeper from '@foadonis/shopkeeper/services/shopkeeper'
+
+shopkeeper.registerRoutes()
+```
+
+```ts title="start/events.ts"
+import shopkeeper from '@foadonis/shopkeeper/services/shopkeeper'
+
+shopkeeper.registerWebhookListeners()
+```
+
+## Stripe SDK v20 API changes
+
+### Invoice
+
+**Before:** `invoice.tax`, `invoice.total_tax_amounts`
+
+**After:** `invoice.total_taxes`
+
+### CustomerBalanceTransaction
+
+The constructor no longer takes an `owner` parameter:
+
+**Before:** `new CustomerBalanceTransaction(owner, transaction)`
+
+**After:** `new CustomerBalanceTransaction(transaction)`
+
+**Before:** `balanceTransaction.invoice()`
+
+**After:** `balanceTransaction.invoiceId()`
+
+### Tax
+
+**Before:** `new Tax(amount, currency, taxRate)` / `tax.taxRate()` / `tax.isInclusive()`
+
+**After:** `new Tax(amount, currency, taxRateId)` / `tax.taxRateId()` / `isInclusive()` removed
+
+### InvoiceLineItem
+
+`hasTaxRates()` now reads from `item.taxes` instead of `item.tax_amounts`.
+
+## Metered billing
+
+`reportUsage()` now uses Stripe Billing Meters. The signature changed:
+
+**Before:**
+```ts
+await subscriptionItem.reportUsage(quantity)
+```
+
+**After:**
+```ts
+await subscription.reportUsage('event_name', '150')
+```
+
+Usage is reported via meter event names. Prices must be linked to a `Meter` in your Stripe dashboard.

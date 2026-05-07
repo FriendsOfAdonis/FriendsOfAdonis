@@ -49,47 +49,35 @@ const payment = await new User().charge(100, paymentMethodId)
 
 ## Charge with invoice
 
-If you need to generate an invoice for a one-off charge, use `invoicePrice`. This charges the customer's default payment method and creates a downloadable invoice:
+To generate an invoice for a one-off charge, use the invoice builder. This charges the customer's default payment method and creates a downloadable invoice:
 
 ```ts
 // Invoice for 5 t-shirts
-await user.invoicePrice('price_tshirt', 5)
+await user.invoice().addPrice('price_tshirt', 5).charge()
 ```
 
-You can pass additional options for both the invoice item and the invoice itself:
+You can customize the invoice with the builder's fluent API:
 
 ```ts
-await user.invoicePrice(
-  'price_tshirt',
-  5,
-  { discounts: [{ coupon: 'SUMMER21SALE' }] },
-  { default_tax_rates: ['txr_id'] }
-)
+await user
+  .invoice()
+  .addPrice('price_tshirt', 5)
+  .addPrice('price_mug', 2)
+  .description('Order #12345')
+  .charge()
 ```
 
-## Charge tabs
-
-To build up a "tab" of multiple items before invoicing, use `tabPrice`:
+For ad-hoc amounts without a pre-defined Stripe price, use `addItem`:
 
 ```ts
-await user.tabPrice('price_tshirt', 5)
-await user.tabPrice('price_mug', 2)
-await user.invoice()
-```
-
-For ad-hoc amounts without a pre-defined Stripe price, use `invoiceFor`:
-
-```ts
-await user.invoiceFor('One Time Fee', 500)
+await user.invoice().addItem('One Time Fee', 500).charge()
 ```
 
 <Callout>
-Using `invoicePrice` and `tabPrice` with pre-defined prices is recommended over `invoiceFor`, as it gives you better analytics in the Stripe dashboard.
+Using `addPrice` with pre-defined prices is recommended over `addItem`, as it gives you better analytics in the Stripe dashboard.
 </Callout>
 
-<Callout type="warn">
-The `invoice`, `invoicePrice`, and `invoiceFor` methods create Stripe invoices that automatically retry failed charges. If you don't want retries, close the invoice via the Stripe API after the first failed attempt.
-</Callout>
+The invoice builder also supports `draft()` to keep invoices as drafts, `send()` to email invoices to the customer, `daysUntilDue()`, `withMetadata()`, and `currency()`.
 
 ## Payment intents
 
@@ -134,5 +122,4 @@ await user.refund(payment.id)
 - [Accepting Payments](/docs/shopkeeper/accepting-payments): Checkout-based payment flows
 - [Managing Payment Methods](/docs/shopkeeper/managing-payment-methods): Storing and retrieving payment methods
 - [Invoices & Receipts](/docs/shopkeeper/invoices-and-receipts): Listing and displaying invoices
-- [Stripe Charges documentation](https://stripe.com/docs/payments/charges-api): Stripe's guide to charges
 - [Stripe Payment Intents documentation](https://stripe.com/docs/payments/payment-intents): Stripe's guide to payment intents

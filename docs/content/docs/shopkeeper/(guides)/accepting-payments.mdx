@@ -7,40 +7,40 @@ The easiest way to start accepting payments is with [Stripe Checkout](https://st
 
 ## Product checkout
 
-To charge a customer for an existing product, use the `checkout` method on a billable model. Pass the Stripe Price ID of the product you want to sell:
+To charge a customer for an existing product, use the `checkout` method on a billable model. Chain `addLineItem` and `sessionParams` on the returned builder:
 
 ```ts title="start/routes.ts"
 import { urlFor } from '@adonisjs/core/services/url_builder'
 
 router.get('/buy', async ({ auth, response }) => {
   const user = auth.getUserOrFail()
-  const checkout = await user.checkout('price_tshirt', {
+  const checkout = await user
+    .checkout()
+    .addLineItem('price_tshirt')
+    .sessionParams({
+      success_url: urlFor('checkout.success'),
+      cancel_url: urlFor('checkout.cancel'),
+    })
+
+  return response.redirect().status(303).toPath(checkout.asStripeSession().url)
+})
+```
+
+You can also specify a quantity:
+
+```ts
+const checkout = await user
+  .checkout()
+  .addLineItem('price_tshirt', 5)
+  .sessionParams({
     success_url: urlFor('checkout.success'),
     cancel_url: urlFor('checkout.cancel'),
   })
-
-  return response.redirect().status(303).toPath(checkout.session.url)
-})
 ```
 
-You can also specify a quantity by passing an object instead of a string:
+### Redirect URLs
 
-```ts
-const checkout = await user.checkout({ price_tshirt: 5 })
-```
-
-### Custom redirect URLs
-
-By default, customers are redirected to your `home` route after completing or cancelling a purchase. You can customize this with the `success_url` and `cancel_url` options:
-
-```ts
-import { urlFor } from '@adonisjs/core/services/url_builder'
-
-const checkout = await user.checkout('price_tshirt', {
-  success_url: urlFor('checkout.success'),
-  cancel_url: urlFor('checkout.cancel'),
-})
-```
+`success_url` and `cancel_url` are required. The builder throws an `InvalidArgumentError` if they are missing.
 
 ### Retrieving the checkout session
 
@@ -48,21 +48,25 @@ If you need to access the checkout session on the success page (for example, to 
 
 ```ts
 import { urlFor } from '@adonisjs/core/services/url_builder'
-import Shopkeeper from '@foadonis/shopkeeper/services/shopkeeper'
+import shopkeeper from '@foadonis/shopkeeper/services/shopkeeper'
 
 router.get('/buy', async ({ auth, response }) => {
   const user = auth.getUserOrFail()
-  const checkout = await user.checkout('price_tshirt', {
-    success_url: urlFor('checkout.success', { session_id: '{CHECKOUT_SESSION_ID}' }),
-  })
+  const checkout = await user
+    .checkout()
+    .addLineItem('price_tshirt')
+    .sessionParams({
+      success_url: urlFor('checkout.success', { session_id: '{CHECKOUT_SESSION_ID}' }),
+      cancel_url: urlFor('checkout.cancel'),
+    })
 
-  return response.redirect().status(303).toPath(checkout.session.url)
+  return response.redirect().status(303).toPath(checkout.asStripeSession().url)
 })
 
 router
   .get('/checkout/success', async ({ request, view }) => {
     const qs = request.qs()
-    const stripe = await Shopkeeper.resolveStripe()
+    const stripe = shopkeeper.stripe
     const session = await stripe.checkout.sessions.retrieve(qs.session_id)
 
     return view.render('checkout/success', { session })
@@ -87,7 +91,7 @@ router.get('/subscribe', async ({ auth, response }) => {
       cancel_url: urlFor('checkout.cancel'),
     })
 
-  return response.redirect().status(303).toPath(checkout.session.url)
+  return response.redirect().status(303).toPath(checkout.asStripeSession().url)
 })
 ```
 
@@ -103,7 +107,10 @@ You can offer a trial period on a subscription checkout using `trialDays`:
 const checkout = await user
   .newSubscription('default', 'price_monthly')
   .trialDays(7)
-  .checkout()
+  .checkout({
+    success_url: urlFor('checkout.success'),
+    cancel_url: urlFor('checkout.cancel'),
+  })
 ```
 
 <Callout type="warn">
@@ -118,8 +125,13 @@ By default, Stripe Checkout does not show a promotion code field. You can enable
 
 ```ts
 const checkout = await user
-  .allowPromotionCodes()
-  .checkout('price_tshirt')
+  .checkout()
+  .addLineItem('price_tshirt')
+  .withAllowPromotionsCodes()
+  .sessionParams({
+    success_url: urlFor('checkout.success'),
+    cancel_url: urlFor('checkout.cancel'),
+  })
 ```
 
 This also works for subscription checkouts:
@@ -128,7 +140,10 @@ This also works for subscription checkouts:
 const checkout = await user
   .newSubscription('default', 'price_monthly')
   .allowPromotionCodes()
-  .checkout()
+  .checkout({
+    success_url: urlFor('checkout.success'),
+    cancel_url: urlFor('checkout.cancel'),
+  })
 ```
 
 ## Single charge checkout
@@ -138,9 +153,14 @@ If you need to sell a product that doesn't exist in your Stripe dashboard, you c
 ```ts
 router.get('/buy-custom', async ({ auth, response }) => {
   const user = auth.getUserOrFail()
-  const checkout = await user.checkoutCharge(1200, 'T-Shirt', 5)
+  const checkout = await user
+    .checkoutCharge(1200, 'T-Shirt', 5)
+    .sessionParams({
+      success_url: urlFor('checkout.success'),
+      cancel_url: urlFor('checkout.cancel'),
+    })
 
-  return response.redirect().status(303).toPath(checkout.session.url)
+  return response.redirect().status(303).toPath(checkout.asStripeSession().url)
 })
 ```
 
@@ -150,16 +170,21 @@ router.get('/buy-custom', async ({ auth, response }) => {
 
 ## Collecting tax IDs
 
-To let customers provide their tax ID during checkout, use `collectTaxIds`:
+To let customers provide their tax ID during checkout, use `withTaxIdsCollect` on the builder:
 
 ```ts
 const checkout = await user
-  .collectTaxIds()
-  .checkout('price_tshirt')
+  .checkout()
+  .addLineItem('price_tshirt')
+  .withTaxIdsCollect()
+  .sessionParams({
+    success_url: urlFor('checkout.success'),
+    cancel_url: urlFor('checkout.cancel'),
+  })
 ```
 
 <Callout>
-If you have [automatic tax collection](/docs/shopkeeper/taxes) enabled, the tax ID field is shown automatically and you don't need to call `collectTaxIds`.
+If you have [automatic tax collection](/docs/shopkeeper/taxes) enabled, the tax ID field is shown automatically.
 </Callout>
 
 ## Guest checkouts
@@ -171,12 +196,14 @@ import { Checkout } from '@foadonis/shopkeeper'
 import { urlFor } from '@adonisjs/core/services/url_builder'
 
 router.get('/guest-checkout', async ({ response }) => {
-  const checkout = await Checkout.guest().create('default', 'price_monthly', {
-    success_url: urlFor('checkout.success'),
-    cancel_url: urlFor('checkout.cancel'),
-  })
+  const checkout = await Checkout.guest()
+    .addLineItem('price_tshirt')
+    .sessionParams({
+      success_url: urlFor('checkout.success'),
+      cancel_url: urlFor('checkout.cancel'),
+    })
 
-  return response.redirect().status(303).toPath(checkout.session.url)
+  return response.redirect().status(303).toPath(checkout.asStripeSession().url)
 })
 ```
 
@@ -184,8 +211,9 @@ You can also apply promotion codes to guest checkouts:
 
 ```ts
 const checkout = await Checkout.guest()
+  .addLineItem('price_tshirt')
   .withPromotionCode('promo_code_id')
-  .create('default', 'price_monthly', {
+  .sessionParams({
     success_url: urlFor('checkout.success'),
     cancel_url: urlFor('checkout.cancel'),
   })

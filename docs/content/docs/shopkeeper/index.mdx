@@ -21,7 +21,7 @@ router.get('/subscribe', async ({ auth, response }) => {
       cancel_url: urlFor('checkout.cancel'),
     })
 
-  return response.redirect().status(303).toPath(checkout.session.url)
+  return response.redirect().status(303).toPath(checkout.asStripeSession().url)
 })
 ```
 
