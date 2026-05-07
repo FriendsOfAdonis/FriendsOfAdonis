@@ -18,6 +18,8 @@
     "(guides)/handling-webhooks",
     "(guides)/managing-customers",
     "(guides)/managing-payment-methods",
-    "(guides)/taxes"
+    "(guides)/taxes",
+    "---",
+    "migration"
   ]
 }

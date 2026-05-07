@@ -10,9 +10,9 @@ Shopkeeper maps your application's users to [Stripe customers](https://stripe.co
 To find a billable model by its Stripe customer ID:
 
 ```ts
-import Shopkeeper from '@foadonis/shopkeeper/services/shopkeeper'
+import shopkeeper from '@foadonis/shopkeeper/services/shopkeeper'
 
-const user = await Shopkeeper.findBillable(stripeId)
+const user = await shopkeeper.findBillable(stripeId)
 ```
 
 ## Creating customers
@@ -106,7 +106,7 @@ await user.debitBalance(500, 'Adjustment')
 To retrieve the full history of balance transactions:
 
 ```ts
-const transactions = await user.balanceTransactions()
+const transactions = await user.balanceTransaction()
 
 for (const transaction of transactions) {
   const amount = transaction.amount()       // e.g., "$2.31"
