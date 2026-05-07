@@ -1,46 +1,67 @@
 import Stripe from 'stripe'
-import { type ShopkeeperConfig } from './types.js'
-import { type WithBillable } from './mixins/billable.js'
+import { type ResolvedConfig } from './types.ts'
+import { type BillableModel } from './contracts.ts'
 import { type NormalizeConstructor } from '@poppinss/utils/types'
 import type Subscription from './models/subscription.js'
-import type SubscriptionItem from './models/subscription_item.js'
+import type SubscriptionItem from './models/subscription_item.ts'
+import { type EmitterService, type HttpRouterService } from '@adonisjs/core/types'
+import { type TransactionClientContract } from '@adonisjs/lucid/types/database'
+import WebhookEvent from './models/webhook_event.js'
+
+const CustomerSubscriptionCreatedListener = () =>
+  import('./handlers/customer_subscription_created_listener.ts')
+const CustomerSubscriptionDeletedListener = () =>
+  import('./handlers/customer_subscription_deleted_listener.ts')
+const CustomerSubscriptionUpdatedListener = () =>
+  import('./handlers/customer_subscription_updated_listener.ts')
+const ShopkeeperWebhookController = () => import('./controllers/shopkeeper_webhook_controller.ts')
 
 export class Shopkeeper {
-  readonly #config: ShopkeeperConfig
-  readonly #stripe: Stripe
-  #customerModel: WithBillable
-  #subscriptionModel: NormalizeConstructor<typeof Subscription>
-  #subscriptionItemModel: NormalizeConstructor<typeof SubscriptionItem>
+  /**
+   * @internal
+   */
+  static $instance: Shopkeeper
 
-  constructor(
-    config: ShopkeeperConfig,
-    customerModel: WithBillable,
-    subscriptionModel: NormalizeConstructor<typeof Subscription>,
-    subscriptionItemModel: NormalizeConstructor<typeof SubscriptionItem>
-  ) {
+  #config: ResolvedConfig
+  #stripe: Stripe
+  #router: HttpRouterService
+  #emitter: EmitterService
+
+  constructor(config: ResolvedConfig, router: HttpRouterService, emitter: EmitterService) {
     this.#config = config
-    this.#customerModel = customerModel
-    this.#subscriptionModel = subscriptionModel
-    this.#subscriptionItemModel = subscriptionItemModel
+    this.#stripe = new Stripe(config.secret.release(), config.stripe)
+    this.#router = router
+    this.#emitter = emitter
 
-    this.#stripe = new Stripe(config.secret, config.stripe)
+    Shopkeeper.$instance = this
   }
 
   public get stripe(): Stripe {
     return this.#stripe
   }
 
-  public get config(): ShopkeeperConfig {
+  public get config(): ResolvedConfig {
     return this.#config
   }
 
-  /**
-   * Format the given amount into a displayable currency.
-   */
-  public formatAmount(amount: number, currency?: string): string {
-    return Intl.NumberFormat(this.config.currencyLocale, { style: 'currency', currency }).format(
-      amount / 100
-    )
+  public get customerModel(): BillableModel {
+    return this.config.models.customerModel
+  }
+
+  public get subscriptionModel(): NormalizeConstructor<typeof Subscription> {
+    return this.config.models.subscriptionModel
+  }
+
+  public get subscriptionItemModel(): NormalizeConstructor<typeof SubscriptionItem> {
+    return this.config.models.subscriptionItemModel
+  }
+
+  public get calculateTaxes(): boolean {
+    return this.config.calculateTaxes
+  }
+
+  public get currency(): string {
+    return this.#config.currency
   }
 
   /**
@@ -48,7 +69,7 @@ export class Shopkeeper {
    */
   public async findBillable(
     customer: Stripe.Customer | Stripe.DeletedCustomer | string
-  ): Promise<WithBillable['prototype'] | null> {
+  ): Promise<InstanceType<BillableModel> | null> {
     const stripeId = typeof customer === 'string' ? customer : customer.id
 
     const billable = await this.customerModel.findBy({
@@ -58,23 +79,68 @@ export class Shopkeeper {
     return billable
   }
 
-  public get customerModel(): WithBillable {
-    return this.#customerModel
+  /**
+   * Format the given amount into a displayable currency.
+   */
+  public formatAmount(amount: number, currency?: string): string {
+    const locale = this.#config.currencyLocale
+    return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount / 100)
   }
 
-  public get subscriptionModel(): NormalizeConstructor<typeof Subscription> {
-    return this.#subscriptionModel
+  public registerRoutes() {
+    const middlewares = this.#router.named({
+      stripeWebhook: () => import('./middlewares/stripe_webhook_middleware.ts'),
+    })
+
+    return this.#router
+      .post('/stripe/webhook', [ShopkeeperWebhookController, 'handle'])
+      .use(middlewares.stripeWebhook())
+      .as('shopkeeper.webhook')
   }
 
-  public get subscriptionItemModel(): NormalizeConstructor<typeof SubscriptionItem> {
-    return this.#subscriptionItemModel
+  /**
+   * Wrap webhook handling with idempotency audit.
+   * The event is recorded in `stripe_webhook_events` within the same transaction.
+   * If the callback throws, the transaction rolls back and the event is not marked as processed.
+   */
+  public async webhookAudit(
+    event: Stripe.Event,
+    callback: (trx: TransactionClientContract) => Promise<void>
+  ): Promise<boolean> {
+    const alreadyProcessed = await WebhookEvent.findBy('eventId', event.id)
+
+    if (alreadyProcessed) {
+      return false
+    }
+
+    const { default: db } = await import('@adonisjs/lucid/services/db')
+
+    await db.transaction(async (trx) => {
+      await callback(trx)
+
+      await WebhookEvent.create(
+        {
+          eventId: event.id,
+          eventPayload: event as unknown as Record<string, unknown>,
+        },
+        { client: trx }
+      )
+    })
+    return true
   }
 
-  public get calculateTaxes(): boolean {
-    return this.config.calculateTaxes
-  }
-
-  public get currency(): string {
-    return this.#config.currency
+  public registerWebhookListeners() {
+    this.#emitter.on('stripe:customer.subscription.created', [
+      CustomerSubscriptionCreatedListener,
+      'handle',
+    ])
+    this.#emitter.on('stripe:customer.subscription.deleted', [
+      CustomerSubscriptionDeletedListener,
+      'handle',
+    ])
+    this.#emitter.on('stripe:customer.subscription.updated', [
+      CustomerSubscriptionUpdatedListener,
+      'handle',
+    ])
   }
 }

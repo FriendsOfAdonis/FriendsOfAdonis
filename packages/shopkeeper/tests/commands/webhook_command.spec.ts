@@ -5,7 +5,8 @@ import { createApp } from '../app.js'
 
 test.group('WebhookCommand', () => {
   test('webhook cannot be created without url', async () => {
-    const { ace } = await createApp()
+    const { app, ace } = await createApp()
+    app.config.set('app.appUrl', undefined)
     const command = await ace.create(WebhookCommand, [])
     ace.ui.switchMode('raw')
     await command.exec()

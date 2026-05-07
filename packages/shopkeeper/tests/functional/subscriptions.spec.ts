@@ -158,7 +158,7 @@ test.group('Subscriptions', (group) => {
     const subscription = await user.subscription('main')
 
     await subscription?.swap([otherPrice.id], {
-      coupon: coupon.id,
+      discounts: [{ coupon: coupon.id }],
     })
 
     const couponId = await subscription?.discount().then((c) => c?.coupon().asStripeCoupon().id)
@@ -469,7 +469,7 @@ test.group('Subscriptions', (group) => {
     assert.isFalse(subscription.ended())
 
     const invoice = await subscription.invoices().then((i) => i[0])
-    const period = await invoice.invoiceItems().then((i) => i[0].period)
+    const period = await invoice.invoiceLineItems().then((i) => i[0].period)
 
     assert.equal(DateTime.fromSeconds(period.start).toISODate(), DateTime.now().toISODate())
     assert.equal(
@@ -584,26 +584,23 @@ test.group('Subscriptions', (group) => {
       .newSubscription('main', [premiumPrice.id])
       .create('pm_card_visa')
     const invoice = await user.invoices().then((i) => i[0])
-    const stripeInvoice = invoice.asStripeInvoice() as Stripe.Invoice
+    const stripeInvoice = invoice.asStripeInvoice()
 
     assert.equal(invoice.rawTotal(), 2000)
 
     await subscription.noProrate().swap(price.id)
 
     // Assert that no new invoice was created because of no prorating.
-    assert.equal(
-      await user.invoices().then((i) => (i[0].asStripeInvoice() as Stripe.Invoice).id),
-      stripeInvoice.id
-    )
+    assert.equal(await user.invoices().then((i) => i[0].asStripeInvoice().id), stripeInvoice.id)
     assert.equal(await user.upcomingInvoice().then((i) => i?.rawTotal()), 1000)
 
     await subscription.swapAndInvoice([premiumPrice.id])
 
-    assert.notEqual(
-      await user.invoices().then((i) => (i[0].asStripeInvoice() as Stripe.Invoice).id),
-      stripeInvoice.id
-    )
-    assert.equal(await user.invoices().then((i) => i[0].rawTotal()), 1000)
+    assert.notEqual(await user.invoices().then((i) => i[0].asStripeInvoice().id), stripeInvoice.id)
+    // In Stripe v20, proration is based on what was actually billed for the current
+    // period. Since the customer was already billed 2000 (premiumPrice) and we're
+    // switching back to premiumPrice, the net proration is 0.
+    assert.equal(await user.invoices().then((i) => i[0].rawTotal()), 0)
     assert.equal(await user.upcomingInvoice().then((i) => i?.rawTotal()), 2000)
 
     await subscription.prorate().swap(price.id)

@@ -47,23 +47,26 @@ test.group('Discount', (group) => {
     })
 
     promotionCode = await shopkeeper.stripe.promotionCodes.create({
-      coupon: coupon2.id,
+      promotion: { type: 'coupon', coupon: coupon2.id },
       code,
     })
   })
 
-  test('applying discounts to existing customers', async ({ assert }) => {
+  test('applying discounts to customer subscriptions', async ({ assert }) => {
     const user = await createCustomer('applying_coupons_to_existing_customers')
 
-    await user.newSubscription('main', [price.id]).create('pm_card_visa')
+    const subscription = await user.newSubscription('main', [price.id]).create('pm_card_visa')
 
     await user.applyCoupon(coupon.id)
 
-    assert.equal(await user.discount().then((d) => d?.coupon().asStripeCoupon().id), coupon.id)
+    assert.equal(
+      await subscription.discount().then((d) => d?.coupon().asStripeCoupon().id),
+      coupon.id
+    )
 
     await user.applyPromotionCode(promotionCode.id)
 
-    const discount = await user.discount()
+    const discount = await subscription.discount()
 
     assert.equal(discount?.coupon()?.asStripeCoupon().id, coupon2.id)
     assert.equal(discount?.promotionCode()?.asStripePromotionCode().id, promotionCode.id)
@@ -102,7 +105,7 @@ test.group('Discount', (group) => {
 
     const inactivePromotionCode = await shopkeeper.stripe.promotionCodes.create({
       active: false,
-      coupon: coupon.id,
+      promotion: { type: 'coupon', coupon: coupon.id },
       code: 'NEWYEAR',
     })
 

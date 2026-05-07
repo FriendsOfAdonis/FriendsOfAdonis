@@ -1,5 +1,4 @@
-import type Stripe from 'stripe'
-import shopkeeper from '../services/shopkeeper.js'
+import { Shopkeeper } from './shopkeeper.js'
 
 export class Tax {
   /**
@@ -13,14 +12,14 @@ export class Tax {
   #currency: string
 
   /**
-   * The Stripe TaxRate object.
+   * The Stripe TaxRate ID.
    */
-  #taxRate: Stripe.TaxRate
+  #taxRateId: string | null
 
-  constructor(amount: number, currency: string, taxRate: Stripe.TaxRate) {
+  constructor(amount: number, currency: string, taxRateId: string | null) {
     this.#amount = amount
     this.#currency = currency
-    this.#taxRate = taxRate
+    this.#taxRateId = taxRateId
   }
 
   /**
@@ -48,17 +47,13 @@ export class Tax {
    * Format the given amount into a displayable currency.
    */
   formatAmount(amount: number): string {
-    return shopkeeper.formatAmount(amount, this.#currency)
+    return Shopkeeper.$instance.formatAmount(amount, this.#currency)
   }
 
   /**
-   * Determine if the tax is inclusive or not.
+   * Get the tax rate ID.
    */
-  isInclusive(): boolean {
-    return this.#taxRate.inclusive
-  }
-
-  taxRate(): Stripe.TaxRate {
-    return this.#taxRate
+  taxRateId(): string | null {
+    return this.#taxRateId
   }
 }

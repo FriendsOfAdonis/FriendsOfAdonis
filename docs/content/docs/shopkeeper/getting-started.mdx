@@ -1,11 +1,13 @@
 ---
-title: 'Getting Started'
+title: Getting Started
 icon: Rocket
 ---
 
+This guide walks you through installing Shopkeeper, configuring your application, and accepting your first payment.
+
 ## Installation
 
-Install and configure the package using the following command :
+Install and configure the package using the following command:
 
 ```sh
 node ace add @foadonis/shopkeeper
@@ -15,51 +17,51 @@ node ace add @foadonis/shopkeeper
 
 ### Migrations
 
-Shopkeeper comes with a set of migrations to add serveral columns to your `users` table, a new `subscriptions` table to hold all of your customer's subscriptions and a `subscription_items` table for subscriptions with multiple prices.
+Shopkeeper ships with a set of database migrations that:
 
-You can run the migration with:
+- Add billing columns (`stripe_id`, `trial_ends_at`, etc.) to your `users` table
+- Create a `subscriptions` table to track your customers' subscriptions
+- Create a `subscription_items` table for subscriptions with multiple prices
+- Create a `stripe_webhook_events` table for idempotent webhook handling
+
+Run the migrations with:
 
 ```sh
 node ace migration:run
 ```
 
-Lastly, to ensure Shopkeeper properly handles all Stripe events, remember to [configure Shopkeeper's webhook handling](./webhooks).
-
 ## Configuration
 
-### Billable Model
+### Billable model
 
-Before using Shopkeeper, add the `Billable` mixin to your billable model definition. Typically, this will be the `User` model. This trait provides various methods to allow you to perform common billing tasks, such as creating subscriptions, applying coupons, and updating payment method information:
+Before using Shopkeeper, add the `billable()` mixin to your model. This is typically the `User` model. The mixin provides methods for common billing tasks like creating subscriptions, managing payment methods, and more.
 
 ```ts title="app/models/user.ts"
 import { compose } from '@adonisjs/core/helpers'
 import { BaseModel } from '@adonisjs/lucid/orm'
-import { Billable } from '@foadonis/shopkeeper/mixins'
+import { billable } from '@foadonis/shopkeeper/mixins'
 
-export default class User extends compose(BaseModel, Billable) {}
+export default class User extends compose(BaseModel, billable()) {}
 ```
 
-In your Shopkeeper configuration file, define your User as the Customer model:
+Then, define your model as the customer model in the Shopkeeper configuration:
 
-```ts
-// title: config/shopkeeper.ts
+```ts title="config/shopkeeper.ts"
 import { defineConfig } from '@foadonis/shopkeeper'
 
 export default defineConfig({
-  customerModel: () => import('#models/user')
-  ...
+  customerModel: () => import('#models/user'),
+  // ...
 })
 ```
 
 <Callout>
-
-When using a model with a different name than `User`, make sure to change the table name in the generated migration.
-
+If you use a model with a different name than `User`, make sure to update the table name in the generated migration accordingly.
 </Callout>
 
-### API Keys
+### API keys
 
-Next, you should configure your Stripe API keys in your application's `.env` file. You can retrieve your Stripe API keys from the [Stripe control panel](https://dashboard.stripe.com/test/developers):
+Configure your Stripe API keys in your application's `.env` file. You can find your keys in the [Stripe dashboard](https://dashboard.stripe.com/test/developers).
 
 ```ini title=".env"
 STRIPE_KEY=your-stripe-key
@@ -68,68 +70,104 @@ STRIPE_WEBHOOK_SECRET=your-stripe-webhook-secret
 ```
 
 <Callout type="warn">
-
-In production environment the `STRIPE_WEBHOOK_SECRET` environment variable is mandatory as it secures the Stripe webhook endpoint.
-
+The `STRIPE_WEBHOOK_SECRET` environment variable is mandatory in production. It secures the Stripe webhook endpoint and ensures incoming events are authentic.
 </Callout>
 
-## Your first Checkout
+### Webhooks
 
-The easiest way to get started with Stripe is by using the [https://stripe.com/payments/checkout](Stripe Checkout) feature.
+Register the Shopkeeper webhook route and listeners in your application:
+
+```ts title="start/routes.ts"
+import shopkeeper from '@foadonis/shopkeeper/services/shopkeeper'
+
+shopkeeper.registerRoutes()
+```
+
+```ts title="start/events.ts"
+import shopkeeper from '@foadonis/shopkeeper/services/shopkeeper'
+
+shopkeeper.registerWebhookListeners()
+```
+
+Then, use the `shopkeeper:webhook` Ace command to create the webhook in Stripe with all the required events:
+
+```sh
+node ace shopkeeper:webhook
+```
+
+To learn more about webhook configuration and handling custom events, see the [Handling Webhooks](/docs/shopkeeper/handling-webhooks) guide.
+
+## Your first checkout
+
+Let's accept your first payment using [Stripe Checkout](https://stripe.com/payments/checkout), a hosted payment page provided by Stripe.
 
 ### Create a price
 
-To start selling you must create a new price in Stripe. want to try the implementation
+First, create a price for your product in Stripe. You can do this from the [Stripe dashboard](https://dashboard.stripe.com/test/prices) or using the [Stripe CLI](https://docs.stripe.com/stripe-cli):
 
-If you have the [Stripe CLI](https://docs.stripe.com/stripe-cli) you can simply run the following command.
-
-````bash
-stripe prices create  \
+```sh
+stripe prices create \
   --currency=usd \
   --unit-amount=1000 \
-  -d "recurring[interval]"=month \
-  -d "product_data[name]"="Gold Plan"```
-````
+  -d "recurring[interval]=month" \
+  -d "product_data[name]=Gold Plan"
+```
 
-### Redirect to the Checkout
+This creates a recurring price of $10/month. Take note of the price ID (e.g., `price_xxxxxxx`) returned by Stripe.
 
-Let's now create a route to redirect our user to the Stripe Checkout page for the price we just created.
+### Redirect to checkout
+
+Create a route that redirects your user to the Stripe Checkout page:
 
 ```ts title="start/routes.ts"
-router.get('/checkout', ({ auth }) => {
-  const user = await auth.getUserOrFail()
-  const checkout = await user.checkout('price_xxxxxxx')
+import router from '@adonisjs/core/services/router'
+import { urlFor } from '@adonisjs/core/services/url_builder'
 
-  response.redirect(303).toPath(checkout.session.url)
+router.get('/checkout', async ({ auth, response }) => {
+  const user = auth.getUserOrFail()
+
+  const checkout = await user
+    .newSubscription('default', 'price_xxxxxxx')
+    .checkout({
+      success_url: urlFor('checkout.success'),
+      cancel_url: urlFor('checkout.cancel'),
+    })
+
+  return response.redirect().status(303).toPath(checkout.asStripeSession().url)
 })
 ```
 
-### Handle redirect
+### Handle the redirect
 
-When a customer visits this route they will be redirected to Stripe's Checkout page. By default, when a user successfully completes or cancels a purchase they will be redirected to your `home` route location, but you may specify custom callback URLs using the `success_url` and `cancel_url` options:
+When a customer completes or cancels their purchase, Stripe redirects them back to your application. Create routes to handle both cases:
 
-```ts
-router.get('/', async ({ auth, response }) => {
-  const user = auth.getUserOrFail()
-  const checkout = await user.checkout('price_xxxxxxx', {
-    success_url: route('checkout.success'),
-    cancel_url: route('checkout.cancel'),
-  })
-
-  response.redirect().status(303).toPath(checkout.session.url)
-})
-
+```ts title="start/routes.ts"
 router
-  .get('/success', async ({ view }) => {
+  .get('/checkout/success', async ({ view }) => {
     return view.render('checkout/success')
   })
   .as('checkout.success')
 
 router
-  .get('/cancel', async ({ view }) => {
+  .get('/checkout/cancel', async ({ view }) => {
     return view.render('checkout/cancel')
   })
   .as('checkout.cancel')
 ```
 
-Congratulation, you can now accept money and get your first customers!
+That's it! Visit `/checkout` in your browser and you should be redirected to Stripe's payment page. After completing the payment, Stripe will redirect back to your success page.
+
+<Callout>
+Stripe and Shopkeeper update subscription statuses via webhooks. There may be a short delay before the subscription is active in your database after the customer completes their payment.
+</Callout>
+
+## What's next?
+
+Now that you have a working checkout, explore the guides to build on top of it:
+
+- [Accepting Payments](/docs/shopkeeper/accepting-payments): Learn about the different ways to collect payments
+- [Managing Subscriptions](/docs/shopkeeper/managing-subscriptions): Change plans, cancel, resume, and more
+- [Managing Customers](/docs/shopkeeper/managing-customers): Customer management, billing portal, and tax IDs
+- [Offering Trials](/docs/shopkeeper/offering-trials): Give your customers a free trial period
+- [Handling Webhooks](/docs/shopkeeper/handling-webhooks): React to Stripe events in your application
+- [Invoices & Receipts](/docs/shopkeeper/invoices-and-receipts): Show billing history to your customers

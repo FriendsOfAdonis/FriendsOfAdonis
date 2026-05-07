@@ -1,0 +1,116 @@
+---
+title: Metered Billing
+icon: ChartBar
+---
+
+[Metered billing](https://stripe.com/docs/billing/subscriptions/usage-based) lets you charge customers based on how much they use your product during a billing cycle, rather than a fixed price. For example, you might charge per API call, per email sent, or per GB of storage used.
+
+## Setting up a metered subscription
+
+First, create a product with a metered price in your [Stripe dashboard](https://dashboard.stripe.com/products). The price must be linked to a [Billing Meter](https://stripe.com/docs/billing/subscriptions/usage-based/recording-usage#billing-meter) that tracks the usage events.
+
+Then, create a subscription using `meteredPrice`:
+
+```ts title="start/routes.ts"
+router.get('/subscribe', async ({ auth, request }) => {
+  const user = auth.getUserOrFail()
+  const paymentMethodId = request.input('paymentMethodId')
+
+  await user
+    .newSubscription('default')
+    .meteredPrice('price_metered')
+    .create(paymentMethodId)
+})
+```
+
+You can also start a metered subscription via Stripe Checkout:
+
+```ts
+const checkout = await user
+  .newSubscription('default')
+  .meteredPrice('price_metered')
+  .checkout({
+    success_url: urlFor('checkout.success'),
+    cancel_url: urlFor('checkout.cancel'),
+  })
+```
+
+## Reporting usage
+
+As your customers use your product, report their usage to Stripe. You can use the `reportUsage` method on a subscription:
+
+```ts
+const subscription = await user.subscription('default')
+
+// Report a single unit of usage
+await subscription.reportUsage('api_calls')
+
+// Report a larger quantity
+await subscription.reportUsage('api_calls', '150')
+```
+
+If the subscription has multiple metered prices, specify which one:
+
+```ts
+await subscription.reportUsageFor('price_metered', 'api_calls', '150')
+```
+
+You can also use the Stripe SDK directly for more control:
+
+```ts
+import shopkeeper from '@foadonis/shopkeeper/services/shopkeeper'
+
+const stripe = shopkeeper.stripe
+
+await stripe.billing.meterEvents.create({
+  event_name: 'api_calls',
+  payload: {
+    stripe_customer_id: user.stripeId,
+    value: '150',
+  },
+})
+```
+
+<Callout>
+The `event_name` must match the Billing Meter you created in the Stripe dashboard. The `value` is always a string.
+</Callout>
+
+## Retrieving usage records
+
+To view a customer's past usage for a subscription:
+
+```ts
+const subscription = await user.subscription('default')
+const usageRecords = await subscription.usageRecords(meterId, {
+  start_time: startTimestamp,
+  end_time: endTimestamp,
+})
+```
+
+If the subscription has multiple metered prices, specify which one:
+
+```ts
+const usageRecords = await subscription.usageRecordsFor('price_metered', meterId, {
+  start_time: startTimestamp,
+  end_time: endTimestamp,
+})
+```
+
+You can display usage records in a template:
+
+```edge
+@each(record in usageRecords)
+  <p>
+    Period: {{ record.period.start }} - {{ record.period.end }}
+    Usage: {{ record.total_usage }}
+  </p>
+@end
+```
+
+For pagination and the full usage record API, see the [Stripe usage records documentation](https://stripe.com/docs/api/usage_records/subscription_item_summary_list).
+
+## Going further
+
+- [Managing Subscriptions](/docs/shopkeeper/managing-subscriptions): Subscription lifecycle management
+- [Stripe Usage-Based Billing documentation](https://stripe.com/docs/billing/subscriptions/usage-based): Stripe's complete guide to metered billing
+- [Stripe Billing Meters documentation](https://stripe.com/docs/billing/subscriptions/usage-based/recording-usage#billing-meter): Setting up and managing meters

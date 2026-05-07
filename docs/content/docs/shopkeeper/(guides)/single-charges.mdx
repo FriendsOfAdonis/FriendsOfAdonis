@@ -1,0 +1,125 @@
+---
+title: Single Charges
+icon: CircleDollarSign
+---
+
+Beyond subscriptions, Shopkeeper lets you make one-off charges, create invoices for individual items, and issue refunds. This guide covers all the ways to charge customers outside of a subscription.
+
+## Simple charge
+
+To make a one-off charge against a customer's payment method:
+
+```ts
+router.post('/purchase', async ({ auth, request }) => {
+  const user = auth.getUserOrFail()
+  const paymentMethodId = request.input('paymentMethodId')
+
+  const payment = await user.charge(100, paymentMethodId)
+})
+```
+
+<Callout type="warn">
+The `charge` method accepts amounts in the smallest currency unit. For example, $10.00 USD is `1000` (cents).
+</Callout>
+
+You can pass additional [Stripe charge options](https://stripe.com/docs/api/charges/create) as a third argument:
+
+```ts
+await user.charge(100, paymentMethodId, {
+  description: 'One-time setup fee',
+  metadata: { order_id: '12345' },
+})
+```
+
+The `charge` method returns a Shopkeeper `Payment` instance on success, or throws an exception if the charge fails:
+
+```ts
+try {
+  const payment = await user.charge(100, paymentMethodId)
+} catch (error) {
+  // Handle the failed charge
+}
+```
+
+You can also charge without an existing customer by using a new model instance:
+
+```ts
+const payment = await new User().charge(100, paymentMethodId)
+```
+
+## Charge with invoice
+
+To generate an invoice for a one-off charge, use the invoice builder. This charges the customer's default payment method and creates a downloadable invoice:
+
+```ts
+// Invoice for 5 t-shirts
+await user.invoice().addPrice('price_tshirt', 5).charge()
+```
+
+You can customize the invoice with the builder's fluent API:
+
+```ts
+await user
+  .invoice()
+  .addPrice('price_tshirt', 5)
+  .addPrice('price_mug', 2)
+  .description('Order #12345')
+  .charge()
+```
+
+For ad-hoc amounts without a pre-defined Stripe price, use `addItem`:
+
+```ts
+await user.invoice().addItem('One Time Fee', 500).charge()
+```
+
+<Callout>
+Using `addPrice` with pre-defined prices is recommended over `addItem`, as it gives you better analytics in the Stripe dashboard.
+</Callout>
+
+The invoice builder also supports `draft()` to keep invoices as drafts, `send()` to email invoices to the customer, `daysUntilDue()`, `withMetadata()`, and `currency()`.
+
+## Payment intents
+
+For more control over the payment flow, you can create a [payment intent](https://stripe.com/docs/payments/payment-intents) directly:
+
+```ts
+router.post('/pay', async ({ auth, request }) => {
+  const user = auth.getUserOrFail()
+  const payment = await user.pay(request.input('amount'))
+
+  return payment.clientSecret()
+})
+```
+
+The client secret is returned to your frontend, where the customer completes the payment using [Stripe.js](https://stripe.com/docs/payments/accept-a-payment?platform=web).
+
+To restrict which payment methods are available:
+
+```ts
+const payment = await user.payWith(1000, ['card', 'bancontact'])
+
+return payment.clientSecret()
+```
+
+<Callout type="warn">
+The `pay` and `payWith` methods accept amounts in the smallest currency unit (e.g., cents for USD).
+</Callout>
+
+## Refunds
+
+To refund a charge, use the `refund` method with the payment intent ID:
+
+```ts
+const payment = await user.charge(1000, paymentMethodId)
+
+// Full refund
+await user.refund(payment.id)
+```
+
+## Going further
+
+- [Accepting Payments](/docs/shopkeeper/accepting-payments): Checkout-based payment flows
+- [Managing Payment Methods](/docs/shopkeeper/managing-payment-methods): Storing and retrieving payment methods
+- [Invoices & Receipts](/docs/shopkeeper/invoices-and-receipts): Listing and displaying invoices
+- [Stripe Payment Intents documentation](https://stripe.com/docs/payments/payment-intents): Stripe's guide to payment intents

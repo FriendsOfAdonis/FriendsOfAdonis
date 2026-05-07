@@ -2,20 +2,21 @@ import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import Subscription from './subscription.js'
 import { compose } from '@adonisjs/core/helpers'
-import { HandlesPaymentFailures } from '../mixins/handles_payment_failures.js'
-import { InteractWithPaymentBehavior } from '../mixins/interacts_with_payment_behavior.js'
-import { Prorates } from '../mixins/prorates.js'
+import { handlesPaymentFailures } from '../mixins/handles_payment_failures.js'
+import { interactWithPaymentBehavior } from '../mixins/interacts_with_payment_behavior.js'
+import { prorates } from '../mixins/prorates.js'
 import Stripe from 'stripe'
-import { ManagesStripe } from '../mixins/manages_stripe.js'
+import { managesStripe } from '../mixins/manages_stripe.js'
 import { DateTime } from 'luxon'
+import { Shopkeeper } from '../shopkeeper.js'
 import shopkeeper from '../../services/shopkeeper.js'
 
 export default class SubscriptionItem extends compose(
   BaseModel,
-  ManagesStripe(false),
-  HandlesPaymentFailures,
-  InteractWithPaymentBehavior,
-  Prorates
+  managesStripe(false),
+  handlesPaymentFailures(),
+  interactWithPaymentBehavior(),
+  prorates()
 ) {
   @column({ isPrimary: true })
   declare id: number
@@ -60,7 +61,9 @@ export default class SubscriptionItem extends compose(
    * Decrement the quantity of the subscription item.
    */
   decrementQuantity(count = 1): Promise<this> {
-    // TODO: Handle error -1
+    if ((this.quantity ?? 0) - count < 0) {
+      throw new Error('Quantity cannot be negative')
+    }
     return this.updateQuantity((this.quantity ?? 0) - count)
   }
 
@@ -114,7 +117,10 @@ export default class SubscriptionItem extends compose(
       ...params,
     })
 
-    this.stripeProduct = stripeSubscriptionItem.price.product as string
+    this.stripeProduct =
+      typeof stripeSubscriptionItem.price.product === 'string'
+        ? stripeSubscriptionItem.price.product
+        : stripeSubscriptionItem.price.product.id
     this.stripePrice = stripeSubscriptionItem.price.id
     this.quantity = stripeSubscriptionItem.quantity ?? null
 
@@ -145,43 +151,66 @@ export default class SubscriptionItem extends compose(
   }
 
   /**
-   * Report usage for a metered product.
+   * Report a meter event for a metered product.
    */
-  reportUsage(quantity = 1, date?: DateTime | number): Promise<Stripe.UsageRecord> {
-    const timestamp = date instanceof DateTime ? date.toUnixInteger() : date
-    return this.stripe.subscriptionItems.createUsageRecord(this.stripeId, {
-      quantity,
-      action: date ? 'set' : 'increment',
-      timestamp: timestamp ?? DateTime.now().toUnixInteger(),
+  async reportUsage(
+    this: SubscriptionItem,
+    eventName: string,
+    value = '1',
+    params: Partial<Stripe.Billing.MeterEventCreateParams> = {}
+  ): Promise<Stripe.Billing.MeterEvent> {
+    await this.load('subscription')
+    await this.subscription.load('user')
+
+    const customerId = this.subscription.user.stripeIdOrFail()
+
+    const stripe = Shopkeeper.$instance.stripe
+    return stripe.billing.meterEvents.create({
+      event_name: eventName,
+      payload: {
+        stripe_customer_id: customerId,
+        value,
+      },
+      ...params,
     })
   }
 
   /**
-   * Get the usage records for a metered product.
+   * Get the meter event summaries for a metered product.
    */
   async usageRecords(
-    params: Stripe.SubscriptionItemListUsageRecordSummariesParams = {}
-  ): Promise<Stripe.UsageRecordSummary[]> {
-    const response = await this.stripe.subscriptionItems.listUsageRecordSummaries(
-      this.stripeId,
-      params
-    )
+    this: SubscriptionItem,
+    meterId: string,
+    params: Omit<Stripe.Billing.MeterListEventSummariesParams, 'customer'>
+  ): Promise<Stripe.Billing.MeterEventSummary[]> {
+    await this.load('subscription')
+    await this.subscription.load('user')
+
+    const customerId = this.subscription.user.stripeIdOrFail()
+
+    const stripe = Shopkeeper.$instance.stripe
+    const response = await stripe.billing.meters.listEventSummaries(meterId, {
+      customer: customerId,
+      ...params,
+    })
     return response.data
   }
 
   /**
    * Update the underlying Stripe subscription item information for the model.
    */
-  updateStripeSubscriptionItem(
+  async updateStripeSubscriptionItem(
     params: Stripe.SubscriptionItemUpdateParams = {}
   ): Promise<Stripe.SubscriptionItem> {
-    return this.stripe.subscriptionItems.update(this.stripeId, params)
+    const stripe = Shopkeeper.$instance.stripe
+    return stripe.subscriptionItems.update(this.stripeId, params)
   }
 
   /**
    * Get the subscription as a Stripe subscription item object.
    */
-  asStripeSubscriptionItem(expand: string[] = []): Promise<Stripe.SubscriptionItem> {
-    return this.stripe.subscriptionItems.retrieve(this.stripeId, { expand })
+  async asStripeSubscriptionItem(expand: string[] = []): Promise<Stripe.SubscriptionItem> {
+    const stripe = Shopkeeper.$instance.stripe
+    return stripe.subscriptionItems.retrieve(this.stripeId, { expand })
   }
 }

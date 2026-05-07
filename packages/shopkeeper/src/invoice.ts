@@ -1,22 +1,22 @@
 import type Stripe from 'stripe'
-import { type WithManagesInvoices } from './mixins/manages_invoices.js'
+import { type ManagesInvoicesContract } from './contracts.js'
 import { Tax } from './tax.js'
 import { Discount } from './discount.js'
 import { InvalidInvoiceError } from './errors/invalid_invoice.js'
 import { DateTime, type Zone } from 'luxon'
-import shopkeeper from '../services/shopkeeper.js'
+import { Shopkeeper } from './shopkeeper.js'
 import { InvoiceLineItem } from './invoice_line_item.js'
 
 export class Invoice {
   /**
    * The Stripe model instance.
    */
-  #owner: WithManagesInvoices['prototype']
+  #owner: ManagesInvoicesContract
 
   /**
    * The Stripe invoice instance.
    */
-  #invoice: Stripe.Invoice | Stripe.UpcomingInvoice
+  #invoice: Stripe.Invoice
 
   /**
    * The Stripe invoice line items.
@@ -38,10 +38,7 @@ export class Invoice {
    */
   #refreshed = false
 
-  constructor(
-    owner: WithManagesInvoices['prototype'],
-    invoice: Stripe.Invoice | Stripe.UpcomingInvoice
-  ) {
+  constructor(owner: ManagesInvoicesContract, invoice: Stripe.Invoice) {
     if (owner.stripeId !== invoice.customer) {
       throw InvalidInvoiceError.invalidOwner(invoice, owner)
     }
@@ -196,7 +193,12 @@ export class Invoice {
 
     await this.refreshWithExpandedData()
 
-    return this.#invoice.discounts.map((discount) => new Discount(discount as Stripe.Discount))
+    return this.#invoice.discounts
+      .filter(
+        (d): d is Stripe.Discount =>
+          typeof d === 'object' && d !== null && !('deleted' in d && d.deleted)
+      )
+      .map((discount) => new Discount(discount))
   }
 
   /**
@@ -244,7 +246,8 @@ export class Invoice {
    * Get the total tax amount.
    */
   tax(): string {
-    return this.formatAmount(this.#invoice.tax ?? 0)
+    const totalTax = (this.#invoice.total_taxes ?? []).reduce((sum, t) => sum + t.amount, 0)
+    return this.formatAmount(totalTax)
   }
 
   /**
@@ -268,10 +271,10 @@ export class Invoice {
 
     await this.refreshWithExpandedData()
 
-    this.#taxes = this.#invoice.total_tax_amounts.map(
-      (taxAmount) =>
-        new Tax(taxAmount.amount, this.#invoice.currency, taxAmount.tax_rate as Stripe.TaxRate)
-    )
+    this.#taxes = (this.#invoice.total_taxes ?? []).map((totalTax) => {
+      const taxRateId = totalTax.tax_rate_details?.tax_rate
+      return new Tax(totalTax.amount, this.#invoice.currency, taxRateId ?? null)
+    })
 
     return this.#taxes
   }
@@ -316,7 +319,7 @@ export class Invoice {
    */
   async invoiceItems(): Promise<InvoiceLineItem[]> {
     const lines = await this.invoiceLineItems()
-    return lines.filter((l) => l.type === 'invoiceitem')
+    return lines.filter((l) => l.parent?.type === 'invoice_item_details')
   }
 
   /**
@@ -324,7 +327,7 @@ export class Invoice {
    */
   async subscriptions(): Promise<InvoiceLineItem[]> {
     const lines = await this.invoiceLineItems()
-    return lines.filter((l) => l.type === 'subscription')
+    return lines.filter((l) => l.parent?.type === 'subscription_item_details')
   }
 
   /**
@@ -337,13 +340,12 @@ export class Invoice {
 
     await this.refreshWithExpandedData()
 
+    const stripe = Shopkeeper.$instance.stripe
     const items = []
-    const lines =
-      'id' in this.#invoice
-        ? this.#owner.stripe.invoices.listLineItems(this.#invoice.id)
-        : this.#owner.stripe.invoices.listUpcomingLines()
 
-    for await (const line of lines) {
+    for await (const line of stripe.invoices.listLineItems(this.#invoice.id, {
+      expand: ['data.pricing.price_details.price'],
+    })) {
       items.push(new InvoiceLineItem(this, line))
     }
 
@@ -351,18 +353,58 @@ export class Invoice {
   }
 
   /**
-   * Add an invoice item to this invoice.
+   * Add a custom amount item to this invoice.
    */
-  async tab(
+  async addItem(
     description: string,
     amount: number,
-    params: Partial<Stripe.InvoiceItemCreateParams> = {}
+    params: Partial<
+      Omit<Stripe.InvoiceItemCreateParams, 'price_data'> & {
+        price_data?: Omit<Stripe.InvoiceItemCreateParams.PriceData, 'currency'> & {
+          currency?: string
+        }
+      }
+    > = {}
   ): Promise<Stripe.InvoiceItem> {
-    if (!('id' in this.#invoice)) {
-      throw new Error() // TODO: Handle that
+    const stripe = Shopkeeper.$instance.stripe
+    const { price_data, ...restParams } = params
+
+    const options: Stripe.InvoiceItemCreateParams = {
+      customer: this.#owner.stripeIdOrFail(),
+      currency: this.#invoice.currency,
+      description,
+      invoice: this.#invoice.id,
+      ...restParams,
     }
 
-    const item = await this.#owner.tab(description, amount, {
+    if (price_data) {
+      options.price_data = {
+        unit_amount: amount,
+        currency: this.#invoice.currency,
+        ...price_data,
+      }
+    } else {
+      options.amount = amount
+    }
+
+    const item = await stripe.invoiceItems.create(options)
+    await this.refresh()
+    return item
+  }
+
+  /**
+   * Add a price-based item to this invoice.
+   */
+  async addPrice(
+    price: string,
+    quantity = 1,
+    params: Partial<Stripe.InvoiceItemCreateParams> = {}
+  ): Promise<Stripe.InvoiceItem> {
+    const stripe = Shopkeeper.$instance.stripe
+    const item = await stripe.invoiceItems.create({
+      customer: this.#owner.stripeIdOrFail(),
+      pricing: { price },
+      quantity,
       invoice: this.#invoice.id,
       ...params,
     })
@@ -372,30 +414,11 @@ export class Invoice {
   }
 
   /**
-   * Add an invoice item for a specific Price ID to this invoice.
-   */
-  async tabPrice(
-    price: string,
-    quantity = 1,
-    params: Partial<Stripe.InvoiceItemCreateParams>
-  ): Promise<Stripe.InvoiceItem> {
-    if (!('id' in this.#invoice)) {
-      throw new Error() // TODO: Handle that
-    }
-
-    const item = this.#owner.tabPrice(price, quantity, { invoice: this.#invoice.id, ...params })
-    await this.refresh()
-    return item
-  }
-
-  /**
    * Refresh the invoice.
    */
   async refresh(): Promise<void> {
-    this.#invoice =
-      'id' in this.#invoice
-        ? await this.#owner.stripe.invoices.retrieve(this.#invoice.id)
-        : await this.#owner.stripe.invoices.retrieveUpcoming()
+    const stripe = Shopkeeper.$instance.stripe
+    this.#invoice = await stripe.invoices.retrieve(this.#invoice.id)
   }
 
   /**
@@ -409,18 +432,14 @@ export class Invoice {
     const expand = [
       'account_tax_ids',
       'discounts',
-      'lines.data.tax_amounts.tax_rate',
+      'discounts.source.coupon',
       'total_discount_amounts.discount',
-      'total_tax_amounts.tax_rate',
     ]
 
-    if ('id' in this.#invoice) {
-      this.#invoice = await this.#owner.stripe.invoices.retrieve(this.#invoice.id, {
-        expand,
-      })
-    } else {
-      this.#invoice = await this.#owner.stripe.invoices.retrieveUpcoming({ expand })
-    }
+    const stripe = Shopkeeper.$instance.stripe
+    this.#invoice = await stripe.invoices.retrieve(this.#invoice.id, {
+      expand,
+    })
 
     this.#refreshed = true
   }
@@ -429,7 +448,7 @@ export class Invoice {
    * Format the given amount into a displayable currency.
    */
   formatAmount(amount: number): string {
-    return shopkeeper.formatAmount(amount, this.#invoice.currency)
+    return Shopkeeper.$instance.formatAmount(amount, this.#invoice.currency)
   }
 
   /**
@@ -450,66 +469,48 @@ export class Invoice {
    * Finalize the Stripe invoice.
    */
   async finalize(params: Stripe.InvoiceFinalizeInvoiceParams = {}): Promise<void> {
-    if (!('id' in this.#invoice)) {
-      throw new Error() // TODO: ERror
-    }
-
-    this.#invoice = await this.#owner.stripe.invoices.finalizeInvoice(this.#invoice.id, params)
+    const stripe = Shopkeeper.$instance.stripe
+    this.#invoice = await stripe.invoices.finalizeInvoice(this.#invoice.id, params)
   }
 
   /**
    * Pay the Stripe invoice.
    */
   async pay(params: Stripe.InvoicePayParams = {}): Promise<void> {
-    if (!('id' in this.#invoice)) {
-      throw new Error() // TODO: ERror
-    }
-
-    this.#invoice = await this.#owner.stripe.invoices.pay(this.#invoice.id, params)
+    const stripe = Shopkeeper.$instance.stripe
+    this.#invoice = await stripe.invoices.pay(this.#invoice.id, params)
   }
 
   /**
    * Send the Stripe invoice to the customer.
    */
   async send(params: Stripe.InvoiceSendInvoiceParams = {}): Promise<void> {
-    if (!('id' in this.#invoice)) {
-      throw new Error() // TODO: ERror
-    }
-
-    this.#invoice = await this.#owner.stripe.invoices.sendInvoice(this.#invoice.id, params)
+    const stripe = Shopkeeper.$instance.stripe
+    this.#invoice = await stripe.invoices.sendInvoice(this.#invoice.id, params)
   }
 
   /**
    * Void the Stripe invoice.
    */
   async void(params: Stripe.InvoiceVoidInvoiceParams = {}): Promise<void> {
-    if (!('id' in this.#invoice)) {
-      throw new Error() // TODO: ERror
-    }
-
-    this.#invoice = await this.#owner.stripe.invoices.voidInvoice(this.#invoice.id, params)
+    const stripe = Shopkeeper.$instance.stripe
+    this.#invoice = await stripe.invoices.voidInvoice(this.#invoice.id, params)
   }
 
   /**
    * Mark an invoice as uncollectible.
    */
   async markUncollectible(params: Stripe.InvoiceMarkUncollectibleParams = {}): Promise<void> {
-    if (!('id' in this.#invoice)) {
-      throw new Error() // TODO: ERror
-    }
-
-    this.#invoice = await this.#owner.stripe.invoices.markUncollectible(this.#invoice.id, params)
+    const stripe = Shopkeeper.$instance.stripe
+    this.#invoice = await stripe.invoices.markUncollectible(this.#invoice.id, params)
   }
 
   /**
    * Delete the Stripe invoice.
    */
   async delete(params: Stripe.InvoiceDeleteParams = {}): Promise<void> {
-    if (!('id' in this.#invoice)) {
-      throw new Error() // TODO: ERror
-    }
-
-    await this.#owner.stripe.invoices.del(this.#invoice.id, params)
+    const stripe = Shopkeeper.$instance.stripe
+    await stripe.invoices.del(this.#invoice.id, params)
   }
 
   /**
@@ -550,14 +551,14 @@ export class Invoice {
   /**
    * Get the Stripe model instance.
    */
-  owner(): WithManagesInvoices['prototype'] {
+  owner(): ManagesInvoicesContract {
     return this.#owner
   }
 
   /**
    * Get the Stripe invoice instance.
    */
-  asStripeInvoice(): Stripe.Invoice | Stripe.UpcomingInvoice {
+  asStripeInvoice(): Stripe.Invoice {
     return this.#invoice
   }
 }

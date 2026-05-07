@@ -1,0 +1,81 @@
+---
+title: Taxes
+icon: Landmark
+---
+
+Shopkeeper supports two approaches to handling taxes: automatic tax calculation with [Stripe Tax](https://stripe.com/tax), and manual tax rates that you define yourself.
+
+## Automatic taxes with Stripe Tax
+
+The simplest way to handle taxes is to let Stripe calculate them for you. Enable it in your Shopkeeper configuration:
+
+```ts title="config/shopkeeper.ts"
+import { defineConfig } from '@foadonis/shopkeeper'
+
+export default defineConfig({
+  calculateTaxes: true,
+  // ...
+})
+```
+
+With this enabled, Stripe automatically determines the correct tax rate based on the customer's location and applies it to subscriptions, invoices, and checkout sessions.
+
+<Callout type="warn">
+Stripe Tax must be activated on your Stripe account before using this feature. You also need to configure your [tax registrations](https://dashboard.stripe.com/tax/registrations) in the Stripe dashboard to tell Stripe which jurisdictions you collect tax in. See the [Stripe Tax documentation](https://stripe.com/docs/tax) for setup instructions.
+</Callout>
+
+## Manual tax rates
+
+If you prefer to manage tax rates yourself, define a `taxRates` method on your billable model. It should return an array of [Stripe tax rate IDs](https://dashboard.stripe.com/test/tax-rates):
+
+```ts title="app/models/user.ts"
+import { compose } from '@adonisjs/core/helpers'
+import { BaseModel } from '@adonisjs/lucid/orm'
+import { billable } from '@foadonis/shopkeeper/mixins'
+
+export default class User extends compose(BaseModel, billable()) {
+  taxRates(): string[] {
+    return ['txr_id']
+  }
+}
+```
+
+This applies the tax rate to all of the customer's subscriptions. If you need different rates per price (e.g., for subscriptions with multiple products), implement `priceTaxRates`:
+
+```ts title="app/models/user.ts"
+export default class User extends compose(BaseModel, billable()) {
+  priceTaxRates(): Record<string, string[]> {
+    return {
+      price_monthly: ['txr_id'],
+      price_addon: ['txr_id_2'],
+    }
+  }
+}
+```
+
+<Callout type="warn">
+The `taxRates` method only applies to subscription charges. For one-off charges, you need to specify tax rates manually when creating the invoice. See [Single Charges](/docs/shopkeeper/single-charges) for details.
+</Callout>
+
+## Tax exemptions
+
+Shopkeeper provides methods to check a customer's tax exemption status:
+
+```ts
+await user.isTaxExempt()
+await user.isNotTaxExempt()
+await user.reverseChargeApplies()
+```
+
+These methods call the Stripe API and return the customer's current tax exemption status.
+
+<Callout>
+These methods are also available on `Invoice` instances. When called on an invoice, they return the exemption status at the time the invoice was created.
+</Callout>
+
+## Going further
+
+- [Managing Subscriptions](/docs/shopkeeper/managing-subscriptions): Subscription management
+- [Accepting Payments](/docs/shopkeeper/accepting-payments): Collecting tax IDs during checkout
+- [Stripe Tax documentation](https://stripe.com/docs/tax): Stripe's complete guide to automatic tax calculation
+- [Stripe Tax Rates documentation](https://stripe.com/docs/billing/taxes/tax-rates): Stripe's guide to manual tax rates

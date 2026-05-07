@@ -1,29 +1,46 @@
 import { DateTime } from 'luxon'
 import type Stripe from 'stripe'
 import { Exception } from '@adonisjs/core/exceptions'
-import { Checkout } from './checkout.js'
-import type Subscription from './models/subscription.js'
+import { Checkout } from '../checkout.js'
+import { type CheckoutBuilder } from './checkout_builder.js'
+import type Subscription from '../models/subscription.js'
 import { compose } from '@adonisjs/core/helpers'
-import { HandlesTaxes } from './mixins/handles_taxes.js'
-import { Empty } from './types.js'
-import { type WithManagesSubscriptions } from './mixins/manages_subscriptions.js'
-import { AllowsCoupon } from './mixins/allows_coupons.js'
-import { HandlesPaymentFailures } from './mixins/handles_payment_failures.js'
-import { InteractWithPaymentBehavior } from './mixins/interacts_with_payment_behavior.js'
-import { Prorates } from './mixins/prorates.js'
+import { handlesTaxes } from '../mixins/handles_taxes.js'
+import { Empty } from '../types.js'
+import {
+  type ManagesCustomerContract,
+  type ManagesPaymentMethodsContract,
+  type ManagesSubscriptionsContract,
+} from '../contracts.js'
+import type { LucidRow } from '@adonisjs/lucid/types/model'
+import { allowsCoupon } from '../mixins/allows_coupons.js'
+import { handlesPaymentFailures } from '../mixins/handles_payment_failures.js'
+import { interactWithPaymentBehavior } from '../mixins/interacts_with_payment_behavior.js'
+import { prorates } from '../mixins/prorates.js'
+import { Shopkeeper } from '../shopkeeper.js'
 
-export class SubscriptionBuilder extends compose(
-  Empty,
-  AllowsCoupon,
-  HandlesPaymentFailures,
-  HandlesTaxes,
-  InteractWithPaymentBehavior,
-  Prorates
-) {
+interface SubscriptionBuilderOwner
+  extends
+    ManagesSubscriptionsContract,
+    ManagesCustomerContract,
+    ManagesPaymentMethodsContract,
+    LucidRow {}
+
+export class SubscriptionBuilder
+  extends compose(
+    Empty,
+    allowsCoupon(),
+    handlesPaymentFailures(),
+    handlesTaxes(),
+    interactWithPaymentBehavior(),
+    prorates()
+  )
+  implements PromiseLike<Subscription>
+{
   /**
    * The model that is subscribing.
    */
-  #owner: WithManagesSubscriptions['prototype']
+  #owner: SubscriptionBuilderOwner
 
   /**
    * The type of the subscription.
@@ -55,7 +72,7 @@ export class SubscriptionBuilder extends compose(
    */
   #metadata: Record<string, string> = {}
 
-  constructor(owner: WithManagesSubscriptions['prototype'], type: string, prices: string[]) {
+  constructor(owner: SubscriptionBuilderOwner, type: string, prices: string[]) {
     super()
     this.#owner = owner
     this.#type = type
@@ -186,7 +203,8 @@ export class SubscriptionBuilder extends compose(
 
     const stripeCustomer = await this.getStripeCustomer(paymentMethod, customerParams)
 
-    const stripeSuscription = await this.#owner.stripe.subscriptions.create({
+    const stripe = Shopkeeper.$instance.stripe
+    const stripeSuscription = await stripe.subscriptions.create({
       customer: stripeCustomer.id,
       ...this.buildPayload(),
       ...subscriptionParams,
@@ -243,7 +261,8 @@ export class SubscriptionBuilder extends compose(
     for (const item of stripeSubscription.items.data) {
       await subscription.related('items').create({
         stripeId: item.id,
-        stripeProduct: item.price.product as string,
+        stripeProduct:
+          typeof item.price.product === 'string' ? item.price.product : item.price.product.id,
         stripePrice: item.price.id,
         quantity: item.quantity,
       })
@@ -255,10 +274,10 @@ export class SubscriptionBuilder extends compose(
   /**
    * Begin a new Checkout Session.
    */
-  async checkout(
+  checkout(
     sessionParams: Stripe.Checkout.SessionCreateParams = {},
     customerParams: Stripe.CustomerCreateParams = {}
-  ): Promise<Checkout> {
+  ): CheckoutBuilder {
     if (this.#items.length <= 0) {
       throw new Exception('At least one price is required when starting subscriptions.')
     }
@@ -271,17 +290,45 @@ export class SubscriptionBuilder extends compose(
 
     const billingCycleAnchor = trialEnd ? this.#billingCycleAnchor : null
 
-    return Checkout.customer(this.#owner as any, this).create(
-      [],
-      {
-        // TODO: Avoid as any
-        line_items: this.#items as any,
+    const builder = Checkout.customer(this.#owner)
+
+    if (this.couponId) builder.withCoupon(this.couponId)
+    if (this.promotionCodeId) builder.withPromotionCode(this.promotionCodeId)
+    if (this.allowPromotionCodes) builder.withAllowPromotionsCodes()
+    if (this.customerIpAddress) builder.withTaxIpAddress(this.customerIpAddress)
+    if (this.estimationBillingAddress?.country) {
+      builder.withTaxAddress(
+        this.estimationBillingAddress.country,
+        this.estimationBillingAddress.postal_code ?? undefined,
+        this.estimationBillingAddress.state ?? undefined
+      )
+    }
+    if (this.collectTaxIds) builder.withTaxIdsCollect()
+
+    for (const item of this.#items) {
+      builder.addRawLineItem({
+        ...item,
+        tax_rates: Array.isArray(item.tax_rates) ? item.tax_rates : undefined,
+      })
+    }
+
+    return builder
+      .sessionParams({
         mode: 'subscription',
         subscription_data: {
           default_tax_rates: this.getTaxRatesForPayload() ?? undefined,
           trial_end: trialEnd?.toUnixInteger(),
           billing_cycle_anchor: billingCycleAnchor ?? undefined,
-          proration_behavior: billingCycleAnchor ? (this.prorateBehavior() as any) : undefined, // TODO: Avoid as
+          proration_behavior: billingCycleAnchor
+            ? (():
+                | Stripe.Checkout.SessionCreateParams.SubscriptionData.ProrationBehavior
+                | undefined => {
+                const behavior = this.prorateBehavior()
+                return behavior === 'create_prorations' || behavior === 'none'
+                  ? behavior
+                  : undefined
+              })()
+            : undefined,
           metadata: {
             ...this.#metadata,
             ...(this.#type && {
@@ -291,9 +338,8 @@ export class SubscriptionBuilder extends compose(
           },
         },
         ...sessionParams,
-      },
-      customerParams
-    )
+      })
+      .customerParams(customerParams)
   }
 
   /**
@@ -312,20 +358,25 @@ export class SubscriptionBuilder extends compose(
     return customer
   }
 
-  // TODO:
   /**
    * Build the payload for subscription creation.
    */
   buildPayload(): Partial<Stripe.SubscriptionCreateParams> {
+    const discounts: Stripe.SubscriptionCreateParams.Discount[] = []
+    if (this.couponId) {
+      discounts.push({ coupon: this.couponId })
+    }
+    if (this.promotionCodeId) {
+      discounts.push({ promotion_code: this.promotionCodeId })
+    }
+
     return {
       automatic_tax: this.automaticTaxPayload(),
       billing_cycle_anchor: this.#billingCycleAnchor,
-      coupon: this.couponId,
-      expand: ['latest_invoice.payment_intent'],
+      discounts: discounts.length > 0 ? discounts : undefined,
       metadata: this.#metadata,
       items: this.#items,
       payment_behavior: this.paymentBehavior(),
-      promotion_code: this.promotionCodeId,
       proration_behavior: this.prorateBehavior(),
       trial_end: this.getTrialEndForPayload(),
       off_session: true,
@@ -348,7 +399,6 @@ export class SubscriptionBuilder extends compose(
   /**
    * Get the price tax rates for the Stripe payload.
    */
-  // TODO: Type
   getTaxRatesForPayload(): string[] | null {
     return this.#owner.taxRates() ?? null
   }
@@ -365,5 +415,15 @@ export class SubscriptionBuilder extends compose(
    */
   getItems() {
     return this.#items
+  }
+
+  /**
+   * PromiseLike implementation — resolves by calling create() with no payment method.
+   */
+  then<TResult1 = Subscription, TResult2 = never>(
+    onfulfilled?: ((value: Subscription) => TResult1 | PromiseLike<TResult1>) | null,
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null
+  ): Promise<TResult1 | TResult2> {
+    return this.create().then(onfulfilled, onrejected)
   }
 }
