@@ -724,7 +724,10 @@ export default class Subscription extends compose(
   ): Promise<Invoice> {
     await this.load('user')
     try {
-      return await this.user.invoice().invoiceParams(params).charge()
+      return await this.user
+        .invoice()
+        .invoiceParams({ pending_invoice_items_behavior: 'include', ...params })
+        .charge()
     } catch (e) {
       if (e instanceof IncompletePaymentError) {
         const stripeSubscription = await this.asStripeSubscription()
