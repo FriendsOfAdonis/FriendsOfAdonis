@@ -84,19 +84,19 @@ import { urlFor } from '@adonisjs/core/services/url_builder'
 router.get('/subscribe', async ({ auth, response }) => {
   const user = auth.getUserOrFail()
 
-  const checkout = await user
-    .newSubscription('default', 'price_monthly')
-    .checkout({
-      success_url: urlFor('checkout.success'),
-      cancel_url: urlFor('checkout.cancel'),
-    })
+  const checkout = await user.newSubscription('default', 'price_monthly').checkout({
+    success_url: urlFor('checkout.success'),
+    cancel_url: urlFor('checkout.cancel'),
+  })
 
   return response.redirect().status(303).toPath(checkout.asStripeSession().url)
 })
 ```
 
 <Callout type="warn">
-Subscription checkout requires the `customer.subscription.created` webhook event to be enabled in your Stripe dashboard. This webhook creates the subscription record in your database. See [Handling Webhooks](/docs/shopkeeper/handling-webhooks) for setup instructions.
+  Subscription checkout requires the `customer.subscription.created` webhook event to be enabled in
+  your Stripe dashboard. This webhook creates the subscription record in your database. See
+  [Handling Webhooks](/docs/shopkeeper/handling-webhooks) for setup instructions.
 </Callout>
 
 ### Trial periods
@@ -113,9 +113,7 @@ const checkout = await user
   })
 ```
 
-<Callout type="warn">
-Stripe Checkout requires a minimum trial period of 48 hours.
-</Callout>
+<Callout type="warn">Stripe Checkout requires a minimum trial period of 48 hours.</Callout>
 
 To learn more about trials, see the [Offering Trials](/docs/shopkeeper/offering-trials) guide.
 
@@ -153,19 +151,19 @@ If you need to sell a product that doesn't exist in your Stripe dashboard, you c
 ```ts
 router.get('/buy-custom', async ({ auth, response }) => {
   const user = auth.getUserOrFail()
-  const checkout = await user
-    .checkoutCharge(1200, 'T-Shirt', 5)
-    .sessionParams({
-      success_url: urlFor('checkout.success'),
-      cancel_url: urlFor('checkout.cancel'),
-    })
+  const checkout = await user.checkoutCharge(1200, 'T-Shirt', 5).sessionParams({
+    success_url: urlFor('checkout.success'),
+    cancel_url: urlFor('checkout.cancel'),
+  })
 
   return response.redirect().status(303).toPath(checkout.asStripeSession().url)
 })
 ```
 
 <Callout type="warn">
-`checkoutCharge` creates a new product and price in your Stripe dashboard every time it is called. For products you sell regularly, create them in the [Stripe dashboard](https://dashboard.stripe.com/products) and use the `checkout` method instead.
+  `checkoutCharge` creates a new product and price in your Stripe dashboard every time it is called.
+  For products you sell regularly, create them in the [Stripe
+  dashboard](https://dashboard.stripe.com/products) and use the `checkout` method instead.
 </Callout>
 
 ## Collecting tax IDs
@@ -184,7 +182,8 @@ const checkout = await user
 ```
 
 <Callout>
-If you have [automatic tax collection](/docs/shopkeeper/taxes) enabled, the tax ID field is shown automatically.
+  If you have [automatic tax collection](/docs/shopkeeper/taxes) enabled, the tax ID field is shown
+  automatically.
 </Callout>
 
 ## Guest checkouts
@@ -220,7 +219,10 @@ const checkout = await Checkout.guest()
 ```
 
 <Callout>
-After a guest checkout completes, Stripe dispatches a `checkout.session.completed` webhook event. Make sure this event is enabled in your [Stripe webhook configuration](https://dashboard.stripe.com/webhooks) so you can fulfill the order. See [Handling Webhooks](/docs/shopkeeper/handling-webhooks) to learn how to listen to this event.
+  After a guest checkout completes, Stripe dispatches a `checkout.session.completed` webhook event.
+  Make sure this event is enabled in your [Stripe webhook
+  configuration](https://dashboard.stripe.com/webhooks) so you can fulfill the order. See [Handling
+  Webhooks](/docs/shopkeeper/handling-webhooks) to learn how to listen to this event.
 </Callout>
 
 ## Going further

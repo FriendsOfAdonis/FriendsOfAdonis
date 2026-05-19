@@ -95,12 +95,9 @@ Shopkeeper emits events using the naming convention `stripe:<eventType>`:
 import emitter from '@adonisjs/core/services/emitter'
 import type Stripe from 'stripe'
 
-emitter.on(
-  'stripe:checkout.session.completed',
-  (event: Stripe.CheckoutSessionCompletedEvent) => {
-    // Fulfill the order, send a confirmation email, etc.
-  }
-)
+emitter.on('stripe:checkout.session.completed', (event: Stripe.CheckoutSessionCompletedEvent) => {
+  // Fulfill the order, send a confirmation email, etc.
+})
 ```
 
 Events with the `:handled` suffix are emitted after all listeners have finished processing:
@@ -139,7 +136,8 @@ export default class MyWebhookListener {
 `webhookAudit` returns `false` if the event was already processed, and `true` if it was handled successfully.
 
 <Callout>
-The built-in subscription listeners do **not** use `webhookAudit` by default. You can wrap them or your own listeners as needed.
+  The built-in subscription listeners do **not** use `webhookAudit` by default. You can wrap them or
+  your own listeners as needed.
 </Callout>
 
 ## Webhook signature verification
@@ -147,7 +145,8 @@ The built-in subscription listeners do **not** use `webhookAudit` by default. Yo
 Shopkeeper automatically verifies the signature of incoming webhook requests to ensure they are authentic. This requires the `STRIPE_WEBHOOK_SECRET` environment variable to be set.
 
 <Callout type="warn">
-The `STRIPE_WEBHOOK_SECRET` is mandatory in production. Without it, your application cannot verify that incoming webhook requests are genuinely from Stripe.
+  The `STRIPE_WEBHOOK_SECRET` is mandatory in production. Without it, your application cannot verify
+  that incoming webhook requests are genuinely from Stripe.
 </Callout>
 
 ## Going further

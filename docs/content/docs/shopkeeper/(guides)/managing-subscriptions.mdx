@@ -83,9 +83,9 @@ if (subscription.onGracePeriod()) {
 Other useful status checks:
 
 ```ts
-subscription.recurring()    // Active and not on trial
-subscription.canceled()     // Has been cancelled
-subscription.ended()        // Cancelled and grace period has expired
+subscription.recurring() // Active and not on trial
+subscription.canceled() // Has been cancelled
+subscription.ended() // Cancelled and grace period has expired
 subscription.hasExpiredTrial() // Trial has expired
 ```
 
@@ -126,11 +126,11 @@ Some subscriptions are quantity-based (e.g., $10/month per seat). You can adjust
 ```ts
 const subscription = await user.subscription('default')
 
-await subscription.incrementQuantity()    // +1
-await subscription.incrementQuantity(5)   // +5
-await subscription.decrementQuantity()    // -1
-await subscription.decrementQuantity(3)   // -3
-await subscription.updateQuantity(10)     // Set to exactly 10
+await subscription.incrementQuantity() // +1
+await subscription.incrementQuantity(5) // +5
+await subscription.decrementQuantity() // -1
+await subscription.decrementQuantity(3) // -3
+await subscription.updateQuantity(10) // Set to exactly 10
 ```
 
 To update quantities without proration:
@@ -174,7 +174,7 @@ await subscription.cancelAt(DateTime.now().plus({ days: 14 }))
 ```
 
 <Callout type="warn">
-Always cancel a customer's subscriptions before deleting their account.
+  Always cancel a customer's subscriptions before deleting their account.
 </Callout>
 
 ## Resuming
@@ -217,7 +217,8 @@ export default defineConfig({
 ```
 
 <Callout type="warn">
-A subscription in `incomplete` state cannot be modified. Calling `swap` or `updateQuantity` will throw an exception until the payment is confirmed.
+  A subscription in `incomplete` state cannot be modified. Calling `swap` or `updateQuantity` will
+  throw an exception until the payment is confirmed.
 </Callout>
 
 ## Multiple subscriptions
@@ -246,9 +247,7 @@ Stripe supports [subscriptions with multiple products](https://stripe.com/docs/b
 Pass an array of prices when creating the subscription:
 
 ```ts
-await user
-  .newSubscription('default', ['price_helpdesk', 'price_chat'])
-  .create(paymentMethodId)
+await user.newSubscription('default', ['price_helpdesk', 'price_chat']).create(paymentMethodId)
 ```
 
 To set a quantity on a specific price:
@@ -284,7 +283,7 @@ await subscription.removePrice('price_chat')
 ```
 
 <Callout type="warn">
-You cannot remove the last price on a subscription. Cancel the subscription instead.
+  You cannot remove the last price on a subscription. Cancel the subscription instead.
 </Callout>
 
 ### Swapping prices on multi-product subscriptions
@@ -320,8 +319,8 @@ const subscription = await user.subscription('default')
 await subscription.load('items')
 
 const item = subscription.items[0]
-item.stripePrice  // Price ID
-item.quantity     // Quantity
+item.stripePrice // Price ID
+item.quantity // Quantity
 ```
 
 You can also find a specific item:
@@ -331,7 +330,8 @@ const item = await subscription.findItemOrFail('price_chat')
 ```
 
 <Callout type="warn">
-When a subscription has multiple prices, the `stripePrice` and `quantity` attributes on the `Subscription` model are `null`. Use the `items` relationship to access individual price details.
+  When a subscription has multiple prices, the `stripePrice` and `quantity` attributes on the
+  `Subscription` model are `null`. Use the `items` relationship to access individual price details.
 </Callout>
 
 ## Going further

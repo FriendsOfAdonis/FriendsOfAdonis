@@ -42,9 +42,6 @@
     "access": "public",
     "tag": "latest"
   },
-  "engines": {
-    "node": ">=20.6.0"
-  },
   "scripts": {
     "clean": "del-cli build",
     "copy:templates": "cpy \"stubs/**/*.stub\" build/stubs",
@@ -99,5 +96,8 @@
       "text",
       "html"
     ]
+  },
+  "engines": {
+    "node": ">=20.6.0"
   }
 }

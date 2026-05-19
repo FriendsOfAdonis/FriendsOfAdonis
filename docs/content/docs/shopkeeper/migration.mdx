@@ -31,6 +31,7 @@ This creates the `stripe_webhook_events` table used for idempotent webhook handl
 All mixins are now factory functions. Add `()` after each mixin name:
 
 **Before:**
+
 ```ts
 import { Billable } from '@foadonis/shopkeeper/mixins'
 
@@ -38,6 +39,7 @@ class User extends compose(BaseModel, Billable) {}
 ```
 
 **After:**
+
 ```ts
 import { billable } from '@foadonis/shopkeeper/mixins'
 
@@ -46,25 +48,27 @@ class User extends compose(BaseModel, billable()) {}
 
 Full rename list:
 
-| Before | After |
-|---|---|
-| `Billable` | `billable()` |
-| `HandlesTaxes` | `handlesTaxes()` |
-| `AllowsCoupon` | `allowsCoupon()` |
-| `HandlesPaymentFailures` | `handlesPaymentFailures()` |
+| Before                        | After                           |
+| ----------------------------- | ------------------------------- |
+| `Billable`                    | `billable()`                    |
+| `HandlesTaxes`                | `handlesTaxes()`                |
+| `AllowsCoupon`                | `allowsCoupon()`                |
+| `HandlesPaymentFailures`      | `handlesPaymentFailures()`      |
 | `InteractWithPaymentBehavior` | `interactWithPaymentBehavior()` |
-| `Prorates` | `prorates()` |
+| `Prorates`                    | `prorates()`                    |
 
 ## Accessing the Stripe SDK
 
 The `stripe` getter has been removed from models. Use the Shopkeeper service instead:
 
 **Before:**
+
 ```ts
 const stripe = this.stripe
 ```
 
 **After:**
+
 ```ts
 import shopkeeper from '@foadonis/shopkeeper/services/shopkeeper'
 
@@ -74,11 +78,13 @@ const stripe = shopkeeper.stripe
 ## Replace `With*` types with `*Contract` interfaces
 
 **Before:**
+
 ```ts
 import type { WithSubscriptions, WithCustomer } from '@foadonis/shopkeeper/types'
 ```
 
 **After:**
+
 ```ts
 import type { BillableContract } from '@foadonis/shopkeeper'
 ```
@@ -88,6 +94,7 @@ import type { BillableContract } from '@foadonis/shopkeeper'
 Product checkouts now use a fluent builder instead of positional arguments.
 
 **Before:**
+
 ```ts
 const checkout = await user.checkout('price_tshirt', {
   success_url: urlFor('checkout.success'),
@@ -96,6 +103,7 @@ const checkout = await user.checkout('price_tshirt', {
 ```
 
 **After:**
+
 ```ts
 const checkout = await user
   .checkout()
@@ -111,22 +119,22 @@ const checkout = await user
 Subscription checkouts are unchanged (session params are passed to `.checkout()`):
 
 ```ts
-const checkout = await user
-  .newSubscription('default', 'price_monthly')
-  .checkout({
-    success_url: urlFor('checkout.success'),
-    cancel_url: urlFor('checkout.cancel'),
-  })
+const checkout = await user.newSubscription('default', 'price_monthly').checkout({
+  success_url: urlFor('checkout.success'),
+  cancel_url: urlFor('checkout.cancel'),
+})
 ```
 
 Guest checkouts now use the builder:
 
 **Before:**
+
 ```ts
 const checkout = await Checkout.create(sessionParams)
 ```
 
 **After:**
+
 ```ts
 const checkout = await Checkout.guest()
   .addLineItem('price_tshirt')
@@ -149,26 +157,31 @@ The `Checkout` object no longer exposes `.session` directly:
 - `invoicePrice(price, quantity, tabParams, invoiceParams)`
 
 **Before:**
+
 ```ts
 await user.invoiceFor('One Time Fee', 500)
 ```
 
 **After:**
+
 ```ts
 await user.invoice().addItem('One Time Fee', 500).charge()
 ```
 
 **Before:**
+
 ```ts
 await user.invoicePrice('price_tshirt', 5)
 ```
 
 **After:**
+
 ```ts
 await user.invoice().addPrice('price_tshirt', 5).charge()
 ```
 
 **Before:**
+
 ```ts
 await user.tabPrice('price_tshirt', 5)
 await user.tabPrice('price_mug', 2)
@@ -176,11 +189,9 @@ await user.invoice()
 ```
 
 **After:**
+
 ```ts
-await user.invoice()
-  .addPrice('price_tshirt', 5)
-  .addPrice('price_mug', 2)
-  .charge()
+await user.invoice().addPrice('price_tshirt', 5).addPrice('price_mug', 2).charge()
 ```
 
 The builder also supports `draft()`, `send()`, `daysUntilDue()`, `description()`, `withMetadata()`, and `currency()`.
@@ -193,9 +204,9 @@ The config now requires `enforceSecret`, `keepPastDueSubscriptionsActive`, and `
 export default defineConfig({
   // ...
   webhook: {
-    secret: env.get("STRIPE_WEBHOOK_SECRET"),
+    secret: env.get('STRIPE_WEBHOOK_SECRET'),
     tolerance: 300,
-    enforceSecret: env.get("NODE_ENV") === "production", // [!code highlight]
+    enforceSecret: env.get('NODE_ENV') === 'production', // [!code highlight]
   },
   keepPastDueSubscriptionsActive: false, // [!code highlight]
   registerRoutes: true, // [!code highlight]
@@ -253,11 +264,13 @@ The constructor no longer takes an `owner` parameter:
 `reportUsage()` now uses Stripe Billing Meters. The signature changed:
 
 **Before:**
+
 ```ts
 await subscriptionItem.reportUsage(quantity)
 ```
 
 **After:**
+
 ```ts
 await subscription.reportUsage('event_name', '150')
 ```

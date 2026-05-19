@@ -26,9 +26,7 @@ In your frontend, use [Stripe.js](https://stripe.com/docs/js) to mount a card el
 ```html
 <input id="card-holder-name" type="text" />
 <div id="card-element"></div>
-<button id="card-button" data-secret="{{ intent.client_secret }}">
-  Save Payment Method
-</button>
+<button id="card-button" data-secret="{{ intent.client_secret }}">Save Payment Method</button>
 
 <script src="https://js.stripe.com/v3/"></script>
 <script>
@@ -39,17 +37,14 @@ In your frontend, use [Stripe.js](https://stripe.com/docs/js) to mount a card el
 
   const cardButton = document.getElementById('card-button')
   cardButton.addEventListener('click', async () => {
-    const { setupIntent, error } = await stripe.confirmCardSetup(
-      cardButton.dataset.secret,
-      {
-        payment_method: {
-          card: cardElement,
-          billing_details: {
-            name: document.getElementById('card-holder-name').value,
-          },
+    const { setupIntent, error } = await stripe.confirmCardSetup(cardButton.dataset.secret, {
+      payment_method: {
+        card: cardElement,
+        billing_details: {
+          name: document.getElementById('card-holder-name').value,
         },
-      }
-    )
+      },
+    })
 
     if (error) {
       // Show error.message to the user
@@ -82,15 +77,11 @@ For one-off charges, you don't need a Setup Intent. Instead, use Stripe.js to cr
 
   const cardButton = document.getElementById('card-button')
   cardButton.addEventListener('click', async () => {
-    const { paymentMethod, error } = await stripe.createPaymentMethod(
-      'card',
-      cardElement,
-      {
-        billing_details: {
-          name: document.getElementById('card-holder-name').value,
-        },
-      }
-    )
+    const { paymentMethod, error } = await stripe.createPaymentMethod('card', cardElement, {
+      billing_details: {
+        name: document.getElementById('card-holder-name').value,
+      },
+    })
 
     if (error) {
       // Show error.message to the user
@@ -104,7 +95,8 @@ For one-off charges, you don't need a Setup Intent. Instead, use Stripe.js to cr
 Pass the `paymentMethod.id` to your server and use it with the [charge methods](/docs/shopkeeper/single-charges).
 
 <Callout type="warn">
-Due to Stripe limitations, you cannot use a customer's stored default payment method for single charges. The customer must enter their payment details each time.
+  Due to Stripe limitations, you cannot use a customer's stored default payment method for single
+  charges. The customer must enter their payment details each time.
 </Callout>
 
 ## Retrieving payment methods
@@ -175,7 +167,8 @@ await user.updateDefaultPaymentMethodFromStripe()
 ```
 
 <Callout type="warn">
-The default payment method is used for invoices and new subscriptions. Due to Stripe limitations, it cannot be used for single charges.
+  The default payment method is used for invoices and new subscriptions. Due to Stripe limitations,
+  it cannot be used for single charges.
 </Callout>
 
 ## Deleting payment methods
@@ -204,7 +197,8 @@ await user.deletePaymentMethods('sepa_debit')
 ```
 
 <Callout type="warn">
-If a customer has an active subscription, do not allow them to delete their default payment method.
+  If a customer has an active subscription, do not allow them to delete their default payment
+  method.
 </Callout>
 
 ## Going further

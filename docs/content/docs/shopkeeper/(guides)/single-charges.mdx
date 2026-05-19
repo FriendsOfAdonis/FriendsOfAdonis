@@ -19,7 +19,8 @@ router.post('/purchase', async ({ auth, request }) => {
 ```
 
 <Callout type="warn">
-The `charge` method accepts amounts in the smallest currency unit. For example, $10.00 USD is `1000` (cents).
+  The `charge` method accepts amounts in the smallest currency unit. For example, $10.00 USD is
+  `1000` (cents).
 </Callout>
 
 You can pass additional [Stripe charge options](https://stripe.com/docs/api/charges/create) as a third argument:
@@ -74,7 +75,8 @@ await user.invoice().addItem('One Time Fee', 500).charge()
 ```
 
 <Callout>
-Using `addPrice` with pre-defined prices is recommended over `addItem`, as it gives you better analytics in the Stripe dashboard.
+  Using `addPrice` with pre-defined prices is recommended over `addItem`, as it gives you better
+  analytics in the Stripe dashboard.
 </Callout>
 
 The invoice builder also supports `draft()` to keep invoices as drafts, `send()` to email invoices to the customer, `daysUntilDue()`, `withMetadata()`, and `currency()`.
@@ -103,7 +105,8 @@ return payment.clientSecret()
 ```
 
 <Callout type="warn">
-The `pay` and `payWith` methods accept amounts in the smallest currency unit (e.g., cents for USD).
+  The `pay` and `payWith` methods accept amounts in the smallest currency unit (e.g., cents for
+  USD).
 </Callout>
 
 ## Refunds

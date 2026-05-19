@@ -1,6 +1,6 @@
 ---
-title: "Using Actions as Listeners"
-description: "Use actions as event listeners"
+title: 'Using Actions as Listeners'
+description: 'Use actions as event listeners'
 ---
 
 The `AsListener` interface allows you to trigger actions in response to events. This is useful for decoupling side effects from your main business logic.
@@ -17,10 +17,7 @@ import User from '#models/user'
 export default class SendWelcomeEmailAction extends BaseAction implements AsListener<User> {
   async handle(user: User) {
     await mail.send((message) => {
-      message
-        .to(user.email)
-        .subject('Welcome!')
-        .htmlView('emails/welcome', { user })
+      message.to(user.email).subject('Welcome!').htmlView('emails/welcome', { user })
     })
 
     this.logger.info(`Welcome email sent to ${user.email}`)
@@ -65,13 +62,13 @@ import { BaseAction, type AsListener } from '@foadonis/actions'
 import mail from '@adonisjs/mail/services/main'
 import UserRegistered from '#events/user_registered'
 
-export default class SendWelcomeEmailAction extends BaseAction implements AsListener<UserRegistered> {
+export default class SendWelcomeEmailAction
+  extends BaseAction
+  implements AsListener<UserRegistered>
+{
   async handle(email: string) {
     await mail.send((message) => {
-      message
-        .to(email)
-        .subject('Welcome!')
-        .htmlView('emails/welcome', { email })
+      message.to(email).subject('Welcome!').htmlView('emails/welcome', { email })
     })
 
     this.logger.info(`Welcome email sent to ${email}`)

@@ -1,6 +1,12 @@
 {
   "name": "friends-of-adonis",
   "private": true,
+  "workspaces": [
+    "docs",
+    "playgrounds/*",
+    "packages/*",
+    "tooling/*"
+  ],
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
@@ -14,16 +20,6 @@
     "play:actions": "turbo dev --filter=playground-actions...",
     "automd": "automd",
     "switch-catalog": "node --import=@poppinss/ts-exec ./tooling/scripts/switch-catalog.ts"
-  },
-  "packageManager": "yarn@4.13.0",
-  "engines": {
-    "node": ">=18"
-  },
-  "resolutions": {
-    "yargs": "^18.0.0"
-  },
-  "manypkg": {
-    "defaultBranch": "main"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.5.2",
@@ -40,10 +36,14 @@
     "typescript": "^5.9.3",
     "yaml": "^2.8.2"
   },
-  "workspaces": [
-    "docs",
-    "playgrounds/*",
-    "packages/*",
-    "tooling/*"
-  ]
+  "resolutions": {
+    "yargs": "^18.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "packageManager": "yarn@4.13.0",
+  "manypkg": {
+    "defaultBranch": "main"
+  }
 }

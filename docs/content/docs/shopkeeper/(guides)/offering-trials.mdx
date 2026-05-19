@@ -14,10 +14,7 @@ router.get('/subscribe', async ({ auth, request }) => {
   const user = auth.getUserOrFail()
   const paymentMethodId = request.input('paymentMethodId')
 
-  await user
-    .newSubscription('default', 'price_monthly')
-    .trialDays(14)
-    .create(paymentMethodId)
+  await user.newSubscription('default', 'price_monthly').trialDays(14).create(paymentMethodId)
 })
 ```
 
@@ -39,25 +36,17 @@ await user
 Trials also work with Stripe Checkout:
 
 ```ts
-const checkout = await user
-  .newSubscription('default', 'price_monthly')
-  .trialDays(7)
-  .checkout()
+const checkout = await user.newSubscription('default', 'price_monthly').trialDays(7).checkout()
 ```
 
-<Callout type="warn">
-Stripe Checkout requires a minimum trial period of 48 hours.
-</Callout>
+<Callout type="warn">Stripe Checkout requires a minimum trial period of 48 hours.</Callout>
 
 ### Stripe dashboard trial days
 
 You can also configure trial days directly in the [Stripe dashboard](https://dashboard.stripe.com) on the price level. Be aware that when a price has a trial period configured in Stripe, every new subscription for that price will receive a trial, including customers who have subscribed before. To skip the trial for a specific subscription, use `skipTrial`:
 
 ```ts
-await user
-  .newSubscription('default', 'price_monthly')
-  .skipTrial()
-  .create(paymentMethodId)
+await user.newSubscription('default', 'price_monthly').skipTrial().create(paymentMethodId)
 ```
 
 ## Without payment method
@@ -93,9 +82,7 @@ if (await user.onGenericTrial()) {
 When the customer is ready to subscribe, create a subscription as usual:
 
 ```ts
-await user
-  .newSubscription('default', 'price_monthly')
-  .create(paymentMethodId)
+await user.newSubscription('default', 'price_monthly').create(paymentMethodId)
 ```
 
 ## Checking trial status

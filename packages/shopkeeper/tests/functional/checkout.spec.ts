@@ -145,12 +145,10 @@ test.group('Checkout', () => {
       unit_amount: 1500,
     })
 
-    const checkout = await Checkout.guest()
-      .addLineItem(price.id)
-      .sessionParams({
-        success_url: 'http://example.org',
-        cancel_url: 'http://example.org',
-      })
+    const checkout = await Checkout.guest().addLineItem(price.id).sessionParams({
+      success_url: 'http://example.org',
+      cancel_url: 'http://example.org',
+    })
 
     assert.instanceOf(checkout, Checkout)
   })
@@ -167,13 +165,10 @@ test.group('Checkout', () => {
       unit_amount: 1500,
     })
 
-    const checkout = await user
-      .checkout()
-      .addLineItem(price.id, 5)
-      .sessionParams({
-        ui_mode: 'embedded',
-        return_url: 'http://example.org',
-      })
+    const checkout = await user.checkout().addLineItem(price.id, 5).sessionParams({
+      ui_mode: 'embedded',
+      return_url: 'http://example.org',
+    })
 
     assert.instanceOf(checkout, Checkout)
   })

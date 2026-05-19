@@ -16,10 +16,7 @@ router.get('/subscribe', async ({ auth, request }) => {
   const user = auth.getUserOrFail()
   const paymentMethodId = request.input('paymentMethodId')
 
-  await user
-    .newSubscription('default')
-    .meteredPrice('price_metered')
-    .create(paymentMethodId)
+  await user.newSubscription('default').meteredPrice('price_metered').create(paymentMethodId)
 })
 ```
 
@@ -72,7 +69,8 @@ await stripe.billing.meterEvents.create({
 ```
 
 <Callout>
-The `event_name` must match the Billing Meter you created in the Stripe dashboard. The `value` is always a string.
+  The `event_name` must match the Billing Meter you created in the Stripe dashboard. The `value` is
+  always a string.
 </Callout>
 
 ## Retrieving usage records

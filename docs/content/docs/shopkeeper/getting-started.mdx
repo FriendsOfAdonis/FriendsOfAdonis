@@ -56,7 +56,8 @@ export default defineConfig({
 ```
 
 <Callout>
-If you use a model with a different name than `User`, make sure to update the table name in the generated migration accordingly.
+  If you use a model with a different name than `User`, make sure to update the table name in the
+  generated migration accordingly.
 </Callout>
 
 ### API keys
@@ -70,7 +71,8 @@ STRIPE_WEBHOOK_SECRET=your-stripe-webhook-secret
 ```
 
 <Callout type="warn">
-The `STRIPE_WEBHOOK_SECRET` environment variable is mandatory in production. It secures the Stripe webhook endpoint and ensures incoming events are authentic.
+  The `STRIPE_WEBHOOK_SECRET` environment variable is mandatory in production. It secures the Stripe
+  webhook endpoint and ensures incoming events are authentic.
 </Callout>
 
 ### Webhooks
@@ -126,12 +128,10 @@ import { urlFor } from '@adonisjs/core/services/url_builder'
 router.get('/checkout', async ({ auth, response }) => {
   const user = auth.getUserOrFail()
 
-  const checkout = await user
-    .newSubscription('default', 'price_xxxxxxx')
-    .checkout({
-      success_url: urlFor('checkout.success'),
-      cancel_url: urlFor('checkout.cancel'),
-    })
+  const checkout = await user.newSubscription('default', 'price_xxxxxxx').checkout({
+    success_url: urlFor('checkout.success'),
+    cancel_url: urlFor('checkout.cancel'),
+  })
 
   return response.redirect().status(303).toPath(checkout.asStripeSession().url)
 })
@@ -158,7 +158,8 @@ router
 That's it! Visit `/checkout` in your browser and you should be redirected to Stripe's payment page. After completing the payment, Stripe will redirect back to your success page.
 
 <Callout>
-Stripe and Shopkeeper update subscription statuses via webhooks. There may be a short delay before the subscription is active in your database after the customer completes their payment.
+  Stripe and Shopkeeper update subscription statuses via webhooks. There may be a short delay before
+  the subscription is active in your database after the customer completes their payment.
 </Callout>
 
 ## What's next?

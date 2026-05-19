@@ -228,10 +228,7 @@ export interface PerformsChargesContract extends ManagesCustomerContract {
     amount: number,
     name: string,
     quantity?: number,
-    productData?: Omit<
-      Stripe.Checkout.SessionCreateParams.LineItem.PriceData.ProductData,
-      'name'
-    >
+    productData?: Omit<Stripe.Checkout.SessionCreateParams.LineItem.PriceData.ProductData, 'name'>
   ): CheckoutBuilder
 }
 

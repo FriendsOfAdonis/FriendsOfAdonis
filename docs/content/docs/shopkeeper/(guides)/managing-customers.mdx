@@ -109,7 +109,7 @@ To retrieve the full history of balance transactions:
 const transactions = await user.balanceTransaction()
 
 for (const transaction of transactions) {
-  const amount = transaction.amount()       // e.g., "$2.31"
+  const amount = transaction.amount() // e.g., "$2.31"
   const invoiceId = transaction.invoiceId() // Related invoice, if any
 }
 ```
@@ -133,7 +133,9 @@ await user.deleteTaxId('txi_belgium')
 ```
 
 <Callout>
-Tax ID verification is handled asynchronously by Stripe. To be notified when verification completes, listen to the `customer.tax_id.updated` webhook event. See [Handling Webhooks](/docs/shopkeeper/handling-webhooks) for details.
+  Tax ID verification is handled asynchronously by Stripe. To be notified when verification
+  completes, listen to the `customer.tax_id.updated` webhook event. See [Handling
+  Webhooks](/docs/shopkeeper/handling-webhooks) for details.
 </Callout>
 
 ## Billing portal
@@ -159,7 +161,9 @@ router
 You can configure the billing portal's appearance and features in your [Stripe dashboard](https://dashboard.stripe.com/test/settings/billing/portal).
 
 <Callout>
-When a customer makes changes through the billing portal (such as cancelling or changing plans), Stripe sends webhook events that Shopkeeper processes automatically. Make sure your [webhooks are configured](/docs/shopkeeper/handling-webhooks) for the portal to work correctly.
+  When a customer makes changes through the billing portal (such as cancelling or changing plans),
+  Stripe sends webhook events that Shopkeeper processes automatically. Make sure your [webhooks are
+  configured](/docs/shopkeeper/handling-webhooks) for the portal to work correctly.
 </Callout>
 
 ## Going further

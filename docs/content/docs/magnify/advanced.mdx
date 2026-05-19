@@ -1,6 +1,6 @@
 ---
-title: "Advanced"
-summary: ""
+title: 'Advanced'
+summary: ''
 ---
 
 ## Model Configuration
@@ -10,26 +10,26 @@ summary: ""
 By default, Magnify uses the table name of your model as the index name. You can change this behavior by overriding the `$indexName` getter function.
 
 ```ts title="app/models/post.ts"
-import { compose } from "@adonisjs/core/helpers";
-import { BaseModel, column } from "@adonisjs/lucid/orm";
-import { Searchable } from "@foadonis/magnify";
+import { compose } from '@adonisjs/core/helpers'
+import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { Searchable } from '@foadonis/magnify'
 
 export default class Post extends compose(BaseModel, Searchable) {
   @column({ isPrimary: true })
-  declare id: string;
+  declare id: string
 
   @column()
-  declare title: string;
+  declare title: string
 
   static get $indexName(): string {
-    return "different_index";
+    return 'different_index'
   }
 }
 ```
 
 <Callout type="warn">
-  Depending on your Search engine, you might as well have to change your index
-  configuration in `config/magnify.ts` to match your new index name.
+  Depending on your Search engine, you might as well have to change your index configuration in
+  `config/magnify.ts` to match your new index name.
 </Callout>
 
 ### Model Searchable Data
@@ -37,23 +37,23 @@ export default class Post extends compose(BaseModel, Searchable) {
 By default, Magnify uses `model.serialize()` to store your model in the index. You can change this behavior by overriding the `toSearchableObject` method.
 
 ```ts title="app/models/post.ts"
-import { compose } from "@adonisjs/core/helpers";
-import { BaseModel, column } from "@adonisjs/lucid/orm";
-import { Searchable } from "@foadonis/magnify";
+import { compose } from '@adonisjs/core/helpers'
+import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { Searchable } from '@foadonis/magnify'
 
 export default class Post extends compose(BaseModel, Searchable) {
   @column({ isPrimary: true })
-  declare id: string;
+  declare id: string
 
   @column()
-  declare title: string;
+  declare title: string
 
   toSearchableObject() {
     return {
       id: this.id,
       title: this.title,
-      tags: ["Magnify", "Adonis"],
-    };
+      tags: ['Magnify', 'Adonis'],
+    }
   }
 }
 ```
@@ -63,20 +63,20 @@ export default class Post extends compose(BaseModel, Searchable) {
 If you have configured multiple engine, you can define the use Search engine per model.
 
 ```ts
-import { compose } from "@adonisjs/core/helpers";
-import { BaseModel, column } from "@adonisjs/lucid/orm";
-import { Searchable } from "@foadonis/magnify";
-import magnify from "@foadonis/magnify/services/magnify";
+import { compose } from '@adonisjs/core/helpers'
+import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { Searchable } from '@foadonis/magnify'
+import magnify from '@foadonis/magnify/services/magnify'
 
 export default class Post extends compose(BaseModel, Searchable) {
   @column({ isPrimary: true })
-  declare id: string;
+  declare id: string
 
   @column()
-  declare title: string;
+  declare title: string
 
   get $searchEngine() {
-    return magnify.engine("typesense");
+    return magnify.engine('typesense')
   }
 }
 ```
@@ -120,7 +120,7 @@ node ace magnify:sync-index-settings
 You may begin searching a model using the `search` method. The search method accepts a single string that will be used to search your models. You should then chain the `get` method onto the search query to retrieve the Lucid models that match the given search query:
 
 ```ts
-const posts = await Post.search("Magnify").get();
+const posts = await Post.search('Magnify').get()
 ```
 
 ### Where Clauses
@@ -128,21 +128,18 @@ const posts = await Post.search("Magnify").get();
 Magnify allows you to add simple "where" clauses to your search queries. Currently, these clauses only support basic numeric equality checks and are primarily useful for scoping search queries by an owner ID:
 
 ```ts
-const posts = await Post.search("Magnify").where("isPublished", true).get();
+const posts = await Post.search('Magnify').where('isPublished', true).get()
 ```
 
 In addition, the `whereIn` method may be used to verify that a given column's value is contained within the given array:
 
 ```ts
-const posts = await Post.search("Magnify")
-  .whereIn("status", ["published", "draft"])
-  .get();
+const posts = await Post.search('Magnify').whereIn('status', ['published', 'draft']).get()
 ```
 
 <Callout type="warn">
-  If your application is using Meilisearch, you must configure your
-  application's filterable attributes before utilizing Magnify's "where"
-  clauses.
+  If your application is using Meilisearch, you must configure your application's filterable
+  attributes before utilizing Magnify's "where" clauses.
 </Callout>
 
 ### Pagination
@@ -150,29 +147,27 @@ const posts = await Post.search("Magnify")
 In addition to retrieving a collection of models, you may paginate your search results using the paginate method. This method will return a `SimplePaginator` instance just as if you had paginated a traditional Lucid query:
 
 ```ts
-const posts = await Post.search("Magnify")
-  .whereIn("status", ["published", "draft"])
-  .paginate(15, 1);
+const posts = await Post.search('Magnify').whereIn('status', ['published', 'draft']).paginate(15, 1)
 ```
 
 Once you have retrieved the results, you may display the results and render the page links using Edge just as if you had paginated a traditional Lucid query:
 
 ```ts title="app/controllers/posts_controller.ts"
-import { HttpContext } from "@adonisjs/core/http";
-import db from "@adonisjs/lucid/services/db";
+import { HttpContext } from '@adonisjs/core/http'
+import db from '@adonisjs/lucid/services/db'
 
 class PostsController {
   async index({ request, view }: HttpContextContract) {
-    const page = request.input("page", 1);
-    const limit = 10;
+    const page = request.input('page', 1)
+    const limit = 10
 
-    const posts = await Post.search("Magnify")
-      .whereIn("status", ["published", "draft"])
-      .paginate(limit, page);
+    const posts = await Post.search('Magnify')
+      .whereIn('status', ['published', 'draft'])
+      .paginate(limit, page)
 
-    posts.baseUrl("/posts");
+    posts.baseUrl('/posts')
 
-    return view.render("posts/index", { posts });
+    return view.render('posts/index', { posts })
   }
 }
 ```
