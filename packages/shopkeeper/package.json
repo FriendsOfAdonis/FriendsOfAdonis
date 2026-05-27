@@ -1,6 +1,6 @@
 {
   "name": "@foadonis/shopkeeper",
-  "version": "0.1.7",
+  "version": "1.0.0",
   "description": "An expressive and fluent interface to Stripe's subscription billing services.",
   "keywords": [
     "adonis",
