@@ -45,6 +45,7 @@ export async function configure(command: ConfigureCommand) {
   await generateMigration(command, codemods, 'create_customer_stripe_columns')
   await generateMigration(command, codemods, 'create_subscriptions_table')
   await generateMigration(command, codemods, 'create_subscription_items_table')
+  await generateMigration(command, codemods, 'create_stripe_webhook_events_table')
 
   logSuccess(command)
 }

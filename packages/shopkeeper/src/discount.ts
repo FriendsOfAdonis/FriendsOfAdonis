@@ -24,7 +24,11 @@ export class Discount {
    * Get the coupon applied to the discount.
    */
   coupon(): Coupon {
-    return new Coupon(this.#discount.coupon)
+    const coupon = this.#discount.source.coupon
+    if (!coupon || typeof coupon === 'string') {
+      throw new Error('Discount source coupon was not expanded')
+    }
+    return new Coupon(coupon)
   }
 
   /**

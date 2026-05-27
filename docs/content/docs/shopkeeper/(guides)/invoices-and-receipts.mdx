@@ -1,0 +1,98 @@
+---
+title: Invoices & Receipts
+icon: Receipt
+---
+
+Shopkeeper makes it easy to retrieve and display your customers' invoices from Stripe. This guide covers how to list invoices, show billing details, and preview upcoming charges.
+
+## Retrieving invoices
+
+To get all of a customer's invoices, use the `invoices` method. It returns a collection of Shopkeeper `Invoice` instances:
+
+```ts
+const invoices = await user.invoices()
+```
+
+To include pending invoices (not yet finalized) in the results:
+
+```ts
+const invoices = await user.invoicesIncludingPending()
+```
+
+To retrieve a specific invoice by its Stripe ID:
+
+```ts
+const invoice = await user.findInvoice('in_xxxxxxx')
+```
+
+## Displaying invoices
+
+You can use the invoice's methods to display billing information. Here's an example Edge template that renders an invoice table:
+
+```edge
+<table>
+  @each(invoice in invoices)
+    <tr>
+      <td>{{ invoice.date().toFormat('LLL dd, yyyy') }}</td>
+      <td>{{ invoice.total() }}</td>
+      <td>
+        <a href="/invoices/{{ invoice.id }}">Download</a>
+      </td>
+    </tr>
+  @end
+</table>
+```
+
+## Creating invoices
+
+`user.invoice()` returns an `InvoiceBuilder`. By default, invoices are created as **drafts** — they are not finalized or charged until you explicitly call `.charge()` or `.send()`.
+
+```ts
+// Creates a draft invoice (not sent, not charged)
+const invoice = await user.invoice().addPrice('price_tshirt', 5)
+
+// Finalize and email the invoice for manual payment
+await user.invoice().addPrice('price_tshirt', 5).daysUntilDue(30).send()
+
+// Charge the default payment method immediately
+await user.invoice().addPrice('price_tshirt', 5).charge()
+```
+
+See [Single Charges — Charge with invoice](/docs/shopkeeper/single-charges#charge-with-invoice) for more examples.
+
+## Upcoming invoice
+
+To show a customer what they will be charged next, use the `upcomingInvoice` method:
+
+```ts
+const invoice = await user.upcomingInvoice()
+```
+
+You can also get the upcoming invoice for a specific subscription:
+
+```ts
+const subscription = await user.subscription('default')
+const invoice = await subscription.upcomingInvoice()
+```
+
+## Previewing price changes
+
+Before swapping a customer's subscription to a different price, you can preview what their invoice would look like using `previewInvoice`:
+
+```ts
+const subscription = await user.subscription('default')
+const invoice = await subscription.previewInvoice('price_yearly')
+```
+
+To preview an invoice with multiple new prices:
+
+```ts
+const invoice = await subscription.previewInvoice(['price_yearly', 'price_addon'])
+```
+
+This is useful for showing customers the cost difference before they confirm a plan change.
+
+## Going further
+
+- [Single Charges reference](/docs/shopkeeper/single-charges): Invoice-based charges, charge tabs, and refunds
+- [Stripe Invoices documentation](https://stripe.com/docs/invoicing): Stripe's own guide to invoices

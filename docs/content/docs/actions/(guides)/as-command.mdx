@@ -1,6 +1,6 @@
 ---
-title: "Using Actions as Commands"
-description: "Use actions as CLI commands"
+title: 'Using Actions as Commands'
+description: 'Use actions as CLI commands'
 ---
 
 The `AsCommand` interface allows you to run actions from the command line. Actions implementing this interface are automatically registered as Ace commands.
@@ -16,9 +16,7 @@ import Session from '#models/session'
 
 export default class PruneExpiredSessionsAction extends BaseAction implements AsCommand {
   async handle() {
-    const deleted = await Session.query()
-      .where('expiresAt', '<', new Date())
-      .delete()
+    const deleted = await Session.query().where('expiresAt', '<', new Date()).delete()
 
     return deleted
   }
@@ -57,9 +55,7 @@ export default class ChargeOverdueInvoicesAction extends BaseAction implements A
   }
 
   async handle() {
-    const invoices = await Invoice.query()
-      .where('status', 'overdue')
-      .preload('user')
+    const invoices = await Invoice.query().where('status', 'overdue').preload('user')
 
     let charged = 0
     for (const invoice of invoices) {

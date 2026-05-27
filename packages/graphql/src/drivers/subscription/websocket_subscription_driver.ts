@@ -108,7 +108,8 @@ export class WebsocketSubscriptionDriver implements SubscriptionDriverContract {
     const ctx = this.#createHttpContext(req)
 
     return new Promise<HttpContext>((res, rej) => {
-      this.#serverMiddlewareStack!.runner()
+      this.#serverMiddlewareStack!
+        .runner()
         .run((executor, next) => {
           return executor.handle(ctx.containerResolver, ctx, next)
         })
