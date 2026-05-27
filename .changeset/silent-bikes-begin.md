@@ -1,5 +1,5 @@
 ---
-'@foadonis/shopkeeper': minor
+'@foadonis/shopkeeper': major
 ---
 
 Shopkeeper 0.2.0 — full rewrite with breaking changes across the public API.
