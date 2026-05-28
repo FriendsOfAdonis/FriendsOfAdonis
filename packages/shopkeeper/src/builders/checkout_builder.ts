@@ -1,3 +1,4 @@
+// oxlint-disable unicorn/no-thenable
 import { compose } from '@adonisjs/core/helpers'
 import { Empty } from '../types.js'
 import { allowsCoupon } from '../mixins/allows_coupons.js'
