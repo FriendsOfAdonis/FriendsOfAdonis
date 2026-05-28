@@ -5,7 +5,7 @@ export interface IndexFeaturesOptions {
   /**
    * Source directory for resolvers
    *
-   * @default 'app/actions'
+   * @default 'app/features'
    * */
   source?: string
 
@@ -22,9 +22,9 @@ export interface IndexFeaturesOptions {
   glob?: string[]
 
   /**
-   * Directory segments to skip when building the actions tree.
+   * Directory segments to skip when building the features tree.
    *
-   * For example, if your actions live in `app/identity/features/test_feature.ts`
+   * For example, if your features live in `app/identity/features/test_feature.ts`
    * and you want the generated tree to be `Identity.Test` instead of
    * `Identity.Features.Test`, set `skipSegments: ['features']`.
    */

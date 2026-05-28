@@ -17,12 +17,12 @@ node ace add @foadonis/flick
 
 <ConfigurationSteps
   pkg="@foadonis/flick"
-  providers={['flick']}
+  providers={["flick"]}
   config="flick"
-  assemblerHooks={[{ import: 'indexFeatures', hook: 'indexFeatures()' }]}
+  assemblerHooks={[{ import: "indexFeatures", hook: "indexFeatures()" }]}
   packageJsonImports={[
-    { alias: '#features/*', path: './app/features/*.js' },
-    { alias: '#generated/*', path: './.adonisjs/server/*.js' },
+    { alias: "#features/*", path: "./app/features/*.js" },
+    { alias: "#generated/*", path: "./.adonisjs/server/*.js" },
   ]}
 />
 
@@ -31,34 +31,38 @@ node ace add @foadonis/flick
 Flick stores resolved feature values in a driver. The memory driver is enough for development; switch to Redis (or your own driver) for production.
 
 ```ts title="config/flick.ts"
-import { features } from '#generated/features'
-import { defineConfig, drivers } from '@foadonis/flick'
-import { InferFeatures } from '@foadonis/flick/types'
+import { features } from "#generated/features";
+import { defineConfig, drivers } from "@foadonis/flick";
 
-export default defineConfig({
+const flickConfig = defineConfig({
   features,
-  driver: 'memory',
+  driver: "memory",
   drivers: {
     memory: drivers.memory(),
   },
-})
+});
 
-declare module '@foadonis/flick/types' {
-  interface KnownFeatures extends InferFeatures<typeof features> {}
+export default flickConfig;
+
+declare module "@foadonis/flick/types" {
+  interface KnownFeatures extends InferFeatures<typeof flickConfig> {}
+  interface KnownDriver extends InferFlickDriver<typeof flickConfig> {}
 }
 ```
 
 The `declare module` block registers your features with Flick's type system so feature names are autocompleted and typo-checked wherever you pass a feature name to the resolver.
 
 <Callout>
-  The `features` import comes from `#generated/features`, a barrel file produced at build time by the
-  `indexFeatures()` hook. It lists every `*_feature.ts` file under `app/features/`.
+  The `features` import comes from `#generated/features`, a barrel file produced
+  at build time by the `indexFeatures()` hook. It lists every `*_feature.ts`
+  file under `app/features/`.
 </Callout>
 
 <Callout type="warn">
-  On a fresh install the barrel does not exist yet. Run `node ace build` (or start the dev server
-  with `node ace serve`) once so the assembler hook generates `.adonisjs/server/features.ts` before
-  TypeScript compiles `config/flick.ts`.
+  On a fresh install the barrel does not exist yet. Run `node ace build` (or
+  start the dev server with `node ace serve`) once so the assembler hook
+  generates `.adonisjs/server/features.ts` before TypeScript compiles
+  `config/flick.ts`.
 </Callout>
 
 ## Make a model scopeable
@@ -68,9 +72,9 @@ Features are always resolved against a **scope**: a user, a tenant, a request, o
 The easiest way is to apply the `HasFeatures` mixin to your Lucid model. It uses the model's primary key as the identifier:
 
 ```ts title="app/models/user.ts"
-import { compose } from '@adonisjs/core/helpers'
-import { BaseModel } from '@adonisjs/lucid/orm'
-import { HasFeatures } from '@foadonis/flick/mixins'
+import { compose } from "@adonisjs/core/helpers";
+import { BaseModel } from "@adonisjs/lucid/orm";
+import { HasFeatures } from "@foadonis/flick";
 
 export default class User extends compose(BaseModel, HasFeatures) {}
 ```
@@ -82,14 +86,14 @@ For non-Lucid scopes or custom identifiers, implement `FeatureScopeable` yoursel
 Create a feature class under `app/features/`. The file must end with `_feature.ts` so the indexer picks it up.
 
 ```ts title="app/features/new_checkout_feature.ts"
-import { BaseFeature } from '@foadonis/flick'
-import User from '#models/user'
+import { BaseFeature } from "@foadonis/flick";
+import User from "#models/user";
 
 export default class NewCheckoutFeature extends BaseFeature<User> {
   async resolve(user: User) {
-    if (user.isAdmin) return true
+    if (user.isAdmin) return true;
 
-    return Math.random() > 0.5
+    return Math.random() > 0.5;
   }
 }
 ```
@@ -103,24 +107,25 @@ The feature is named after its filename with `_feature` stripped: `new_checkout_
 Import the Flick service and resolve the feature for a user:
 
 ```ts title="start/routes.ts"
-import router from '@adonisjs/core/services/router'
-import flick from '@foadonis/flick/services/main'
+import router from "@adonisjs/core/services/router";
+import flick from "@foadonis/flick/services/main";
 
-router.get('/checkout', async ({ auth, view }) => {
-  const user = auth.getUserOrFail()
+router.get("/checkout", async ({ auth, view }) => {
+  const user = auth.getUserOrFail();
 
-  return flick.for(user).match('new_checkout', {
-    active: () => view.render('checkout/new'),
-    inactive: () => view.render('checkout/legacy'),
-  })
-})
+  return flick.for(user).match("new_checkout", {
+    active: () => view.render("checkout/new"),
+    inactive: () => view.render("checkout/legacy"),
+  });
+});
 ```
 
 That's it. Hit `/checkout` and Flick will route admins to the new checkout, and everyone else to the new or legacy checkout based on the coin flip.
 
 <Callout>
-  The result is cached per scope identifier, so the same user keeps getting the same outcome until
-  the cache entry is cleared. See [Drivers](/docs/flick/drivers) for cache configuration.
+  The result is cached per scope identifier, so the same user keeps getting the
+  same outcome until the cache entry is cleared. See
+  [Drivers](/docs/flick/drivers) for cache configuration.
 </Callout>
 
 </div>
@@ -132,3 +137,4 @@ Now that you have a working flag, explore the guides:
 - [Defining Features](/docs/flick/defining-features): Variants, scopes, and the `before()` short-circuit
 - [Resolving Features](/docs/flick/resolving-features): `isActive`, `isInactive`, `value`, `match`, and type-safe feature names
 - [Drivers](/docs/flick/drivers): Configure the Redis driver or write your own
+- [Testing Features](/docs/flick/testing): Fake flag resolution and assert which flags were checked

@@ -3,20 +3,34 @@ import { Flick } from './flick.ts'
 import { BaseFeature } from './base_feature.ts'
 import { ConfigProvider } from '@adonisjs/core/types'
 
-export type FlickConfig<Drivers extends Record<string, ConfigProvider<FlickDriverContract>>> = {
-  driver: keyof Drivers
-  features: Record<string, LazyImport<Constructor<BaseFeature>>>
+export type FlickConfig<
+  Features extends Record<string, LazyImport<Constructor<BaseFeature>>>,
+  Drivers extends Record<string, ConfigProvider<FlickDriverContract>>,
+  Driver extends keyof Drivers,
+> = {
+  driver: Driver
+  features: Features
   drivers: Drivers
 }
 
-export type FlickOptions = {
-  features: Record<string, LazyImport<Constructor<BaseFeature>>>
-  driver: FlickDriverContract
+export type FlickOptions<
+  Features extends Record<string, LazyImport<Constructor<BaseFeature>>> = {},
+  Driver extends FlickDriverContract = FlickDriverContract,
+> = {
+  features: Features
+  driver: Driver
 }
 
 export interface KnownFeatures {}
+export interface KnownDriver {}
 
-export type InferFeatures<Features> = Features
+export type InferFeatures<Config extends ConfigProvider<FlickOptions>> = Awaited<
+  ReturnType<Config['resolver']>
+>['features']
+
+export type InferFlickDriver<Config extends ConfigProvider<FlickOptions>> = Awaited<
+  ReturnType<Config['resolver']>
+>['driver']
 
 export type InferFeatureScope<Feature> =
   Feature extends Constructor<BaseFeature<infer U>> ? U : never
@@ -50,5 +64,8 @@ export interface FlickDriverContract {
 }
 
 export interface FlickService extends Flick<
-  KnownFeatures extends Record<string, LazyImport<Constructor<BaseFeature>>> ? KnownFeatures : never
+  KnownFeatures extends Record<string, LazyImport<Constructor<BaseFeature>>>
+    ? KnownFeatures
+    : never,
+  KnownDriver extends FlickDriverContract ? KnownDriver : never
 > {}

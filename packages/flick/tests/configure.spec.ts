@@ -24,6 +24,7 @@ test.group('Configuration', () => {
 
     await fs.create('.env', '')
     await fs.createJson('tsconfig.json', {})
+    await fs.createJson('package.json', {})
     await fs.create('start/env.ts', `export default Env.create(new URL('./'), {})`)
     await fs.create('adonisrc.ts', `export default defineConfig({})`)
 
@@ -34,10 +35,16 @@ test.group('Configuration', () => {
 
     command.assertSucceeded()
 
-    await assert.fileExists('config/openapi.ts')
-    await assert.fileContains('config/openapi.ts', 'defineConfig')
+    await assert.fileExists('config/flick.ts')
+    await assert.fileContains('config/flick.ts', 'defineConfig')
 
     await assert.fileExists('adonisrc.ts')
-    await assert.fileContains('adonisrc.ts', '@foadonis/openapi/openapi_provider')
+    await assert.fileContains('adonisrc.ts', '@foadonis/flick/flick_provider')
+    await assert.fileContains('adonisrc.ts', '@foadonis/flick/commands')
+    await assert.fileContains('adonisrc.ts', 'indexFeatures()')
+
+    await assert.fileExists('package.json')
+    await assert.fileContains('package.json', '#generated')
+    await assert.fileContains('package.json', '#features')
   }).timeout(30000)
 })

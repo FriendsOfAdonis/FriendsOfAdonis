@@ -1,6 +1,7 @@
 ---
 title: Drivers
 description: "Configure the memory and Redis drivers, or write your own."
+icon: Database
 ---
 
 A driver is what keeps a feature's resolution **stable** for a given scope. The first time `resolve` runs for a scope, the driver stores the result; every subsequent call returns the stored value instead of re-running `resolve`.
@@ -37,21 +38,23 @@ Choosing a driver is then a choice about where that cache lives, how it survives
 Drivers are declared in `config/flick.ts`. The `driver` key picks the active driver, and the `drivers` map registers their factories:
 
 ```ts title="config/flick.ts"
-import { features } from '#generated/features'
-import { defineConfig, drivers } from '@foadonis/flick'
-import { InferFeatures } from '@foadonis/flick/types'
+import { features } from "#generated/features";
+import { defineConfig, drivers } from "@foadonis/flick";
 
-export default defineConfig({
+const flickConfig = defineConfig({
   features,
-  driver: 'memory',
+  driver: "memory",
   drivers: {
     memory: drivers.memory(),
-    redis: drivers.redis({ connection: 'main' }),
+    redis: drivers.redis({ connection: "main" }),
   },
-})
+});
 
-declare module '@foadonis/flick/types' {
-  interface KnownFeatures extends InferFeatures<typeof features> {}
+export default flickConfig;
+
+declare module "@foadonis/flick/types" {
+  interface KnownFeatures extends InferFeatures<typeof flickConfig> {}
+  interface KnownDriver extends InferFlickDriver<typeof flickConfig> {}
 }
 ```
 
@@ -64,17 +67,17 @@ Listing multiple drivers in the map is fine; only the one referenced by the top-
 ```ts title="config/flick.ts"
 export default defineConfig({
   features,
-  driver: 'memory',
+  driver: "memory",
   drivers: {
     memory: drivers.memory(),
   },
-})
+});
 ```
 
 <Callout type="warn">
-  The memory driver is not shared between processes and is wiped on restart. Two workers will
-  resolve the same feature independently and may end up with different cached values. Use Redis (or
-  a custom driver) in production.
+  The memory driver is not shared between processes and is wiped on restart. Two
+  workers will resolve the same feature independently and may end up with
+  different cached values. Use Redis (or a custom driver) in production.
 </Callout>
 
 ## Redis driver
@@ -84,11 +87,11 @@ export default defineConfig({
 ```ts title="config/flick.ts"
 export default defineConfig({
   features,
-  driver: 'redis',
+  driver: "redis",
   drivers: {
-    redis: drivers.redis({ connection: 'main' }),
+    redis: drivers.redis({ connection: "main" }),
   },
-})
+});
 ```
 
 `connection` is the name of a connection defined in `config/redis.ts`. The connection must exist before Flick can boot, so make sure `@adonisjs/redis` is installed and configured first (see the [AdonisJS Redis docs](https://docs.adonisjs.com/guides/database/redis) for setup). Flick uses the chosen connection to read and write its hash; nothing else about your Redis setup needs to change.
@@ -99,11 +102,15 @@ When neither memory nor Redis fits (a Postgres-backed driver for auditability, a
 
 ```ts
 export interface FlickDriverContract {
-  set(feature: string, identifier: string | number, value: unknown): Promise<void>
-  get(feature: string, identifier: string | number): Promise<unknown>
-  delete(feature: string, identifier: string | number): Promise<void>
-  purge(features?: string[]): Promise<void>
-  flush(): Promise<void>
+  set(
+    feature: string,
+    identifier: string | number,
+    value: unknown,
+  ): Promise<void>;
+  get(feature: string, identifier: string | number): Promise<unknown>;
+  delete(feature: string, identifier: string | number): Promise<void>;
+  purge(features?: string[]): Promise<void>;
+  flush(): Promise<void>;
 }
 ```
 
@@ -114,25 +121,27 @@ The [memory driver source](https://github.com/FriendsOfAdonis/FriendsOfAdonis/bl
 Once your driver class is ready, wrap it in a `configProvider` factory and add it to the `drivers` map:
 
 ```ts title="config/flick.ts"
-import { configProvider } from '@adonisjs/core'
-import { features } from '#generated/features'
-import { defineConfig } from '@foadonis/flick'
-import { InferFeatures } from '@foadonis/flick/types'
+import { configProvider } from "@adonisjs/core";
+import { features } from "#generated/features";
+import { defineConfig } from "@foadonis/flick";
 
-export default defineConfig({
+const flickConfig = defineConfig({
   features,
-  driver: 'custom',
+  driver: "custom",
   drivers: {
     custom: configProvider.create(async (app) => {
-      const { MyDriver } = await import('#flick/my_driver')
-      const db = await app.container.make('lucid.db')
-      return new MyDriver(db)
+      const { MyDriver } = await import("#flick/my_driver");
+      const db = await app.container.make("lucid.db");
+      return new MyDriver(db);
     }),
   },
-})
+});
 
-declare module '@foadonis/flick/types' {
-  interface KnownFeatures extends InferFeatures<typeof features> {}
+export default flickConfig;
+
+declare module "@foadonis/flick/types" {
+  interface KnownFeatures extends InferFeatures<typeof flickConfig> {}
+  interface KnownDriver extends InferFlickDriver<typeof flickConfig> {}
 }
 ```
 

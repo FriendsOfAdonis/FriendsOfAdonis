@@ -1,101 +1,144 @@
 ---
 title: Resolving Features
 description: "Check, branch on, and read values from feature flags."
+icon: ToggleRight
 ---
 
-Once a feature is [defined](/docs/flick/defining-features), you resolve it by handing the Flick service a scope and asking what it should do for that scope. This page covers the four resolution methods and how Flick keeps feature names type-safe.
+Once a feature is [defined](/docs/flick/defining-features), you resolve it by handing the Flick service a scope and asking what it should do for that scope. This page covers the resolution methods and how Flick keeps feature names type-safe.
 
 ## The flick service
 
 Import the Flick service anywhere in your application:
 
 ```ts
-import flick from '@foadonis/flick/services/main'
+import flick from "@foadonis/flick/services/main";
 ```
 
 Every resolution starts with `flick.for(scope)`, which binds a scope and returns a resolver:
 
 ```ts
-const resolver = flick.for(user)
+const resolver = flick.for(user);
 ```
 
-The returned resolver exposes four methods, all asynchronous: `isActive`, `isInactive`, `value`, and `match`.
+The returned resolver exposes a set of asynchronous methods: `isActive`, `isInactive`, `value`, `values`, `match`, and the batch helpers `allActive`, `someActive`, `allInactive`, and `someInactive`.
 
 ## Checking active state
 
-`isActive(feature)` returns `true` only when the feature resolves to the strict value `true`. Use it for classic on/off flags:
+`isActive(feature)` returns `true` when the feature resolves to a truthy value. Use it for classic on/off flags:
 
 ```ts
-import flick from '@foadonis/flick/services/main'
+import flick from "@foadonis/flick/services/main";
 
-if (await flick.for(user).isActive('new_checkout')) {
-  return view.render('checkout/new')
+if (await flick.for(user).isActive("new_checkout")) {
+  return view.render("checkout/new");
 }
 
-return view.render('checkout/legacy')
+return view.render("checkout/legacy");
 ```
 
-`isInactive(feature)` is the inverse and exists for readability:
+`isInactive(feature)` is the inverse: it returns `true` when the feature resolves to a falsy value. It exists for readability:
 
 ```ts
-if (await flick.for(user).isInactive('legacy_pricing')) {
-  return response.notFound()
+if (await flick.for(user).isInactive("legacy_pricing")) {
+  return response.notFound();
 }
 ```
 
 <Callout>
-  For features that return values other than `true` or `false` (variant strings, numbers, objects),
-  `isActive` will always return `false`. Use `value` or `match` for those.
+  `isActive` and `isInactive` coerce the resolved value to a boolean: any truthy
+  value (a non-empty variant string, a non-zero number, an object) is
+  **active**, and falsy values (`false`, `0`, `''`, `null`, `undefined`) are
+  **inactive**. When a variant's specific value matters, read it with `value`
+  rather than collapsing it to a boolean.
 </Callout>
+
+## Checking multiple flags
+
+When a decision depends on more than one flag, the batch helpers resolve a list of features and combine the results so you don't have to `await` each check yourself:
+
+- `allActive(features)`: `true` when **every** feature is active
+- `someActive(features)`: `true` when **at least one** feature is active
+- `allInactive(features)`: `true` when **every** feature is inactive
+- `someInactive(features)`: `true` when **at least one** feature is inactive
+
+```ts
+import flick from "@foadonis/flick/services/main";
+
+if (await flick.for(user).allActive(["new_checkout", "beta_banner"])) {
+  // both flags are on
+}
+
+if (await flick.for(user).someActive(["new_checkout", "beta_banner"])) {
+  // at least one flag is on
+}
+```
+
+Each helper applies the same truthy/falsy rule as `isActive`, so a variant value counts as active.
 
 ## Reading variant values
 
 `value(feature)` returns whatever the feature's `resolve` method returned. This is the canonical API for variant features:
 
 ```ts
-import flick from '@foadonis/flick/services/main'
+import flick from "@foadonis/flick/services/main";
 
-const color = await flick.for(user).value('checkout_button_color')
+const color = await flick.for(user).value("checkout_button_color");
 
-return view.render('checkout', { buttonColor: color })
+return view.render("checkout", { buttonColor: color });
 ```
 
 The same method works for boolean features, returning `true` or `false`.
+
+### Reading several values at once
+
+`values(features)` resolves a list of features in parallel and returns their resolved values as a tuple, in the same order as the input. The result is fully typed: each position carries the return type of that feature's `resolve`.
+
+```ts
+import flick from "@foadonis/flick/services/main";
+
+const [checkout, buttonColor] = await flick
+  .for(user)
+  .values(["new_checkout", "checkout_button_color"]);
+// checkout:    boolean
+// buttonColor: 'blue' | 'green' | 'red'
+```
 
 ## Branching with `match`
 
 `match(feature, { active, inactive })` chooses between two branches based on whether the feature is active. Each branch is a function whose return value becomes the result of `match`:
 
 ```ts
-import flick from '@foadonis/flick/services/main'
+import flick from "@foadonis/flick/services/main";
 
-const html = await flick.for(user).match('new_checkout', {
-  active: () => view.render('checkout/new'),
-  inactive: () => view.render('checkout/legacy'),
-})
+const html = await flick.for(user).match("new_checkout", {
+  active: () => view.render("checkout/new"),
+  inactive: () => view.render("checkout/legacy"),
+});
 ```
 
-`match` is preferable to a manual `if`/`else` when both branches return a value and you want to keep the call expression-shaped. Like `isActive`, it triggers the `active` branch only when the resolved value is strictly `true`.
+`match` is preferable to a manual `if`/`else` when both branches return a value and you want to keep the call expression-shaped. Like `isActive`, it runs the `active` branch when the resolved value is truthy.
 
 ## Type-safe feature names
 
 Flick uses TypeScript module augmentation to make feature names autocompletable and typo-checked. In your config file, declare your features against the `KnownFeatures` interface:
 
 ```ts title="config/flick.ts"
-import { features } from '#generated/features'
-import { defineConfig, drivers } from '@foadonis/flick'
-import { InferFeatures } from '@foadonis/flick/types'
+import { features } from "#generated/features";
+import { defineConfig, drivers } from "@foadonis/flick";
 
-export default defineConfig({
+const flickConfig = defineConfig({
   features,
-  driver: 'memory',
+  driver: "memory",
   drivers: {
     memory: drivers.memory(),
   },
-})
+});
 
-declare module '@foadonis/flick/types' {
-  interface KnownFeatures extends InferFeatures<typeof features> {}
+export default flickConfig;
+
+declare module "@foadonis/flick/types" {
+  interface KnownFeatures extends InferFeatures<typeof flickConfig> {}
+  interface KnownDriver extends InferFlickDriver<typeof flickConfig> {}
 }
 ```
 
@@ -103,10 +146,10 @@ With that in place, every resolution call accepts only the names of features tha
 
 ```ts
 // ✓ Compiles
-await flick.for(user).isActive('new_checkout')
+await flick.for(user).isActive("new_checkout");
 
 // ✗ TypeScript will not let this compile
-await flick.for(user).isActive('new_chekcout')
+await flick.for(user).isActive("new_chekcout");
 ```
 
 Adding a new file under `app/features/` is enough to make its name available; the indexer regenerates the `features` barrel and the `InferFeatures` helper picks it up on the next build.

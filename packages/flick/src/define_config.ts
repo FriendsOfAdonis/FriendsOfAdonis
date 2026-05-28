@@ -3,18 +3,26 @@ import { FlickDriverContract, FlickOptions, type FlickConfig } from './types.ts'
 import { configProvider } from '@adonisjs/core'
 import { FlickMemoryDriver } from './drivers/memory_driver.ts'
 import { FlickRedisDriver, FlickRedisDriverConfig } from './drivers/redis_driver.ts'
+import { Constructor, LazyImport } from '@adonisjs/core/types/common'
+import { BaseFeature } from './base_feature.ts'
 
 /**
  * Creates a Flick configuration.
  */
-export function defineConfig<Drivers extends Record<string, ConfigProvider<FlickDriverContract>>>(
-  config: FlickConfig<Drivers>
-): ConfigProvider<FlickOptions> {
+export function defineConfig<
+  Features extends Record<string, LazyImport<Constructor<BaseFeature>>>,
+  Drivers extends Record<string, ConfigProvider<FlickDriverContract>>,
+  Driver extends keyof Drivers,
+>(
+  config: FlickConfig<Features, Drivers, Driver>
+): ConfigProvider<FlickOptions<Features, Awaited<ReturnType<Drivers[Driver]['resolver']>>>> {
   return configProvider.create(async (app) => {
     const driverProvider = config.drivers[config.driver]
     return {
       features: config.features,
-      driver: await driverProvider.resolver(app),
+      driver: (await driverProvider.resolver(app)) as Awaited<
+        ReturnType<Drivers[Driver]['resolver']>
+      >,
     }
   })
 }

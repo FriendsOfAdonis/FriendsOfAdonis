@@ -7,33 +7,33 @@ icon: Album
 Adonis Flick is a typed, driver-based feature-flag system for AdonisJS. Define a feature once, then resolve it for any user, tenant, or request, with full TypeScript inference and a pluggable cache.
 
 ```ts title="app/features/new_checkout_feature.ts"
-import { BaseFeature } from '@foadonis/flick'
-import User from '#models/user'
+import { BaseFeature } from "@foadonis/flick";
+import User from "#models/user";
 
 export default class NewCheckoutFeature extends BaseFeature<User> {
   async resolve(user: User) {
-    if (user.isAdmin) return true
+    if (user.isAdmin) return true;
 
-    return Math.random() > 0.5
+    return Math.random() > 0.5;
   }
 }
 ```
 
 ```ts title="start/routes.ts"
-import router from '@adonisjs/core/services/router'
-import flick from '@foadonis/flick/services/main'
+import router from "@adonisjs/core/services/router";
+import flick from "@foadonis/flick/services/main";
 
-router.get('/checkout', async ({ auth, view }) => {
-  const user = auth.getUserOrFail()
+router.get("/checkout", async ({ auth, view }) => {
+  const user = auth.getUserOrFail();
 
-  return flick.for(user).match('new_checkout', {
-    active: () => view.render('checkout/new'),
-    inactive: () => view.render('checkout/legacy'),
-  })
-})
+  return flick.for(user).match("new_checkout", {
+    active: () => view.render("checkout/new"),
+    inactive: () => view.render("checkout/legacy"),
+  });
+});
 ```
 
-`match` runs the `active` callback when the feature resolves to `true`, and `inactive` otherwise. The full resolution API (`isActive`, `isInactive`, `value`, `match`) is covered in [Resolving Features](/docs/flick/resolving-features).
+`match` runs the `active` callback when the feature resolves to a truthy value, and `inactive` otherwise. The full resolution API (`isActive`, `isInactive`, `value`, `values`, `match`, and the `allActive` / `someActive` batch helpers) is covered in [Resolving Features](/docs/flick/resolving-features).
 
 ## What are feature flags?
 

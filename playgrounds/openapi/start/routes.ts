@@ -15,7 +15,7 @@ router.get('/test', async () => {
   const user = new User()
 
   const value = await flick.for(user).value('demo')
-  const [test] = await flick.for(user).values(['demo', 'test'])
+  const [test, hello] = await flick.for(user).values(['demo', 'test'])
 
   return value
 })

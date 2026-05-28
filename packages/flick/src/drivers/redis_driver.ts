@@ -30,7 +30,11 @@ export class FlickRedisDriver implements FlickDriverContract {
   }
 
   async set(feature: string, identifier: string | number, value: unknown) {
-    this.connection.hset(this.storeKey, this.field(feature, identifier), JSON.stringify(value))
+    await this.connection.hset(
+      this.storeKey,
+      this.field(feature, identifier),
+      JSON.stringify(value)
+    )
   }
 
   async get(feature: string, identifier: string | number) {

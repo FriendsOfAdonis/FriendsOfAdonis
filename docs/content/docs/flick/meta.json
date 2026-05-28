@@ -9,6 +9,8 @@
     "--- Guides ---",
     "(guides)/defining-features",
     "(guides)/resolving-features",
-    "(guides)/drivers"
+    "(guides)/edge",
+    "(guides)/drivers",
+    "(guides)/testing"
   ]
 }
