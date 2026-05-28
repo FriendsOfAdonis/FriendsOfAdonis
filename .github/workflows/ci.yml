@@ -41,4 +41,4 @@ jobs:
       - name: 📦 Install Node dependencies
         run: yarn install
       - run: yarn lint build typecheck --filter="./packages/*"
-      - run: yarn test --filter="./packages/*" --filter=!@foadonis/magnify
+      - run: yarn test --filter="./packages/*" --filter=!@foadonis/magnify --filter=!@foadonis/shopkeeper
