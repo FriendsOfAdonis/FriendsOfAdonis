@@ -1,5 +1,11 @@
 # @foadonis/shopkeeper
 
+## 1.0.1
+
+### Patch Changes
+
+- [#133](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/133) [`9cc73fc`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/9cc73fc6e58340b736eb30879f466ecabfe038bc) Thanks [@kerwanp](https://github.com/kerwanp)! - Fix package deployment workflow
+
 ## 1.0.0
 
 ### Major Changes
