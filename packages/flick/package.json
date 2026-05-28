@@ -1,6 +1,6 @@
 {
   "name": "@foadonis/flick",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Feature-flags management package for AdonisJS",
   "keywords": [
     "adonis",
