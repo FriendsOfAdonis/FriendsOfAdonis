@@ -25,6 +25,7 @@
     "@sentry/node": "^10.30.0",
     "@shikijs/transformers": "^3.20.0",
     "@takumi-rs/image-response": "^0.57.5",
+    "@vercel/analytics": "^1.5.0",
     "algoliasearch": "^5.46.0",
     "automd": "^0.4.2",
     "class-variance-authority": "^0.7.1",

@@ -2,6 +2,7 @@ import './global.css'
 import 'fumadocs-twoslash/twoslash.css'
 import { NextProvider } from 'fumadocs-core/framework/next'
 import { TreeContextProvider } from 'fumadocs-ui/contexts/tree'
+import { Analytics } from '@vercel/analytics/next'
 import { GeistMono } from 'geist/font/mono'
 import { GeistSans } from 'geist/font/sans'
 import Script from 'next/script'
@@ -50,6 +51,7 @@ export default async function Layout({ children }: { readonly children: ReactNod
             <Provider tags={tags as any}>{children}</Provider>
           </TreeContextProvider>
         </NextProvider>
+        <Analytics />
       </Body>
       <Script data-domain="friendsofadonis.com" src="https://plausible.io/js/script.js" />
     </html>
