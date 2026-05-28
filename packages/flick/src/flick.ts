@@ -92,6 +92,57 @@ export class Flick<
     return result
   }
 
+  /**
+   * Stores an explicit value for the feature and scope, bypassing the feature's
+   * `resolve`. Because `resolve` returns the cached value when present, this acts
+   * as a persistent per-scope override until `clear` (or `purge`) removes it.
+   *
+   * @example
+   * await flick.define('checkout_variant', user, 'experimental')
+   */
+  async define<Feature extends keyof Features, Scope extends FeatureScopeable>(
+    feature: Feature,
+    scope: Scope,
+    value: InferFeatureResult<LazyLoaded<Features[Feature]>>
+  ): Promise<void> {
+    await this.#driver.set(feature as string, scope.toFeatureIdentifier(), value)
+  }
+
+  /**
+   * Turns the feature on for the scope by storing `true`. Shorthand for
+   * `define(feature, scope, true)`.
+   *
+   * @example
+   * await flick.activate('new_checkout', user)
+   */
+  async activate<Feature extends keyof Features, Scope extends FeatureScopeable>(
+    feature: Feature,
+    scope: Scope
+  ): Promise<void> {
+    return this.define(feature, scope, true as any)
+  }
+
+  /**
+   * Turns the feature off for the scope by storing `false`. Shorthand for
+   * `define(feature, scope, false)`.
+   *
+   * @example
+   * await flick.deactivate('new_checkout', user)
+   */
+  async deactivate<Feature extends keyof Features, Scope extends FeatureScopeable>(
+    feature: Feature,
+    scope: Scope
+  ): Promise<void> {
+    return this.define(feature, scope, false as any)
+  }
+
+  /**
+   * Removes the cached value for the feature and scope. The next `resolve` will
+   * re-evaluate the feature instead of returning a stored value.
+   *
+   * @example
+   * await flick.clear('new_checkout', user)
+   */
   async clear<Feature extends keyof Features, Scope extends FeatureScopeable>(
     feature: Feature,
     scope: Scope
@@ -99,6 +150,14 @@ export class Flick<
     await this.#driver.delete(feature as string, scope.toFeatureIdentifier())
   }
 
+  /**
+   * Removes the cached values of the given features across every scope, or of
+   * all features when none are given.
+   *
+   * @example
+   * await flick.purge(['new_checkout']) // a single feature
+   * await flick.purge()                 // everything
+   */
   async purge(features?: string[]): Promise<void> {
     await this.#driver.purge(features)
   }

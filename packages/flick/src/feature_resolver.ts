@@ -129,7 +129,48 @@ export class FeatureResolver<
     return resolved as any
   }
 
+  /**
+   * Removes the cached value of the feature for the scope, forcing the next
+   * resolution to re-evaluate the feature.
+   *
+   * @example
+   * flick.for(user).clear('new_checkout')
+   */
   async clear<Feature extends keyof Features>(feature: Feature) {
     return this.flick.clear(feature, this.scope)
+  }
+
+  /**
+   * Stores an explicit value for the feature on the scope, overriding its
+   * `resolve` until the value is cleared.
+   *
+   * @example
+   * flick.for(user).define('checkout_variant', 'experimental')
+   */
+  async define<Feature extends keyof Features>(
+    feature: Feature,
+    value: InferFeatureResult<LazyLoaded<Features[Feature]>>
+  ) {
+    return this.flick.define(feature, this.scope, value)
+  }
+
+  /**
+   * Turns the feature on for the scope by storing `true`.
+   *
+   * @example
+   * flick.for(user).activate('new_checkout')
+   */
+  async activate<Feature extends keyof Features>(feature: Feature) {
+    return this.flick.activate(feature, this.scope)
+  }
+
+  /**
+   * Turns the feature off for the scope by storing `false`.
+   *
+   * @example
+   * flick.for(user).deactivate('new_checkout')
+   */
+  async deactivate<Feature extends keyof Features>(feature: Feature) {
+    return this.flick.deactivate(feature, this.scope)
   }
 }

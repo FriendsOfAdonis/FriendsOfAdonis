@@ -40,7 +40,7 @@ function createResolver() {
       off: async () => ({ default: OffFeature }),
       num: async () => ({ default: NumberFeature }),
       zero: async () => ({ default: ZeroFeature }),
-    } as any,
+    },
     resolver as any,
     driver
   )
@@ -138,5 +138,40 @@ test.group('FeatureResolver', () => {
     const flick = createResolver()
 
     assert.deepEqual(await flick.values(['on', 'num', 'zero']), [true, 5, 0])
+  })
+
+  test('define should store an explicit value for the scope', async ({ assert }) => {
+    const flick = createResolver()
+
+    await flick.define('num', 42)
+
+    assert.strictEqual(await flick.value('num'), 42)
+  })
+
+  test('activate should turn the feature on for the scope', async ({ assert }) => {
+    const flick = createResolver()
+
+    await flick.activate('off')
+
+    assert.isTrue(await flick.isActive('off'))
+  })
+
+  test('deactivate should turn the feature off for the scope', async ({ assert }) => {
+    const flick = createResolver()
+
+    await flick.deactivate('on')
+
+    assert.isFalse(await flick.isActive('on'))
+  })
+
+  test('clear should remove the stored value so it re-evaluates', async ({ assert }) => {
+    const flick = createResolver()
+
+    await flick.activate('off')
+    assert.isTrue(await flick.isActive('off'))
+
+    await flick.clear('off')
+
+    assert.isFalse(await flick.isActive('off'))
   })
 })

@@ -20,7 +20,7 @@ Every resolution starts with `flick.for(scope)`, which binds a scope and returns
 const resolver = flick.for(user);
 ```
 
-The returned resolver exposes a set of asynchronous methods: `isActive`, `isInactive`, `value`, `values`, `match`, and the batch helpers `allActive`, `someActive`, `allInactive`, and `someInactive`.
+The returned resolver exposes a set of asynchronous methods: `isActive`, `isInactive`, `value`, `values`, `match`, and the batch helpers `allActive`, `someActive`, `allInactive`, and `someInactive`. Alongside these read methods it also exposes `define`, `activate`, `deactivate`, and `clear` for writing and removing stored values, covered in [Overriding stored values](#overriding-stored-values).
 
 ## Checking active state
 
@@ -117,6 +117,47 @@ const html = await flick.for(user).match("new_checkout", {
 ```
 
 `match` is preferable to a manual `if`/`else` when both branches return a value and you want to keep the call expression-shaped. Like `isActive`, it runs the `active` branch when the resolved value is truthy.
+
+## Overriding stored values
+
+Sometimes you want to set a feature's value for a scope directly, instead of letting `resolve` compute it: a support agent enabling a beta for one customer, a seed script opting an account into an experiment, or a manual kill switch. The resolver exposes three methods that write straight to the driver:
+
+- `define(feature, value)` stores an explicit value for the scope.
+- `activate(feature)` is shorthand for `define(feature, true)`.
+- `deactivate(feature)` is shorthand for `define(feature, false)`.
+
+```ts
+import flick from "@foadonis/flick/services/main";
+
+// Force a variant value for this user
+await flick.for(user).define("checkout_button_color", "green");
+
+// Turn a boolean flag on or off for a given scope
+await flick.for(user).activate("new_checkout");
+await flick.for(other).deactivate("new_checkout");
+```
+
+Because resolution returns the stored value whenever one exists, a defined value takes precedence over `resolve` and stays in effect until it is [cleared](#clearing-stored-values). `define` only accepts values assignable to the feature's `resolve` return type, so variant values stay type-checked.
+
+<Callout>
+  A feature's [`before` hook](/docs/flick/defining-features) runs before the
+  stored value is read, so a `before` that returns a value short-circuits ahead
+  of anything set with `define`, `activate`, or `deactivate`. Reserve `before`
+  for hard overrides (such as an admin bypass) that should win over manually set
+  values.
+</Callout>
+
+## Clearing stored values
+
+`clear(feature)` removes the stored value for the scope. The next resolution re-runs `resolve` instead of returning the old value:
+
+```ts
+import flick from "@foadonis/flick/services/main";
+
+await flick.for(user).clear("new_checkout");
+```
+
+Use it after changing a feature's logic, or to undo a value set with `define`. To clear stored values across **every** scope at once, call `flick.purge(["new_checkout"])` (or `flick.purge()` for all features), or run the `flick:purge` command. See [Cache Drivers](/docs/flick/drivers) for how invalidation works.
 
 ## Type-safe feature names
 
