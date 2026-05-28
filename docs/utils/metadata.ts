@@ -49,6 +49,11 @@ export const packages: Record<string, PackageInfo> = {
     name: 'Lucid Parser',
     description: 'Parse Lucid models using AST tree',
   },
+  'flick': {
+    package: '@foadonis/flick',
+    name: 'Adonis Flick',
+    description: 'Feature-flags package for AdonisJS',
+  },
 }
 
 export const baseUrl =
