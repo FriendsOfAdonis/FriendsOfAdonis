@@ -7,13 +7,14 @@ import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
 import { ApiProperty } from '@foadonis/openapi/decorators'
 import type { HasMany } from '@adonisjs/lucid/types/relations'
 import Recipe from './recipe.js'
+import { HasFeatures } from '@foadonis/flick'
 
 const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
   uids: ['email'],
   passwordColumnName: 'password',
 })
 
-export default class User extends compose(BaseModel, AuthFinder) {
+export default class User extends compose(BaseModel, AuthFinder, HasFeatures) {
   static accessTokens = DbAccessTokensProvider.forModel(User)
 
   @column({ isPrimary: true })

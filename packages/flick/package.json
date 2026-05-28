@@ -1,0 +1,100 @@
+{
+  "name": "@foadonis/flick",
+  "version": "0.0.0",
+  "description": "Feature-flags management package for AdonisJS",
+  "keywords": [
+    "adonis",
+    "adonisjs",
+    "feature-flags",
+    "typescript"
+  ],
+  "homepage": "https://friendsofadonis.com/docs/flick",
+  "bugs": {
+    "url": "https://github.com/FriendsOfAdonis/FriendsOfAdonis/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Martin Paucot",
+    "email": "contact@martin-paucot.fr"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FriendsOfAdonis/FriendsOfAdonis",
+    "directory": "packages/flick"
+  },
+  "files": [
+    "build",
+    "!build/bin",
+    "!build/tests"
+  ],
+  "type": "module",
+  "exports": {
+    ".": "./build/index.js",
+    "./commands": "./build/commands/main.js",
+    "./flick_provider": "./build/providers/flick_provider.js",
+    "./plugins/edge": "./build/src/plugins/edge.js",
+    "./services/main": "./build/services/main.js",
+    "./types": "./build/src/types.js"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "latest"
+  },
+  "scripts": {
+    "clean": "del-cli build",
+    "copy:templates": "cpy \"stubs/**/*.stub\" build/stubs",
+    "index:commands": "adonis-kit index build/commands",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint",
+    "quick:test": "node --import=./tsnode.esm.js --enable-source-maps bin/test.ts",
+    "test": "c8 yarn quick:test",
+    "build": "yarn clean && tsc && yarn copy:templates && yarn index:commands",
+    "dev": "tsc --watch",
+    "version": "yarn build"
+  },
+  "dependencies": {
+    "dot-prop": "^10.1.0",
+    "pkg-types": "^2.3.1",
+    "type-fest": "^5.6.0"
+  },
+  "devDependencies": {
+    "@adonisjs/assembler": "catalog:",
+    "@adonisjs/core": "catalog:",
+    "@adonisjs/lucid": "catalog:",
+    "@adonisjs/redis": "catalog:",
+    "@japa/assert": "^4.2.0",
+    "@japa/expect-type": "^2.0.4",
+    "@japa/file-system": "^3.0.0",
+    "@japa/runner": "^4.5.0",
+    "@swc/core": "1.15.5",
+    "@testcontainers/redis": "^11.10.0",
+    "@types/node": "^25.0.2",
+    "c8": "^11.0.0",
+    "cpy-cli": "^7.0.0",
+    "del-cli": "^7.0.0",
+    "edge.js": "^6.4.0",
+    "ts-node": "^10.9.2",
+    "typescript": "catalog:",
+    "youch": "catalog:"
+  },
+  "peerDependencies": {
+    "@adonisjs/core": "^7.0.0",
+    "@adonisjs/lucid": "^22.0.0"
+  },
+  "optionalDependencies": {
+    "@adonisjs/redis": "^10.0.0",
+    "edge.js": "^6.4.0"
+  },
+  "c8": {
+    "exclude": [
+      "tests/**"
+    ],
+    "reporter": [
+      "text",
+      "html"
+    ]
+  },
+  "engines": {
+    "node": ">=20.6.0"
+  }
+}

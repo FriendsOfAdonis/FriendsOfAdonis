@@ -1,5 +1,6 @@
 import { defineConfig } from '@adonisjs/core/app'
 import { indexActions } from '@foadonis/actions'
+import { indexFeatures } from '@foadonis/flick'
 
 export default defineConfig({
   /*
@@ -41,6 +42,7 @@ export default defineConfig({
     () => import('@foadonis/openapi/openapi_provider'),
     () => import('@foadonis/actions/actions_provider'),
     () => import('@adonisjs/otel/otel_provider'),
+    () => import('@foadonis/flick/flick_provider'),
   ],
 
   /*
@@ -79,6 +81,6 @@ export default defineConfig({
   },
 
   hooks: {
-    init: [indexActions()],
+    init: [indexActions(), indexFeatures()],
   },
 })

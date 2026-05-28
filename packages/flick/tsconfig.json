@@ -1,0 +1,8 @@
+{
+  "extends": "@foadonis/typescript-config/adonis.package.json",
+  "compilerOptions": {
+    "rootDir": "./",
+    "outDir": "./build",
+    "types": ["@adonisjs/redis/redis_provider"]
+  }
+}

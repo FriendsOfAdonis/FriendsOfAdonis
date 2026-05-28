@@ -1,0 +1,15 @@
+{{#var entity = generators.createEntity(name) }}
+{{#var featureName = string(entity.name).pascalCase().suffix('Feature').toString() }}
+{{#var featureFileName = string(featureName).snakeCase().ext('.ts').toString() }}
+{{{
+  exports({
+    to: app.makePath('app/features', entity.path, featureFileName)
+  })
+}}}
+import { BaseFeature } from '@foadonis/flick'
+
+export default class {{ featureName }} extends BaseFeature {
+  async resolve() {
+    return false
+  }
+}

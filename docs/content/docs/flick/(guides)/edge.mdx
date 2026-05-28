@@ -1,0 +1,96 @@
+---
+title: Edge Templates
+description: "Gate template markup on feature flags with Edge tags and the flick global."
+icon: LayoutTemplate
+---
+
+Flick integrates with [Edge](https://edgejs.dev), the AdonisJS templating engine, so you can render markup conditionally based on a feature's state. The same scope and resolution rules from [Resolving Features](/docs/flick/resolving-features) apply: every check needs a scope, and the resolved value is coerced to a boolean for the active/inactive tags.
+
+<Callout>
+  The Edge integration is optional. It registers itself automatically when your
+  application uses Edge, so there is nothing to configure. If Edge is not
+  installed, Flick simply skips the integration.
+</Callout>
+
+## Passing the scope
+
+Tags and the global never assume a scope for you. You pass it explicitly, exactly like in TypeScript. In an HTTP view that is usually the authenticated user, which you share with the template from your controller:
+
+```ts title="app/controllers/checkout_controller.ts"
+return view.render("checkout", { user: auth.user });
+```
+
+The examples below assume `user` is available in the template.
+
+## The `@feature` tag
+
+`@feature(feature, scope)` renders its block when the feature resolves to a truthy value:
+
+```edge
+@feature('new_checkout', user)
+  @include('checkout/new')
+@end
+```
+
+Add an `@else` branch to render fallback markup when the feature is inactive:
+
+```edge
+@feature('new_checkout', user)
+  @include('checkout/new')
+@else
+  @include('checkout/legacy')
+@end
+```
+
+## The `@featureInactive` tag
+
+`@featureInactive(feature, scope)` is the inverse. It renders its block when the feature resolves to a falsy value, which reads better than an empty `@feature` with only an `@else`:
+
+```edge
+@featureInactive('beta_program', user)
+  <a href="/beta/join">Join the beta</a>
+@end
+```
+
+<Callout>
+  Both tags coerce the resolved value to a boolean, following the same rule as
+  `isActive`: any truthy value is **active**, and `false`, `0`, `''`, `null`, or
+  `undefined` are **inactive**. To branch on a specific variant value, read it
+  with the `flick` global instead.
+</Callout>
+
+## The `flick` global
+
+Flick also exposes the service as a `flick` global, so the full resolver API is available inside templates. Because resolution is asynchronous, remember to `await` it.
+
+Use it with Edge's native `@if` when you need `@elseif` chains or a condition the tags do not cover:
+
+```edge
+@if(await flick.for(user).isActive('new_checkout'))
+  @include('checkout/new')
+@elseif(await flick.for(user).isActive('legacy_checkout'))
+  @include('checkout/legacy')
+@else
+  @include('checkout/default')
+@end
+```
+
+Read a variant value with an interpolation:
+
+```edge
+<button class="btn-{{ await flick.for(user).value('checkout_button_color') }}">
+  Checkout
+</button>
+```
+
+## Registering the plugin manually
+
+The provider registers the plugin for you. If you manage your own Edge instance, or want to register it explicitly, import the plugin and pass it the Flick service:
+
+```ts title="start/view.ts"
+import edge from "edge.js";
+import flick from "@foadonis/flick/services/main";
+import { edgePluginFlick } from "@foadonis/flick/plugins/edge";
+
+edge.use(edgePluginFlick(flick));
+```
