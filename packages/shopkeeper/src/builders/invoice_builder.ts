@@ -1,3 +1,4 @@
+// oxlint-disable unicorn/no-thenable
 import type Stripe from 'stripe'
 import { Invoice } from '../invoice.js'
 import { Payment } from '../payment.js'

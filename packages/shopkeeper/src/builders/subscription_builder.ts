@@ -1,3 +1,4 @@
+// oxlint-disable unicorn/no-thenable
 import { DateTime } from 'luxon'
 import type Stripe from 'stripe'
 import { Exception } from '@adonisjs/core/exceptions'
