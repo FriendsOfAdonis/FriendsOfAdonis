@@ -4,7 +4,7 @@
 
 ### Major Changes
 
-- [#116](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/116) [`3d1e30d`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/3d1e30d9b326bf6e051f453e7eb73a1e355d1450) Thanks [@densetsuuu](https://github.com/densetsuuu)! - Shopkeeper 0.2.0 — full rewrite with breaking changes across the public API.
+- [#116](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/116) [`3d1e30d`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/3d1e30d9b326bf6e051f453e7eb73a1e355d1450) Thanks [@densetsuuu](https://github.com/densetsuuu)! - Shopkeeper 1.0.0 — full rewrite with breaking changes across the public API.
 
   See the [migration guide](https://friendsofadonis.com/docs/shopkeeper/migration) for step-by-step upgrade instructions.
 
