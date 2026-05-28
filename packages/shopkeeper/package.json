@@ -50,7 +50,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "oxlint",
     "format": "prettier --write .",
-    "quick:test": "node --import=./tsnode.esm.js --env-file .env --enable-source-maps bin/test.ts",
+    "quick:test": "node --import=./tsnode.esm.js --enable-source-maps bin/test.ts",
     "test": "c8 yarn quick:test",
     "build": "yarn clean && tsc && yarn copy:templates && yarn index:commands",
     "dev": "tsc --watch"
