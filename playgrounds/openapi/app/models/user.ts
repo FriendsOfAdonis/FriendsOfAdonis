@@ -7,13 +7,14 @@ import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
 import { ApiProperty } from '@foadonis/openapi/decorators'
 import type { HasMany } from '@adonisjs/lucid/types/relations'
 import Recipe from './recipe.js'
+import { FeatureScopeable } from '@foadonis/flick/types'
 
 const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
   uids: ['email'],
   passwordColumnName: 'password',
 })
 
-export default class User extends compose(BaseModel, AuthFinder) {
+export default class User extends compose(BaseModel, AuthFinder) implements FeatureScopeable {
   static accessTokens = DbAccessTokensProvider.forModel(User)
 
   @column({ isPrimary: true })
@@ -43,4 +44,8 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   @ApiProperty({ type: String })
   declare updatedAt: DateTime | null
+
+  toFeatureIdentifier() {
+    return this.id
+  }
 }

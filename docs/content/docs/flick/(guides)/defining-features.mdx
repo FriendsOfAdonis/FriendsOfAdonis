@@ -1,0 +1,214 @@
+---
+title: Defining Features
+description: "Write feature classes, choose a scope, and short-circuit resolution."
+---
+
+A **feature** is a class that decides what value a flag has for a given scope. Features live in `app/features/`, are indexed at build time, and resolved on demand by the Flick service.
+
+## Anatomy of a feature
+
+Every feature extends `BaseFeature<Scope>` and implements a single required method, `resolve`:
+
+```ts title="app/features/new_checkout_feature.ts"
+import { BaseFeature } from '@foadonis/flick'
+import User from '#models/user'
+
+export default class NewCheckoutFeature extends BaseFeature<User> {
+  async resolve(user: User) {
+    if (user.isAdmin) return true
+
+    return Math.random() > 0.5
+  }
+}
+```
+
+<Callout>
+  `resolve` is allowed to be non-deterministic. The first call for a given scope rolls the dice, and
+  the configured [driver](/docs/flick/drivers) caches the result so the same user keeps seeing the
+  same variant on every subsequent call.
+</Callout>
+
+A few rules apply:
+
+- The file must end with `_feature.ts` so the indexer picks it up.
+- The feature's name is the filename with `_feature` stripped, so `new_checkout_feature.ts` becomes the `new_checkout` flag.
+- The file must default-export the feature class.
+- The generic parameter on `BaseFeature<Scope>` declares what scope the feature accepts. Flick uses it to type the `resolve` argument and the `flick.for(scope)` call site.
+
+<Callout>
+  The indexer runs as part of the Adonis assembler hooks. Any feature file you add or remove is
+  picked up on the next build or `node ace serve` restart.
+</Callout>
+
+## Variant returns
+
+`resolve` can return any value, not just a boolean. This makes a single feature class power both classic on/off flags and multivariate experiments.
+
+```ts title="app/features/checkout_button_color_feature.ts"
+import { BaseFeature } from '@foadonis/flick'
+import User from '#models/user'
+
+export default class CheckoutButtonColorFeature extends BaseFeature<User> {
+  async resolve(user: User): Promise<'blue' | 'green' | 'red'> {
+    const bucket = user.id % 3
+    if (bucket === 0) return 'blue'
+    if (bucket === 1) return 'green'
+    return 'red'
+  }
+}
+```
+
+You can return primitive values, plain objects, or full configuration payloads. Whatever shape you return is what consumers see when they call `flick.for(scope).value('...')`.
+
+<Callout>
+  `isActive` is a convenience that only returns `true` when the resolved value is strictly `true`.
+  For variant features, use `value` or `match` instead. See [Resolving
+  Features](/docs/flick/resolving-features).
+</Callout>
+
+## Async work and dependencies
+
+`resolve` is asynchronous, so it can hit the database, call an external API, or read from cache. Features are also resolved through the Adonis container, which means you can inject services straight into the constructor:
+
+```ts title="app/features/regional_pricing_feature.ts"
+import { inject } from '@adonisjs/core'
+import { BaseFeature } from '@foadonis/flick'
+import GeoService from '#services/geo_service'
+import User from '#models/user'
+
+@inject()
+export default class RegionalPricingFeature extends BaseFeature<User> {
+  constructor(private geo: GeoService) {
+    super()
+  }
+
+  async resolve(user: User) {
+    const country = await this.geo.countryFor(user)
+    return ['US', 'CA', 'MX'].includes(country)
+  }
+}
+```
+
+`BaseFeature` has a no-argument constructor, so `super()` with no arguments is all that's required. Because the container instantiates the feature, every binding registered with Adonis (services, models, config providers) is available to inject.
+
+<Callout>
+  Expensive work in `resolve` is fine: the configured [driver](/docs/flick/drivers) caches the
+  result per scope identifier, so the cost is only paid the first time. Subsequent calls return
+  immediately without touching the database or external service.
+</Callout>
+
+## Short-circuiting with `before()`
+
+A feature can implement an optional `before(scope)` hook to short-circuit resolution. The hook's return type is `Promise<boolean | void>`:
+
+- Return `true` to mark the feature active and skip `resolve` entirely.
+- Return `false` to mark the feature inactive and skip `resolve` entirely.
+- Return nothing (`void` or `undefined`) to fall through to `resolve`.
+
+`before` cannot return variant values: it is strictly a boolean gate. For variant overrides, branch inside `resolve` instead.
+
+`before` is the natural place for global kill switches and overrides for privileged users.
+
+### Kill switch
+
+Flip a config flag to disable a feature for everyone without redeploying logic:
+
+```ts title="app/features/new_checkout_feature.ts"
+import { BaseFeature } from '@foadonis/flick'
+import env from '#start/env'
+import User from '#models/user'
+
+export default class NewCheckoutFeature extends BaseFeature<User> {
+  async before() {
+    if (env.get('KILL_NEW_CHECKOUT')) return false
+  }
+
+  async resolve(user: User) {
+    if (user.isAdmin) return true
+
+    return Math.random() > 0.5
+  }
+}
+```
+
+### Force-on for staff
+
+Make sure internal users always see a feature, regardless of rollout state:
+
+```ts title="app/features/new_checkout_feature.ts"
+export default class NewCheckoutFeature extends BaseFeature<User> {
+  async before(user: User) {
+    if (user.isStaff) return true
+  }
+
+  async resolve(user: User) {
+    return Math.random() > 0.5
+  }
+}
+```
+
+<Callout>
+  `before` runs on every resolution and is not cached. `resolve` is cached. If you need an always-on
+  override, `before` is the right place. If you need a cached value, return it from `resolve`.
+</Callout>
+
+## Scopes
+
+A scope is whatever object you pass to `flick.for(...)`. It identifies *who* (or what) the flag is being resolved for, so the resolved value can be cached and consistent across requests.
+
+Scopes must implement `FeatureScopeable`:
+
+```ts
+export interface FeatureScopeable {
+  toFeatureIdentifier(): string | number
+}
+```
+
+The returned identifier must be stable for the same logical scope: the same user should always return the same identifier, otherwise Flick will treat them as different scopes and re-resolve the feature.
+
+### The HasFeatures mixin
+
+For Lucid models, the `HasFeatures` mixin implements `FeatureScopeable` for you using the model's primary key:
+
+```ts title="app/models/user.ts"
+import { compose } from '@adonisjs/core/helpers'
+import { BaseModel } from '@adonisjs/lucid/orm'
+import { HasFeatures } from '@foadonis/flick/mixins'
+
+export default class User extends compose(BaseModel, HasFeatures) {}
+```
+
+This is the recommended approach for any Lucid model you want to use as a scope.
+
+### Implementing `FeatureScopeable` manually
+
+For non-Lucid scopes (e.g., a request, an organization handle, a session) implement the interface yourself:
+
+```ts title="app/scopes/tenant_scope.ts"
+import { FeatureScopeable } from '@foadonis/flick/types'
+
+export class TenantScope implements FeatureScopeable {
+  constructor(private slug: string) {}
+
+  toFeatureIdentifier() {
+    return this.slug
+  }
+}
+```
+
+Use it the same way you'd use a model:
+
+```ts
+await flick.for(new TenantScope('acme')).value('new_checkout')
+```
+
+<Callout type="warn">
+  Returning a random or per-request identifier (a timestamp, a UUID generated per call) will defeat
+  the cache and resolve the feature on every call. Use a value that's stable across the lifetime of
+  the scope.
+</Callout>
+
+## Next steps
+
+- [Resolving Features](/docs/flick/resolving-features): Read flag values with `isActive`, `value`, and `match`
+- [Drivers](/docs/flick/drivers): Pick the right cache backend for your environment

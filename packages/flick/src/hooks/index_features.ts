@@ -1,0 +1,63 @@
+import stringHelpers from '@adonisjs/core/helpers/string'
+import { AllHooks } from '@adonisjs/core/types/app'
+
+export interface IndexFeaturesOptions {
+  /**
+   * Source directory for resolvers
+   *
+   * @default 'app/actions'
+   * */
+  source?: string
+
+  /**
+   * Import alias for resolvers
+   *
+   * @default '#features'
+   */
+  importAlias?: string
+
+  /**
+   * Glob patterns for matching resolver files
+   */
+  glob?: string[]
+
+  /**
+   * Directory segments to skip when building the actions tree.
+   *
+   * For example, if your actions live in `app/identity/features/test_feature.ts`
+   * and you want the generated tree to be `Identity.Test` instead of
+   * `Identity.Features.Test`, set `skipSegments: ['features']`.
+   */
+  skipSegments?: string[]
+}
+
+export function indexFeatures({
+  source = 'app/features',
+  importAlias = '#features',
+  glob = ['**/*_feature.ts'],
+}: IndexFeaturesOptions = {}): AllHooks['init'][number] {
+  return {
+    run(_, __, indexGenerator) {
+      indexGenerator.add('features', {
+        source,
+        glob,
+        output: '.adonisjs/server/features.ts',
+        importAlias,
+        as(vfs, buffer, ___, helpers) {
+          const filesList = vfs.asList({
+            transformKey: (key) => stringHelpers.create(key).removeSuffix('_feature').toString(),
+            transformValue: (value) => `() => import('${helpers.toImportPath(value)}')`,
+          })
+
+          buffer.write(`export const features = {`).indent()
+
+          for (const [key, value] of Object.entries(filesList)) {
+            buffer.write(`${key}: ${value},`)
+          }
+
+          buffer.dedent().writeLine(`}`).indent()
+        },
+      })
+    },
+  }
+}

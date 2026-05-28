@@ -1,0 +1,139 @@
+---
+title: Drivers
+description: "Configure the memory and Redis drivers, or write your own."
+---
+
+A driver is what keeps a feature's resolution **stable** for a given scope. The first time `resolve` runs for a scope, the driver stores the result; every subsequent call returns the stored value instead of re-running `resolve`.
+
+## Why drivers matter
+
+The most important job of the driver is consistency for non-deterministic features. Consider a rollout flag that uses `Math.random` to assign half of users to the new experience:
+
+```ts
+async resolve(user: User) {
+  return Math.random() > 0.5
+}
+```
+
+Without a cache, every call to `flick.for(user).isActive('new_checkout')` would roll the dice again. The same user would see the new checkout on one page load, the old one on the next, and break in obvious ways the moment a single request resolves the flag twice. The driver is what makes the assignment sticky: once a user is bucketed into a variant, they stay there until the cache entry is cleared.
+
+The same applies to any non-deterministic logic in `resolve`: rolling percentage rollouts, A/B test bucketing, weighted variants, lookups against external services that change over time. If you want a stable answer per scope, the driver is what gives it to you.
+
+A secondary benefit is performance: even when `resolve` is deterministic but expensive (a database query, an HTTP call to a feature-flag SaaS), the driver removes the cost from every call after the first.
+
+## How drivers work
+
+Flick keys every cached value by the pair `(feature name, scope identifier)`. The flow on each resolution is:
+
+1. `flick.for(scope).value('feature')` is called.
+2. Flick asks the driver if it has a value for that `(feature, identifier)` pair.
+3. If yes, the driver's value is returned and `resolve` is **not** called.
+4. If no, the feature's `resolve` runs, and its return value is written to the driver before being returned.
+
+Choosing a driver is then a choice about where that cache lives, how it survives restarts, and how it scales across processes.
+
+## Configuration
+
+Drivers are declared in `config/flick.ts`. The `driver` key picks the active driver, and the `drivers` map registers their factories:
+
+```ts title="config/flick.ts"
+import { features } from '#generated/features'
+import { defineConfig, drivers } from '@foadonis/flick'
+import { InferFeatures } from '@foadonis/flick/types'
+
+export default defineConfig({
+  features,
+  driver: 'memory',
+  drivers: {
+    memory: drivers.memory(),
+    redis: drivers.redis({ connection: 'main' }),
+  },
+})
+
+declare module '@foadonis/flick/types' {
+  interface KnownFeatures extends InferFeatures<typeof features> {}
+}
+```
+
+Listing multiple drivers in the map is fine; only the one referenced by the top-level `driver` key is instantiated at boot. Setting `driver` from an environment variable is the usual way to switch backends per environment (`memory` in tests, `redis` in production).
+
+## Memory driver
+
+`drivers.memory()` stores cached values in an in-process `Map`. It requires no setup and is the right default for tests and local development:
+
+```ts title="config/flick.ts"
+export default defineConfig({
+  features,
+  driver: 'memory',
+  drivers: {
+    memory: drivers.memory(),
+  },
+})
+```
+
+<Callout type="warn">
+  The memory driver is not shared between processes and is wiped on restart. Two workers will
+  resolve the same feature independently and may end up with different cached values. Use Redis (or
+  a custom driver) in production.
+</Callout>
+
+## Redis driver
+
+`drivers.redis()` stores cached values in a Redis hash, shared across every process pointed at the same Redis instance. It depends on `@adonisjs/redis` being installed and configured:
+
+```ts title="config/flick.ts"
+export default defineConfig({
+  features,
+  driver: 'redis',
+  drivers: {
+    redis: drivers.redis({ connection: 'main' }),
+  },
+})
+```
+
+`connection` is the name of a connection defined in `config/redis.ts`. The connection must exist before Flick can boot, so make sure `@adonisjs/redis` is installed and configured first (see the [AdonisJS Redis docs](https://docs.adonisjs.com/guides/database/redis) for setup). Flick uses the chosen connection to read and write its hash; nothing else about your Redis setup needs to change.
+
+## Writing a custom driver
+
+When neither memory nor Redis fits (a Postgres-backed driver for auditability, a tiered driver with a local LRU in front of Redis, a HTTP-backed driver for a managed feature-flag service), implement the `FlickDriverContract` yourself:
+
+```ts
+export interface FlickDriverContract {
+  set(feature: string, identifier: string | number, value: unknown): Promise<void>
+  get(feature: string, identifier: string | number): Promise<unknown>
+  delete(feature: string, identifier: string | number): Promise<void>
+  purge(features?: string[]): Promise<void>
+  flush(): Promise<void>
+}
+```
+
+Flick only calls `get` and `set` during normal resolution. `delete`, `purge`, and `flush` are there so you (or higher-level tooling) can invalidate cached values when a feature's behavior changes.
+
+The [memory driver source](https://github.com/FriendsOfAdonis/FriendsOfAdonis/blob/main/packages/flick/src/drivers/memory_driver.ts) is the smallest complete implementation of the contract and a good starting point to copy and adapt.
+
+Once your driver class is ready, wrap it in a `configProvider` factory and add it to the `drivers` map:
+
+```ts title="config/flick.ts"
+import { configProvider } from '@adonisjs/core'
+import { features } from '#generated/features'
+import { defineConfig } from '@foadonis/flick'
+import { InferFeatures } from '@foadonis/flick/types'
+
+export default defineConfig({
+  features,
+  driver: 'custom',
+  drivers: {
+    custom: configProvider.create(async (app) => {
+      const { MyDriver } = await import('#flick/my_driver')
+      const db = await app.container.make('lucid.db')
+      return new MyDriver(db)
+    }),
+  },
+})
+
+declare module '@foadonis/flick/types' {
+  interface KnownFeatures extends InferFeatures<typeof features> {}
+}
+```
+
+The factory receives the Adonis application instance, so anything you need from the container (the database, the logger, a Redis connection) is reachable via `app.container.make(...)` inside the async function.
