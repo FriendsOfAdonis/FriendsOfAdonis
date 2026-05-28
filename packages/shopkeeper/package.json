@@ -24,6 +24,7 @@
   },
   "files": [
     "build",
+    "build/stubs",
     "!build/bin",
     "!build/tests"
   ],
