@@ -27,9 +27,9 @@ export async function configure(command: ConfigureCommand) {
   await codemods.defineEnvValidations({
     leadingComment: 'Variables for configuring the Shopkeeper Stripe SDK',
     variables: {
-      STRIPE_KEY: 'Env.schema.string()',
-      STRIPE_SECRET: 'Env.schema.string()',
-      STRIPE_WEBHOOK_SECRET: 'Env.schema.string.optional()',
+      STRIPE_KEY: 'Env.schema.secret()',
+      STRIPE_SECRET: 'Env.schema.secret()',
+      STRIPE_WEBHOOK_SECRET: 'Env.schema.secret.optional()',
     },
   })
 
