@@ -1,6 +1,7 @@
 import { defineConfig } from '@adonisjs/core/app'
 import { indexActions } from '@foadonis/actions'
 import { indexControllers } from '@adonisjs-community/girouette'
+import { indexFeatures } from '@foadonis/flick'
 
 export default defineConfig({
   /*
@@ -45,6 +46,7 @@ export default defineConfig({
     () => import('@adonisjs/otel/otel_provider'),
     () => import('@adonisjs/queue/queue_provider'),
     () => import('@adonisjs-community/girouette/girouette_provider'),
+    () => import('@foadonis/flick/flick_provider'),
   ],
 
   /*
@@ -91,6 +93,6 @@ export default defineConfig({
   },
 
   hooks: {
-    init: [indexActions(), indexControllers()],
+    init: [indexActions(), indexControllers(), indexFeatures()],
   },
 })

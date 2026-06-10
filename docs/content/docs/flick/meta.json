@@ -1,0 +1,16 @@
+{
+  "title": "Flick",
+  "description": "Feature flags for AdonisJS",
+  "icon": "ToggleRight",
+  "root": true,
+  "pages": [
+    "index",
+    "getting-started",
+    "--- Guides ---",
+    "(guides)/defining-features",
+    "(guides)/resolving-features",
+    "(guides)/edge",
+    "(guides)/drivers",
+    "(guides)/testing"
+  ]
+}

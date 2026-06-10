@@ -1,0 +1,172 @@
+---
+title: Managing Customers
+icon: Users
+---
+
+Shopkeeper maps your application's users to [Stripe customers](https://stripe.com/docs/api/customers). Most of the time this happens automatically when a user subscribes or makes a payment, but you can also manage customers directly.
+
+## Retrieving customers
+
+To find a billable model by its Stripe customer ID:
+
+```ts
+import shopkeeper from '@foadonis/shopkeeper/services/shopkeeper'
+
+const user = await shopkeeper.findBillable(stripeId)
+```
+
+## Creating customers
+
+If you need to create a Stripe customer without starting a subscription or making a charge, use `createAsStripeCustomer`:
+
+```ts
+const stripeCustomer = await user.createAsStripeCustomer()
+```
+
+You can pass any [customer creation parameters supported by the Stripe API](https://stripe.com/docs/api/customers/create):
+
+```ts
+const stripeCustomer = await user.createAsStripeCustomer({
+  name: 'John Doe',
+  metadata: { plan: 'enterprise' },
+})
+```
+
+To get the Stripe customer object for an existing billable model:
+
+```ts
+const stripeCustomer = await user.asStripeCustomer()
+```
+
+If you are not sure whether the user already has a Stripe customer, use `createOrGetStripeCustomer`. It creates one if needed, or returns the existing one:
+
+```ts
+const stripeCustomer = await user.createOrGetStripeCustomer()
+```
+
+## Updating customers
+
+To update the customer directly in Stripe, use `updateStripeCustomer` with any [customer update parameters](https://stripe.com/docs/api/customers/update):
+
+```ts
+await user.updateStripeCustomer({
+  name: 'Jane Doe',
+  phone: '+1234567890',
+})
+```
+
+## Syncing customer data
+
+When your users update their profile (name, email, etc.), you probably want to keep Stripe in sync. You can do this automatically with a model hook:
+
+```ts title="app/models/user.ts"
+import { compose } from '@adonisjs/core/helpers'
+import { BaseModel, afterUpdate } from '@adonisjs/lucid/orm'
+import { billable } from '@foadonis/shopkeeper/mixins'
+
+export default class User extends compose(BaseModel, billable()) {
+  @afterUpdate()
+  static syncWithStripe(user: User) {
+    user.syncStripeCustomerDetails()
+  }
+}
+```
+
+Shopkeeper automatically syncs customer details when a Stripe customer is first created. For ongoing updates, the hook above keeps everything in sync.
+
+### Customizing synced fields
+
+By default, Shopkeeper syncs the customer's name, email, phone, and address. You can customize what gets synced by overriding the corresponding methods on your model:
+
+```ts title="app/models/user.ts"
+export default class User extends compose(BaseModel, billable()) {
+  stripeName(): string {
+    return `${this.firstName} ${this.lastName}`
+  }
+}
+```
+
+Available methods to override: `stripeName`, `stripeEmail`, `stripePhone`, `stripeAddress`, and `stripePreferredLocales`. For full control, override `syncStripeCustomerDetails` directly.
+
+## Balances
+
+Stripe allows you to credit or debit a customer's [balance](https://stripe.com/docs/billing/customer/balance). This balance is automatically applied to future invoices.
+
+```ts
+// Get the formatted balance
+const balance = await user.balance()
+
+// Credit $5.00
+await user.creditBalance(500, 'Referral bonus')
+
+// Debit $5.00
+await user.debitBalance(500, 'Adjustment')
+```
+
+To retrieve the full history of balance transactions:
+
+```ts
+const transactions = await user.balanceTransaction()
+
+for (const transaction of transactions) {
+  const amount = transaction.amount() // e.g., "$2.31"
+  const invoiceId = transaction.invoiceId() // Related invoice, if any
+}
+```
+
+## Tax IDs
+
+You can manage a customer's [tax IDs](https://stripe.com/docs/api/customer_tax_ids/object) directly through Shopkeeper:
+
+```ts
+// List all tax IDs
+const taxIds = await user.taxIds()
+
+// Find a specific tax ID
+const taxId = await user.findTaxId('txi_belgium')
+
+// Create a new tax ID
+await user.createTaxId('eu_vat', 'BE0123456789')
+
+// Delete a tax ID
+await user.deleteTaxId('txi_belgium')
+```
+
+<Callout>
+  Tax ID verification is handled asynchronously by Stripe. To be notified when verification
+  completes, listen to the `customer.tax_id.updated` webhook event. See [Handling
+  Webhooks](/docs/shopkeeper/handling-webhooks) for details.
+</Callout>
+
+## Billing portal
+
+Stripe provides a [billing portal](https://stripe.com/docs/billing/subscriptions/customer-portal) where customers can manage their subscription, payment methods, and billing history. You can generate a URL to redirect your users there:
+
+```ts title="start/routes.ts"
+import router from '@adonisjs/core/services/router'
+import { middleware } from '#start/kernel'
+import { urlFor } from '@adonisjs/core/services/url_builder'
+
+router
+  .get('/billing', async ({ auth, response }) => {
+    const user = auth.getUserOrFail()
+    const billingPortalUrl = await user.billingPortalUrl(urlFor('dashboard'))
+
+    return response.redirect().toPath(billingPortalUrl)
+  })
+  .middleware(middleware.auth())
+  .as('billing')
+```
+
+You can configure the billing portal's appearance and features in your [Stripe dashboard](https://dashboard.stripe.com/test/settings/billing/portal).
+
+<Callout>
+  When a customer makes changes through the billing portal (such as cancelling or changing plans),
+  Stripe sends webhook events that Shopkeeper processes automatically. Make sure your [webhooks are
+  configured](/docs/shopkeeper/handling-webhooks) for the portal to work correctly.
+</Callout>
+
+## Going further
+
+- [Managing Payment Methods](/docs/shopkeeper/managing-payment-methods): Store and manage customer payment methods
+- [Stripe Customers API documentation](https://stripe.com/docs/api/customers): Stripe's full Customers API reference

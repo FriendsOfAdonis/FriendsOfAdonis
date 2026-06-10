@@ -1,0 +1,232 @@
+---
+title: Accepting Payments
+icon: ShoppingCart
+---
+
+The easiest way to start accepting payments is with [Stripe Checkout](https://stripe.com/payments/checkout), a hosted payment page that handles card forms, validation, and 3D Secure for you. This guide covers the different checkout flows available in Shopkeeper.
+
+## Product checkout
+
+To charge a customer for an existing product, use the `checkout` method on a billable model. Chain `addLineItem` and `sessionParams` on the returned builder:
+
+```ts title="start/routes.ts"
+import { urlFor } from '@adonisjs/core/services/url_builder'
+
+router.get('/buy', async ({ auth, response }) => {
+  const user = auth.getUserOrFail()
+  const checkout = await user
+    .checkout()
+    .addLineItem('price_tshirt')
+    .sessionParams({
+      success_url: urlFor('checkout.success'),
+      cancel_url: urlFor('checkout.cancel'),
+    })
+
+  return response.redirect().status(303).toPath(checkout.asStripeSession().url)
+})
+```
+
+You can also specify a quantity:
+
+```ts
+const checkout = await user
+  .checkout()
+  .addLineItem('price_tshirt', 5)
+  .sessionParams({
+    success_url: urlFor('checkout.success'),
+    cancel_url: urlFor('checkout.cancel'),
+  })
+```
+
+### Redirect URLs
+
+`success_url` and `cancel_url` are required. The builder throws an `InvalidArgumentError` if they are missing.
+
+### Retrieving the checkout session
+
+If you need to access the checkout session on the success page (for example, to display the order details), you can use the `{CHECKOUT_SESSION_ID}` placeholder in your `success_url`. Stripe will replace it with the actual session ID:
+
+```ts
+import { urlFor } from '@adonisjs/core/services/url_builder'
+import shopkeeper from '@foadonis/shopkeeper/services/shopkeeper'
+
+router.get('/buy', async ({ auth, response }) => {
+  const user = auth.getUserOrFail()
+  const checkout = await user
+    .checkout()
+    .addLineItem('price_tshirt')
+    .sessionParams({
+      success_url: urlFor('checkout.success', { session_id: '{CHECKOUT_SESSION_ID}' }),
+      cancel_url: urlFor('checkout.cancel'),
+    })
+
+  return response.redirect().status(303).toPath(checkout.asStripeSession().url)
+})
+
+router
+  .get('/checkout/success', async ({ request, view }) => {
+    const qs = request.qs()
+    const stripe = shopkeeper.stripe
+    const session = await stripe.checkout.sessions.retrieve(qs.session_id)
+
+    return view.render('checkout/success', { session })
+  })
+  .as('checkout.success')
+```
+
+## Subscription checkout
+
+To start a subscription through Stripe Checkout, use the subscription builder's `checkout` method:
+
+```ts
+import { urlFor } from '@adonisjs/core/services/url_builder'
+
+router.get('/subscribe', async ({ auth, response }) => {
+  const user = auth.getUserOrFail()
+
+  const checkout = await user.newSubscription('default', 'price_monthly').checkout({
+    success_url: urlFor('checkout.success'),
+    cancel_url: urlFor('checkout.cancel'),
+  })
+
+  return response.redirect().status(303).toPath(checkout.asStripeSession().url)
+})
+```
+
+<Callout type="warn">
+  Subscription checkout requires the `customer.subscription.created` webhook event to be enabled in
+  your Stripe dashboard. This webhook creates the subscription record in your database. See
+  [Handling Webhooks](/docs/shopkeeper/handling-webhooks) for setup instructions.
+</Callout>
+
+### Trial periods
+
+You can offer a trial period on a subscription checkout using `trialDays`:
+
+```ts
+const checkout = await user
+  .newSubscription('default', 'price_monthly')
+  .trialDays(7)
+  .checkout({
+    success_url: urlFor('checkout.success'),
+    cancel_url: urlFor('checkout.cancel'),
+  })
+```
+
+<Callout type="warn">Stripe Checkout requires a minimum trial period of 48 hours.</Callout>
+
+To learn more about trials, see the [Offering Trials](/docs/shopkeeper/offering-trials) guide.
+
+## Promotion codes
+
+By default, Stripe Checkout does not show a promotion code field. You can enable it with `allowPromotionCodes`:
+
+```ts
+const checkout = await user
+  .checkout()
+  .addLineItem('price_tshirt')
+  .withAllowPromotionsCodes()
+  .sessionParams({
+    success_url: urlFor('checkout.success'),
+    cancel_url: urlFor('checkout.cancel'),
+  })
+```
+
+This also works for subscription checkouts:
+
+```ts
+const checkout = await user
+  .newSubscription('default', 'price_monthly')
+  .allowPromotionCodes()
+  .checkout({
+    success_url: urlFor('checkout.success'),
+    cancel_url: urlFor('checkout.cancel'),
+  })
+```
+
+## Single charge checkout
+
+If you need to sell a product that doesn't exist in your Stripe dashboard, you can use `checkoutCharge` with an amount, a product name, and an optional quantity:
+
+```ts
+router.get('/buy-custom', async ({ auth, response }) => {
+  const user = auth.getUserOrFail()
+  const checkout = await user.checkoutCharge(1200, 'T-Shirt', 5).sessionParams({
+    success_url: urlFor('checkout.success'),
+    cancel_url: urlFor('checkout.cancel'),
+  })
+
+  return response.redirect().status(303).toPath(checkout.asStripeSession().url)
+})
+```
+
+<Callout type="warn">
+  `checkoutCharge` creates a new product and price in your Stripe dashboard every time it is called.
+  For products you sell regularly, create them in the [Stripe
+  dashboard](https://dashboard.stripe.com/products) and use the `checkout` method instead.
+</Callout>
+
+## Collecting tax IDs
+
+To let customers provide their tax ID during checkout, use `withTaxIdsCollect` on the builder:
+
+```ts
+const checkout = await user
+  .checkout()
+  .addLineItem('price_tshirt')
+  .withTaxIdsCollect()
+  .sessionParams({
+    success_url: urlFor('checkout.success'),
+    cancel_url: urlFor('checkout.cancel'),
+  })
+```
+
+<Callout>
+  If you have [automatic tax collection](/docs/shopkeeper/taxes) enabled, the tax ID field is shown
+  automatically.
+</Callout>
+
+## Guest checkouts
+
+You can create checkout sessions for visitors who don't have an account using `Checkout.guest()`:
+
+```ts
+import { Checkout } from '@foadonis/shopkeeper'
+import { urlFor } from '@adonisjs/core/services/url_builder'
+
+router.get('/guest-checkout', async ({ response }) => {
+  const checkout = await Checkout.guest()
+    .addLineItem('price_tshirt')
+    .sessionParams({
+      success_url: urlFor('checkout.success'),
+      cancel_url: urlFor('checkout.cancel'),
+    })
+
+  return response.redirect().status(303).toPath(checkout.asStripeSession().url)
+})
+```
+
+You can also apply promotion codes to guest checkouts:
+
+```ts
+const checkout = await Checkout.guest()
+  .addLineItem('price_tshirt')
+  .withPromotionCode('promo_code_id')
+  .sessionParams({
+    success_url: urlFor('checkout.success'),
+    cancel_url: urlFor('checkout.cancel'),
+  })
+```
+
+<Callout>
+  After a guest checkout completes, Stripe dispatches a `checkout.session.completed` webhook event.
+  Make sure this event is enabled in your [Stripe webhook
+  configuration](https://dashboard.stripe.com/webhooks) so you can fulfill the order. See [Handling
+  Webhooks](/docs/shopkeeper/handling-webhooks) to learn how to listen to this event.
+</Callout>
+
+## Going further
+
+- [Single Charges](/docs/shopkeeper/single-charges): Direct charges, invoiced charges, and refunds
+- [Managing Payment Methods](/docs/shopkeeper/managing-payment-methods): Storing and managing payment methods for custom payment flows
+- [Stripe Checkout documentation](https://stripe.com/docs/payments/checkout): Stripe's own guide to Checkout

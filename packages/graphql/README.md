@@ -29,7 +29,7 @@
 
 ## Quickstart
 
-[Installation & Getting Started](https://friendsofadonis.com/docs/openapi)
+[Installation & Getting Started](https://friendsofadonis.com/docs/graphql/getting-started)
 
 ## License
 

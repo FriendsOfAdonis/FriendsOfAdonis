@@ -1,0 +1,208 @@
+---
+title: Managing Payment Methods
+icon: CreditCard
+---
+
+Shopkeeper provides methods to store, retrieve, update, and delete your customers' payment methods. The approach differs slightly depending on whether the payment method is for a subscription or a one-off charge.
+
+## Payment methods for subscriptions
+
+When storing a payment method for future subscription use, you need to use Stripe's [Setup Intents](https://stripe.com/docs/payments/setup-intents) API. A Setup Intent securely collects payment details without making an immediate charge.
+
+Create a Setup Intent and pass it to your frontend:
+
+```ts
+router.get('/payment-method', async ({ auth, view }) => {
+  const user = auth.getUserOrFail()
+
+  return view.render('pages/payment-method', {
+    intent: await user.createSetupIntent(),
+  })
+})
+```
+
+In your frontend, use [Stripe.js](https://stripe.com/docs/js) to mount a card element and confirm the setup:
+
+```html
+<input id="card-holder-name" type="text" />
+<div id="card-element"></div>
+<button id="card-button" data-secret="{{ intent.client_secret }}">Save Payment Method</button>
+
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+  const stripe = Stripe('your-stripe-public-key')
+  const elements = stripe.elements()
+  const cardElement = elements.create('card')
+  cardElement.mount('#card-element')
+
+  const cardButton = document.getElementById('card-button')
+  cardButton.addEventListener('click', async () => {
+    const { setupIntent, error } = await stripe.confirmCardSetup(cardButton.dataset.secret, {
+      payment_method: {
+        card: cardElement,
+        billing_details: {
+          name: document.getElementById('card-holder-name').value,
+        },
+      },
+    })
+
+    if (error) {
+      // Show error.message to the user
+    } else {
+      // Send setupIntent.payment_method to your server
+    }
+  })
+</script>
+```
+
+Once you have the payment method ID from the frontend, you can [add it to the customer](#adding-payment-methods) or [use it to create a subscription](/docs/shopkeeper/managing-subscriptions).
+
+For more details, see [Stripe's Setup Intents documentation](https://stripe.com/docs/payments/save-and-reuse).
+
+## Payment methods for single charges
+
+For one-off charges, you don't need a Setup Intent. Instead, use Stripe.js to create a payment method directly:
+
+```html
+<input id="card-holder-name" type="text" />
+<div id="card-element"></div>
+<button id="card-button">Pay</button>
+
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+  const stripe = Stripe('your-stripe-public-key')
+  const elements = stripe.elements()
+  const cardElement = elements.create('card')
+  cardElement.mount('#card-element')
+
+  const cardButton = document.getElementById('card-button')
+  cardButton.addEventListener('click', async () => {
+    const { paymentMethod, error } = await stripe.createPaymentMethod('card', cardElement, {
+      billing_details: {
+        name: document.getElementById('card-holder-name').value,
+      },
+    })
+
+    if (error) {
+      // Show error.message to the user
+    } else {
+      // Send paymentMethod.id to your server to process the charge
+    }
+  })
+</script>
+```
+
+Pass the `paymentMethod.id` to your server and use it with the [charge methods](/docs/shopkeeper/single-charges).
+
+<Callout type="warn">
+  Due to Stripe limitations, you cannot use a customer's stored default payment method for single
+  charges. The customer must enter their payment details each time.
+</Callout>
+
+## Retrieving payment methods
+
+List all payment methods for a customer:
+
+```ts
+const paymentMethods = await user.paymentMethods()
+```
+
+To filter by type (e.g., `sepa_debit`, `card`):
+
+```ts
+const paymentMethods = await user.paymentMethods('sepa_debit')
+```
+
+To retrieve the default payment method:
+
+```ts
+const defaultMethod = await user.defaultPaymentMethod()
+```
+
+To find a specific payment method by its Stripe ID:
+
+```ts
+const paymentMethod = await user.findPaymentMethod('pm_xxxxxxx')
+```
+
+## Checking for payment methods
+
+```ts
+// Has a default payment method?
+if (await user.hasDefaultPaymentMethod()) {
+  // ...
+}
+
+// Has any payment method?
+if (await user.hasPaymentMethod()) {
+  // ...
+}
+
+// Has a payment method of a specific type?
+if (await user.hasPaymentMethod('sepa_debit')) {
+  // ...
+}
+```
+
+## Adding payment methods
+
+To attach a new payment method to a customer:
+
+```ts
+await user.addPaymentMethod('pm_xxxxxxx')
+```
+
+## Updating the default payment method
+
+To set a new default payment method:
+
+```ts
+await user.updateDefaultPaymentMethod('pm_xxxxxxx')
+```
+
+To sync the default payment method from Stripe (useful if it was changed outside your application):
+
+```ts
+await user.updateDefaultPaymentMethodFromStripe()
+```
+
+<Callout type="warn">
+  The default payment method is used for invoices and new subscriptions. Due to Stripe limitations,
+  it cannot be used for single charges.
+</Callout>
+
+## Deleting payment methods
+
+Delete a specific payment method:
+
+```ts
+// From the PaymentMethod instance
+const paymentMethod = await user.findPaymentMethod('pm_xxxxxxx')
+await paymentMethod.delete()
+
+// Or by ID
+await user.deletePaymentMethod('pm_xxxxxxx')
+```
+
+Delete all payment methods:
+
+```ts
+await user.deletePaymentMethods()
+```
+
+To delete only payment methods of a specific type:
+
+```ts
+await user.deletePaymentMethods('sepa_debit')
+```
+
+<Callout type="warn">
+  If a customer has an active subscription, do not allow them to delete their default payment
+  method.
+</Callout>
+
+## Going further
+
+- [Accepting Payments](/docs/shopkeeper/accepting-payments): Checkout-based payment flows
+- [Single Charges](/docs/shopkeeper/single-charges): One-off charges and payment intents
+- [Stripe Payment Methods documentation](https://stripe.com/docs/payments/payment-methods): Stripe's own guide to payment methods

@@ -1,15 +1,18 @@
 // Used as based class for mixins.
 
 import type Stripe from 'stripe'
-import { type WithBillable } from './mixins/billable.js'
+import { type BillableModel } from './contracts.js'
 import type Subscription from './models/subscription.js'
 import type SubscriptionItem from './models/subscription_item.js'
 import { type NormalizeConstructor } from '@poppinss/utils/types'
+import { type Secret } from '@adonisjs/core/helpers'
+
+export type Constructor<T = {}> = new (...args: any[]) => T
 
 // I'm sure there is a better way but i'll figure out later
 export class Empty {}
 
-type LazyImport<DefaultExport> = () => Promise<{
+export type LazyImport<DefaultExport> = () => Promise<{
   default: DefaultExport
 }>
 
@@ -17,12 +20,12 @@ export type ShopkeeperConfig = {
   /**
    * The Stripe publishable key.
    */
-  key: string
+  key: Secret<string>
 
   /**
    * The Stripe secret key.
    */
-  secret: string
+  secret: Secret<string>
 
   /**
    * Webhook configuration.
@@ -34,7 +37,7 @@ export type ShopkeeperConfig = {
      *
      * In production, this is a required parameter.
      */
-    secret?: string
+    secret?: Secret<string>
 
     /**
      * Signature timing shift tolerance.
@@ -45,6 +48,11 @@ export type ShopkeeperConfig = {
      * List of events that will be configured on the generated webhook using `node ace shopkeeper:webhook`.
      */
     events?: StripeEventTypes[]
+
+    /**
+     * Enforce webhook secret to be defined.
+     */
+    enforceSecret: boolean
   }
 
   /**
@@ -66,7 +74,7 @@ export type ShopkeeperConfig = {
      *
      * @example () => import('#models/user')
      */
-    customerModel: LazyImport<WithBillable>
+    customerModel: LazyImport<BillableModel>
 
     /**
      * The Subscription model import.
@@ -109,16 +117,19 @@ export type ShopkeeperConfig = {
   stripe?: Stripe.StripeConfig
 }
 
+export interface ResolvedConfig extends Omit<ShopkeeperConfig, 'models'> {
+  models: {
+    customerModel: BillableModel
+    subscriptionModel: NormalizeConstructor<typeof Subscription>
+    subscriptionItemModel: NormalizeConstructor<typeof SubscriptionItem>
+  }
+}
+
 export type StripeEventTypes = Stripe.Event['type']
 
-// TODO: IT works but it is slow asf
-// type StripeEventName<T extends string> = T extends `stripe:${infer U}`
-//   ? Stripe.Event & { type: U }
-//   : never
-// type StrictStripeEventList = {
-//   [key in `stripe:${StripeEventTypes}`]: StripeEventName<key>
-// }
-
+// Strict event typing (narrowing each event to its specific Stripe.Event subtype)
+// causes significant TS performance degradation due to the large union of Stripe event types.
+// Using relaxed typing as a pragmatic trade-off.
 type RelaxedStripeEventList = {
   [key in `stripe:${StripeEventTypes}` | `stripe:${StripeEventTypes}:handled`]: any
 }

@@ -22,6 +22,7 @@
     "#tests/*": "./tests/*.js",
     "#config/*": "./config/*.js",
     "#actions/*": "./app/actions/*.js",
+    "#features/*": "./app/features/*.js",
     "#generated/*": "./.adonisjs/server/*.js"
   },
   "scripts": {
@@ -41,6 +42,7 @@
     "@adonisjs/session": "catalog:",
     "@foadonis/actions": "workspace:*",
     "@foadonis/crypt": "workspace:*",
+    "@foadonis/flick": "workspace:*",
     "@foadonis/openapi": "workspace:*",
     "@vinejs/vine": "catalog:",
     "better-sqlite3": "^12.5.0",

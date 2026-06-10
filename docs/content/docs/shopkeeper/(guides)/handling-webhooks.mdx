@@ -1,0 +1,155 @@
+---
+title: Handling Webhooks
+icon: Webhook
+---
+
+Stripe uses [webhooks](https://stripe.com/docs/webhooks) to notify your application when events happen, like a subscription being cancelled or a payment failing. Shopkeeper provides the tools to handle these events and keep your database in sync.
+
+## Setup
+
+Shopkeeper requires you to register its webhook route and event listeners explicitly in your application.
+
+### Register the webhook route
+
+Add the following to your `start/routes.ts` file:
+
+```ts title="start/routes.ts"
+import shopkeeper from '@foadonis/shopkeeper/services/shopkeeper'
+
+shopkeeper.registerRoutes()
+```
+
+This registers a `POST /stripe/webhook` endpoint that receives events from Stripe.
+
+### Register the webhook listeners
+
+Add the following to your `start/events.ts` file:
+
+```ts title="start/events.ts"
+import shopkeeper from '@foadonis/shopkeeper/services/shopkeeper'
+
+shopkeeper.registerWebhookListeners()
+```
+
+This registers the built-in listeners that keep your database in sync with Stripe. Out of the box, Shopkeeper handles:
+
+- `customer.subscription.created`
+- `customer.subscription.updated`
+- `customer.subscription.deleted`
+
+## Required events
+
+For Shopkeeper to work correctly, the above webhook events must be enabled in Stripe.
+
+## Creating the webhook
+
+The easiest way to configure the webhook in Stripe is with the `shopkeeper:webhook` Ace command. It creates a webhook with all the required events:
+
+```sh
+node ace shopkeeper:webhook
+```
+
+By default, the webhook URL is built from your `APP_URL` environment variable. You can override it:
+
+```sh
+node ace shopkeeper:webhook --url "https://example.com/stripe/webhook"
+```
+
+Other options:
+
+```sh
+# Use a specific Stripe API version
+node ace shopkeeper:webhook --api-version="2024-12-18.acacia"
+
+# Create the webhook in a disabled state
+node ace shopkeeper:webhook --disabled
+```
+
+## Testing locally
+
+During development, use the [Stripe CLI](https://docs.stripe.com/stripe-cli) to forward webhook events to your local application:
+
+```sh
+stripe listen --forward-to localhost:3333/stripe/webhook
+```
+
+The CLI will output a webhook signing secret starting with `whsec_`. Add it to your `.env` file:
+
+```ini title=".env"
+STRIPE_WEBHOOK_SECRET=whsec_xxxxxxx
+```
+
+You can then trigger test events with:
+
+```sh
+stripe trigger customer.subscription.created
+```
+
+## Handling custom events
+
+If you need to react to events beyond what Shopkeeper handles by default, you can listen to them via the AdonisJS [Event Emitter](https://docs.adonisjs.com/guides/digging-deeper/emitter).
+
+Shopkeeper emits events using the naming convention `stripe:<eventType>`:
+
+```ts title="start/events.ts"
+import emitter from '@adonisjs/core/services/emitter'
+import type Stripe from 'stripe'
+
+emitter.on('stripe:checkout.session.completed', (event: Stripe.CheckoutSessionCompletedEvent) => {
+  // Fulfill the order, send a confirmation email, etc.
+})
+```
+
+Events with the `:handled` suffix are emitted after all listeners have finished processing:
+
+```ts title="start/events.ts"
+emitter.on(
+  'stripe:customer.subscription.created:handled',
+  (event: Stripe.CustomerSubscriptionCreatedEvent) => {
+    // The subscription is now saved in your database
+  }
+)
+```
+
+## Idempotent handling
+
+Shopkeeper provides an opt-in `webhookAudit` method to prevent duplicate processing and ensure transactional safety. When used, it:
+
+- Checks if the event has already been processed (stored in the `stripe_webhook_events` table)
+- Wraps your logic and the event recording in a single database transaction
+- Rolls back everything if your logic throws, so the event can be retried
+
+```ts title="app/listeners/my_webhook_listener.ts"
+import shopkeeper from '@foadonis/shopkeeper/services/shopkeeper'
+import type Stripe from 'stripe'
+
+export default class MyWebhookListener {
+  async handle(event: Stripe.CheckoutSessionCompletedEvent) {
+    await shopkeeper.webhookAudit(event, async (trx) => {
+      // Your business logic here.
+      // Use trx for database operations to ensure atomicity.
+    })
+  }
+}
+```
+
+`webhookAudit` returns `false` if the event was already processed, and `true` if it was handled successfully.
+
+<Callout>
+  The built-in subscription listeners do **not** use `webhookAudit` by default. You can wrap them or
+  your own listeners as needed.
+</Callout>
+
+## Webhook signature verification
+
+Shopkeeper automatically verifies the signature of incoming webhook requests to ensure they are authentic. This requires the `STRIPE_WEBHOOK_SECRET` environment variable to be set.
+
+<Callout type="warn">
+  The `STRIPE_WEBHOOK_SECRET` is mandatory in production. Without it, your application cannot verify
+  that incoming webhook requests are genuinely from Stripe.
+</Callout>
+
+## Going further
+
+- [Stripe Webhooks documentation](https://stripe.com/docs/webhooks): Stripe's own guide to webhooks
+- [Stripe CLI documentation](https://docs.stripe.com/stripe-cli): Testing and debugging with the Stripe CLI

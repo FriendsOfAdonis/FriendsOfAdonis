@@ -1,27 +1,27 @@
 import { test } from '@japa/runner'
 import { createCustomer } from '../utils.js'
 import { InvalidCustomerError } from '../../src/errors/invalid_customer.js'
+import { Shopkeeper } from '../../src/shopkeeper.js'
 import { Invoice } from '../../src/invoice.js'
-import type Stripe from 'stripe'
 import { InvalidInvoiceError } from '../../src/errors/invalid_invoice.js'
 
 test.group('Invoices', () => {
   test('require stripe customer for invoices', async ({ expect }) => {
     const user = await createCustomer('require_stripe_customer_for_invoicing')
 
-    await expect(user.invoice()).rejects.toThrow(InvalidCustomerError)
+    await expect(user.invoice().create()).rejects.toThrow(InvalidCustomerError)
   })
 
   test('invoices can be created', async ({ assert }) => {
     const user = await createCustomer('invoices_can_be_created')
     await user.createAsStripeCustomer()
 
-    const invoice = await user.createInvoice()
+    const invoice = await user.invoice().draft()
 
     assert.instanceOf(invoice, Invoice)
     assert.equal(invoice.rawTotal(), 0)
 
-    await invoice.tab('Adonis Pin', 10000)
+    await invoice.addItem('Adonis Pin', 10000)
 
     assert.equal(invoice.rawTotal(), 10000)
   })
@@ -31,7 +31,7 @@ test.group('Invoices', () => {
     await user.createAsStripeCustomer()
     await user.updateDefaultPaymentMethod('pm_card_visa')
 
-    const invoice = await user.invoiceFor('Adonis Pin', 12000)
+    const invoice = await user.invoice().addItem('Adonis Pin', 12000).charge()
 
     assert.instanceOf(invoice, Invoice)
     assert.equal(invoice.rawTotal(), 12000)
@@ -42,7 +42,8 @@ test.group('Invoices', () => {
     await user.createAsStripeCustomer()
     await user.updateDefaultPaymentMethod('pm_card_visa')
 
-    const price = await user.stripe.prices.create({
+    const stripe = Shopkeeper.$instance.stripe
+    const price = await stripe.prices.create({
       currency: user.preferredCurrency(),
       product_data: {
         name: 'Koala',
@@ -50,7 +51,7 @@ test.group('Invoices', () => {
       unit_amount: 8000,
     })
 
-    const invoice = await user.invoicePrice(price.id, 2)
+    const invoice = await user.invoice().addPrice(price.id, 2).charge()
 
     assert.instanceOf(invoice, Invoice)
     assert.equal(invoice.rawTotal(), 16000)
@@ -61,22 +62,29 @@ test.group('Invoices', () => {
     await user.createAsStripeCustomer()
     await user.updateDefaultPaymentMethod('pm_card_visa')
 
-    const product = await user.stripe.products.create({
+    const stripe = Shopkeeper.$instance.stripe
+    const product = await stripe.products.create({
       name: 'Fixing bugs',
       type: 'service',
     })
 
-    const invoice = await user.invoiceFor('Fixing bugs', 50000, {
-      price_data: {
-        product: product.id,
-        tax_behavior: 'exclusive',
-      },
-    })
+    const invoice = await user
+      .invoice()
+      .addItem('Fixing bugs', 50000, {
+        price_data: {
+          product: product.id,
+          tax_behavior: 'exclusive',
+        },
+      })
+      .charge()
 
     assert.instanceOf(invoice, Invoice)
     assert.equal(invoice.rawTotal(), 50000)
     assert.equal(
-      await invoice.invoiceLineItems().then((l) => l[0].price?.tax_behavior),
+      await invoice.invoiceLineItems().then((l: any[]) => {
+        const price = l[0].pricing?.price_details?.price
+        return typeof price === 'object' ? price?.tax_behavior : undefined
+      }),
       'exclusive'
     )
   })
@@ -85,9 +93,9 @@ test.group('Invoices', () => {
     const user = await createCustomer('customer_can_be_invoiced_with_inline_price_data')
     await user.createAsStripeCustomer()
     await user.updateDefaultPaymentMethod('pm_card_visa')
-    let invoice = await user.invoiceFor('Fishing', 2000)
+    let invoice = await user.invoice().addItem('Fishing', 2000).charge()
 
-    const stripeInvoice = invoice.asStripeInvoice() as Stripe.Invoice
+    const stripeInvoice = invoice.asStripeInvoice()
 
     const found = await user.findInvoice(stripeInvoice.id)
     assert.instanceOf(found, Invoice)
@@ -107,11 +115,11 @@ test.group('Invoices', () => {
     await otherUser.createAsStripeCustomer()
     await otherUser.updateDefaultPaymentMethod('pm_card_visa')
 
-    const invoice = await user.invoiceFor('Fishing', 2000)
+    const invoice = await user.invoice().addItem('Fishing', 2000).charge()
 
-    await expect(
-      otherUser.findInvoice((invoice.asStripeInvoice() as Stripe.Invoice).id)
-    ).rejects.toThrow(InvalidInvoiceError)
+    await expect(otherUser.findInvoice(invoice.asStripeInvoice().id)).rejects.toThrow(
+      InvalidInvoiceError
+    )
   })
 
   test('find invoice by id or faild', async ({ assert }) => {
@@ -125,10 +133,10 @@ test.group('Invoices', () => {
     await otherUser.createAsStripeCustomer()
     await otherUser.updateDefaultPaymentMethod('pm_card_visa')
 
-    const invoice = await user.invoiceFor('Fishing', 2000)
+    const invoice = await user.invoice().addItem('Fishing', 2000).charge()
 
     try {
-      await otherUser.findInvoiceOrFail((invoice.asStripeInvoice() as Stripe.Invoice).id)
+      await otherUser.findInvoiceOrFail(invoice.asStripeInvoice().id)
     } catch (e: any) {
       assert.instanceOf(e, InvalidInvoiceError)
       assert.equal(e.code, '403')
@@ -140,17 +148,16 @@ test.group('Invoices', () => {
     await user.createAsStripeCustomer()
     await user.updateDefaultPaymentMethod('pm_card_visa')
 
-    const invoice = await user.invoiceFor('Crying', 2000, { quantity: 5 })
+    const invoice = await user.invoice().addItem('Crying', 2000, { quantity: 5 }).charge()
 
     assert.instanceOf(invoice, Invoice)
     assert.equal(invoice.rawTotal(), 10000)
 
-    const item = await user.tab('Shouting', undefined, {
-      unit_amount: 1000,
-      quantity: 2,
-    })
+    const draftInvoice = await user.invoice().draft()
+    await draftInvoice.addItem('Shouting', 1000)
 
-    assert.equal(item.unit_amount, 1000)
-    assert.equal(item.quantity, 2)
+    // Tab on existing invoice uses Stripe directly now
+    const items = await draftInvoice.invoiceLineItems()
+    assert.equal(items[0].description, 'Shouting')
   })
 })

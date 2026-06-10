@@ -29,7 +29,7 @@
 
 ## Quickstart
 
-[Installation & Getting Started](https://friendsofadonis.com/docs/crypt)
+[Installation & Getting Started](https://friendsofadonis.com/docs/crypt/getting-started)
 
 ## License
 
