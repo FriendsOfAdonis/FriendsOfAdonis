@@ -6,6 +6,7 @@
   "pages": [
     "index",
     "getting-started",
+    "migration",
     "best-practices",
     "---Guides---",
     "(guides)/usage",
