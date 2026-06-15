@@ -1,5 +1,6 @@
 ---
-title: Migrations
+icon: FileSliders
+title: Automatic Migrations
 ---
 
 ## Introduction
@@ -10,36 +11,36 @@ by identifying drifts between your models and your database.
 ```ts tab="Model"
 export default class Post extends BaseModel {
   @column.uuid({ isPrimary: true })
-  declare id: string
+  declare id: string;
 
   @column.string()
-  declare title: string
+  declare title: string;
 
   @column.text({ nullable: true })
-  declare description: string | null
+  declare description: string | null;
 
   @column.updatedAt()
-  declare updatedAt: DateTime
+  declare updatedAt: DateTime;
 
   @column.createdAt()
-  declare createdAt: DateTime
+  declare createdAt: DateTime;
 }
 ```
 
 ```ts tab="Migration"
 export default class extends BaseSchema {
   async up() {
-    this.createTable('users', (table) => {
-      table.uuid('id').primary().notNullable()
-      table.string('title').notNullable()
-      table.text('description').nullable()
-      table.datetime('updated_at').notNullable()
-      table.datetime('created_at').notNullable()
-    })
+    this.createTable("users", (table) => {
+      table.uuid("id").primary().notNullable();
+      table.string("title").notNullable();
+      table.text("description").nullable();
+      table.datetime("updated_at").notNullable();
+      table.datetime("created_at").notNullable();
+    });
   }
 
   async down() {
-    this.dropTable('users')
+    this.dropTable("users");
   }
 }
 ```
@@ -67,8 +68,9 @@ Code-first vs schema-first is a matter of preferences and usage but most of indu
 <Callout>
   Other well-known ORMs like
   [ActiveRecords](https://guides.rubyonrails.org/active_record_basics.html),
-  [Hybernate](https://hibernate.org/) or [Eloquent](https://laravel.com/docs/12.x/eloquent) does not
-  have such feature and usually simply rely on "make" commands and will not help you with schema
+  [Hybernate](https://hibernate.org/) or
+  [Eloquent](https://laravel.com/docs/12.x/eloquent) does not have such feature
+  and usually simply rely on "make" commands and will not help you with schema
   changes.
 </Callout>
 

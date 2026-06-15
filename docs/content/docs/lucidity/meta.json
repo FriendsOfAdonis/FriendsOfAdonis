@@ -3,5 +3,13 @@
   "description": "Quality of life features for Lucid ORM",
   "root": true,
   "icon": "Search",
-  "pages": ["index", "getting-started", "---Features---", "migrations"]
+  "pages": [
+    "index",
+    "getting-started",
+    "---Features---",
+    "(features)/migrations",
+    "(features)/soft-delete",
+    "(features)/table-inheritance",
+    "(features)/polymorphic-relationships"
+  ]
 }
