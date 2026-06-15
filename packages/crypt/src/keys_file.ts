@@ -54,7 +54,7 @@ export class KeysFile {
 
     for (const [key, value] of Object.entries(this.keys)) {
       const file = `.env${key.replace('CRYPT_PRIVATE_KEY', '').split('_').join('.').toLowerCase()}`
-      content.push(...['', `# ${file}`, `${key}="${value}"`])
+      content.push('', `# ${file}`, `${key}="${value}"`)
     }
 
     await writeFile(this.path, content.join('\n'))

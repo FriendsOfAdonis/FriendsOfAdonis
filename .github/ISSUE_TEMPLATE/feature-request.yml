@@ -95,4 +95,3 @@ body:
       placeholder: e.g., #123, #456
     validations:
       required: false
-

@@ -1,5 +1,6 @@
 ---
 title: Decorators
+description: 'Complete reference for all OpenAPI decorators available in AdonisJS. Covers operation, controller, and model decorators.'
 ---
 
 This page provides a comprehensive reference for all available OpenAPI decorators. Decorators are organized by their usage context: operations (methods), controllers, and models.
@@ -31,6 +32,7 @@ export default class PostsController {
 ```
 
 **Options:**
+
 - `summary?: string` - A short summary of what the operation does
 - `description?: string` - A verbose explanation of the operation behavior
 - `operationId?: string` - Unique string used to identify the operation
@@ -72,6 +74,7 @@ export default class PostsController {
 ```
 
 **Options:**
+
 - `status?: number` - HTTP status code (default: 200)
 - `description?: string` - A description of the response
 - `type?: Type | Type[]` - The response type or array of types
@@ -99,6 +102,7 @@ export default class PostsController {
 ```
 
 **Options:**
+
 - `type?: Type | (() => Type)` - The request body type (use a function for circular dependencies)
 - `description?: string` - A description of the request body
 - `mediaType?: string` - The media type of the request body (e.g., 'application/json', 'multipart/form-data')
@@ -127,6 +131,7 @@ export default class PostsController {
 ```
 
 **Options:**
+
 - `name: string` - The name of the parameter
 - `description?: string` - A description of the parameter
 - `type?: Type` - The parameter type
@@ -167,6 +172,7 @@ export default class PostsController {
 ```
 
 **Options:**
+
 - `name: string` - The name of the query parameter
 - `description?: string` - A description of the parameter
 - `type?: Type` - The parameter type
@@ -201,6 +207,7 @@ export default class UsersController {
 ```
 
 **Options:**
+
 - `name: string` - The name of the header
 - `description?: string` - A description of the header
 - `required?: boolean` - Whether the header is required (default: false)
@@ -248,6 +255,7 @@ export default class PostsController {
 ```
 
 **Options:**
+
 - `name: string` - The extension name (without the `x-` prefix)
 - `value: any` - The extension value
 
@@ -273,6 +281,7 @@ export default class UsersController {
 ```
 
 **Options:**
+
 - `...tags: string[]` - One or more tag names
 
 <Callout>Tags will automatically be applied to your controllers using its name.</Callout>
@@ -295,6 +304,7 @@ export default class FilesController {
 ```
 
 **Options:**
+
 - `...mimeTypes: string[]` - One or more MIME types (e.g., 'application/json', 'text/html')
 
 ### `@ApiConsumes()`
@@ -315,6 +325,7 @@ export default class FilesController {
 ```
 
 **Options:**
+
 - `...mimeTypes: string[]` - One or more MIME types (e.g., 'application/json', 'multipart/form-data')
 
 ### `@ApiSecurity()`
@@ -335,6 +346,7 @@ export default class UsersController {
 ```
 
 **Options:**
+
 - `name: string` - The name of the security scheme (must be defined in `config/openapi.ts`)
 
 ### `@ApiBearerAuth()`
@@ -352,6 +364,7 @@ export default class UsersController {}
 ```
 
 **Options:**
+
 - `name?: string` - Optional name of the bearer auth scheme (default: 'bearer')
 
 ### `@ApiBasicAuth()`
@@ -369,6 +382,7 @@ export default class UsersController {}
 ```
 
 **Options:**
+
 - `name?: string` - Optional name of the basic auth scheme (default: 'basic')
 
 ### `@ApiOAuth2()`
@@ -386,6 +400,7 @@ export default class UsersController {}
 ```
 
 **Options:**
+
 - `...scopes: string[]` - One or more OAuth2 scopes required for the operation
 
 ### `@ApiExtraModels()`
@@ -410,6 +425,7 @@ export default class PostsController {
 ```
 
 **Options:**
+
 - `...models: Type[]` - One or more model classes to register
 
 ## Model Decorators
@@ -440,6 +456,7 @@ export default class Post {
 ```
 
 **Options:**
+
 - `type?: Type | (() => Type)` - Explicit type (use a function for circular dependencies)
 - `description?: string` - A description of the property
 - `required?: boolean` - Whether the property is required (default: true)
@@ -471,6 +488,7 @@ export default class Post {
 ```
 
 **Options:**
+
 - Same as `@ApiProperty()`, but `required` defaults to `false`
 
 ### `@ApiHideProperty()`
@@ -494,24 +512,24 @@ export default class Post {
 
 ## Decorator Reference Table
 
-| Decorator                | Usage Level          | Description                                    |
-| ------------------------ | -------------------- | ---------------------------------------------- |
-| `@ApiOperation()`        | Method               | Configures operation details                   |
-| `@ApiResponse()`         | Method / Controller  | Describes possible responses                   |
-| `@ApiBody()`             | Method               | Describes request body                         |
-| `@ApiParam()`            | Method               | Describes path parameters                      |
-| `@ApiQuery()`            | Method               | Describes query parameters                     |
-| `@ApiHeader()`           | Method / Controller  | Describes header parameters                    |
-| `@ApiExcludeEndpoint()`   | Method               | Excludes endpoint from documentation            |
-| `@ApiExtension()`        | Method               | Adds custom extensions                         |
-| `@ApiTags()`             | Method / Controller  | Assigns tags for categorization                |
-| `@ApiProduces()`         | Method / Controller  | Specifies MIME types produced                  |
-| `@ApiConsumes()`         | Method / Controller  | Specifies MIME types consumed                  |
-| `@ApiSecurity()`         | Method / Controller  | Defines security requirements                  |
-| `@ApiBearerAuth()`       | Method / Controller  | Bearer token authentication                    |
-| `@ApiBasicAuth()`        | Method / Controller  | Basic authentication                           |
-| `@ApiOAuth2()`           | Method / Controller  | OAuth2 authentication                          |
-| `@ApiExtraModels()`      | Method / Controller  | Registers additional models                    |
-| `@ApiProperty()`         | Property             | Defines a model property                       |
-| `@ApiPropertyOptional()` | Property             | Defines an optional model property             |
-| `@ApiHideProperty()`     | Property             | Hides a property from documentation            |
+| Decorator                | Usage Level         | Description                          |
+| ------------------------ | ------------------- | ------------------------------------ |
+| `@ApiOperation()`        | Method              | Configures operation details         |
+| `@ApiResponse()`         | Method / Controller | Describes possible responses         |
+| `@ApiBody()`             | Method              | Describes request body               |
+| `@ApiParam()`            | Method              | Describes path parameters            |
+| `@ApiQuery()`            | Method              | Describes query parameters           |
+| `@ApiHeader()`           | Method / Controller | Describes header parameters          |
+| `@ApiExcludeEndpoint()`  | Method              | Excludes endpoint from documentation |
+| `@ApiExtension()`        | Method              | Adds custom extensions               |
+| `@ApiTags()`             | Method / Controller | Assigns tags for categorization      |
+| `@ApiProduces()`         | Method / Controller | Specifies MIME types produced        |
+| `@ApiConsumes()`         | Method / Controller | Specifies MIME types consumed        |
+| `@ApiSecurity()`         | Method / Controller | Defines security requirements        |
+| `@ApiBearerAuth()`       | Method / Controller | Bearer token authentication          |
+| `@ApiBasicAuth()`        | Method / Controller | Basic authentication                 |
+| `@ApiOAuth2()`           | Method / Controller | OAuth2 authentication                |
+| `@ApiExtraModels()`      | Method / Controller | Registers additional models          |
+| `@ApiProperty()`         | Property            | Defines a model property             |
+| `@ApiPropertyOptional()` | Property            | Defines an optional model property   |
+| `@ApiHideProperty()`     | Property            | Hides a property from documentation  |

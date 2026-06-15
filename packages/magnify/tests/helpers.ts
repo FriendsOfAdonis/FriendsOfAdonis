@@ -154,6 +154,7 @@ async function seedDatabase() {
 
   // To ensure proper order we manually set createdAt
   const toCreate = [
+    // oxlint-disable-next-line unicorn/no-useless-spread
     ...collection().map((v) => {
       date = date.minus({ seconds: 1 })
       return {

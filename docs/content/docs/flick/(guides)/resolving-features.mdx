@@ -1,0 +1,196 @@
+---
+title: Resolving Features
+description: "Check, branch on, and read values from feature flags."
+icon: ToggleRight
+---
+
+Once a feature is [defined](/docs/flick/defining-features), you resolve it by handing the Flick service a scope and asking what it should do for that scope. This page covers the resolution methods and how Flick keeps feature names type-safe.
+
+## The flick service
+
+Import the Flick service anywhere in your application:
+
+```ts
+import flick from "@foadonis/flick/services/main";
+```
+
+Every resolution starts with `flick.for(scope)`, which binds a scope and returns a resolver:
+
+```ts
+const resolver = flick.for(user);
+```
+
+The returned resolver exposes a set of asynchronous methods: `isActive`, `isInactive`, `value`, `values`, `match`, and the batch helpers `allActive`, `someActive`, `allInactive`, and `someInactive`. Alongside these read methods it also exposes `define`, `activate`, `deactivate`, and `clear` for writing and removing stored values, covered in [Overriding stored values](#overriding-stored-values).
+
+## Checking active state
+
+`isActive(feature)` returns `true` when the feature resolves to a truthy value. Use it for classic on/off flags:
+
+```ts
+import flick from "@foadonis/flick/services/main";
+
+if (await flick.for(user).isActive("new_checkout")) {
+  return view.render("checkout/new");
+}
+
+return view.render("checkout/legacy");
+```
+
+`isInactive(feature)` is the inverse: it returns `true` when the feature resolves to a falsy value. It exists for readability:
+
+```ts
+if (await flick.for(user).isInactive("legacy_pricing")) {
+  return response.notFound();
+}
+```
+
+<Callout>
+  `isActive` and `isInactive` coerce the resolved value to a boolean: any truthy
+  value (a non-empty variant string, a non-zero number, an object) is
+  **active**, and falsy values (`false`, `0`, `''`, `null`, `undefined`) are
+  **inactive**. When a variant's specific value matters, read it with `value`
+  rather than collapsing it to a boolean.
+</Callout>
+
+## Checking multiple flags
+
+When a decision depends on more than one flag, the batch helpers resolve a list of features and combine the results so you don't have to `await` each check yourself:
+
+- `allActive(features)`: `true` when **every** feature is active
+- `someActive(features)`: `true` when **at least one** feature is active
+- `allInactive(features)`: `true` when **every** feature is inactive
+- `someInactive(features)`: `true` when **at least one** feature is inactive
+
+```ts
+import flick from "@foadonis/flick/services/main";
+
+if (await flick.for(user).allActive(["new_checkout", "beta_banner"])) {
+  // both flags are on
+}
+
+if (await flick.for(user).someActive(["new_checkout", "beta_banner"])) {
+  // at least one flag is on
+}
+```
+
+Each helper applies the same truthy/falsy rule as `isActive`, so a variant value counts as active.
+
+## Reading variant values
+
+`value(feature)` returns whatever the feature's `resolve` method returned. This is the canonical API for variant features:
+
+```ts
+import flick from "@foadonis/flick/services/main";
+
+const color = await flick.for(user).value("checkout_button_color");
+
+return view.render("checkout", { buttonColor: color });
+```
+
+The same method works for boolean features, returning `true` or `false`.
+
+### Reading several values at once
+
+`values(features)` resolves a list of features in parallel and returns their resolved values as a tuple, in the same order as the input. The result is fully typed: each position carries the return type of that feature's `resolve`.
+
+```ts
+import flick from "@foadonis/flick/services/main";
+
+const [checkout, buttonColor] = await flick
+  .for(user)
+  .values(["new_checkout", "checkout_button_color"]);
+// checkout:    boolean
+// buttonColor: 'blue' | 'green' | 'red'
+```
+
+## Branching with `match`
+
+`match(feature, { active, inactive })` chooses between two branches based on whether the feature is active. Each branch is a function whose return value becomes the result of `match`:
+
+```ts
+import flick from "@foadonis/flick/services/main";
+
+const html = await flick.for(user).match("new_checkout", {
+  active: () => view.render("checkout/new"),
+  inactive: () => view.render("checkout/legacy"),
+});
+```
+
+`match` is preferable to a manual `if`/`else` when both branches return a value and you want to keep the call expression-shaped. Like `isActive`, it runs the `active` branch when the resolved value is truthy.
+
+## Overriding stored values
+
+Sometimes you want to set a feature's value for a scope directly, instead of letting `resolve` compute it: a support agent enabling a beta for one customer, a seed script opting an account into an experiment, or a manual kill switch. The resolver exposes three methods that write straight to the driver:
+
+- `define(feature, value)` stores an explicit value for the scope.
+- `activate(feature)` is shorthand for `define(feature, true)`.
+- `deactivate(feature)` is shorthand for `define(feature, false)`.
+
+```ts
+import flick from "@foadonis/flick/services/main";
+
+// Force a variant value for this user
+await flick.for(user).define("checkout_button_color", "green");
+
+// Turn a boolean flag on or off for a given scope
+await flick.for(user).activate("new_checkout");
+await flick.for(other).deactivate("new_checkout");
+```
+
+Because resolution returns the stored value whenever one exists, a defined value takes precedence over `resolve` and stays in effect until it is [cleared](#clearing-stored-values). `define` only accepts values assignable to the feature's `resolve` return type, so variant values stay type-checked.
+
+<Callout>
+  A feature's [`before` hook](/docs/flick/defining-features) runs before the
+  stored value is read, so a `before` that returns a value short-circuits ahead
+  of anything set with `define`, `activate`, or `deactivate`. Reserve `before`
+  for hard overrides (such as an admin bypass) that should win over manually set
+  values.
+</Callout>
+
+## Clearing stored values
+
+`clear(feature)` removes the stored value for the scope. The next resolution re-runs `resolve` instead of returning the old value:
+
+```ts
+import flick from "@foadonis/flick/services/main";
+
+await flick.for(user).clear("new_checkout");
+```
+
+Use it after changing a feature's logic, or to undo a value set with `define`. To clear stored values across **every** scope at once, call `flick.purge(["new_checkout"])` (or `flick.purge()` for all features), or run the `flick:purge` command. See [Cache Drivers](/docs/flick/drivers) for how invalidation works.
+
+## Type-safe feature names
+
+Flick uses TypeScript module augmentation to make feature names autocompletable and typo-checked. In your config file, declare your features against the `KnownFeatures` interface:
+
+```ts title="config/flick.ts"
+import { features } from "#generated/features";
+import { defineConfig, drivers } from "@foadonis/flick";
+
+const flickConfig = defineConfig({
+  features,
+  driver: "memory",
+  drivers: {
+    memory: drivers.memory(),
+  },
+});
+
+export default flickConfig;
+
+declare module "@foadonis/flick/types" {
+  interface KnownFeatures extends InferFeatures<typeof flickConfig> {}
+  interface KnownDriver extends InferFlickDriver<typeof flickConfig> {}
+}
+```
+
+With that in place, every resolution call accepts only the names of features that actually exist:
+
+```ts
+// ✓ Compiles
+await flick.for(user).isActive("new_checkout");
+
+// ✗ TypeScript will not let this compile
+await flick.for(user).isActive("new_chekcout");
+```
+
+Adding a new file under `app/features/` is enough to make its name available; the indexer regenerates the `features` barrel and the `InferFeatures` helper picks it up on the next build.

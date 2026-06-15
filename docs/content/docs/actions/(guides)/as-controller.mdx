@@ -1,0 +1,111 @@
+---
+title: 'Using Actions as Controllers'
+description: 'Use actions as HTTP controllers in your routes'
+---
+
+The `AsController` interface allows you to use actions as HTTP route handlers. This keeps your routes file clean while centralizing business logic in your actions.
+
+## Basic Example
+
+Implement the `AsController` interface and define the `asController` method:
+
+```ts title="app/actions/create_post_action.ts"
+import { BaseAction, type AsController } from '@foadonis/actions'
+import { type HttpContext } from '@adonisjs/core/http'
+import { inject } from '@adonisjs/core'
+import Post from '#models/post'
+import { createPostValidator } from '#validators/post'
+
+export default class CreatePostAction extends BaseAction implements AsController {
+  async handle(title: string, content: string, authorId: number) {
+    const post = await Post.create({
+      title,
+      content,
+      authorId,
+    })
+
+    return post
+  }
+
+  async asController({ request, response, auth }: HttpContext) {
+    const { title, content } = await request.validateUsing(createPostValidator)
+    const post = await this.handle(title, content, auth.user!.id)
+    return response.created(post)
+  }
+}
+```
+
+Register the route:
+
+```ts title="start/routes.ts"
+import { actions } from '#generated/actions'
+import router from '@adonisjs/core/services/router'
+
+router.post('/posts', actions.CreatePost.asController())
+```
+
+## Accessing Request Data
+
+The `asController` method receives the full `HttpContext`, giving you access to all request data. Use `validateUsing` to validate both body and route parameters:
+
+```ts title="app/actions/update_post_action.ts"
+import { BaseAction, type AsController } from '@foadonis/actions'
+import { type HttpContext } from '@adonisjs/core/http'
+import Post from '#models/post'
+import { updatePostValidator } from '#validators/post'
+
+export default class UpdatePostAction extends BaseAction implements AsController {
+  async handle(postId: number, data: { title?: string; content?: string }) {
+    const post = await Post.findOrFail(postId)
+    post.merge(data)
+    await post.save()
+    return post
+  }
+
+  async asController({ request, response }: HttpContext) {
+    const { params, ...data } = await request.validateUsing(updatePostValidator)
+    const post = await this.handle(params.id, data)
+    return response.ok(post)
+  }
+}
+```
+
+```ts title="start/routes.ts"
+import { actions } from '#generated/actions'
+import router from '@adonisjs/core/services/router'
+
+router.put('/posts/:id', actions.UpdatePost.asController())
+```
+
+## Dependency Injection
+
+Actions are resolved through the AdonisJS container, allowing you to inject services into the constructor:
+
+```ts title="app/actions/create_order_action.ts"
+import { BaseAction, type AsController } from '@foadonis/actions'
+import { type HttpContext } from '@adonisjs/core/http'
+import { inject } from '@adonisjs/core'
+import PaymentService from '#services/payment_service'
+import Order from '#models/order'
+import { createOrderValidator } from '#validators/order'
+
+@inject()
+export default class CreateOrderAction extends BaseAction implements AsController {
+  constructor(private paymentService: PaymentService) {
+    super()
+  }
+
+  async handle(userId: number, items: { productId: number; quantity: number }[]) {
+    const order = await Order.create({ userId, status: 'pending' })
+    await order.related('items').createMany(items)
+    await this.paymentService.initializePayment(order)
+    return order
+  }
+
+  async asController({ request, response, auth }: HttpContext) {
+    const { items } = await request.validateUsing(createOrderValidator)
+    const order = await this.handle(auth.user!.id, items)
+    return response.created(order)
+  }
+}
+```

@@ -4,7 +4,6 @@ type ParamValue = string | number | bigint | boolean
 
 export type ScannedRoutes = {
   ALL: {
-    'demo.index': { paramsTuple?: []; params?: {} }
     'posts.index': { paramsTuple?: []; params?: {} }
     'posts.create': { paramsTuple?: []; params?: {} }
     'posts.store': { paramsTuple?: []; params?: {} }
@@ -16,8 +15,10 @@ export type ScannedRoutes = {
     'openapi.json': { paramsTuple?: []; params?: {} }
     'openapi.yaml': { paramsTuple?: []; params?: {} }
   }
+  POST: {
+    'posts.store': { paramsTuple?: []; params?: {} }
+  }
   GET: {
-    'demo.index': { paramsTuple?: []; params?: {} }
     'posts.index': { paramsTuple?: []; params?: {} }
     'posts.create': { paramsTuple?: []; params?: {} }
     'posts.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
@@ -27,7 +28,6 @@ export type ScannedRoutes = {
     'openapi.yaml': { paramsTuple?: []; params?: {} }
   }
   HEAD: {
-    'demo.index': { paramsTuple?: []; params?: {} }
     'posts.index': { paramsTuple?: []; params?: {} }
     'posts.create': { paramsTuple?: []; params?: {} }
     'posts.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
@@ -35,9 +35,6 @@ export type ScannedRoutes = {
     'openapi.html': { paramsTuple?: []; params?: {} }
     'openapi.json': { paramsTuple?: []; params?: {} }
     'openapi.yaml': { paramsTuple?: []; params?: {} }
-  }
-  POST: {
-    'posts.store': { paramsTuple?: []; params?: {} }
   }
   PUT: {
     'posts.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }

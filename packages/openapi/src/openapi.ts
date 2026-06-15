@@ -4,7 +4,6 @@ import { generateDocument } from '@martin.xyz/openapi-decorators'
 import { RouterLoader } from './loader.js'
 import { type Logger } from '@adonisjs/core/logger'
 import { LuxonTypeLoader } from './loaders/luxon.js'
-import { VineTypeLoader } from './loaders/vine.js'
 import {
   generateRapidocUI,
   generateScalarUI,
@@ -12,6 +11,10 @@ import {
 } from '@martin.xyz/openapi-decorators/ui'
 import { type OpenAPIDocument } from '@martin.xyz/openapi-decorators/types'
 import stringHelpers from '@adonisjs/core/helpers/string'
+import {
+  JSONSchemaTypeLoader,
+  StandardJSONSchemaTypeLoader,
+} from '@martin.xyz/openapi-decorators/loaders'
 
 const OpenAPIController = () => import('./controllers/openapi_controller.js')
 
@@ -52,11 +55,17 @@ export class OpenAPI {
     }
 
     const controllers = await this.#routerLoader.load()
+    const customTypeLoaders = this.#config.loaders ?? []
 
     this.#document = await generateDocument({
       controllers: [...controllers, ...(this.#config.controllers ?? [])],
       customLogger: this.#logger,
-      loaders: [LuxonTypeLoader, VineTypeLoader, ...(this.#config.loaders ?? [])],
+      loaders: [
+        ...customTypeLoaders,
+        LuxonTypeLoader,
+        StandardJSONSchemaTypeLoader,
+        JSONSchemaTypeLoader,
+      ],
       document: this.#config.document,
     })
 

@@ -6,7 +6,7 @@
     "build": "next build",
     "dev": "next dev",
     "start": "next start",
-    "lint": "eslint .",
+    "lint": "oxlint",
     "mdx": "fumadocs-mdx"
   },
   "dependencies": {
@@ -25,6 +25,7 @@
     "@sentry/node": "^10.30.0",
     "@shikijs/transformers": "^3.20.0",
     "@takumi-rs/image-response": "^0.57.5",
+    "@vercel/analytics": "^1.5.0",
     "algoliasearch": "^5.46.0",
     "automd": "^0.4.2",
     "class-variance-authority": "^0.7.1",
@@ -44,7 +45,6 @@
     "zod": "^4.2.0"
   },
   "devDependencies": {
-    "@foadonis/eslint-config": "workspace:*",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/mdx": "^2.0.13",
     "@types/node": "^25.0.2",

@@ -1,5 +1,9 @@
 import { type RouteJSON } from '@adonisjs/core/types/http'
-import { type generateDocument } from '@martin.xyz/openapi-decorators'
+import { type Context, type generateDocument } from '@martin.xyz/openapi-decorators'
+import { type ExtractTransformerResource } from './loaders/transformer.ts'
+import { type Next } from '@adonisjs/core/types/transformers'
+import { type ContainerResolver } from '@adonisjs/core/container'
+import { type OpenAPIV3_1 } from 'openapi-types'
 
 type GenerateDocumentParameters = Parameters<typeof generateDocument>[0]
 
@@ -40,3 +44,59 @@ export type OperationTaggerFn = (
   target: Function,
   propertyKey: string
 ) => string[]
+
+declare module '@adonisjs/core/transformers' {
+  namespace BaseTransformer {
+    function schema<Self extends { new (resource: any, ...rest: any[]): any }>(
+      this: Self,
+      model:
+        | ExtractTransformerResource<InstanceType<Self>>
+        | [ExtractTransformerResource<InstanceType<Self>>],
+      paginated?: boolean
+    ):
+      | Item<InstanceType<Self>, 1, 'toObject'>
+      | Collection<InstanceType<Self>, 1, 'toObject'>
+      | Paginator<InstanceType<Self>, 1, 'toObject'>
+  }
+
+  interface Item<
+    Transformer extends Record<string, any>,
+    MaxDepth extends Next[number],
+    Variant extends string,
+  > {
+    resolveSchema(
+      context: Context,
+      container: ContainerResolver<any>,
+      depth: number,
+      maxDepth?: number
+    ): Promise<OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject>
+  }
+
+  interface Collection<
+    Transformer extends Record<string, any>,
+    MaxDepth extends Next[number],
+    Variant extends string,
+  > {
+    context: Context
+    resolveSchema(
+      context: Context,
+      container: ContainerResolver<any>,
+      depth: number,
+      maxDepth?: number
+    ): Promise<OpenAPIV3_1.SchemaObject>
+  }
+
+  interface Paginator<
+    Transformer extends Record<string, any>,
+    MaxDepth extends Next[number],
+    Variant extends string,
+  > {
+    context: Context
+    resolveSchema(
+      context: Context,
+      container: ContainerResolver<any>,
+      depth: number,
+      maxDepth?: number
+    ): Promise<OpenAPIV3_1.SchemaObject>
+  }
+}

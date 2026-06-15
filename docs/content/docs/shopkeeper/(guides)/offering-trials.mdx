@@ -1,0 +1,152 @@
+---
+title: Offering Trials
+icon: Clock
+---
+
+Shopkeeper supports two types of free trials: trials that collect a payment method up front, and trials that let customers try your product without entering any billing details.
+
+## With payment method up front
+
+If you want to collect the customer's payment method before the trial starts, use `trialDays` when creating the subscription:
+
+```ts title="start/routes.ts"
+router.get('/subscribe', async ({ auth, request }) => {
+  const user = auth.getUserOrFail()
+  const paymentMethodId = request.input('paymentMethodId')
+
+  await user.newSubscription('default', 'price_monthly').trialDays(14).create(paymentMethodId)
+})
+```
+
+The customer will not be charged until the trial ends. If they don't cancel before then, billing starts automatically.
+
+You can also set a specific trial end date with `trialUntil`:
+
+```ts
+import { DateTime } from 'luxon'
+
+await user
+  .newSubscription('default', 'price_monthly')
+  .trialUntil(DateTime.now().plus({ days: 14 }))
+  .create(paymentMethodId)
+```
+
+### With Stripe Checkout
+
+Trials also work with Stripe Checkout:
+
+```ts
+const checkout = await user.newSubscription('default', 'price_monthly').trialDays(7).checkout()
+```
+
+<Callout type="warn">Stripe Checkout requires a minimum trial period of 48 hours.</Callout>
+
+### Stripe dashboard trial days
+
+You can also configure trial days directly in the [Stripe dashboard](https://dashboard.stripe.com) on the price level. Be aware that when a price has a trial period configured in Stripe, every new subscription for that price will receive a trial, including customers who have subscribed before. To skip the trial for a specific subscription, use `skipTrial`:
+
+```ts
+await user.newSubscription('default', 'price_monthly').skipTrial().create(paymentMethodId)
+```
+
+## Without payment method
+
+If you want to offer a trial without collecting any billing details, set the `trialEndsAt` column directly on the user record. This is typically done during registration:
+
+```ts
+import { DateTime } from 'luxon'
+
+await User.create({
+  name: 'John',
+  email: 'john@example.com',
+  trialEndsAt: DateTime.now().plus({ days: 14 }),
+})
+```
+
+Shopkeeper calls this a "generic trial" since it is not attached to any subscription. The `onTrial` method on the user returns `true` as long as the current date is before `trialEndsAt`:
+
+```ts
+if (await user.onTrial()) {
+  // User is within their trial period
+}
+```
+
+To specifically check for a generic trial (not a subscription trial):
+
+```ts
+if (await user.onGenericTrial()) {
+  // User has a generic trial, no subscription yet
+}
+```
+
+When the customer is ready to subscribe, create a subscription as usual:
+
+```ts
+await user.newSubscription('default', 'price_monthly').create(paymentMethodId)
+```
+
+## Checking trial status
+
+You can check trial status on both the user and the subscription:
+
+```ts
+// On the user (checks both generic and subscription trials)
+if (await user.onTrial()) {
+  // ...
+}
+
+// On a specific subscription
+const subscription = await user.subscription('default')
+if (subscription.onTrial()) {
+  // ...
+}
+```
+
+To check if a trial has expired:
+
+```ts
+if (await user.hasExpiredTrial()) {
+  // ...
+}
+
+if (subscription.hasExpiredTrial()) {
+  // ...
+}
+```
+
+To get the trial end date:
+
+```ts
+const trialEndsAt = await user.trialEndsAt('default')
+```
+
+## Ending a trial early
+
+To end a subscription trial immediately and start billing the customer:
+
+```ts
+const subscription = await user.subscription('default')
+
+await subscription.endTrial()
+```
+
+## Extending a trial
+
+If you want to give a customer more time, you can extend their trial even after it has expired. The extra time spent in the trial will be deducted from the customer's next invoice:
+
+```ts
+import { DateTime } from 'luxon'
+
+const subscription = await user.subscription('default')
+
+// Set a new trial end date
+await subscription.extendTrial(DateTime.now().plus({ days: 7 }))
+
+// Or add days to the current trial end date
+await subscription.extendTrial(subscription.trialEndsAt.plus({ days: 5 }))
+```
+
+## Going further
+
+- [Managing Subscriptions](/docs/shopkeeper/managing-subscriptions): Change plans, cancel, resume, and more
+- [Stripe Subscriptions Trials documentation](https://stripe.com/docs/billing/subscriptions/trials): Stripe's own guide to trial periods

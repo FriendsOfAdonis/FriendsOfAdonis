@@ -1,0 +1,186 @@
+---
+title: Testing Features
+description: "Fake feature resolution and assert which flags were checked in your tests."
+icon: FlaskConical
+---
+
+Feature flags are awkward to test against directly. A feature's `resolve` may be non-deterministic, hit the database, or call an external service, and the [driver](/docs/flick/drivers) caches whatever it returns. Flick gives you `flick.fake()` to replace resolution with values you control, so a test can pin a flag on or off without touching the real feature logic or cache.
+
+## Faking resolution
+
+Call `flick.fake()` to swap the real resolver for a test double, then `override` the features you want to control:
+
+```ts
+import { test } from "@japa/runner";
+import flick from "@foadonis/flick/services/main";
+
+test("renders the new checkout when the flag is active", async ({ client }) => {
+  flick.fake().override("new_checkout", true);
+
+  const response = await client.get("/checkout");
+
+  response.assertTextIncludes("New checkout");
+});
+```
+
+`override(feature, value)` makes that feature resolve to `value` for every scope. The real `resolve` (and any `before` hook) is never called, and the driver cache is bypassed entirely, so faked features never read or write stored values.
+
+<Callout>
+  Each call to `flick.fake()` starts fresh, discarding any previous fake and its
+  overrides. Build up all of a test's overrides on the single `fake()` returned
+  at the start of the test.
+</Callout>
+
+Overrides chain, so you can pin several flags at once:
+
+```ts
+flick
+  .fake()
+  .override("new_checkout", true)
+  .override("checkout_button_color", "blue");
+```
+
+## Restoring real resolution
+
+A fake stays active on the Flick service until you restore it, so you must undo it between tests or later tests will keep seeing the faked values.
+
+The simplest option is a group teardown that runs after every test:
+
+```ts
+import { test } from "@japa/runner";
+import flick from "@foadonis/flick/services/main";
+
+test.group("Checkout", (group) => {
+  test("renders the new checkout when the flag is active", async ({
+    client,
+  }) => {
+    const fake = flick.fake().override("new_checkout", true);
+
+    const response = await client.get("/checkout");
+
+    response.assertTextIncludes("New checkout");
+
+    fake.restore();
+  });
+});
+```
+
+### Automatic cleanup with `using`
+
+The `FakeFlick` returned by `fake()` is disposable, so a `using` declaration restores real resolution automatically when the variable goes out of scope. No teardown needed:
+
+```ts
+test("renders the new checkout when the flag is active", async ({ client }) => {
+  using fake = flick.fake().override("new_checkout", true);
+
+  const response = await client.get("/checkout");
+
+  response.assertTextIncludes("New checkout");
+  // real resolution is restored here, when `fake` is disposed
+});
+```
+
+## Dynamic overrides
+
+When a flag's value should depend on the scope, pass a function instead of a static value. It receives the scope being resolved and returns the faked value:
+
+```ts
+using fake = flick
+  .fake()
+  .override("checkout_button_color", (user) =>
+    user.id % 2 === 0 ? "blue" : "red",
+  );
+```
+
+The function runs on every resolution, so different scopes can get different values. The scope argument is typed as the feature's declared scope, the same `User` you'd receive in the real `resolve`.
+
+## Passing through to real features
+
+Only the features you `override` are faked. Any feature you don't override falls through to its real `resolve`, cache included:
+
+```ts
+using fake = flick.fake().override("new_checkout", true);
+
+// faked, returns true without running the feature
+await flick.for(user).isActive("new_checkout");
+
+// not overridden, runs the real BetaBannerFeature
+await flick.for(user).isActive("beta_banner");
+```
+
+This lets you isolate the one flag a test cares about while leaving the rest of the system behaving normally.
+
+## Asserting resolution
+
+`FakeFlick` records every resolution that passes through it, so you can assert which flags your code actually checked:
+
+```ts
+using fake = flick.fake().override("new_checkout", true);
+
+await client.get("/checkout").loginAs(user);
+
+fake.assertResolved("new_checkout");
+```
+
+Three assertions are available:
+
+- `assertResolved(feature)`: the feature was resolved at least once.
+- `assertNotResolved(feature)`: the feature was never resolved. Useful to prove a code path was skipped.
+- `assertResolvedFor(feature, scope)`: the feature was resolved for a specific scope, matched by its `toFeatureIdentifier()`.
+
+```ts
+fake.assertResolvedFor("new_checkout", user);
+fake.assertNotResolved("legacy_pricing");
+```
+
+Each assertion throws an `AssertionError` with a descriptive message when it fails, so a failing expectation reads clearly in your test output.
+
+## Type-safe overrides
+
+Overrides are checked against the feature's registry the same way resolution is. The feature name must exist, and the override value must match the feature's `resolve` return type:
+
+```ts
+// ✓ Compiles: new_checkout resolves to a boolean
+flick.fake().override("new_checkout", true);
+
+// ✓ Compiles: checkout_button_color resolves to 'blue' | 'green' | 'red'
+flick.fake().override("checkout_button_color", "green");
+
+// ✗ TypeScript will not let this compile: 'purple' is not a valid variant
+flick.fake().override("checkout_button_color", "purple");
+```
+
+This catches stale tests at compile time: rename or retype a feature and any override that no longer fits stops compiling.
+
+## A complete example
+
+Putting it together in an HTTP test:
+
+```ts title="tests/functional/checkout.spec.ts"
+import { test } from "@japa/runner";
+import flick from "@foadonis/flick/services/main";
+import { UserFactory } from "#database/factories/user_factory";
+
+test.group("Checkout", () => {
+  test("shows the new checkout to users in the rollout", async ({ client }) => {
+    const user = await UserFactory.create();
+
+    using fake = flick.fake().override("new_checkout", true);
+
+    const response = await client.get("/checkout").loginAs(user);
+
+    response.assertTextIncludes("New checkout");
+    fake.assertResolvedFor("new_checkout", user);
+  });
+
+  test("falls back to the legacy checkout otherwise", async ({ client }) => {
+    const user = await UserFactory.create();
+
+    using _fake = flick.fake().override("new_checkout", false);
+
+    const response = await client.get("/checkout").loginAs(user);
+
+    response.assertTextIncludes("Checkout");
+  });
+});
+```

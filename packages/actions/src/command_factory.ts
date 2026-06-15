@@ -1,8 +1,13 @@
 import { BaseCommand } from '@adonisjs/core/ace'
-import { type AsCommand } from './base_action.js'
-import { type Constructor } from './types.js'
 import { commandName } from './utils.js'
+import { type Constructor } from '@adonisjs/core/types/common'
+import { type AsCommand } from './types.ts'
 
+/**
+ * Creates an Ace command class from an action implementing AsCommand.
+ * The command name defaults to "action:{action-name}" unless a custom
+ * `commandName` static property is defined.
+ */
 export function makeCommand(Action: Constructor<AsCommand>): typeof BaseCommand {
   class FakeCommand extends BaseCommand {
     async exec(): Promise<any> {

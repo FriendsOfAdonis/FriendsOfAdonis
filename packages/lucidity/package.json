@@ -1,43 +1,18 @@
 {
   "name": "@foadonis/lucidity",
-  "description": "Quality of life improvements for the Lucid ORM",
   "version": "0.0.1-next.0",
-  "engines": {
-    "node": ">=20.6.0"
-  },
-  "type": "module",
-  "files": [
-    "build",
-    "!build/bin",
-    "!build/tests"
-  ],
-  "exports": {
-    ".": "./build/index.js",
-    "./commands": "./build/commands/main.js",
-    "./services/main": "./build/services/main.js",
-    "./lucidity_provider": "./build/providers/lucidity_provider.js",
-    "./types": "./build/src/types.js"
-  },
-  "scripts": {
-    "clean": "del-cli build",
-    "copy:templates": "copyfiles \"stubs/**/*.stub\" build",
-    "index:commands": "adonis-kit index build/commands",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint .",
-    "format": "prettier --write .",
-    "quick:test": "node --import=./tsnode.esm.js --enable-source-maps bin/test.ts",
-    "test": "c8 yarn quick:test",
-    "build": "yarn clean && tsc && yarn copy:templates && yarn index:commands",
-    "dev": "tsc --watch",
-    "version": "yarn build",
-    "prepublishOnly": "yarn build"
-  },
+  "description": "Quality of life improvements for the Lucid ORM",
   "keywords": [
     "adonis",
     "adonisjs",
     "lucid",
     "typescript"
   ],
+  "homepage": "https://friendsofadonis.com/docs/lucidity",
+  "bugs": {
+    "url": "https://github.com/FriendsOfAdonis/FriendsOfAdonis/issues"
+  },
+  "license": "MIT",
   "author": {
     "name": "Martin Paucot",
     "email": "contact@martin-paucot.fr"
@@ -47,18 +22,52 @@
     "url": "https://github.com/FriendsOfAdonis/FriendsOfAdonis",
     "directory": "packages/lucidity"
   },
-  "bugs": {
-    "url": "https://github.com/FriendsOfAdonis/FriendsOfAdonis/issues"
+  "files": [
+    "build",
+    "!build/bin",
+    "!build/tests"
+  ],
+  "type": "module",
+  "exports": {
+    ".": "./build/index.js",
+    "./commands": "./build/commands/main.js",
+    "./services/main": "./build/services/main.js",
+    "./lucidity_provider": "./build/providers/lucidity_provider.js",
+    "./types": "./build/src/types.js"
   },
-  "homepage": "https://friendsofadonis.com/docs/lucidity",
-  "license": "MIT",
+  "publishConfig": {
+    "access": "public",
+    "tag": "latest"
+  },
+  "scripts": {
+    "clean": "del-cli build",
+    "copy:templates": "copyfiles \"stubs/**/*.stub\" build",
+    "index:commands": "adonis-kit index build/commands",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint",
+    "quick:test": "node --import=./tsnode.esm.js --enable-source-maps bin/test.ts",
+    "test": "c8 yarn quick:test",
+    "build": "yarn clean && tsc && yarn copy:templates && yarn index:commands",
+    "dev": "tsc --watch",
+    "version": "yarn build",
+    "prepublishOnly": "yarn build"
+  },
+  "dependencies": {
+    "@npmcli/package-json": "^7.0.4",
+    "chalk": "^5.6.2",
+    "cli-highlight": "^2.1.11",
+    "deep-object-diff": "^1.1.9",
+    "globby": "^16.1.0",
+    "pkg-types": "^2.3.0",
+    "ts-morph": "^27.0.2",
+    "type-fest": "^5.3.1"
+  },
   "devDependencies": {
     "@adonisjs/assembler": "catalog:",
     "@adonisjs/auth": "catalog:",
     "@adonisjs/core": "catalog:",
     "@adonisjs/lucid": "catalog:",
     "@apollo/client": "^4.0.11",
-    "@foadonis/eslint-config": "workspace:*",
     "@japa/assert": "^4.2.0",
     "@japa/expect": "^3.0.7",
     "@japa/expect-type": "^2.0.4",
@@ -76,10 +85,8 @@
     "c8": "^10.1.3",
     "copyfiles": "^2.4.1",
     "del-cli": "^7.0.0",
-    "eslint": "catalog:",
     "luxon": "^3.7.2",
     "pg": "^8.13.0",
-    "prettier": "catalog:",
     "reflect-metadata": "^0.2.2",
     "testcontainers": "^10.18.0",
     "ts-node": "^10.9.2",
@@ -91,27 +98,16 @@
     "@adonisjs/lucid": "^22.0.0-next.4",
     "luxon": "^3.5.0"
   },
-  "dependencies": {
-    "@npmcli/package-json": "^7.0.4",
-    "chalk": "^5.6.2",
-    "cli-highlight": "^2.1.11",
-    "deep-object-diff": "^1.1.9",
-    "globby": "^16.1.0",
-    "pkg-types": "^2.3.0",
-    "ts-morph": "^27.0.2",
-    "type-fest": "^5.3.1"
-  },
-  "publishConfig": {
-    "access": "public",
-    "tag": "latest"
-  },
   "c8": {
+    "exclude": [
+      "tests/**"
+    ],
     "reporter": [
       "text",
       "html"
-    ],
-    "exclude": [
-      "tests/**"
     ]
+  },
+  "engines": {
+    "node": ">=20.6.0"
   }
 }

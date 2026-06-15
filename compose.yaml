@@ -1,0 +1,20 @@
+services:
+  otel-lgtm:
+    image: grafana/otel-lgtm:latest
+    container_name: otel-lgtm
+    ports:
+      - '3000:3000' # Grafana UI (admin/admin)
+      - '4317:4317' # OTLP gRPC receiver
+      - '4318:4318' # OTLP HTTP receiver
+      - '9090:9090' # Prometheus UI
+    environment:
+      # Optional: Enable internal logs for debugging the stack
+      - ENABLE_LOGS_OTELCOL=true
+      - ENABLE_LOGS_GRAFANA=false
+    volumes:
+      # Optional: Persist data across restarts
+      - lgtm-data:/data
+    restart: unless-stopped
+
+volumes:
+  lgtm-data:

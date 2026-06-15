@@ -1,0 +1,57 @@
+---
+title: Introduction
+summary: "Adonis Flick provides a typed, driver-based feature-flag system for AdonisJS applications."
+icon: Album
+---
+
+Adonis Flick is a typed, driver-based feature-flag system for AdonisJS. Define a feature once, then resolve it for any user, tenant, or request, with full TypeScript inference and a pluggable cache.
+
+```ts title="app/features/new_checkout_feature.ts"
+import { BaseFeature } from "@foadonis/flick";
+import User from "#models/user";
+
+export default class NewCheckoutFeature extends BaseFeature<User> {
+  async resolve(user: User) {
+    if (user.isAdmin) return true;
+
+    return Math.random() > 0.5;
+  }
+}
+```
+
+```ts title="start/routes.ts"
+import router from "@adonisjs/core/services/router";
+import flick from "@foadonis/flick/services/main";
+
+router.get("/checkout", async ({ auth, view }) => {
+  const user = auth.getUserOrFail();
+
+  return flick.for(user).match("new_checkout", {
+    active: () => view.render("checkout/new"),
+    inactive: () => view.render("checkout/legacy"),
+  });
+});
+```
+
+`match` runs the `active` callback when the feature resolves to a truthy value, and `inactive` otherwise. The full resolution API (`isActive`, `isInactive`, `value`, `values`, `match`, and the `allActive` / `someActive` batch helpers) is covered in [Resolving Features](/docs/flick/resolving-features).
+
+## What are feature flags?
+
+Feature flags let you decouple deploying code from releasing functionality. Instead of shipping a new feature to everyone the moment it's merged, you wrap it in a flag and decide, at runtime, who sees it. Common uses include gradual rollouts, beta-tester opt-ins, A/B tests, and kill switches for risky code paths.
+
+## Why a dedicated package?
+
+A boolean in your `.env` file is the simplest feature flag, and it falls over fast. Environment variables are global (everyone sees the same value), require a restart to change, and can only express "on" or "off". Flick lets you scope a flag to any value you choose (a user, an organization, a request) and return any value from it (a boolean, a variant string, a config object).
+
+## Features
+
+- **Typed feature names:** Auto-complete and type-check feature names from a generated registry
+- **Variant returns:** Features can return any value, not just booleans
+- **Scope-aware:** Resolve a flag per user, tenant, request, or any object you decide
+- **Edge support:** Custom edge tags for using features flags in your views
+- **Driver-based caching:** Memory and Redis drivers ship out of the box
+- **Pluggable drivers:** Implement the driver contract to back flick with anything
+
+## Next steps
+
+Ready to get started? Head over to the [Getting Started](/docs/flick/getting-started) guide to install Flick and ship your first flag in minutes.

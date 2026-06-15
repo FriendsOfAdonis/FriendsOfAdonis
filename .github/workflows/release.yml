@@ -1,4 +1,4 @@
-name: '🚀 Packages releases'
+name: "🚀 Packages releases"
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 
 jobs:
   changelog:
-    name: '🚀 Packages releases'
+    name: "🚀 Packages releases"
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -28,7 +28,7 @@ jobs:
       - name: 🅝 Setup node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
 
       - name: 🅝 Update npm for Trusted Publishers
         run: npm install -g npm@latest
@@ -42,14 +42,14 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: 🔨 Build packages
-        run: yarn build --filter="./packages/*" --filter=!@foadonis/shopkeeper
+        run: yarn build --filter="./packages/*"
 
       - uses: changesets/action@e0145edc7d9d8679003495b11f87bd8ef63c0cba # v1.5.3
         with:
           version: yarn changeset version
           publish: yarn changeset publish
-          commit: '[ci] release'
-          title: '[ci] release'
+          commit: "[ci] release"
+          title: "[ci] release"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ''
+          NPM_TOKEN: ""

@@ -1,5 +1,25 @@
 # @foadonis/magnify
 
+## 0.3.2
+
+### Patch Changes
+
+- [#115](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/115) [`d8771e8`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/d8771e8f18cbd1bfef15541f6f716705aea63731) Thanks [@kerwanp](https://github.com/kerwanp)! - Bump peer dependencies
+
+- [#111](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/111) [`ad872d6`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/ad872d6b8372056ff5e8bcb53a126a2ed05de904) Thanks [@NadimD](https://github.com/NadimD)! - Fix stub templates being copied to the wrong directory during build.
+
+## 0.3.1
+
+### Patch Changes
+
+- [`9c5a59b`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/9c5a59b1770d89e1d3c58d630e43dd5a4f4b36e3) Thanks [@kerwanp](https://github.com/kerwanp)! - Bump AdonisJS packages for V7 support release
+
+## 0.3.1-next.0
+
+### Patch Changes
+
+- [#107](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/107) [`9c5a59b`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/9c5a59b1770d89e1d3c58d630e43dd5a4f4b36e3) Thanks [@github-actions](https://github.com/apps/github-actions)! - Bump AdonisJS packages for V7 support release
+
 ## 0.3.0
 
 ### Minor Changes

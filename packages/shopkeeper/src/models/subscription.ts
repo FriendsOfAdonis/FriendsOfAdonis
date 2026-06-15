@@ -3,22 +3,24 @@ import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import { DateTime } from 'luxon'
 import Stripe from 'stripe'
 import { compose } from '@adonisjs/core/helpers'
-import { ManagesStripe } from '../mixins/manages_stripe.js'
+import { managesStripe } from '../mixins/manages_stripe.js'
 import { Exception } from '@adonisjs/core/exceptions'
-import { WithBillable } from '../mixins/billable.js'
+import { type BillableModel } from '../contracts.js'
 import { IncompletePaymentError } from '../errors/incomplete_payment.js'
 import { Invoice } from '../invoice.js'
 import { Payment } from '../payment.js'
 import { Discount } from '../discount.js'
 import { SubscriptionUpdateFailureError } from '../errors/subscription_update_failure.js'
+import { Shopkeeper } from '../shopkeeper.js'
 import shopkeeper from '../../services/shopkeeper.js'
-import { AllowsCoupon } from '../mixins/allows_coupons.js'
-import { HandlesPaymentFailures } from '../mixins/handles_payment_failures.js'
-import { InteractWithPaymentBehavior } from '../mixins/interacts_with_payment_behavior.js'
-import { Prorates } from '../mixins/prorates.js'
+import { allowsCoupon } from '../mixins/allows_coupons.js'
+import { handlesPaymentFailures } from '../mixins/handles_payment_failures.js'
+import { interactWithPaymentBehavior } from '../mixins/interacts_with_payment_behavior.js'
+import { prorates } from '../mixins/prorates.js'
 import is from '@adonisjs/core/helpers/is'
 import SubscriptionItem from './subscription_item.js'
 import { InvalidArgumentError } from '../errors/invalid_argument.js'
+import { checkStripeError } from '../utils/errors.js'
 
 type SwapPricesParam =
   | string
@@ -28,11 +30,11 @@ type SwapPricesParam =
 
 export default class Subscription extends compose(
   BaseModel,
-  ManagesStripe(false),
-  AllowsCoupon,
-  HandlesPaymentFailures,
-  InteractWithPaymentBehavior,
-  Prorates
+  managesStripe(false),
+  allowsCoupon(),
+  handlesPaymentFailures(),
+  interactWithPaymentBehavior(),
+  prorates()
 ) {
   @column({ isPrimary: true })
   declare id: number
@@ -40,9 +42,8 @@ export default class Subscription extends compose(
   @column()
   declare userId: string
 
-  // TODO: Decorate and type
   @belongsTo(() => shopkeeper.customerModel)
-  declare user: BelongsTo<WithBillable>
+  declare user: BelongsTo<BillableModel>
 
   @column()
   declare type: string
@@ -56,7 +57,7 @@ export default class Subscription extends compose(
   @column()
   declare quantity: number | null
 
-  @hasMany(() => shopkeeper.subscriptionItemModel)
+  @hasMany(() => Shopkeeper.$instance.subscriptionItemModel)
   declare items: HasMany<typeof SubscriptionItem>
 
   @column.dateTime()
@@ -90,8 +91,7 @@ export default class Subscription extends compose(
   /**
    * Determine if the subscription has a specific product.
    */
-  async hasProduct(product: string): Promise<boolean> {
-    // @ts-ignore -- Lucid type issue
+  async hasProduct(this: Subscription, product: string): Promise<boolean> {
     await this.load('items')
     return this.items.some((i) => i.stripeProduct === product)
   }
@@ -99,9 +99,8 @@ export default class Subscription extends compose(
   /**
    * Determine if the subscription has a specific price.
    */
-  async hasPrice(price: string): Promise<boolean> {
+  async hasPrice(this: Subscription, price: string): Promise<boolean> {
     if (this.hasMultiplePrices()) {
-      // @ts-ignore -- Lucid type issue
       await this.load('items')
       return this.items.some((i) => i.stripePrice === price)
     }
@@ -112,8 +111,7 @@ export default class Subscription extends compose(
   /**
    * Get the subscription item for the given price.
    */
-  findItemOrFail(price: string): Promise<SubscriptionItem> {
-    // @ts-ignore -- Lucid type issue
+  findItemOrFail(this: Subscription, price: string): Promise<SubscriptionItem> {
     return this.related('items').query().where('stripePrice', price).firstOrFail()
   }
 
@@ -131,8 +129,6 @@ export default class Subscription extends compose(
     return this.stripeStatus === 'incomplete'
   }
 
-  // TODO: SCOPES
-
   /**
    * Determine if the subscription is past due.
    */
@@ -144,11 +140,11 @@ export default class Subscription extends compose(
    * Determine if the subscription is active.
    */
   active(): boolean {
+    const config = Shopkeeper.$instance.config
     return (
       !this.ended() &&
-      (!shopkeeper.config.keepIncompleteSubscriptionsActive ||
-        this.stripeStatus !== 'incomplete') &&
-      (!shopkeeper.config.keepPastDueSubscriptionsActive || this.stripeStatus !== 'past_due') &&
+      (!config.keepIncompleteSubscriptionsActive || this.stripeStatus !== 'incomplete') &&
+      (!config.keepPastDueSubscriptionsActive || this.stripeStatus !== 'past_due') &&
       this.stripeStatus !== 'unpaid'
     )
   }
@@ -271,16 +267,13 @@ export default class Subscription extends compose(
 
     this.guardAgainstMultiplePrices()
 
-    // TODO: quickfix as stripe does not have quantity on subscription
-    // a lot of calls are made here
-    let stripeSubscription = await this.asStripeSubscription()
+    const firstItem = await SubscriptionItem.query().where('subscriptionId', this.id).firstOrFail()
+    const si = firstItem.stripeId
 
-    const si = stripeSubscription.items.data[0].id
-
-    stripeSubscription = await this.updateStripeSubscription({
+    const stripeSubscription = await this.updateStripeSubscription({
       payment_behavior: this.paymentBehavior(),
       proration_behavior: this.prorateBehavior(),
-      expand: ['latest_invoice.payment_intent'],
+      off_session: true,
       items: [
         {
           id: si,
@@ -300,52 +293,63 @@ export default class Subscription extends compose(
   }
 
   /**
-   * Report usage for a metered product.
+   * Report a meter event for a metered product.
    */
-  async reportUsage(quantity = 1, timestamp?: number, price?: string): Promise<Stripe.UsageRecord> {
+  async reportUsage(
+    eventName: string,
+    value = '1',
+    price?: string,
+    params: Partial<Stripe.Billing.MeterEventCreateParams> = {}
+  ): Promise<Stripe.Billing.MeterEvent> {
     if (!price) {
       this.guardAgainstMultiplePrices()
     }
 
     const item = await this.findItemOrFail(price ?? this.stripePrice!)
-    return item.reportUsage(quantity, timestamp)
+    return item.reportUsage(eventName, value, params)
   }
 
   /**
-   * Report usage for specific price of a metered product.
+   * Report a meter event for a specific price of a metered product.
    */
-  reportUsageFor(price: string, quantity = 1, timestamp?: number): Promise<Stripe.UsageRecord> {
-    return this.reportUsage(quantity, timestamp, price)
+  reportUsageFor(
+    price: string,
+    eventName: string,
+    value = '1',
+    params: Partial<Stripe.Billing.MeterEventCreateParams> = {}
+  ): Promise<Stripe.Billing.MeterEvent> {
+    return this.reportUsage(eventName, value, price, params)
   }
 
   /**
-   * Get the usage records for a metered product.
+   * Get the meter event summaries for a metered product.
    */
   async usageRecords(
-    params: Stripe.SubscriptionItemListUsageRecordSummariesParams = {},
+    meterId: string,
+    params: Omit<Stripe.Billing.MeterListEventSummariesParams, 'customer'>,
     price?: string
-  ): Promise<Stripe.UsageRecordSummary[]> {
+  ): Promise<Stripe.Billing.MeterEventSummary[]> {
     if (!price) {
       this.guardAgainstMultiplePrices()
     }
 
     const item = await this.findItemOrFail(price ?? this.stripePrice!)
-    return item.usageRecords(params)
+    return item.usageRecords(meterId, params)
   }
 
   /**
-   * Get the usage records for a specific price of a metered product.
+   * Get the meter event summaries for a specific price of a metered product.
    */
   usageRecordsFor(
     price: string,
-    params: Stripe.SubscriptionItemListUsageRecordSummariesParams = {}
-  ): Promise<Stripe.UsageRecordSummary[]> {
-    return this.usageRecords(params, price)
+    meterId: string,
+    params: Omit<Stripe.Billing.MeterListEventSummariesParams, 'customer'>
+  ): Promise<Stripe.Billing.MeterEventSummary[]> {
+    return this.usageRecords(meterId, params, price)
   }
 
   /**
    * Change the billing cycle anchor on a price change.
-   * TODO: The does not seem to be possible
    */
   anchorBillingCycleOn(
     date: Stripe.SubscriptionUpdateParams.BillingCycleAnchor = 'unchanged'
@@ -403,18 +407,24 @@ export default class Subscription extends compose(
   /**
    * Swap the subscription to new Stripe prices.
    */
-  async swap(prices: SwapPricesParam, params: Stripe.SubscriptionUpdateParams = {}): Promise<this> {
+  async swap(
+    this: Subscription,
+    prices: SwapPricesParam,
+    params: Stripe.SubscriptionUpdateParams = {}
+  ): Promise<Subscription> {
     if (is.array(prices) && prices.length <= 0) {
       throw new Exception('Please provide at least one price when swapping.')
     }
 
     this.guardAgainstIncomplete()
 
+    const stripe = Shopkeeper.$instance.stripe
+
     const items = await this.mergeItemsThatShouldBeDeletedDuringSwap(
       await this.parseSwapPrices(prices)
     )
 
-    const stripeSubscription = await this.stripe.subscriptions.update(
+    const stripeSubscription = await stripe.subscriptions.update(
       this.stripeId,
       this.getSwapOptions(items, params)
     )
@@ -441,7 +451,8 @@ export default class Subscription extends compose(
           stripeId: item.id,
         },
         {
-          stripeProduct: item.price.product as string,
+          stripeProduct:
+            typeof item.price.product === 'string' ? item.price.product : item.price.product.id,
           stripePrice: item.price.id,
           quantity: item.quantity ?? null,
         }
@@ -449,8 +460,29 @@ export default class Subscription extends compose(
     }
 
     // Delete items that aren't attached to the subscription anymore
-    // @ts-ignore -- Lucid type issue
     await this.related('items').query().delete().whereNotIn('stripeId', subscriptionItemIds)
+
+    // When using always_invoice proration, the invoice is created as open and
+    // must be paid explicitly since off_session is not used (it interferes with
+    // proration calculation in Stripe v20).
+    if (this.prorateBehavior() === 'always_invoice') {
+      const latestInvoiceId =
+        typeof stripeSubscription.latest_invoice === 'string'
+          ? stripeSubscription.latest_invoice
+          : stripeSubscription.latest_invoice?.id
+
+      if (latestInvoiceId) {
+        try {
+          const latestInvoice = await stripe.invoices.retrieve(latestInvoiceId)
+          if (latestInvoice.status === 'open') {
+            await stripe.invoices.pay(latestInvoiceId, { off_session: true })
+          }
+        } catch (e) {
+          // Payment failure will be handled by handlePaymentFailure below
+          checkStripeError(e, 'StripeCardError')
+        }
+      }
+    }
 
     await this.handlePaymentFailure(this)
 
@@ -463,120 +495,29 @@ export default class Subscription extends compose(
   async swapAndInvoice(
     prices: string | string[],
     params: Stripe.SubscriptionUpdateParams = {}
-  ): Promise<this> {
+  ): Promise<Subscription> {
     this.alwaysInvoice()
     return this.swap(prices, params)
-  }
-
-  /**
-   * Parse the given prices for a swap operation.
-   */
-  protected async parseSwapPrices(
-    prices: SwapPricesParam
-  ): Promise<Map<string, Stripe.SubscriptionUpdateParams.Item>> {
-    const isSinglePriceSwap = this.hasSinglePrice() && prices.length === 1
-
-    const output = new Map<string, Stripe.SubscriptionUpdateParams.Item>()
-
-    const entries = typeof prices === 'string' ? [[prices, prices]] : Object.entries(prices)
-
-    for (const [key, value] of entries as [
-      key: string,
-      value: string | Stripe.SubscriptionUpdateParams.Item,
-    ][]) {
-      const price = typeof value === 'string' ? value : key
-      const options = typeof value === 'string' ? {} : value
-
-      const payload: Stripe.SubscriptionUpdateParams.Item = {
-        tax_rates: await this.getPriceTaxRatesForPayload(price),
-      }
-
-      if (!options.price_data) {
-        payload.price = price
-      }
-
-      if (isSinglePriceSwap && !!this.quantity) {
-        payload.quantity = this.quantity
-      }
-
-      output.set(price, { ...payload, ...options })
-    }
-
-    return output
-  }
-
-  /**
-   * Merge the items that should be deleted during swap into the given items collection.
-   *
-   * TODO: Test this properly as im not sure of what i did
-   */
-  protected async mergeItemsThatShouldBeDeletedDuringSwap(
-    items: Map<string, Stripe.SubscriptionUpdateParams.Item>
-  ): Promise<Map<string, Stripe.SubscriptionUpdateParams.Item>> {
-    const stripeSubscription = await this.asStripeSubscription()
-
-    for (const stripeSubscriptionItem of stripeSubscription.items.data) {
-      const price = stripeSubscriptionItem.price
-      const item = items.get(price.id) || {}
-      if (!items.has(price.id)) {
-        item.deleted = true
-        if (price.recurring?.usage_type === 'metered') {
-          item.clear_usage = true
-        }
-      }
-
-      items.set(price.id, { ...item, id: stripeSubscriptionItem.id })
-    }
-
-    return items
-  }
-
-  /**
-   * Get the options array for a swap operation.
-   */
-  protected getSwapOptions(
-    items: Map<string, Stripe.SubscriptionUpdateParams.Item>,
-    params: Stripe.SubscriptionUpdateParams = {}
-  ): Stripe.SubscriptionUpdateParams {
-    let payload: Stripe.SubscriptionUpdateParams = {
-      items: [...items.values()],
-      payment_behavior: this.paymentBehavior(),
-      proration_behavior: this.prorateBehavior(),
-      promotion_code: this.promotionCodeId,
-      expand: ['latest_invoice.payment_intent'],
-    }
-
-    if (payload.payment_behavior !== 'pending_if_incomplete') {
-      payload.cancel_at_period_end = false
-    }
-
-    payload = {
-      ...payload,
-      ...params,
-      billing_cycle_anchor: this.billingCycleAnchor,
-      trial_end: this.onTrial() ? this.trialEndsAt!.toUnixInteger() : 'now',
-    }
-
-    return payload
   }
 
   /**
    * Add a new Stripe price to the subscription.
    */
   async addPrice(
+    this: Subscription,
     price: string,
     quantity: number | null = 1,
     params: Partial<Stripe.SubscriptionItemCreateParams> = {}
-  ): Promise<this> {
+  ): Promise<Subscription> {
     this.guardAgainstIncomplete()
 
-    // @ts-ignore -- Lucid type issue
     await this.load('items')
     if (this.items.some((i) => i.stripePrice === price)) {
       throw SubscriptionUpdateFailureError.duplicatePrice(this, price)
     }
 
-    const stripeSubscriptionItem = await this.stripe.subscriptionItems.create({
+    const stripe = Shopkeeper.$instance.stripe
+    const stripeSubscriptionItem = await stripe.subscriptionItems.create({
       subscription: this.stripeId,
       price,
       quantity: quantity ?? undefined,
@@ -586,10 +527,12 @@ export default class Subscription extends compose(
       ...params,
     })
 
-    // @ts-ignore -- Lucid type issue
     await this.related('items').create({
       stripeId: stripeSubscriptionItem.id,
-      stripeProduct: stripeSubscriptionItem.price.product,
+      stripeProduct:
+        typeof stripeSubscriptionItem.price.product === 'string'
+          ? stripeSubscriptionItem.price.product
+          : stripeSubscriptionItem.price.product.id,
       stripePrice: stripeSubscriptionItem.price.id,
       quantity: stripeSubscriptionItem.quantity,
     })
@@ -615,7 +558,7 @@ export default class Subscription extends compose(
     price: string,
     quantity: number | null = 1,
     params: Partial<Stripe.SubscriptionItemCreateParams> = {}
-  ): Promise<this> {
+  ): Promise<Subscription> {
     this.alwaysInvoice()
     return this.addPrice(price, quantity, params)
   }
@@ -626,7 +569,7 @@ export default class Subscription extends compose(
   addMeteredPrice(
     price: string,
     params: Partial<Stripe.SubscriptionItemCreateParams> = {}
-  ): Promise<this> {
+  ): Promise<Subscription> {
     return this.addPrice(price, null, params)
   }
 
@@ -636,7 +579,7 @@ export default class Subscription extends compose(
   addMeteredPriceAndInvoice(
     price: string,
     params: Partial<Stripe.SubscriptionItemCreateParams> = {}
-  ): Promise<this> {
+  ): Promise<Subscription> {
     return this.addPriceAndInvoice(price, null, params)
   }
 
@@ -645,14 +588,14 @@ export default class Subscription extends compose(
    */
   async removePrice(price: string): Promise<this> {
     if (this.hasSinglePrice()) {
-      throw new Exception('Last price') // TODO: error
+      throw SubscriptionUpdateFailureError.cannotRemoveLastPrice(this)
     }
 
     const item = await this.findItemOrFail(price)
     const stripeItem = await item.asStripeSubscriptionItem()
 
-    await this.stripe.subscriptionItems.del(stripeItem.id, {
-      clear_usage: stripeItem.price.recurring?.usage_type === 'metered' ? true : undefined,
+    const stripe = Shopkeeper.$instance.stripe
+    await stripe.subscriptionItems.del(stripeItem.id, {
       proration_behavior: this.prorateBehavior(),
     })
 
@@ -681,7 +624,9 @@ export default class Subscription extends compose(
     if (this.onTrial()) {
       this.endsAt = this.trialEndsAt
     } else {
-      this.endsAt = DateTime.fromSeconds(stripeSubscription.current_period_end)
+      this.endsAt = stripeSubscription.cancel_at
+        ? DateTime.fromSeconds(stripeSubscription.cancel_at)
+        : null
     }
 
     await this.save()
@@ -711,7 +656,8 @@ export default class Subscription extends compose(
    * Cancel the subscription immediately without invoicing.
    */
   async cancelNow(): Promise<this> {
-    await this.stripe.subscriptions.cancel(this.stripeId, {
+    const stripe = Shopkeeper.$instance.stripe
+    await stripe.subscriptions.cancel(this.stripeId, {
       prorate: this.prorateBehavior() === 'create_prorations',
     })
 
@@ -723,7 +669,8 @@ export default class Subscription extends compose(
    * Cancel the subscription immediately and invoice.
    */
   async cancelNowAndInvoice() {
-    await this.stripe.subscriptions.cancel(this.stripeId, {
+    const stripe = Shopkeeper.$instance.stripe
+    await stripe.subscriptions.cancel(this.stripeId, {
       invoice_now: true,
       prorate: this.prorateBehavior() === 'create_prorations',
     })
@@ -772,17 +719,19 @@ export default class Subscription extends compose(
    * Invoice the subscription outside of the regular billing cycle.
    */
   async invoice(
+    this: Subscription,
     params: Stripe.InvoiceCreateParams & Stripe.InvoicePayParams = {}
   ): Promise<Invoice> {
-    // @ts-ignore -- Lucid type issue
     await this.load('user')
     try {
-      const invoice = await this.user.invoice(params)
-      return invoice
+      return await this.user
+        .invoice()
+        .invoiceParams({ pending_invoice_items_behavior: 'include', ...params })
+        .charge()
     } catch (e) {
       if (e instanceof IncompletePaymentError) {
-        // @ts-ignore -- TODO: figure out
-        this.stripeStatus = e.payment.invoice.subscription.status
+        const stripeSubscription = await this.asStripeSubscription()
+        this.stripeStatus = stripeSubscription.status
         await this.save()
       }
 
@@ -796,8 +745,9 @@ export default class Subscription extends compose(
   async latestInvoice(expand: string[] = []): Promise<Invoice | null> {
     const stripeSubscription = await this.asStripeSubscription(['latest_invoice', ...expand])
 
-    if (stripeSubscription.latest_invoice) {
-      return new Invoice(this.user, stripeSubscription.latest_invoice as Stripe.Invoice)
+    const latestInvoice = stripeSubscription.latest_invoice
+    if (latestInvoice && typeof latestInvoice !== 'string') {
+      return new Invoice(this.user, latestInvoice)
     }
 
     return null
@@ -806,9 +756,7 @@ export default class Subscription extends compose(
   /**
    * Fetches upcoming invoice for this subscription.
    */
-  async upcomingInvoice(
-    params: Stripe.InvoiceRetrieveUpcomingParams = {}
-  ): Promise<Invoice | null> {
+  async upcomingInvoice(params: Stripe.InvoiceCreatePreviewParams = {}): Promise<Invoice | null> {
     if (this.canceled()) {
       return null
     }
@@ -824,7 +772,7 @@ export default class Subscription extends compose(
    */
   async previewInvoice(
     prices: string[] | string,
-    params: Stripe.InvoiceRetrieveUpcomingParams = {}
+    params: Stripe.InvoiceCreatePreviewParams = {}
   ): Promise<Invoice | null> {
     prices = typeof prices === 'string' ? [prices] : prices
 
@@ -836,12 +784,23 @@ export default class Subscription extends compose(
 
     const swapOptions = this.getSwapOptions(swapItems)
 
-    const payload: Stripe.InvoiceRetrieveUpcomingParams = {
-      subscription_billing_cycle_anchor: swapOptions.billing_cycle_anchor,
-      subscription_cancel_at_period_end: swapOptions.cancel_at_period_end,
-      subscription_items: swapOptions.items,
-      subscription_proration_behavior: swapOptions.proration_behavior,
-      subscription_trial_end: swapOptions.trial_end,
+    const payload: Stripe.InvoiceCreatePreviewParams = {
+      subscription_details: {
+        billing_cycle_anchor: swapOptions.billing_cycle_anchor,
+        cancel_at_period_end: swapOptions.cancel_at_period_end,
+        items: swapOptions.items?.map(
+          ({ id, price, quantity, deleted, tax_rates, price_data }) => ({
+            id,
+            price,
+            quantity,
+            deleted,
+            tax_rates,
+            price_data,
+          })
+        ),
+        proration_behavior: swapOptions.proration_behavior,
+        trial_end: swapOptions.trial_end,
+      },
       ...params,
     }
 
@@ -852,10 +811,10 @@ export default class Subscription extends compose(
    * Get a collection of the subscription's invoices.
    */
   async invoices(
+    this: Subscription,
     includePending = false,
     params: Stripe.InvoiceListParams = {}
   ): Promise<Invoice[]> {
-    // @ts-ignore -- Lucid type issue
     await this.load('user')
     return this.user.invoices(includePending, {
       ...params,
@@ -890,8 +849,7 @@ export default class Subscription extends compose(
   /**
    * Get the price tax rates for the Stripe payload.
    */
-  async getPriceTaxRatesForPayload(price: string): Promise<string[] | null> {
-    // @ts-ignore -- Lucid type issue
+  async getPriceTaxRatesForPayload(this: Subscription, price: string): Promise<string[] | null> {
     await this.load('user')
     return this.user.priceTaxRates()[price] ?? null
   }
@@ -907,18 +865,37 @@ export default class Subscription extends compose(
    * Get the latest payment for a Subscription.
    */
   async latestPayment(): Promise<Payment | null> {
-    const subscription = await this.asStripeSubscription(['latest_invoice.payment_intent'])
-    const pi = (subscription.latest_invoice as Stripe.Invoice)
-      .payment_intent as Stripe.PaymentIntent
-    return pi ? new Payment(pi) : null
+    const subscription = await this.asStripeSubscription()
+    const invoiceId =
+      typeof subscription.latest_invoice === 'string'
+        ? subscription.latest_invoice
+        : subscription.latest_invoice?.id
+    if (!invoiceId) return null
+
+    const stripe = Shopkeeper.$instance.stripe
+    const invoice = await stripe.invoices.retrieve(invoiceId, {
+      expand: ['payments.data.payment.payment_intent'],
+    })
+
+    const invoicePayment = invoice.payments?.data?.[0]
+    if (!invoicePayment?.payment?.payment_intent) return null
+
+    const pi = invoicePayment.payment.payment_intent
+    return typeof pi === 'string' ? null : new Payment(pi)
   }
 
   /**
    * The discount that applies to the subscription, if applicable.
    */
   async discount(): Promise<Discount | null> {
-    const subscription = await this.asStripeSubscription(['discount.promotion_code'])
-    return subscription.discount ? new Discount(subscription.discount) : null
+    const subscription = await this.asStripeSubscription([
+      'discounts',
+      'discounts.promotion_code',
+      'discounts.source.coupon',
+      'discounts.promotion_code.promotion.coupon',
+    ])
+    const firstDiscount = subscription.discounts[0]
+    return firstDiscount && typeof firstDiscount !== 'string' ? new Discount(firstDiscount) : null
   }
 
   /**
@@ -926,7 +903,7 @@ export default class Subscription extends compose(
    */
   async applyCoupon(coupon: string): Promise<void> {
     await this.updateStripeSubscription({
-      coupon,
+      discounts: [{ coupon }],
     })
   }
 
@@ -935,7 +912,7 @@ export default class Subscription extends compose(
    */
   async applyPromotionCode(promotionCode: string): Promise<void> {
     await this.updateStripeSubscription({
-      promotion_code: promotionCode,
+      discounts: [{ promotion_code: promotionCode }],
     })
   }
 
@@ -962,14 +939,128 @@ export default class Subscription extends compose(
   /**
    * Update the underlying Stripe subscription information for the model.
    */
-  updateStripeSubscription(params: Stripe.SubscriptionUpdateParams): Promise<Stripe.Subscription> {
-    return this.stripe.subscriptions.update(this.stripeId, params)
+  async updateStripeSubscription(
+    params: Stripe.SubscriptionUpdateParams
+  ): Promise<Stripe.Subscription> {
+    const stripe = Shopkeeper.$instance.stripe
+    return stripe.subscriptions.update(this.stripeId, params)
   }
 
   /**
    * Get the subscription as a Stripe subscription object.
    */
-  asStripeSubscription(expand: string[] = []): Promise<Stripe.Subscription> {
-    return this.stripe.subscriptions.retrieve(this.stripeId, { expand })
+  async asStripeSubscription(expand: string[] = []): Promise<Stripe.Subscription> {
+    const stripe = Shopkeeper.$instance.stripe
+    return stripe.subscriptions.retrieve(this.stripeId, { expand })
+  }
+
+  /**
+   * Parse the given prices for a swap operation.
+   */
+  protected async parseSwapPrices(
+    prices: SwapPricesParam
+  ): Promise<Map<string, Stripe.SubscriptionUpdateParams.Item>> {
+    const isSinglePriceSwap = this.hasSinglePrice() && prices.length === 1
+
+    const output = new Map<string, Stripe.SubscriptionUpdateParams.Item>()
+
+    const entries: [string, string | Stripe.SubscriptionUpdateParams.Item][] =
+      typeof prices === 'string' ? [[prices, prices]] : Object.entries(prices)
+
+    for (const [key, value] of entries) {
+      const price = typeof value === 'string' ? value : key
+      const options = typeof value === 'string' ? {} : value
+
+      const payload: Stripe.SubscriptionUpdateParams.Item = {
+        tax_rates: await this.getPriceTaxRatesForPayload(price),
+      }
+
+      if (!options.price_data) {
+        payload.price = price
+      }
+
+      if (isSinglePriceSwap && !!this.quantity) {
+        payload.quantity = this.quantity
+      }
+
+      output.set(price, { ...payload, ...options })
+    }
+
+    return output
+  }
+
+  /**
+   * Merge the items that should be deleted during swap into the given items collection.
+   */
+  protected async mergeItemsThatShouldBeDeletedDuringSwap(
+    items: Map<string, Stripe.SubscriptionUpdateParams.Item>
+  ): Promise<Map<string, Stripe.SubscriptionUpdateParams.Item>> {
+    const stripeSubscription = await this.asStripeSubscription()
+
+    // Collect existing items that are not in the swap prices
+    const existingItemsToRemove: Stripe.SubscriptionItem[] = []
+    for (const stripeSubscriptionItem of stripeSubscription.items.data) {
+      const price = stripeSubscriptionItem.price
+      if (items.has(price.id)) {
+        // Price exists in swap — attach the subscription item id
+        const item = items.get(price.id)!
+        items.set(price.id, { ...item, id: stripeSubscriptionItem.id })
+      } else {
+        existingItemsToRemove.push(stripeSubscriptionItem)
+      }
+    }
+
+    // For non-metered items not in the swap, try to reuse their subscription item
+    // IDs by assigning them to new prices that don't have an id yet. This converts
+    // a delete+create into an update operation, which ensures proper proration
+    // credits in Stripe v20.
+    // Note: metered items cannot be reused because Stripe does not allow changing
+    // the usage type (metered ↔ licensed) on an existing subscription item.
+    const newPricesWithoutId = [...items.entries()].filter(([, v]) => !v.id && !v.deleted)
+    for (const existingItem of existingItemsToRemove) {
+      const isMetered = existingItem.price.recurring?.usage_type === 'metered'
+      if (!isMetered && newPricesWithoutId.length > 0) {
+        // Reuse this non-metered subscription item for a new price
+        const [priceId, priceItem] = newPricesWithoutId.shift()!
+        items.set(priceId, { ...priceItem, id: existingItem.id })
+      } else {
+        // Metered items or no reuse target — mark for deletion
+        items.set(existingItem.price.id, { deleted: true, id: existingItem.id })
+      }
+    }
+
+    return items
+  }
+
+  /**
+   * Get the options array for a swap operation.
+   */
+  protected getSwapOptions(
+    items: Map<string, Stripe.SubscriptionUpdateParams.Item>,
+    params: Stripe.SubscriptionUpdateParams = {}
+  ): Stripe.SubscriptionUpdateParams {
+    const prorationBehavior = this.prorateBehavior()
+
+    let payload: Stripe.SubscriptionUpdateParams = {
+      items: [...items.values()],
+      payment_behavior: this.paymentBehavior(),
+      proration_behavior: prorationBehavior,
+      discounts: this.promotionCodeId ? [{ promotion_code: this.promotionCodeId }] : undefined,
+      // Don't use off_session with always_invoice, as it interferes with proration calculation
+      off_session: prorationBehavior !== 'always_invoice' ? true : undefined,
+    }
+
+    if (payload.payment_behavior !== 'pending_if_incomplete') {
+      payload.cancel_at_period_end = false
+    }
+
+    payload = {
+      ...payload,
+      ...params,
+      billing_cycle_anchor: this.billingCycleAnchor,
+      trial_end: this.onTrial() ? this.trialEndsAt!.toUnixInteger() : undefined,
+    }
+
+    return payload
   }
 }

@@ -12,4 +12,4 @@ export const WEBHOOK_EVENTS: StripeEventTypes[] = [
   'invoice.payment_succeeded',
 ]
 
-export const STRIPE_VERSION: Stripe.WebhookEndpointCreateParams.ApiVersion = '2023-10-16'
+export const STRIPE_VERSION: Stripe.WebhookEndpointCreateParams.ApiVersion = '2026-02-25.clover'

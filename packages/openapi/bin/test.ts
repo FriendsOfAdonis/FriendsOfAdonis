@@ -1,3 +1,5 @@
+import 'reflect-metadata'
+
 import { assert } from '@japa/assert'
 import { fileSystem } from '@japa/file-system'
 import { configure, processCLIArgs, run } from '@japa/runner'
