@@ -1,0 +1,15 @@
+export const FILTER_OPERATORS = [
+  '$eq',
+  '$ne',
+  '$gt',
+  '$gte',
+  '$lt',
+  '$lte',
+  '$in',
+  '$notIn',
+  '$contains',
+  '$startsWith',
+  '$endsWith',
+  '$between',
+  '$null',
+] as const

@@ -3,6 +3,7 @@ import 'reflect-metadata'
 import { assert } from '@japa/assert'
 import { fileSystem } from '@japa/file-system'
 import { expect } from '@japa/expect'
+import { expectTypeOf } from '@japa/expect-type'
 import { configure, processCLIArgs, run } from '@japa/runner'
 import { snapshot } from '@japa/snapshot'
 
@@ -12,7 +13,7 @@ processCLIArgs(process.argv.splice(2))
 
 configure({
   files: ['tests/**/*.spec.ts'],
-  plugins: [assert(), expect(), snapshot(), fileSystem({ basePath: BASE_URL })],
+  plugins: [assert(), expect(), expectTypeOf(), snapshot(), fileSystem({ basePath: BASE_URL })],
   timeout: 30000,
 })
 
