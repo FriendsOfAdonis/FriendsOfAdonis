@@ -144,7 +144,7 @@ export function analyseTableDrift(source: TableSchema, target: TableSchema) {
   return drifts
 }
 
-export type ObjectDrift<T extends Object> = (keyof T)[]
+export type ObjectDrift<T extends object> = (keyof T)[]
 
 /**
  * Analyse drift between two objects.
@@ -152,7 +152,7 @@ export type ObjectDrift<T extends Object> = (keyof T)[]
  *
  * @returns altered properties or false if none
  */
-export function analyzeObjectDrift<T extends Object>(source: T, target: T) {
+export function analyzeObjectDrift<T extends object>(source: T, target: T) {
   const drift: ObjectDrift<T> = []
 
   function checkDrift(a: T, b: T) {
