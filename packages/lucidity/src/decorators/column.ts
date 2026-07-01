@@ -8,7 +8,7 @@ import {
 import { type LucidModel } from '@adonisjs/lucid/types/model'
 
 export function addSchemaMeta(
-  target: Object,
+  target: object,
   propertyKey: string,
   options?: Partial<ColumnOptions>
 ) {
@@ -43,7 +43,7 @@ export function addSchemaMeta(
 }
 
 export function column(options?: Partial<ColumnOptions>) {
-  return function (target: Object, propertyKey: string) {
+  return function (target: object, propertyKey: string) {
     baseColumn(options)(target, propertyKey)
     addSchemaMeta(target, propertyKey, options)
   }
@@ -83,7 +83,7 @@ column.jsonb = createColumnDecorator('jsonb')
 column.uuid = createColumnDecorator('uuid')
 
 column.enum = function enumColumn(options: Partial<ColumnOptions> & { enum: string[] | object }) {
-  return function decorateAsColumn(target: Object, propertyKey: string) {
+  return function decorateAsColumn(target: object, propertyKey: string) {
     column(options)(target, propertyKey)
 
     const values = Array.isArray(options.enum) ? options.enum : Object.keys(options.enum)
@@ -97,7 +97,7 @@ column.enum = function enumColumn(options: Partial<ColumnOptions> & { enum: stri
 }
 
 column.dateTime = function datetime(options?: Partial<Omit<DateTimeColumnOptions, 'type'>>) {
-  return function decorateAsColumn(target: Object, propertyKey: string) {
+  return function decorateAsColumn(target: object, propertyKey: string) {
     dateTimeColumn(options)(target as any, propertyKey) // TODO: Types
     addSchemaMeta(target, propertyKey, {
       type: 'datetime',
@@ -107,7 +107,7 @@ column.dateTime = function datetime(options?: Partial<Omit<DateTimeColumnOptions
 }
 
 column.date = function datetime(options?: Partial<Omit<DateTimeColumnOptions, 'type'>>) {
-  return function decorateAsColumn(target: Object, propertyKey: string) {
+  return function decorateAsColumn(target: object, propertyKey: string) {
     dateColumn(options)(target as any, propertyKey) // TODO: Types
     addSchemaMeta(target, propertyKey, {
       type: 'date',
