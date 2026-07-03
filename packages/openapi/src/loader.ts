@@ -72,10 +72,6 @@ export class RouterLoader {
     for (const param of params) {
       OperationParameterMetadataStorage.mergeMetadata(
         target.prototype,
-        // Path parameters are ALWAYS required per the OpenAPI Specification
-        // (https://spec.openapis.org/oas/v3.1.0#parameter-object). Omitting
-        // `required` produces an invalid document that strict tooling — e.g.
-        // `openapi-python-client` — rejects, silently dropping the operation.
         [{ in: 'path', type: 'string', name: param, required: true }],
         propertyKey
       )
