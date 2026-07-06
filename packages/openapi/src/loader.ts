@@ -72,7 +72,7 @@ export class RouterLoader {
     for (const param of params) {
       OperationParameterMetadataStorage.mergeMetadata(
         target.prototype,
-        [{ in: 'path', type: 'string', name: param }],
+        [{ in: 'path', type: 'string', name: param, required: true }],
         propertyKey
       )
     }
