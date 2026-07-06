@@ -1,5 +1,11 @@
 # @foadonis/openapi
 
+## 1.1.0
+
+### Minor Changes
+
+- [#139](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/139) [`3ceb463`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/3ceb4636447d041c76ec5925b02562f41466996a) Thanks [@lefolalan](https://github.com/lefolalan)! - Mark auto-discovered path parameters as `required` in the generated OpenAPI document.
+
 ## 1.0.1
 
 ### Patch Changes
