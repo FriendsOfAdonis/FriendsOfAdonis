@@ -1,5 +1,15 @@
 # @foadonis/graphql
 
+## 1.1.0
+
+### Minor Changes
+
+- [#143](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/143) [`39673b6`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/39673b696c980e01f24a8d1c58b4504d3794cdab) Thanks [@kerwanp](https://github.com/kerwanp)! - `@Authorized` now accepts Bouncer policies (`@Authorized(RecipePolicy, 'edit')`) and passes the parent object to abilities and policy methods when protecting fields. Authorization is fully delegated to Bouncer, so `allowGuest` abilities and policy methods are now evaluated for unauthenticated users.
+
+### Patch Changes
+
+- [#143](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/143) [`39673b6`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/39673b696c980e01f24a8d1c58b4504d3794cdab) Thanks [@kerwanp](https://github.com/kerwanp)! - The Yoga driver now streams multipart requests to GraphQL Yoga, enabling file uploads through the GraphQL multipart request specification. Previously `request.raw()` returned `null` for multipart bodies (which the bodyparser never buffers), so uploads always failed. Add your GraphQL endpoint to the bodyparser `processManually` list to use file uploads.
+
 ## 1.0.1
 
 ### Patch Changes
@@ -27,20 +37,20 @@
   Update the `config/graphql.ts`:
 
   ```ts
-  import { defineConfig, drivers, pubsubs } from '@foadonis/graphql'
+  import { defineConfig, drivers, pubsubs } from "@foadonis/graphql";
 
   export default defineConfig({
-    path: '/graphql',
+    path: "/graphql",
 
     driver: drivers.apollo({
       playground: true,
       introspection: true,
     }),
 
-    logger: 'app',
+    logger: "app",
 
     emitSchemaFile: true,
-  })
+  });
   ```
 
   Remove the `start/graphql.ts` as resolvers are now autoloaded.
@@ -80,20 +90,20 @@
   Update the `config/graphql.ts`:
 
   ```ts
-  import { defineConfig, drivers, pubsubs } from '@foadonis/graphql'
+  import { defineConfig, drivers, pubsubs } from "@foadonis/graphql";
 
   export default defineConfig({
-    path: '/graphql',
+    path: "/graphql",
 
     driver: drivers.apollo({
       playground: true,
       introspection: true,
     }),
 
-    logger: 'app',
+    logger: "app",
 
     emitSchemaFile: true,
-  })
+  });
   ```
 
   Remove the `start/graphql.ts` as resolvers are now autoloaded.
