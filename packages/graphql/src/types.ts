@@ -9,6 +9,8 @@ import { type GraphQLSchema } from 'graphql'
 import { type ConfigProvider, type LoggersList } from '@adonisjs/core/types'
 import { type Repeater } from '@graphql-yoga/subscription'
 import { type Logger } from '@adonisjs/core/logger'
+import { type BouncerAbility } from '@adonisjs/bouncer/types'
+import { type Constructor } from '@adonisjs/core/types/common'
 
 export interface GraphQLConfig<
   KnownDriver extends GraphQLDriverContract,
@@ -87,6 +89,23 @@ export type ResolverData = BaseResolverData<HttpContext>
 export interface GraphQLMiddleware {
   use(action: ResolverData, next: NextFn): Promise<any>
 }
+
+/**
+ * Reference to a Bouncer policy method collected by the `@Authorized`
+ * decorator and evaluated by the auth checker using
+ * `bouncer.with(policy).denies(method, root)`.
+ */
+export interface PolicyAuthorizationRule {
+  policy: Constructor<any>
+  method: string
+}
+
+/**
+ * Authorization requirement accepted by the `@Authorized` decorator.
+ * Either a Bouncer ability, the name of an ability pre-registered on the
+ * Bouncer instance, or a reference to a policy method.
+ */
+export type AuthorizationRule = BouncerAbility<any> | PolicyAuthorizationRule | string
 
 export interface GraphQLDriverContract {
   start(schema: GraphQLSchema): Promise<void>
