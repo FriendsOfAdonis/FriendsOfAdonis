@@ -1,11 +1,13 @@
 import { test } from '@japa/runner'
 import { setupApp } from '../../helpers.js'
 import { defineConfig, drivers } from '../../../src/define_config.js'
+import { defineConfig as defineBodyParserConfig } from '@adonisjs/core/bodyparser'
 import { ApolloClient, ApolloLink, gql, HttpLink, InMemoryCache } from '@apollo/client'
 import { OperationTypeNode } from 'graphql'
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions'
 import { createClient } from 'graphql-ws'
 import { TestResolver } from '../../fixtures/test_resolver.js'
+import { UploadResolver } from '../../fixtures/upload_resolver.js'
 import WebSocket from 'ws'
 
 export function setupApolloClient() {
@@ -36,7 +38,7 @@ export function setupApolloClient() {
   return { apollo, wsLink, httpLink }
 }
 
-async function setupYogaApp() {
+async function setupYogaApp(bodyparser?: ReturnType<typeof defineBodyParserConfig>) {
   return setupApp(
     (factory) =>
       factory.merge({
@@ -47,13 +49,24 @@ async function setupYogaApp() {
             pubSub: drivers.pubsub.native(),
             subscription: drivers.subscription.websocket({ path: '/graphql' }),
           }),
+          bodyparser:
+            bodyparser ??
+            defineBodyParserConfig({
+              multipart: {
+                autoProcess: true,
+                processManually: ['/graphql'],
+              },
+            }),
         },
       }),
     (app) => {
       app.booted(async () => {
         const graphql = await app.container.make('graphql')
         const router = await app.container.make('router')
-        graphql.resolvers([() => Promise.resolve({ default: TestResolver })])
+        graphql.resolvers([
+          () => Promise.resolve({ default: TestResolver }),
+          () => Promise.resolve({ default: UploadResolver }),
+        ])
         graphql.registerRoute(router)
       })
     }
@@ -101,6 +114,61 @@ test.group('YogaDriver', () => {
 
     expect(data).toMatchObject({ testMutation: true })
   }).skip(false)
+
+  function buildUploadForm() {
+    const form = new FormData()
+    form.append(
+      'operations',
+      JSON.stringify({
+        query: 'mutation TestUpload($file: File!) { testUpload(file: $file) }',
+        variables: { file: null },
+      })
+    )
+    form.append('map', JSON.stringify({ '0': ['variables.file'] }))
+    form.append('0', new File(['Hello Yoga'], 'hello.txt', { type: 'text/plain' }))
+    return form
+  }
+
+  test('should support file uploads', async ({ expect, cleanup }) => {
+    const { app } = await setupYogaApp()
+    cleanup(async () => {
+      await app.terminate()
+    })
+
+    const response = await fetch('http://localhost:3333/graphql', {
+      method: 'POST',
+      body: buildUploadForm(),
+    })
+
+    const result = (await response.json()) as any
+
+    expect(response.status).toBe(200)
+    expect(result).toMatchObject({ data: { testUpload: 'hello.txt:Hello Yoga' } })
+  })
+
+  test('should fail with an actionable error when the bodyparser consumed the multipart body', async ({
+    expect,
+    cleanup,
+  }) => {
+    const { app } = await setupYogaApp(
+      defineBodyParserConfig({
+        multipart: {
+          autoProcess: true,
+        },
+      })
+    )
+    cleanup(async () => {
+      await app.terminate()
+    })
+
+    const response = await fetch('http://localhost:3333/graphql', {
+      method: 'POST',
+      body: buildUploadForm(),
+    })
+
+    expect(response.status).toBe(500)
+    expect(await response.text()).toContain('processManually')
+  })
 
   test('should support subscriptions over Websockets', async ({ expect, cleanup }) => {
     const { app } = await setupYogaApp()

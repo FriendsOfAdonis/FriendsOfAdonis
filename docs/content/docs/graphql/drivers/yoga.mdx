@@ -31,6 +31,47 @@ It is highly recommended **to disable the playground and introspection** in prod
 
 </Callout>
 
+## File Uploads
+
+GraphQL Yoga supports file uploads out of the box using the [GraphQL multipart request specification](https://github.com/jaydenseric/graphql-multipart-request-spec). For the uploads to reach Yoga, the AdonisJS bodyparser must not consume the multipart stream: add your GraphQL endpoint to the `processManually` list in your bodyparser configuration.
+
+```ts title="config/bodyparser.ts"
+import { defineConfig } from '@adonisjs/core/bodyparser'
+
+const bodyParserConfig = defineConfig({
+  multipart: {
+    autoProcess: true,
+    processManually: ['/graphql'],
+  },
+})
+
+export default bodyParserConfig
+```
+
+You can then declare a `File` scalar and use it as an argument in your mutations. The resolver receives a [WHATWG `File`](https://developer.mozilla.org/en-US/docs/Web/API/File) instance.
+
+```ts title="app/graphql/scalars/file.ts"
+import { GraphQLScalarType } from 'graphql'
+
+export const FileScalar = new GraphQLScalarType({
+  name: 'File',
+  description: 'The `File` scalar type represents a file upload.',
+})
+```
+
+```ts title="app/graphql/resolvers/document_resolver.ts"
+import { Arg, Mutation, Resolver } from '@foadonis/graphql'
+import { FileScalar } from '../scalars/file.js'
+
+@Resolver()
+export default class DocumentResolver {
+  @Mutation(() => String)
+  async uploadDocument(@Arg('file', () => FileScalar) file: File) {
+    return `Received ${file.name} (${file.size} bytes)`
+  }
+}
+```
+
 ## Plugins
 
 GraphQL Yoga supports a powerful plugin system that allows you to extend the server's functionality. You can add plugins to handle logging, error reporting, caching, and more.
