@@ -5,6 +5,7 @@ import {
   Arg,
   Args,
   ArgsType,
+  Authorized,
   Field,
   InputType,
   Int,
@@ -15,6 +16,7 @@ import {
 } from '@foadonis/graphql'
 import PerformanceLoggerMiddleware from '#graphql/middlewares/performance_logger_middleware'
 import { TestService } from '#services/test_service'
+import RecipePolicy from '#policies/recipe_policy'
 
 @ArgsType()
 class RecipeArgs {
@@ -66,6 +68,7 @@ export default class RecipeResolver {
   }
 
   @Mutation(() => Boolean)
+  @Authorized(RecipePolicy, 'delete')
   async removeRecipe(@Arg('id') id: number) {
     const recipe = await Recipe.find(id)
 

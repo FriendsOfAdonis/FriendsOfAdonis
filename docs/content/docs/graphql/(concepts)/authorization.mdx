@@ -61,7 +61,7 @@ class RecipeResolver {
 import { Bouncer } from '@adonisjs/bouncer'
 
 const abilities = {
-  isAdmin = Bouncer.ability((user) => user.isAdmin),
+  isAdmin: Bouncer.ability((user) => user.isAdmin),
 }
 
 export default abilities
@@ -74,6 +74,51 @@ export default abilities
   pass.
 </Callout>
 
+<Callout>
+  The `@Authorized` decorator can also be applied on a resolver class to protect all of its
+  operations. When an operation defines its own `@Authorized`, its rules replace the class-level
+  ones, they are not merged.
+</Callout>
+
+## Using Policies
+
+The `Authorized` decorator also accepts a [Bouncer policy](https://docs.adonisjs.com/guides/security/authorization#defining-policies) with the name of the method to use for authorization.
+
+<Tabs items={["app/graphql/resolvers/recipe_resolver.ts", "app/policies/recipe_policy.ts"]}>
+
+```ts tab="app/graphql/resolvers/recipe_resolver.ts" twoslash
+// @noErrors
+import Recipe from '#models/recipe'
+import RecipePolicy from '#policies/recipe_policy'
+import { Resolver, Query, Authorized } from '@foadonis/graphql'
+
+@Resolver(Recipe)
+class RecipeResolver {
+  @Query(() => [Recipe])
+  @Authorized(RecipePolicy, 'viewList') // [!code highlight]
+  recipes() {
+    // ...your logic
+  }
+}
+```
+
+```ts tab="app/policies/recipe_policy.ts" twoslash
+// @noErrors
+import User from '#models/user'
+import { BasePolicy } from '@adonisjs/bouncer'
+import { AuthorizerResponse } from '@adonisjs/bouncer/types'
+
+export default class RecipePolicy extends BasePolicy {
+  viewList(user: User): AuthorizerResponse {
+    return user.isAdmin
+  }
+}
+```
+
+</Tabs>
+
+Policies are resolved through the [IoC container](https://docs.adonisjs.com/concepts/dependency-injection), so you can inject dependencies in them like anywhere else in your Adonis application.
+
 ## Secure objects
 
 The `@Authorized` decorator also works on fields allowing you to protect only certain fields.
@@ -81,7 +126,7 @@ With the following example, only authenticated user can access the `fullName` an
 
 ```ts title="app/models/user.ts" twoslash
 // @noErrors
-import { ObjectType, Authorized } from '@foadonis/graphql'
+import { ObjectType, Field, Authorized } from '@foadonis/graphql'
 import abilities from '#abilities/main'
 
 @ObjectType()
@@ -98,6 +143,69 @@ export default class User {
   declare email: string
 }
 ```
+
+### Accessing the object
+
+When `@Authorized` protects a field (or a field resolver), the parent object is passed to the ability or policy method after the user. This allows authorization rules based on the object itself, like restricting a field to its owner:
+
+<Tabs items={["app/models/recipe.ts", "app/policies/recipe_policy.ts"]}>
+
+```ts tab="app/models/recipe.ts" twoslash
+// @noErrors
+import { ObjectType, Field, Authorized } from '@foadonis/graphql'
+import RecipePolicy from '#policies/recipe_policy'
+
+@ObjectType()
+export default class Recipe {
+  @Field()
+  declare title: string
+
+  @Field()
+  @Authorized(RecipePolicy, 'viewSecret') // [!code highlight]
+  declare secretIngredient: string
+}
+```
+
+```ts tab="app/policies/recipe_policy.ts" twoslash
+// @noErrors
+import User from '#models/user'
+import Recipe from '#models/recipe'
+import { BasePolicy } from '@adonisjs/bouncer'
+import { AuthorizerResponse } from '@adonisjs/bouncer/types'
+
+export default class RecipePolicy extends BasePolicy {
+  viewSecret(user: User, recipe: Recipe): AuthorizerResponse {
+    return recipe.authorId === user.id
+  }
+}
+```
+
+</Tabs>
+
+<Callout type="warn">
+  On queries and mutations there is no parent object: the ability or policy method receives
+  `undefined` instead. To authorize against an object that is not resolved yet, fetch it inside the
+  resolver and use [`ctx.bouncer`](https://docs.adonisjs.com/guides/security/authorization) directly.
+</Callout>
+
+## Allowing guests
+
+A bare `@Authorized()` always requires an authenticated user. When abilities or policies are provided, the decision is delegated to Bouncer: [abilities and policy methods that allow guests](https://docs.adonisjs.com/guides/security/authorization#allowing-guest-users) are evaluated even when no user is logged in.
+
+```ts title="app/abilities/main.ts" twoslash
+// @noErrors
+import { Bouncer } from '@adonisjs/bouncer'
+
+export const viewRecipe = Bouncer.ability({ allowGuest: true }, (user, recipe) => {
+  return recipe.isPublished || recipe.authorId === user?.id
+})
+```
+
+<Callout type="warn">
+  A policy [`before` hook](https://docs.adonisjs.com/guides/security/authorization#policy-hooks)
+  runs before the guest check. If it returns a truthy value for a `null` user, guests are
+  authorized for every method of the policy, including methods not marked with `@allowGuest()`.
+</Callout>
 
 ## Access authenticated User
 

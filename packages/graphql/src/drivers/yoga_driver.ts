@@ -65,13 +65,35 @@ export class YogaDriver<
       requestHeaders.push([key, value as string])
     }
 
+    const contentType = ctx.request.header('content-type') || ''
+    const isMultipart = contentType.startsWith('multipart/form-data')
+
+    const init: RequestInit & { duplex?: 'half' } = {
+      method: ctx.request.method(),
+      headers: requestHeaders,
+    }
+
+    if (isMultipart) {
+      /**
+       * The bodyparser does not buffer multipart bodies (autoProcess/processManually),
+       * so `request.raw()` is null. Stream the untouched Node request into Yoga instead
+       * so it can parse the graphql-multipart-request spec (operations/map/files).
+       */
+      if (ctx.request.request.readableEnded) {
+        throw new RuntimeException(
+          `Cannot handle the multipart GraphQL request as its body has already been consumed by the bodyparser. Add "${ctx.request.url()}" to "multipart.processManually" in "config/bodyparser.ts" to enable file uploads.`
+        )
+      }
+
+      init.body = ctx.request.request as unknown as BodyInit
+      init.duplex = 'half'
+    } else {
+      init.body = ctx.request.raw()
+    }
+
     const { status, headers, body } = await this.yoga.fetch(
       ctx.request.request.url,
-      {
-        method: ctx.request.method(),
-        headers: requestHeaders,
-        body: ctx.request.raw(),
-      },
+      init,
       ctx as TServerContext
     )
 
