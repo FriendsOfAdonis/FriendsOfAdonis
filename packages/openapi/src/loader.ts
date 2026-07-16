@@ -70,6 +70,16 @@ export class RouterLoader {
     )
 
     for (const param of params) {
+      // `mergeMetadata` concatenates arrays, and the metadata registry lives for the whole
+      // process, so re-scanning the router on every `buildDocument()` call (dev/test) would
+      // otherwise append a duplicate path parameter each time. Skip params already registered
+      // — whether by a previous scan or a user-provided `@ApiParam` — to stay idempotent.
+      const existingParams = OperationParameterMetadataStorage.getMetadata(
+        target.prototype,
+        propertyKey
+      )
+      if (existingParams.some((p) => p.in === 'path' && p.name === param)) continue
+
       OperationParameterMetadataStorage.mergeMetadata(
         target.prototype,
         [{ in: 'path', type: 'string', name: param, required: true }],
