@@ -80,21 +80,22 @@ This is useful for calling actions from other actions, services, or tests.
 
 ## Using Actions as Controllers
 
-To use an action as an HTTP controller, implement the `AsController` interface:
+To use an action as an HTTP controller, apply the `AsController` mixin with `compose`:
 
 ```ts title="app/actions/create_user_action.ts"
-import { BaseAction, type AsController } from '@foadonis/actions'
+import { compose } from '@adonisjs/core/helpers'
+import { BaseAction, AsController } from '@foadonis/actions'
 import { type HttpContext } from '@adonisjs/core/http'
 import User from '#models/user'
 
-export default class CreateUserAction extends BaseAction implements AsController {
+export default class CreateUserAction extends compose(BaseAction, AsController()) {
   async handle(email: string, password: string) {
     const user = await User.create({
       email,
       password,
     })
 
-    this.logger.info({ userId: user.id }, 'User created successfuly')
+    this.logger.info({ userId: user.id }, 'User created successfully')
 
     return user
   }
@@ -111,9 +112,17 @@ The `asController` method receives the full `HttpContext` and handles HTTP-speci
 
 ## Register the Route
 
-Actions are automatically indexed during the build process. A barrel file is generated at `.adonisjs/server/actions.ts` that exports all your actions.
+Actions are automatically indexed during the build process via an [AdonisJS assembler hook](https://docs.adonisjs.com/guides/concepts/assembler-hooks). A barrel file is generated at `.adonisjs/server/actions.ts` that exports all your actions as lazy-loaded references.
 
-Register the route using the generated actions:
+Add an import alias for the generated folder to your `package.json`:
+
+```json title="package.json"
+"imports": {
+  "#generated/*": "./.adonisjs/server/*.js"
+}
+```
+
+Then register the route using the generated actions:
 
 ```ts title="start/routes.ts"
 import { actions } from '#generated/actions'
@@ -131,3 +140,5 @@ Now that you have Actions set up, explore the different ways to use them:
 - [As Controller](/docs/actions/as-controller) — Use actions as HTTP controllers (recommended starting point)
 - [As Command](/docs/actions/as-command) — Use actions as CLI commands
 - [As Listener](/docs/actions/as-listener) — Use actions as event listeners
+- [As Job](/docs/actions/as-job) — Dispatch and schedule actions on a queue
+- [Reference](/docs/actions/reference) — Full API reference
