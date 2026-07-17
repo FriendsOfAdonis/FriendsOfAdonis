@@ -40,7 +40,7 @@ export default class Subscription extends compose(
   declare id: number
 
   @column()
-  declare userId: string
+  declare userId: number
 
   @belongsTo(() => shopkeeper.customerModel)
   declare user: BelongsTo<BillableModel>
