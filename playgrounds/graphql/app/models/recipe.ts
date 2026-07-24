@@ -1,22 +1,24 @@
-import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { BaseModel } from '@adonisjs/lucid/orm'
 import { ObjectType, Field, ID } from '@foadonis/graphql'
+import { column, table } from '@foadonis/lucidity'
 import { DateTime } from 'luxon'
 
 @ObjectType()
+@table.index({ columns: ['title', 'description'] })
 export default class Recipe extends BaseModel {
-  @column({ isPrimary: true })
+  @column.increments({ isPrimary: true })
   @Field(() => ID)
-  declare id: string
+  declare id: number
 
-  @column()
-  declare expiresIn?: string | number
+  @column.string()
+  @Field()
   declare title: string
 
-  @column()
+  @column.text({ isNullable: true })
   @Field(() => String, { nullable: true })
   declare description: string | null
 
-  @column({
+  @column.json({
     prepare: (value) => JSON.stringify(value),
     consume: (value) => JSON.parse(value),
   })

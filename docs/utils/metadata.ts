@@ -54,6 +54,11 @@ export const packages: Record<string, PackageInfo> = {
     name: 'Adonis Flick',
     description: 'Feature-flags package for AdonisJS',
   },
+  'lucidity': {
+    package: '@foadonis/lucidity',
+    name: 'Adonis Lucidity',
+    description: 'Quality of life improvements for Lucid ORM',
+  },
 }
 
 export const baseUrl =

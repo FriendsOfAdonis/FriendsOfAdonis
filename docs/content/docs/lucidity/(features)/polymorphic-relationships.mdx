@@ -1,0 +1,316 @@
+---
+icon: GitFork
+title: Polymorphic Relationships
+description: Let a model belong to more than one type of parent through a single, shared relationship.
+---
+
+A polymorphic relationship lets one model be associated with several other models through a single relationship. Instead of adding a separate foreign key for every possible parent, the related model stores two columns: a `*_type` that records which model it belongs to, and a `*_id` that records which row.
+
+A classic example is a `Comment` that can be attached to a `Post` or a `Video`. Rather than giving comments both a `post_id` and a `video_id`, you give them a `commentable_type` and a `commentable_id`. The `Comment` belongs to whichever model the type column names.
+
+Lucidity adds three decorators for this:
+
+- `morphTo` on the child model that holds the type/id columns and can point to any of several parents.
+- `morphOne` on a parent that owns a single polymorphic child.
+- `morphMany` on a parent that owns many polymorphic children.
+
+These mirror Lucid's `belongsTo`, `hasOne`, and `hasMany`, so `preload`, `related()`, `load()`, and serialization all work the way you already expect.
+
+## Setup
+
+Take a `Comment` that can belong to either a `Post` or a `Video`. The child model carries the two morph columns and declares the `morphTo` side; each parent declares a `morphMany`.
+
+```ts tab="Comment" title="app/models/comment.ts"
+import { BaseModel, column } from "@adonisjs/lucid/orm";
+import { morphTo, type MorphTo } from "@foadonis/lucidity";
+
+export default class Comment extends BaseModel {
+  @column({ isPrimary: true })
+  declare id: number;
+
+  @column()
+  declare body: string;
+
+  @column()
+  declare commentableType: string | null;
+
+  @column()
+  declare commentableId: number | null;
+
+  // The `commentableType` / `commentableId` columns are derived from the
+  // property name `commentable`.
+  @morphTo(() => [Post, Video])
+  declare commentable: MorphTo<[typeof Post, typeof Video]> | null;
+}
+```
+
+```ts tab="Post" title="app/models/post.ts"
+import { BaseModel, column } from "@adonisjs/lucid/orm";
+import { type HasMany } from "@adonisjs/lucid/types/relations";
+import { morphMany } from "@foadonis/lucidity";
+
+export default class Post extends BaseModel {
+  @column({ isPrimary: true })
+  declare id: number;
+
+  @column()
+  declare title: string;
+
+  // Morph name `commentable` inferred from Comment's `morphTo`.
+  @morphMany(() => Comment)
+  declare comments: HasMany<typeof Comment>;
+}
+```
+
+```ts tab="Migration" title="database/migrations/create_comments_table.ts"
+import { BaseSchema } from "@adonisjs/lucid/schema";
+
+export default class extends BaseSchema {
+  protected tableName = "comments";
+
+  async up() {
+    this.schema.createTable(this.tableName, (table) => {
+      table.increments("id");
+      table.text("body").notNullable();
+      table.string("commentable_type").nullable();
+      table.integer("commentable_id").nullable();
+      // Speeds up loading a parent's children and resolving a child's parent.
+      table.index(["commentable_type", "commentable_id"]);
+    });
+  }
+
+  async down() {
+    this.schema.dropTable(this.tableName);
+  }
+}
+```
+
+<Callout>
+  The morph columns follow your model's naming strategy. With the default
+  strategy, the `commentable` morph name maps to a `commentable_type` and a
+  `commentable_id` column.
+</Callout>
+
+## Morph names
+
+A polymorphic relationship is identified by its **morph name**: the prefix shared by the `*_type` and `*_id` columns. For `commentable`, that is `commentable_type` and `commentable_id`.
+
+On the `morphTo` side, the morph name is derived from the property name. A `commentable` property reads and writes `commentableType` / `commentableId`.
+
+On the `morphOne` / `morphMany` side, the morph name is **inferred** from the related model's `morphTo` that points back to the parent, so you usually do not repeat it:
+
+```ts
+@morphMany(() => Comment)
+declare comments: HasMany<typeof Comment>;
+```
+
+When the related model has no inverse `morphTo` to infer from, pass the morph name explicitly as the second argument:
+
+```ts
+// `Tag` stores `taggable_type` / `taggable_id` but declares no `morphTo`.
+@morphMany(() => Tag, "taggable")
+declare tags: HasMany<typeof Tag>;
+```
+
+### The stored type value
+
+By default the value written to a `*_type` column is the parent model's **table name** (for example `posts`). Both sides of the relationship resolve this value the same way, so there is no central map to register.
+
+If you would rather store a stable alias that does not change when you rename a table, declare a static `morphType` on the model:
+
+```ts
+export default class Video extends BaseModel {
+  static table = "videos";
+
+  // Stored in `*_type` instead of the table name `videos`.
+  static morphType = "video";
+}
+```
+
+<Callout type="warn">
+  The `*_type` value is stored on every related row. If you change a model's
+  table name (or its `morphType`) after rows exist, the previously stored values
+  will no longer match. Set an explicit `morphType` up front to decouple the
+  stored value from the table name.
+</Callout>
+
+## Creating and attaching children
+
+Use `related()` on a parent to create children. Lucidity stamps the morph type and id for you:
+
+```ts
+const post = await Post.findOrFail(1);
+
+// morphOne / morphMany: create stamps commentable_type + commentable_id
+const comment = await post.related("comments").create({ body: "Nice post!" });
+comment.commentableType; // "posts"
+comment.commentableId; // post.id
+```
+
+`morphMany` supports `createMany`, and both relationships support attaching existing instances with `save` / `saveMany`:
+
+```ts
+await post.related("comments").createMany([{ body: "one" }, { body: "two" }]);
+
+const draft = new Comment();
+draft.body = "later";
+await post.related("comments").save(draft); // stamps the morph columns
+```
+
+`firstOrCreate` and `updateOrCreate` keep the morph scope as well, so lookups are always constrained to the current parent.
+
+## Loading relationships
+
+### Preloading children
+
+Eager load a parent's polymorphic children with `preload`. The query is scoped by both the type and the id columns, so children of a `Post` never bleed into a `Video` even when the two share an id:
+
+```ts
+const posts = await Post.query().preload("comments");
+
+posts[0].comments; // Comment[] belonging to this post only
+```
+
+`morphOne` resolves to the single related row or `null`:
+
+```ts
+const post = await Post.query().preload("image").firstOrFail();
+post.image; // Image | null
+```
+
+### Resolving the parent
+
+Preloading a `morphTo` reads each row's `*_type` column and hydrates the correct concrete model. A single query can resolve a mix of parent types in one pass:
+
+```ts
+const comments = await Comment.query().preload("commentable");
+
+comments[0].commentable; // instanceof Post or Video, depending on the row
+```
+
+When the morph columns are empty, the relationship resolves to `null`.
+
+You can pass a callback to constrain or narrow the query. The parent's primary key is always selected so rows can be matched back, even when you narrow the columns:
+
+```ts
+await Comment.query().preload("commentable", (query) => query.select("title"));
+```
+
+### Nested preloads
+
+You can keep preloading through a resolved `morphTo`. If a candidate parent type does not have the nested relationship, that branch is skipped instead of throwing:
+
+```ts
+// Load each comment's parent, then that parent's tags.
+// `tags` exists on Post but not Video; the Video branch is skipped.
+const comments = await Comment.query().preload("commentable", (parent) =>
+  parent.preload("tags"),
+);
+```
+
+### Lazy loading
+
+`load()` works on an already-fetched instance for every morph relationship:
+
+```ts
+await post.load("comments");
+await comment.load("commentable");
+```
+
+## Querying through a relationship
+
+`related().query()` returns a regular query builder already scoped to the relationship, so you can add any constraints:
+
+```ts
+// Children of a specific parent
+const recent = await post
+  .related("comments")
+  .query()
+  .orderBy("created_at", "desc")
+  .limit(5);
+
+// The resolved parent of a child
+const parent = await comment.related("commentable").query().firstOrFail();
+```
+
+## Associating and dissociating
+
+On the `morphTo` side, `associate` links a child to a parent by setting and persisting the type and id columns. If the parent has not been saved yet, it is persisted first:
+
+```ts
+const post = await Post.findOrFail(1);
+const comment = await Comment.findOrFail(1);
+
+await comment.related("commentable").associate(post);
+
+comment.commentableType; // "posts"
+comment.commentableId; // post.id
+comment.commentable; // the associated Post instance
+```
+
+`dissociate` clears both columns and persists the change:
+
+```ts
+await comment.related("commentable").dissociate();
+
+comment.commentableType; // null
+comment.commentableId; // null
+```
+
+## Serialization
+
+Preloaded polymorphic relationships serialize like any other relationship:
+
+```ts
+const post = await Post.query().preload("comments").firstOrFail();
+
+post.serialize();
+// { id: 1, title: "...", comments: [{ id: 1, body: "..." }] }
+```
+
+Use the `serializeAs` option to rename the key, or set it to `null` to exclude the relationship from the output.
+
+## Options
+
+`morphOne` and `morphMany` accept either a morph name string or an options object as their second argument:
+
+| Option        | Description                                                                                      |
+| ------------- | ------------------------------------------------------------------------------------------------ |
+| `morphName`   | The shared morph name. Inferred from the related model's `morphTo` when omitted.                 |
+| `localKey`    | Parent attribute matched against the morph id column. Defaults to the parent's primary key.      |
+| `serializeAs` | Key used when serializing the relationship. `null` excludes it. Defaults to the property name.   |
+| `onQuery`     | Hook to add constraints to every query issued for the relationship.                              |
+
+`morphTo` accepts an options object:
+
+| Option        | Description                                                                                      |
+| ------------- | ------------------------------------------------------------------------------------------------ |
+| `morphName`   | Morph name used to derive the `*_type` / `*_id` attributes. Defaults to the property name.       |
+| `serializeAs` | Key used when serializing the relationship. `null` excludes it. Defaults to the property name.   |
+| `onQuery`     | Hook to add constraints to every query. Runs once per resolved parent type during eager loading. |
+
+```ts
+@morphMany(() => Comment, {
+  morphName: "commentable",
+  onQuery: (query) => query.where("approved", true),
+})
+declare comments: HasMany<typeof Comment>;
+```
+
+## API reference
+
+### Decorators
+
+| Decorator                       | Defined on   | Description                                                      |
+| ------------------------------- | ------------ | -------------------------------------------------------------- |
+| `morphOne(() => Related, opts)`  | Parent model | One polymorphic child. Resolves to the related row or `null`.   |
+| `morphMany(() => Related, opts)` | Parent model | Many polymorphic children.                                     |
+| `morphTo(() => [A, B], opts)`    | Child model  | Belongs to one of several parents, resolved from `*_type`.      |
+
+### `morphTo` relationship methods
+
+| Method          | Description                                                            |
+| --------------- | --------------------------------------------------------------------- |
+| `associate(parent)` | Link the child to a parent, persisting the type and id columns. Saves the parent first if needed. |
+| `dissociate()`  | Clear the type and id columns and persist the change.                 |
+| `query()`       | A query builder scoped to the resolved parent.                        |
