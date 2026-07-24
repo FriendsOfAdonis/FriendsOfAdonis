@@ -2,57 +2,76 @@ import type { Metadata } from 'next'
 import type { Page } from '@/lib/source'
 
 type PackageInfo = {
-  description: string
+  /**
+   * Full product name. Used to prefix every SEO title of the package
+   * (e.g. "AdonisJS GraphQL - Getting Started") and shown on OG images.
+   */
   name: string
+  /** npm package name */
   package: string
+  /** Fallback description, used when a page ships without one */
+  description: string
 }
+
+export const siteName = 'Friends Of Adonis'
+
+export const siteDescription =
+  'Well-crafted and battle-tested AdonisJS packages made with ♥ by the community'
 
 export const packages: Record<string, PackageInfo> = {
   'magnify': {
     package: '@foadonis/magnify',
-    name: 'Adonis Magnify',
-    description: 'Plug and play full-text search for your Adonis application.',
+    name: 'AdonisJS Magnify',
+    description:
+      'Plug and play full-text search for AdonisJS, powered by Algolia, Meilisearch or Typesense.',
   },
   'openapi': {
     package: '@foadonis/openapi',
-    name: 'Adonis OpenAPI',
-    description: 'Generate OpenAPI V3 specifications for your Adonis application',
+    name: 'AdonisJS OpenAPI',
+    description:
+      'Generate OpenAPI V3 specifications from your AdonisJS controllers using TypeScript decorators.',
   },
   'graphql': {
     package: '@foadonis/graphql',
-    name: 'Adonis GraphQL',
-    description: 'Create GraphQL APIs using Adonis and Apollo.',
+    name: 'AdonisJS GraphQL',
+    description:
+      'Build code-first GraphQL APIs in AdonisJS with TypeScript decorators, Apollo Server or GraphQL Yoga.',
   },
   'shopkeeper': {
     package: '@foadonis/shopkeeper',
-    name: 'Adonis Shopkeeper',
+    name: 'AdonisJS Shopkeeper',
     description:
-      "An expressive and fluent interface to Stripe's subscription billing services for Adonis.",
+      "An expressive, fluent interface to Stripe's subscription billing services for AdonisJS.",
   },
   'maintenance': {
     package: '@foadonis/maintenance',
-    name: 'Adonis Maintenance',
-    description: 'Maintenance mode library for Adonis',
+    name: 'AdonisJS Maintenance',
+    description:
+      'Put your AdonisJS application in maintenance mode without redeploying, with bypass secrets and custom drivers.',
   },
   'crypt': {
     package: '@foadonis/crypt',
-    name: 'Adonis Crypt',
-    description: 'Safely store your secrets in your repository',
+    name: 'AdonisJS Crypt',
+    description:
+      'Safely store encrypted secrets and environment credentials inside your AdonisJS repository.',
   },
   'actions': {
     package: '@foadonis/actions',
-    name: 'Adonis Actions',
-    description: 'Runnable actions that can act as jobs, listeners and commands.',
+    name: 'AdonisJS Actions',
+    description:
+      'Organize business logic into reusable action classes that run as controllers, Ace commands and event listeners.',
   },
   'lucid-parser': {
     package: '@foadonis/lucid-parser',
-    name: 'Lucid Parser',
-    description: 'Parse Lucid models using AST tree',
+    name: 'AdonisJS Lucid Parser',
+    description:
+      'Parse Lucid models through the TypeScript AST to extract property and relationship type information.',
   },
   'flick': {
     package: '@foadonis/flick',
-    name: 'Adonis Flick',
-    description: 'Feature-flags package for AdonisJS',
+    name: 'AdonisJS Flick',
+    description:
+      'A typed, driver-based feature flag system for AdonisJS, with scopes, Edge helpers and test fakes.',
   },
 }
 
@@ -61,21 +80,66 @@ export const baseUrl =
     ? new URL('http://localhost:3000')
     : new URL('https://friendsofadonis.com')
 
-export function createMetadata(override: Metadata): Metadata {
+/** The package a documentation page belongs to, if any. */
+export function getPackage(page: Page): PackageInfo | undefined {
+  return packages[page.slugs[0] ?? '']
+}
+
+/**
+ * SEO title of a documentation page. Always carries the library name so the
+ * ~7 pages titled "Getting Started" stay distinguishable in search results.
+ */
+export function getPageTitle(page: Page): string {
+  const pkg = getPackage(page)
+  const title = page.data.title ?? siteName
+  return pkg && title !== pkg.name ? `${pkg.name} - ${title}` : title
+}
+
+/** Description of a documentation page, falling back to its package then the site. */
+export function getPageDescription(page: Page): string {
+  return page.data.description ?? getPackage(page)?.description ?? siteDescription
+}
+
+function resolveTitle(title: Metadata['title']): string | undefined {
+  if (typeof title === 'string') return title
+  if (title && typeof title === 'object') {
+    if ('absolute' in title && title.absolute) return title.absolute
+    if ('default' in title && title.default) return title.default
+  }
+  return undefined
+}
+
+type MetadataInput = Metadata & {
+  /** Path of the page, used to build its canonical and og:url */
+  path?: string
+}
+
+export function createMetadata({ path, ...override }: MetadataInput): Metadata {
+  const url = new URL(path ?? '/', baseUrl).toString()
+  const title = resolveTitle(override.title)
+  const description = override.description ?? undefined
+
   return {
     ...override,
+    alternates: {
+      canonical: url,
+      ...override.alternates,
+    },
     openGraph: {
-      title: override.title ?? undefined,
-      description: override.description ?? undefined,
-      url: 'https://friendsofadonis.com',
-      siteName: 'Friends Of Adonis',
+      type: 'website',
+      title,
+      description,
+      url,
+      siteName,
+      locale: 'en_US',
       ...override.openGraph,
     },
     twitter: {
       card: 'summary_large_image',
       creator: '@PaucotMartin',
-      title: override.title ?? undefined,
-      description: override.description ?? undefined,
+      site: '@PaucotMartin',
+      title,
+      description,
       ...override.twitter,
     },
     metadataBase: baseUrl,
@@ -91,15 +155,23 @@ export function getPageImage(page: Page) {
   }
 }
 
-export function withPageImage(page: Page, metadata: Metadata): Metadata {
+export function withPageImage(page: Page, metadata: MetadataInput): MetadataInput {
+  const image = {
+    url: getPageImage(page).url,
+    width: 1_200,
+    height: 630,
+    alt: getPageTitle(page),
+  }
+
   return {
     ...metadata,
     openGraph: {
-      images: {
-        url: getPageImage(page).url,
-        width: 1_200,
-        height: 630,
-      },
+      ...metadata.openGraph,
+      images: [image],
+    },
+    twitter: {
+      ...metadata.twitter,
+      images: [image],
     },
   }
 }

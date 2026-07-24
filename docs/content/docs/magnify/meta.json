@@ -1,6 +1,6 @@
 {
   "title": "Magnify",
-  "description": "Plug and play full-text search",
+  "description": "Full-text search for your Lucid models with Algolia, Meilisearch or Typesense, kept in sync automatically",
   "root": true,
   "icon": "Search",
   "pages": [
