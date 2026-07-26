@@ -1,0 +1,300 @@
+---
+title: 'Migration to v1'
+description: 'Upgrade your actions from v0.x to v1'
+icon: CircleArrowUp
+---
+
+`@foadonis/actions` v1 reworks how an action declares its entrypoints. The `AsController`, `AsCommand`, and `AsListener` **interfaces** become **mixins** applied with `compose`, a brand new `AsJob` mixin adds first-class queue support, and the OpenTelemetry instrumentation moves to a hook.
+
+This guide walks you through everything that changed and how to upgrade. If you would rather not do it by hand, jump straight to [Migrate with your coding agent](#migrate-with-your-coding-agent) and let your agent apply the whole thing for you.
+
+## Requirements
+
+v1 raises the baseline for the framework and the runtime:
+
+- **AdonisJS v7+** (v6 is no longer supported)
+- **Node.js 22+** (the previous minimum was 20.6)
+
+<Callout type="warn">
+  Upgrade your application to AdonisJS 7 and Node 22 first. If `@adonisjs/core` is still pinned to
+  v6 in your `package.json`, the v1 peer dependency range will not be satisfied.
+</Callout>
+
+## Migrate with your coding agent
+
+The fastest way to upgrade is to hand the prompt below to your coding agent (Claude Code, Cursor, Copilot, ...). It captures every mechanical change in this guide. Copy it as-is into your agent, then review the diff it produces.
+
+````md
+You are upgrading an AdonisJS project from `@foadonis/actions` v0.x to v1.
+Apply every change below across the whole repository. Do NOT modify the business
+logic inside `handle`, `asController`, `asCommand`, or `asListener` method bodies.
+
+## 1. Update the package and check the requirements
+First, upgrade `@foadonis/actions` to the latest (v1) release using the project's
+package manager, e.g. `npm install @foadonis/actions@latest`
+(or `pnpm add` / `yarn add` / `bun add` to match the lockfile present).
+
+v1 requires AdonisJS v7+ and Node.js 22+. If `package.json` pins `@adonisjs/core`
+to `^6`, stop and tell me: AdonisJS 6 is not supported by v1 and must be upgraded
+first.
+
+If the app uses jobs (the `AsJob` mixin), also install the optional queue peers:
+`@adonisjs/queue`, `@boringnode/queue`, and `@lukeed/ms`.
+
+## 2. Convert entrypoint interfaces into mixins (the main change)
+In v0 an action declared its entrypoints with `implements` and imported the
+contracts as TYPES:
+
+```ts
+import { BaseAction, type AsController, type AsListener } from '@foadonis/actions'
+
+export default class CreateUserAction extends BaseAction implements AsController, AsListener {
+  async handle() {}
+  async asController(ctx: HttpContext) {}
+  async asListener(event: UserCreated) {}
+}
+```
+
+In v1 the entrypoints are mixins applied through `compose`:
+
+```ts
+import { compose } from '@adonisjs/core/helpers'
+import { BaseAction, AsController, AsListener } from '@foadonis/actions'
+
+export default class CreateUserAction extends compose(BaseAction, AsController(), AsListener()) {
+  async handle() {}
+  async asController(ctx: HttpContext) {}
+  async asListener(event: UserCreated) {}
+}
+```
+
+For every action file, apply these rules:
+- Add `import { compose } from '@adonisjs/core/helpers'`.
+- Change the `AsController` / `AsCommand` / `AsListener` imports from
+  `@foadonis/actions` from type-only imports (`import { type AsController }`) to
+  value imports (`import { AsController }`).
+- Replace `extends BaseAction implements X, Y` with
+  `extends compose(BaseAction, X(), Y())`. Each mixin is CALLED as a function.
+  Remove the `implements` clause entirely.
+- Preserve generics on `AsListener`: `implements AsListener<UserCreated>` becomes
+  `AsListener<UserCreated>()`.
+- Actions that only have a `handle` method and no entrypoint stay as
+  `extends BaseAction` (no `compose` needed).
+
+## 3. Move command configuration into the AsCommand options
+In v0, the command name and description were static class properties. In v1 they
+are passed to the `AsCommand()` mixin:
+
+```ts
+// v0
+export default class SendEmailAction extends BaseAction implements AsCommand {
+  static commandName = 'mails:send'
+  static description = 'Send an email to a user'
+  async asCommand(command: BaseCommand) {}
+}
+
+// v1
+import { compose } from '@adonisjs/core/helpers'
+export default class SendEmailAction extends compose(
+  BaseAction,
+  AsCommand({ commandName: 'mails:send', description: 'Send an email to a user' })
+) {
+  async asCommand(command: BaseCommand) {}
+}
+```
+
+Remove the `static commandName` / `static description` properties and move them
+(plus any `aliases`, `flags`, `args`, or `options`) into `AsCommand({ ... })`.
+
+## 4. Migrate the OpenTelemetry instrumentation to a hook
+The `@foadonis/actions/instrumentation` subpath and the `ActionsInstrumentation`
+class were removed. Replace any registration like:
+
+```ts
+import { registerInstrumentations } from '@opentelemetry/instrumentation'
+import { ActionsInstrumentation } from '@foadonis/actions/instrumentation'
+
+registerInstrumentations({ instrumentations: [new ActionsInstrumentation()] })
+```
+
+with the new telemetry hook (usually in `start/kernel.ts`):
+
+```ts
+import actions from '@foadonis/actions/services/main'
+import { telemetryHook } from '@foadonis/actions/otel'
+
+actions.hook('execute', telemetryHook)
+```
+
+Then remove `@opentelemetry/instrumentation` from `package.json` if nothing else
+uses it.
+
+## 5. Rename the runner to the executor (only if referenced)
+Most apps never touch the internals. If the project does, rename:
+- `ActionsRunner` to `ActionExecutor`
+- `BaseAction.useRunner(...)` to `BaseAction.useExecutor(...)`
+- container binding `'actions.runner'` to `'actions.executor'`
+
+## 6. Leave these unchanged
+- Route and event registration through the generated barrel, e.g.
+  `actions.CreateUser.asController()` and
+  `emitter.on(UserRegistered, actions.SendWelcome.asListener())`.
+- Calls to `Action.run(...)`.
+- The `make:action` command, the `indexActions()` assembler hook, and the
+  `#actions/*` / `#generated/*` import aliases.
+
+When finished, run the type-checker (`node ace typecheck`, or `tsc --noEmit`),
+fix any remaining type errors, then give me a summary of every file you changed.
+````
+
+<Callout type="warn">
+  Always review the generated diff before committing. The agent edits files in bulk, and a quick
+  read-through catches anything project specific it could not infer.
+</Callout>
+
+## What changed (manual upgrade)
+
+If you prefer to upgrade by hand, or just want to understand what the prompt above does, here is each change in detail.
+
+<div className="fd-steps [&_h3]:fd-step">
+
+### Update the runtime and dependencies
+
+Make sure your app targets **AdonisJS 7** and **Node 22** before bumping the package. The v1 peer dependency on `@adonisjs/core` is `^7.0.0`, and the `engines.node` field requires `>=22.0.0`.
+
+`@opentelemetry/instrumentation` is no longer a peer dependency. The queue integration adds three new optional peers, installed only if you use [`AsJob`](/docs/actions/as-job): `@adonisjs/queue`, `@boringnode/queue`, and `@lukeed/ms`.
+
+### Entrypoints are now mixins
+
+This is the headline change. In v0, you declared an entrypoint by implementing an interface:
+
+```ts title="app/actions/create_user_action.ts"
+import { BaseAction, type AsController } from '@foadonis/actions'
+import { type HttpContext } from '@adonisjs/core/http'
+
+export default class CreateUserAction extends BaseAction implements AsController {
+  async handle(email: string, password: string) {
+    return User.create({ email, password })
+  }
+
+  async asController({ request, response }: HttpContext) {
+    const { email, password } = request.only(['email', 'password'])
+    const user = await this.handle(email, password)
+    return response.created(user)
+  }
+}
+```
+
+In v1, you apply a mixin with the `compose` helper instead:
+
+```ts title="app/actions/create_user_action.ts"
+import { compose } from '@adonisjs/core/helpers' // [!code ++]
+import { BaseAction, AsController } from '@foadonis/actions' // [!code ++]
+import { type HttpContext } from '@adonisjs/core/http'
+
+export default class CreateUserAction extends compose(BaseAction, AsController()) { // [!code ++]
+  async handle(email: string, password: string) {
+    return User.create({ email, password })
+  }
+
+  async asController({ request, response }: HttpContext) {
+    const { email, password } = request.only(['email', 'password'])
+    const user = await this.handle(email, password)
+    return response.created(user)
+  }
+}
+```
+
+Three things change:
+
+1. The mixins are now **values**, not types. Drop the `type` keyword from the import.
+2. `compose` is imported from `@adonisjs/core/helpers`.
+3. Each mixin is **called** (`AsController()`), and the `implements` clause is removed.
+
+Multiple entrypoints compose together, and `AsListener` keeps its generic:
+
+```ts
+// v0
+class X extends BaseAction implements AsController, AsListener<UserCreated> {}
+
+// v1
+class X extends compose(BaseAction, AsController(), AsListener<UserCreated>()) {}
+```
+
+Actions that expose only a `handle` method keep extending `BaseAction` directly, with no `compose`.
+
+### Command configuration moved to mixin options
+
+In v0, a command action set static properties on the class. In v1, you pass the same metadata to the `AsCommand()` mixin:
+
+```ts title="app/actions/send_email_action.ts"
+import { compose } from '@adonisjs/core/helpers'
+import { BaseAction, AsCommand } from '@foadonis/actions'
+import { type BaseCommand } from '@adonisjs/core/ace'
+
+export default class SendEmailAction extends compose(
+  BaseAction,
+  AsCommand({
+    commandName: 'mails:send', // [!code ++]
+    description: 'Send an email to a user', // [!code ++]
+  })
+) {
+  async handle(email: string, subject: string, body: string) {}
+
+  async asCommand(command: BaseCommand) {
+    // ...
+  }
+}
+```
+
+`AsCommand` accepts a `Partial<CommandMetaData>`, so `commandName`, `description`, `aliases`, `flags`, `args`, and `options` all live in one place now. As before, the command name defaults to `action:<dash-cased-name>` with the trailing `Action` suffix stripped, so `SendEmailAction` becomes `action:send-email`. See [Actions as Commands](/docs/actions/as-command) for the full option list.
+
+### OpenTelemetry instrumentation became a hook
+
+The `@foadonis/actions/instrumentation` export and its `ActionsInstrumentation` class were removed. Tracing is now wired through the `execute` hook on the `actions` service:
+
+```ts title="start/kernel.ts"
+import { registerInstrumentations } from '@opentelemetry/instrumentation' // [!code --]
+import { ActionsInstrumentation } from '@foadonis/actions/instrumentation' // [!code --]
+import actions from '@foadonis/actions/services/main' // [!code ++]
+import { telemetryHook } from '@foadonis/actions/otel' // [!code ++]
+
+registerInstrumentations({ instrumentations: [new ActionsInstrumentation()] }) // [!code --]
+actions.hook('execute', telemetryHook) // [!code ++]
+```
+
+The hook spans every entrypoint invocation (`asController`, `asCommand`, `asListener`, `asJob`). See [Telemetry](/docs/actions/telemetry) for details. You can now also write [your own hooks](/docs/actions/hooks) against the same `execute` event.
+
+### `ActionsRunner` became `ActionExecutor`
+
+Internally, the `ActionsRunner` was replaced by the `ActionExecutor`. This is invisible to most applications because the change is wrapped by the mixins and the `actions` service. If you reference the internals directly, rename them:
+
+| v0                          | v1                            |
+| --------------------------- | ----------------------------- |
+| `ActionsRunner`             | `ActionExecutor`              |
+| `BaseAction.useRunner()`    | `BaseAction.useExecutor()`    |
+| `'actions.runner'` binding  | `'actions.executor'` binding  |
+
+</div>
+
+## New in v1
+
+These are additive. They require no migration, but they are why the rework happened:
+
+- **[Actions as Jobs](/docs/actions/as-job)**: the `AsJob` mixin from `@foadonis/actions/queue` lets an action be dispatched, batched, and scheduled on a queue with `dispatch()`, `dispatchMany()`, and `schedule()`.
+- **[Hooks](/docs/actions/hooks)**: register `execute` hooks on the `actions` service to inspect, time, or extend every entrypoint invocation.
+- **Middlewares**: the `middlewares` export ships ready-made `scopedLogger` helpers you can attach per entrypoint from `config/actions.ts`. See the [reference](/docs/actions/reference#middlewares).
+- **[Girouette](/docs/actions/as-controller#usage-with-girouette) integration**: `toGirouetteControllers` from `@foadonis/actions/girouette` registers your actions as Girouette controllers.
+
+## Breaking changes at a glance
+
+| Area              | v0.x                                                       | v1                                                                          |
+| ----------------- | ---------------------------------------------------------- | --------------------------------------------------------------------------- |
+| AdonisJS          | `^6.2.0 \|\| ^7.0.0`                                         | `^7.0.0`                                                                     |
+| Node.js           | `>=20.6.0`                                                  | `>=22.0.0`                                                                   |
+| Entrypoints       | `extends BaseAction implements AsController`               | `extends compose(BaseAction, AsController())`                               |
+| Mixin imports     | `import { type AsController }`                              | `import { AsController }` (value, called as `AsController()`)                |
+| Command config    | `static commandName` / `static description`                | `AsCommand({ commandName, description })`                                    |
+| Telemetry         | `@foadonis/actions/instrumentation` + `ActionsInstrumentation` | `@foadonis/actions/otel` + `actions.hook('execute', telemetryHook)`     |
+| Runner            | `ActionsRunner`, `'actions.runner'`                        | `ActionExecutor`, `'actions.executor'`                                      |
+| OTel peer dep     | `@opentelemetry/instrumentation` (optional peer)           | removed                                                                      |

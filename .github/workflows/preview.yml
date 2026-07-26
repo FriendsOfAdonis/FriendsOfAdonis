@@ -34,7 +34,7 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: 🔨 Build changed packages
-        run: yarn build --filter="[origin/main...$GITHUB_SHA]" --filter="!./playgrounds/*"
+        run: yarn build --filter="[origin/main...$GITHUB_SHA]" --filter="!./playgrounds/*" --filter="!./docs"
 
       - name: 📦 Get changed packages
         id: changed

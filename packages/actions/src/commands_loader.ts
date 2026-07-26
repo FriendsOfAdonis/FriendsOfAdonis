@@ -3,12 +3,11 @@ import { fsReadAll, importDefault, slash } from '@poppinss/utils'
 import { basename, extname, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { type BaseAction } from './base_action.ts'
-import { makeCommand } from './command_factory.ts'
 import { type BaseCommand } from '@adonisjs/core/ace'
 import { type ApplicationService } from '@adonisjs/core/types'
-import { implementsAsCommand } from './utils.ts'
+import { generateCommandName, implementsAsCommand } from './utils.ts'
 import { type Constructor } from '@adonisjs/core/types/common'
-import { type AsCommand } from './types.ts'
+import type { AsCommandOptions, AsCommandContract } from './mixins/as_command.ts'
 
 const JS_MODULES = ['.js', '.cjs', '.mjs']
 
@@ -36,6 +35,29 @@ export class ActionCommandsLoader implements LoadersContract<typeof BaseCommand>
     return entry.command
   }
 
+  serialize(Action: Constructor<AsCommandContract>): CommandMetaData {
+    const {
+      commandName = generateCommandName(Action.name),
+      description = `Run the action ${Action.name}`,
+      aliases = [],
+      flags = [],
+      args = [],
+      options = {},
+    } = '$commandOptions' in Action ? (Action.$commandOptions as AsCommandOptions) : {}
+
+    const [namespace, name] = commandName.split(':')
+
+    return {
+      commandName,
+      description,
+      namespace: name ? namespace : null,
+      aliases: aliases,
+      flags: flags,
+      args: args,
+      options,
+    }
+  }
+
   /**
    * Scans the actions directory and returns metadata for all
    * actions implementing AsCommand.
@@ -43,19 +65,14 @@ export class ActionCommandsLoader implements LoadersContract<typeof BaseCommand>
   async getMetaData(): Promise<CommandMetaData[]> {
     const actions = await this.#loadActions()
 
-    this.#commands = Object.entries(actions).map(([filePath, Action]) => ({
+    return Object.entries(actions).map(([filePath, Action]) => ({
       filePath,
-      command: makeCommand(Action),
-    }))
-
-    return this.#commands.map((c) => ({
-      ...c.command.serialize(),
-      filePath: c.filePath,
+      ...this.serialize(Action),
     }))
   }
 
   async #loadActions() {
-    const commands: Record<string, Constructor<AsCommand>> = {}
+    const commands: Record<string, Constructor<AsCommandContract>> = {}
 
     const files = await fsReadAll(this.#actionsDirectory, {
       pathType: 'url',
@@ -83,7 +100,7 @@ export class ActionCommandsLoader implements LoadersContract<typeof BaseCommand>
       )
 
       if (implementsAsCommand(Action.prototype)) {
-        commands[relativeFileName] = Action as unknown as Constructor<AsCommand>
+        commands[relativeFileName] = Action as unknown as Constructor<AsCommandContract>
       }
     }
 

@@ -1,5 +1,6 @@
 import { defineConfig } from '@adonisjs/core/app'
 import { indexActions } from '@foadonis/actions'
+import { indexControllers } from '@adonisjs-community/girouette'
 import { indexFeatures } from '@foadonis/flick'
 
 export default defineConfig({
@@ -16,6 +17,7 @@ export default defineConfig({
     () => import('@adonisjs/core/commands'),
     () => import('@adonisjs/lucid/commands'),
     () => import('@adonisjs/bouncer/commands'),
+    () => import('@adonisjs/queue/commands'),
   ],
 
   /*
@@ -42,6 +44,8 @@ export default defineConfig({
     () => import('@foadonis/openapi/openapi_provider'),
     () => import('@foadonis/actions/actions_provider'),
     () => import('@adonisjs/otel/otel_provider'),
+    () => import('@adonisjs/queue/queue_provider'),
+    () => import('@adonisjs-community/girouette/girouette_provider'),
     () => import('@foadonis/flick/flick_provider'),
   ],
 
@@ -53,7 +57,15 @@ export default defineConfig({
   | List of modules to import before starting the application.
   |
   */
-  preloads: [() => import('#start/routes'), () => import('#start/kernel')],
+  preloads: [
+    () => import('#start/routes'),
+    () => import('#start/kernel'),
+    {
+      file: () => import('#start/scheduler'),
+      environment: ['web'],
+    },
+    () => import('#start/routes.girouette'),
+  ],
 
   /*
   |--------------------------------------------------------------------------
@@ -81,6 +93,6 @@ export default defineConfig({
   },
 
   hooks: {
-    init: [indexActions(), indexFeatures()],
+    init: [indexActions(), indexControllers(), indexFeatures()],
   },
 })

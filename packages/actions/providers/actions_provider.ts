@@ -1,6 +1,6 @@
 import { type ApplicationService } from '@adonisjs/core/types'
-import { ActionsRunner } from '../src/runner.ts'
 import { BaseAction } from '../src/base_action.ts'
+import { ActionExecutor } from '../src/action_executor.ts'
 
 /**
  * Service provider that registers the ActionsRunner singleton
@@ -13,24 +13,47 @@ export default class ActionsProvider {
    * Registers the ActionsRunner singleton in the container.
    */
   register() {
-    this.app.container.singleton(ActionsRunner, (resolver) => {
-      return new ActionsRunner(resolver)
+    this.app.container.singleton(ActionExecutor, async (resolver) => {
+      return new ActionExecutor(resolver)
     })
 
-    this.app.container.alias('actions.runner', ActionsRunner)
+    this.app.container.alias('actions.executor', ActionExecutor)
   }
 
   /**
-   * Configures BaseAction and ActionLoader with the resolved runner.
+   * Configures BaseAction with the resolved executor and
+   * register scopped logger hook.
    */
   async boot() {
-    const runner = await this.app.container.make('actions.runner')
-    BaseAction.useRunner(runner)
+    const executor = await this.app.container.make('actions.executor')
+    BaseAction.useExecutor(executor)
+
+    executor.hook('execute', (context) => {
+      if (context.method === 'asController') {
+        const [httpContext] = context.args
+        if (httpContext?.logger) {
+          context.action.logger = httpContext.logger.child({
+            action: context.action.constructor.name,
+          })
+        }
+      }
+
+      if (context.method === 'asJob') {
+        const [, jobContext] = context.args
+        if (jobContext) {
+          context.action.logger = context.action.logger.child({
+            job_id: jobContext.jobId,
+            job_name: jobContext.name,
+            queue: jobContext.queue,
+          })
+        }
+      }
+    })
   }
 }
 
 declare module '@adonisjs/core/types' {
   interface ContainerBindings {
-    'actions.runner': ActionsRunner
+    'actions.executor': ActionExecutor
   }
 }

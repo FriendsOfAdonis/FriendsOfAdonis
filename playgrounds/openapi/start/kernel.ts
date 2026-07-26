@@ -10,6 +10,8 @@
 
 import router from '@adonisjs/core/services/router'
 import server from '@adonisjs/core/services/server'
+import actions from '@foadonis/actions/services/main'
+import { telemetryHook } from '@foadonis/actions/otel'
 
 /**
  * The error handler is used to convert an exception
@@ -44,3 +46,5 @@ export const middleware = router.named({
   guest: () => import('#middleware/guest_middleware'),
   auth: () => import('#middleware/auth_middleware'),
 })
+
+actions.hook('execute', telemetryHook)

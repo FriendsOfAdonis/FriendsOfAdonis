@@ -6,12 +6,17 @@
   "pages": [
     "index",
     "getting-started",
-    "reference",
+    "migration",
     "best-practices",
     "---Guides---",
-    "(guides)/as-controller",
-    "(guides)/as-command",
-    "(guides)/as-listener",
-    "(guides)/telemetry"
+    "(guides)/usage",
+    "(handlers)/as-controller",
+    "(handlers)/as-command",
+    "(handlers)/as-listener",
+    "(handlers)/as-job",
+    "---Advanced---",
+    "(advanced)/telemetry",
+    "(advanced)/hooks",
+    "reference"
   ]
 }
