@@ -13,7 +13,13 @@ import { LLMCopyButton, ViewOptions } from '@/components/ai/page-actions'
 import { ConfigurationSteps } from '@/components/configuration-steps'
 import { NotFound } from '@/components/not-found'
 import { source } from '@/lib/source'
-import { createMetadata, withPageImage } from '@/utils/metadata'
+import {
+  createMetadata,
+  getPageDescription,
+  getPageTitle,
+  siteDescription,
+  withPageImage,
+} from '@/utils/metadata'
 
 export const revalidate = false
 
@@ -88,18 +94,18 @@ export async function generateMetadata(props: {
 
   if (!page)
     return createMetadata({
-      title: 'Not found',
+      title: 'Page not found',
+      description: siteDescription,
+      robots: { index: false, follow: true },
     })
-
-  const description = page.data.description ?? 'The library for building documentation sites'
 
   return createMetadata(
     withPageImage(page, {
-      title: page.data.title,
-      description,
-      openGraph: {
-        url: `/docs/${page.slugs.join('/')}`,
-      },
+      title: { absolute: getPageTitle(page) },
+      description: getPageDescription(page),
+      path: page.url,
+      openGraph: { type: 'article' },
+      ...(page.data.noindex ? { robots: { index: false, follow: true } } : {}),
     })
   )
 }

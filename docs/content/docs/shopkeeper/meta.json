@@ -1,6 +1,6 @@
 {
   "title": "Shopkeeper",
-  "description": "Fluent interface for Stripe",
+  "description": "Expressive, fluent Stripe billing for AdonisJS: subscriptions, checkout, invoices, and webhooks",
   "icon": "CircleDollarSign",
   "root": true,
   "pages": [

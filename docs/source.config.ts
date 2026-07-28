@@ -17,6 +17,8 @@ export const docs = defineDocs({
       preview: z.string().optional(),
       index: z.boolean().default(false),
       method: z.string().optional(),
+      /** Keep unwritten stub pages out of search engines and the sitemap. */
+      noindex: z.boolean().default(false),
     }),
     postprocess: {
       includeProcessedMarkdown: true,

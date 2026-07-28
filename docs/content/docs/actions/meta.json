@@ -1,6 +1,6 @@
 {
   "title": "Actions",
-  "description": "Organize your business logic into reusable, testable actions",
+  "description": "One action class per use case, invoked as a route handler, an Ace command or an event listener, with the business logic living in handle",
   "root": true,
   "icon": "Zap",
   "pages": [

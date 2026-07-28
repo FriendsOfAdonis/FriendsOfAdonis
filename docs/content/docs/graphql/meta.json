@@ -1,6 +1,6 @@
 {
   "title": "GraphQL",
-  "description": "Create GraphQL APIs",
+  "description": "Build code-first GraphQL APIs in AdonisJS with decorators, Apollo or Yoga, auth and realtime subscriptions",
   "root": true,
   "icon": "Braces",
   "pages": [

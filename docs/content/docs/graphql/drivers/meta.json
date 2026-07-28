@@ -1,5 +1,5 @@
 {
   "title": "Drivers",
   "icon": "ServerCrash",
-  "description": ""
+  "description": "Choose between the Apollo Server and GraphQL Yoga drivers and configure them in config/graphql.ts"
 }
