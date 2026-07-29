@@ -6,7 +6,6 @@ import { Analytics } from '@vercel/analytics/next'
 import { GeistMono } from 'geist/font/mono'
 import { GeistSans } from 'geist/font/sans'
 import type { Metadata } from 'next'
-import Script from 'next/script'
 import type { ReactNode } from 'react'
 import { source } from '@/lib/source'
 import { baseUrl, createMetadata, siteDescription, siteName } from '@/utils/metadata'
@@ -63,7 +62,6 @@ export default async function Layout({ children }: { readonly children: ReactNod
         </NextProvider>
         <Analytics />
       </Body>
-      <Script data-domain="friendsofadonis.com" src="https://plausible.io/js/script.js" />
     </html>
   )
 }

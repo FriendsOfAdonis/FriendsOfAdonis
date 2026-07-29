@@ -21,7 +21,7 @@ export function Provider({
     <RootProvider
       search={{
         // eslint-disable-next-line react/no-unstable-nested-components
-        SearchDialog: (props) => <SearchDialog tags={tags} {...props} />,
+        SearchDialog: (props) => <SearchDialog {...props} tags={tags} />,
       }}
     >
       <TooltipProvider>{children}</TooltipProvider>
