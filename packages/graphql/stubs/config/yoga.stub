@@ -19,7 +19,7 @@ const graphqlConfig = defineConfig({
   driver: drivers.yoga({
     graphiql: isDevelopment,
     plugins: isDevelopment ? [] : [useDisableIntrospection()]
-  })
+  }),
 
   /**
    * Logger name used by the GraphQL server.
