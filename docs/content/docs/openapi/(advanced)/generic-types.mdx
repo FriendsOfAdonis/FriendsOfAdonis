@@ -19,6 +19,8 @@ function PaginatedResponse<TItem extends object>(Item: new (...args: any[]) => T
     @ApiProperty({ type: [Item] })
     declare items: TItem[]
   }
+
+  return Pagination
 }
 
 class RecipesPaginatedResponse extends PaginatedResponse(Recipe) {}
@@ -109,6 +111,8 @@ export default function PaginatedResponse<TItem extends object>(
     @ApiProperty({ type: [Item] })
     declare items: TItem[]
   }
+
+  return Pagination
 }
 ```
 
