@@ -1,0 +1,52 @@
+---
+title: Getting Started
+description: "Install @foadonis/sentinel with node ace add, review the generated config/sentinel.ts file and resolve the Sentinel service from the container."
+icon: Rocket
+noindex: true
+---
+
+This guide walks you through installing Sentinel in an AdonisJS application.
+
+<div className="fd-steps [&_h2]:fd-step">
+
+## Installation
+
+Install and configure the package using the following command:
+
+```sh
+node ace add @foadonis/sentinel
+```
+
+<ConfigurationSteps pkg="@foadonis/sentinel" providers={["sentinel"]} config="sentinel" />
+
+## Configuration
+
+The configuration lives in `config/sentinel.ts`. Each building block registers its own options there as you enable it.
+
+```ts title="config/sentinel.ts"
+import { defineConfig } from "@foadonis/sentinel"
+
+const sentinelConfig = defineConfig({})
+
+export default sentinelConfig
+```
+
+## Usage
+
+The `Sentinel` service is registered inside the container. Inject it wherever the container constructs your classes, or import the service when you are outside a DI context.
+
+```ts title="app/controllers/auth_controller.ts"
+import { inject } from "@adonisjs/core"
+import { Sentinel } from "@foadonis/sentinel"
+
+@inject()
+export default class AuthController {
+  constructor(protected sentinel: Sentinel) {}
+}
+```
+
+```ts title="start/routes.ts"
+import sentinel from "@foadonis/sentinel/services/main"
+```
+
+</div>

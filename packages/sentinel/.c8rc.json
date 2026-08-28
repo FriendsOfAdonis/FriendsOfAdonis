@@ -1,0 +1,5 @@
+{
+  "reporter": ["text", "json-summary"],
+  "all": true,
+  "include": ["src", "modules", "index.ts", "configure.ts"]
+}

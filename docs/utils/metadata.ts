@@ -73,6 +73,12 @@ export const packages: Record<string, PackageInfo> = {
     description:
       'A typed, driver-based feature flag system for AdonisJS, with scopes, Edge helpers and test fakes.',
   },
+  'sentinel': {
+    package: '@foadonis/sentinel',
+    name: 'AdonisJS Sentinel',
+    description:
+      'Authentication building blocks for AdonisJS: email verification, password management and magic links.',
+  },
 }
 
 export const baseUrl =

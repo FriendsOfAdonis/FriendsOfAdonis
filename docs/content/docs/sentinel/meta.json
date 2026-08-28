@@ -1,0 +1,16 @@
+{
+  "title": "Sentinel",
+  "description": "Authentication building blocks for AdonisJS: email verification, password management and magic links on top of your existing auth setup.",
+  "icon": "ShieldCheck",
+  "root": true,
+  "pages": [
+    "index",
+    "getting-started",
+    "---Features---",
+    "features/otp",
+    "features/totp",
+    "features/password",
+    "features/email",
+    "features/identity"
+  ]
+}
