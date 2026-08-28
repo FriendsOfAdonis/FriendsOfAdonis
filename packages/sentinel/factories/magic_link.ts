@@ -1,8 +1,8 @@
-import { OTPManager, OTPManagerConfig } from '../modules/otp/manager.ts'
+import { MagicLinkManager, MagicLinkManagerConfig } from '../modules/magic_link/manager.ts'
 import { TokenManager } from '../modules/token/manager.ts'
 import { TokenManagerFactory } from './token.ts'
 
-export class OTPManagerFactory {
+export class MagicLinkManagerFactory {
   #tokens: TokenManager
 
   constructor() {
@@ -14,7 +14,7 @@ export class OTPManagerFactory {
     return this
   }
 
-  create(config: OTPManagerConfig = {}) {
-    return new OTPManager(config, this.#tokens)
+  create(config: MagicLinkManagerConfig) {
+    return new MagicLinkManager(config, this.#tokens)
   }
 }

@@ -3,16 +3,21 @@ import { test } from '@japa/runner'
 import { OTPManager, type OTPManagerConfig } from '../../modules/otp/manager.ts'
 import { E_INVALID_TOKEN, E_TOO_MANY_ATTEMPTS } from '../../modules/token/errors.ts'
 import { TokenManager } from '../../modules/token/manager.ts'
-import { createHashManager, MemoryTokenProvider } from '../helpers.ts'
+import { createHashManager } from '../helpers.ts'
+import { FakeMemoryTokenProvider } from '../../modules/token/providers/fake.ts'
 
 const TWENTY_MINUTES = 20 * 60 * 1000
 const ONE_HOUR = 60 * 60 * 1000
 
-function setup(config: Partial<OTPManagerConfig> = {}) {
-  const provider = new MemoryTokenProvider()
+/**
+ * Manager holding the given configuration, or none at all when "null"
+ * is given.
+ */
+function setup(config: Partial<OTPManagerConfig> | null = {}) {
+  const provider = new FakeMemoryTokenProvider()
   const tokens = new TokenManager(provider, createHashManager())
   const manager = new OTPManager(
-    { length: 6, expiresIn: '20m', maximumFailedAttempts: 5, ...config },
+    config === null ? undefined : { length: 6, expiresIn: '20m', maximumFailedAttempts: 5, ...config },
     tokens
   )
 
@@ -126,6 +131,19 @@ test.group('OTPManager | generateOTP', () => {
 
     assert.isAtLeast(provider.tokens[0].expiresAt.getTime(), before + ONE_HOUR)
     assert.isAtMost(provider.tokens[0].expiresAt.getTime(), after + ONE_HOUR)
+  })
+
+  test('should apply the defaults when nothing is configured', async ({ assert }) => {
+    const { manager, provider } = setup(null)
+
+    const before = Date.now()
+    const code = await manager.generateOTP(1)
+    const after = Date.now()
+
+    assert.lengthOf(code.release(), 6)
+    assert.equal(provider.tokens[0].maximumFailedAttemptsCount, 5)
+    assert.isAtLeast(provider.tokens[0].expiresAt.getTime(), before + TWENTY_MINUTES)
+    assert.isAtMost(provider.tokens[0].expiresAt.getTime(), after + TWENTY_MINUTES)
   })
 })
 

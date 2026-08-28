@@ -2,7 +2,8 @@ export interface GeneratePasswordResetTokenOptions {
   /**
    * Expiration of the token.
    *
-   * @default "password.expiresIn" from "config/sentinel.ts"
+   * @default "password.expiresIn" from "config/sentinel.ts", "1h" when
+   * it is not configured
    */
   expiresIn?: string | number
 

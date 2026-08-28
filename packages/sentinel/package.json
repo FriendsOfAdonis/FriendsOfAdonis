@@ -34,8 +34,10 @@
   "exports": {
     ".": "./build/index.js",
     "./sentinel_provider": "./build/providers/sentinel_provider.js",
-    "./services/main": "./build/services/main.js",
     "./services/otp": "./build/services/otp.js",
+    "./services/totp": "./build/services/totp.js",
+    "./services/magic_link": "./build/services/magic_link.js",
+    "./services/password": "./build/services/password.js",
     "./types": "./build/src/types.js",
     "./otp": "./build/modules/otp/main.js",
     "./totp": "./build/modules/totp/main.js",
@@ -74,23 +76,21 @@
     "cpy-cli": "^7.0.0",
     "del-cli": "^7.0.0",
     "luxon": "^3.7.2",
-    "otpauth": "^9.5.1",
     "qrcode": "^1.5.4",
     "ts-node": "^10.9.2",
     "typescript": "catalog:",
     "youch": "catalog:"
   },
+  "dependencies": {
+    "otpauth": "^9.5.1"
+  },
   "peerDependencies": {
     "@adonisjs/core": "^7.0.0",
     "@adonisjs/lucid": "^22.0.0",
     "luxon": "^3.5.0",
-    "otpauth": "^9.0.0",
     "qrcode": "^1.5.0"
   },
   "peerDependenciesMeta": {
-    "otpauth": {
-      "optional": true
-    },
     "qrcode": {
       "optional": true
     }

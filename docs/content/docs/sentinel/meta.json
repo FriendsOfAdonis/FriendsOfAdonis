@@ -10,6 +10,7 @@
     "features/otp",
     "features/totp",
     "features/password",
+    "features/magic-link",
     "features/email",
     "features/identity"
   ]

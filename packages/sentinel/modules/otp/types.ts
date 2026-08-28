@@ -18,7 +18,8 @@ export interface GenerateOTPOptions {
    * Without a limit, a short numeric code can be brute-forced
    * within its lifetime.
    *
-   * @default "otp.maximumFailedAttempts" from "config/sentinel.ts"
+   * @default "otp.maximumFailedAttempts" from "config/sentinel.ts", 5
+   * when it is not configured
    */
   maximumFailedAttempts?: number
 

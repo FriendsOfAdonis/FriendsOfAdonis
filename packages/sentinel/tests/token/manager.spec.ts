@@ -6,7 +6,8 @@ import { E_INVALID_TOKEN, E_TOO_MANY_ATTEMPTS } from '../../modules/token/errors
 import { ScryptTokenHasher, Sha256TokenHasher } from '../../modules/token/hashers.ts'
 import { TokenManager } from '../../modules/token/manager.ts'
 import type { TokenHasher } from '../../modules/token/types.ts'
-import { createHashManager, MemoryTokenProvider } from '../helpers.ts'
+import { createHashManager } from '../helpers.ts'
+import { FakeMemoryTokenProvider } from '../../modules/token/providers/fake.ts'
 
 const KIND = 'magic_link'
 const VALUE = new Secret('super-secret-token-value')
@@ -16,7 +17,7 @@ const TWENTY_MINUTES = 20 * 60 * 1000
 const ONE_HOUR = 60 * 60 * 1000
 
 function setup() {
-  const provider = new MemoryTokenProvider()
+  const provider = new FakeMemoryTokenProvider()
   const manager = new TokenManager(provider, createHashManager())
 
   return { provider, manager }
@@ -73,7 +74,7 @@ test.group('TokenManager | hasher', () => {
 
   test('should throw when the scrypt hasher is not configured', ({ assert }) => {
     const hash = createHashManager({ custom: () => new Scrypt({}) })
-    const manager = new TokenManager(new MemoryTokenProvider(), hash)
+    const manager = new TokenManager(new FakeMemoryTokenProvider(), hash)
 
     assert.throws(
       () => manager.hasher('scrypt'),
@@ -432,7 +433,7 @@ test.group('TokenManager | verify', () => {
   test('should invalidate a token when the failed attempt cannot be recorded', async ({
     assert,
   }) => {
-    const provider = new (class extends MemoryTokenProvider {
+    const provider = new (class extends FakeMemoryTokenProvider {
       async recordFailedAttempt() {
         return null
       }

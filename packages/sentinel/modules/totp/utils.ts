@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto'
-import { TOTPAlgorithm } from './types.ts'
+import { AuthenticatorOptions, TOTPAlgorithm } from './types.ts'
 
 // Crockford base32: no I, L, O, U — avoids 1/l/0/O confusion and accidental words
 const ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ'
@@ -23,7 +23,10 @@ export function generateBackupCodes(count: number, length = 10) {
  * stored one, ignoring the case and the grouping separator.
  */
 export function normalizeBackupCode(code: string) {
-  return code.trim().toUpperCase().replace(/[^0-9A-Z]/g, '')
+  return code
+    .trim()
+    .toUpperCase()
+    .replace(/[^0-9A-Z]/g, '')
 }
 
 /**
@@ -58,6 +61,25 @@ export function generateSecret(length: number) {
   return base32Encode(randomBytes(length))
 }
 
+/**
+ * Merges layers of authenticator options, from the least specific to
+ * the most specific one. A layer leaving an option out never hides the
+ * value of the previous ones.
+ */
+export function mergeAuthenticatorOptions(
+  ...layers: (Partial<AuthenticatorOptions> | undefined)[]
+): AuthenticatorOptions {
+  const merged: Record<string, unknown> = {}
+
+  for (const layer of layers) {
+    for (const [key, value] of Object.entries(layer ?? {})) {
+      if (value !== undefined) merged[key] = value
+    }
+  }
+
+  return merged as AuthenticatorOptions
+}
+
 export interface AuthenticatorUriOptions {
   issuer: string
   label: string
@@ -65,23 +87,4 @@ export interface AuthenticatorUriOptions {
   algorithm: TOTPAlgorithm
   digits: number
   period: number
-}
-
-/**
- * Builds the "otpauth://" URI the authenticator applications read when
- * they scan the QR code.
- *
- * @see https://github.com/google/google-authenticator/wiki/Key-Uri-Format
- */
-export function buildAuthenticatorUri(options: AuthenticatorUriOptions) {
-  const encode = encodeURIComponent
-  const params = [
-    `issuer=${encode(options.issuer)}`,
-    `secret=${encode(options.secret)}`,
-    `algorithm=${encode(options.algorithm)}`,
-    `digits=${options.digits}`,
-    `period=${options.period}`,
-  ]
-
-  return `otpauth://totp/${encode(options.issuer)}:${encode(options.label)}?${params.join('&')}`
 }

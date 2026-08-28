@@ -1,16 +1,24 @@
-import { EncryptionManager } from '@adonisjs/core/encryption'
+import { Encryption } from '@adonisjs/core/encryption'
 import { RuntimeException } from '@adonisjs/core/exceptions'
 import { Secret } from '@adonisjs/core/helpers'
-import { TOTP_BACKUP_CODES_PURPOSE, TOTP_SECRET_PURPOSE } from './constants.ts'
-import { CreateAuthenticatorOptions } from './types.ts'
+import {
+  TOTP_BACKUP_CODES_PURPOSE,
+  TOTP_DEFAULT_BACKUP_CODES_COUNT,
+  TOTP_DEFAULT_BACKUP_CODES_LENGTH,
+  TOTP_DEFAULT_SECRET_LENGTH,
+  TOTP_SECRET_PURPOSE,
+} from './constants.ts'
+import { AuthenticatorOptions } from './types.ts'
 import { generateBackupCodes, generateSecret } from './utils.ts'
+import { WithTOTPOptions } from './main.ts'
+import { withTOTP } from './mixins/with_totp.ts'
 
-export interface TOTPManagerConfig extends Omit<CreateAuthenticatorOptions, 'label'> {
-  /**
-   * Name displayed in the user authenticator app.
-   */
-  issuer: string
-}
+/**
+ * Options every authenticator of the application is created with. The
+ * "withTOTP" mixin and the calls creating or validating an
+ * authenticator both override them.
+ */
+export interface TOTPManagerConfig extends AuthenticatorOptions {}
 
 /**
  * Encrypts and decrypts the secrets held by the TOTP authenticators.
@@ -23,15 +31,21 @@ export interface TOTPManagerConfig extends Omit<CreateAuthenticatorOptions, 'lab
  * cheap and the codes can be displayed again.
  */
 export class TOTPManager {
-  constructor(private encryption: EncryptionManager<any>) {}
+  constructor(
+    readonly config: TOTPManagerConfig = {},
+    private encryption: Encryption
+  ) {}
 
   /**
    * Generates a secret of "length" random bytes, encoded in the base32
    * form expected by the authenticator applications.
    */
-  createSecret(length: number) {
-    const secret = generateSecret(length)
-    const encryptedSecret = this.encryption.encrypt(secret, { purpose: TOTP_SECRET_PURPOSE })
+  createSecret(length: number = this.config.secretLength ?? TOTP_DEFAULT_SECRET_LENGTH) {
+    const secret = new Secret(generateSecret(length))
+    const encryptedSecret = this.encryption.encrypt(secret.release(), {
+      purpose: TOTP_SECRET_PURPOSE,
+    })
+
     return { secret, encryptedSecret }
   }
 
@@ -50,7 +64,10 @@ export class TOTPManager {
    * Generates backup codes along with their encrypted form. Persisting
    * them is left to the caller.
    */
-  createBackupCodes(count: number, length: number) {
+  createBackupCodes(
+    count: number = this.config.backupCodesCount ?? TOTP_DEFAULT_BACKUP_CODES_COUNT,
+    length: number = this.config.backupCodesLength ?? TOTP_DEFAULT_BACKUP_CODES_LENGTH
+  ) {
     const codes = generateBackupCodes(count, length)
     return { codes, encryptedCodes: this.encryptBackupCodes(codes) }
   }
@@ -69,4 +86,6 @@ export class TOTPManager {
 
     return codes
   }
+
+  withTOTP = (options: WithTOTPOptions = {}) => withTOTP(options)
 }

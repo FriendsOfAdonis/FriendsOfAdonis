@@ -7,8 +7,9 @@ import {
   CreateAuthenticatorOptions,
   TOTPAuthenticableContract,
 } from '../types.ts'
+import { TOTPManager } from '../manager.ts'
 
-export interface WithTOTPOptions extends AuthenticatorOptions {}
+export interface WithTOTPOptions extends Partial<AuthenticatorOptions> {}
 
 type WithTOTPRow = TOTPAuthenticableContract & {
   createAuthenticator(options?: CreateAuthenticatorOptions): Promise<TOTPAuthenticator>
@@ -21,13 +22,22 @@ type WithTOTPClass<
   new (...args: any[]): WithTOTPRow
 }
 
-export function withTOTP(defaults: WithTOTPOptions) {
+export function withTOTP(manager: TOTPManager, defaults: WithTOTPOptions = {}) {
   return function <Model extends NormalizeConstructor<typeof BaseModel>>(
     superclass: Model
   ): WithTOTPClass<Model> {
     @staticImplements<WithTOTPClass>()
     class WithTOTPImpl extends superclass implements WithTOTPRow {
-      $totpOptions: AuthenticatorOptions = defaults
+      getTOTPOptions() {
+        return {
+          ...manager.config,
+          ...defaults,
+        }
+      }
+
+      getTOTPLabel() {
+        return this.$getAttribute('email')
+      }
 
       async createAuthenticator(
         options: CreateAuthenticatorOptions = {}
@@ -45,9 +55,13 @@ export function withTOTP(defaults: WithTOTPOptions) {
        * The newest authenticator wins: confirming an enrollment retires
        * the previous ones, so only an enrollment in flight can sit next
        * to the one in use.
+       *
+       * The read joins the transaction the model is bound to, so that an
+       * enrollment created inside it is visible to the flow that created
+       * it. The authenticator returned stays bound to that transaction.
        */
       async retrieveAuthenticator(unverified = false): Promise<TOTPAuthenticator | null> {
-        const authenticator = await TOTPAuthenticator.query()
+        const authenticator = await TOTPAuthenticator.query({ client: this.$trx })
           .where('tokenable_id', primaryKeyOf(this, 'retrieve authenticator for') as any)
           .if(!unverified, (q) => q.whereNotNull('verified_at'))
           .orderBy('id', 'desc')

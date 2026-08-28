@@ -2486,11 +2486,8 @@ __metadata:
     "@adonisjs/core": ^7.0.0
     "@adonisjs/lucid": ^22.0.0
     luxon: ^3.5.0
-    otpauth: ^9.0.0
     qrcode: ^1.5.0
   peerDependenciesMeta:
-    otpauth:
-      optional: true
     qrcode:
       optional: true
   languageName: unknown

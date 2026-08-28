@@ -25,7 +25,7 @@ export interface GenerateMagicLinkOptions extends GenerateMagicLinkTokenOptions 
    *
    * @default "magicLink.url" from "config/sentinel.ts"
    */
-  url: string
+  url?: string
 }
 
 export interface VerifyMagicLinkTokenOptions {

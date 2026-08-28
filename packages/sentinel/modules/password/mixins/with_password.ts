@@ -3,7 +3,6 @@ import type { Secret } from '@adonisjs/core/helpers'
 import type { NormalizeConstructor } from '@adonisjs/core/types/helpers'
 import { type BaseModel, beforeSave } from '@adonisjs/lucid/orm'
 import type { LucidRow } from '@adonisjs/lucid/types/model'
-import sentinel from '../../../services/main.ts'
 import { DEFAULT_PASSWORD_COLUMN_NAME, DEFAULT_PASSWORD_UIDS } from '../constants.ts'
 import { primaryKeyOf, staticImplements } from '../../../src/helpers.ts'
 import { E_INVALID_TOKEN } from '../../token/errors.ts'
@@ -94,7 +93,7 @@ type WithPasswordClass<
  * The hasher is the one configured under `password.hasher` inside
  * `config/sentinel.ts`, instead of being handed over to the mixin.
  */
-export function withPassword(options: WithPasswordOptions = {}) {
+export function withPassword(manager: PasswordManager, options: WithPasswordOptions = {}) {
   const {
     uids = DEFAULT_PASSWORD_UIDS,
     passwordColumnName = DEFAULT_PASSWORD_COLUMN_NAME,
@@ -114,7 +113,7 @@ export function withPassword(options: WithPasswordOptions = {}) {
       @beforeSave()
       static async hashPassword<T extends WithPasswordClass>(this: T, row: InstanceType<T>) {
         if (row.$dirty[passwordColumnName]) {
-          ;(row as any)[passwordColumnName] = await sentinel.password.hashPassword(
+          ;(row as any)[passwordColumnName] = await manager.hashPassword(
             (row as any)[passwordColumnName]
           )
         }
@@ -154,7 +153,7 @@ export function withPassword(options: WithPasswordOptions = {}) {
         const row = await this.findForAuth(uids, uid)
 
         if (!row) {
-          await sentinel.password.hashPassword(password)
+          await manager.hashPassword(password)
           throw new E_INVALID_CREDENTIALS()
         }
 
@@ -170,7 +169,7 @@ export function withPassword(options: WithPasswordOptions = {}) {
           )
         }
 
-        if (rehashOnVerify && sentinel.password.needsRehash(current)) {
+        if (rehashOnVerify && manager.needsRehash(current)) {
           await savePassword(row, passwordColumnName, password)
         }
 
@@ -192,7 +191,7 @@ export function withPassword(options: WithPasswordOptions = {}) {
         options: VerifyPasswordResetTokenOptions = {}
       ): Promise<[InstanceType<T>, PasswordResetTokenMetadata]> {
         const purpose = 'purpose' in options ? options.purpose : defaults.purpose
-        const token = await sentinel.password.verifyPasswordResetToken(value, { purpose })
+        const token = await manager.verifyPasswordResetToken(value, { purpose })
 
         const instance = await this.find(token.tokenableId)
         if (!instance) {
@@ -237,7 +236,7 @@ export function withPassword(options: WithPasswordOptions = {}) {
           )
         }
 
-        return sentinel.password.verifyPassword(password, plainPassword)
+        return manager.verifyPassword(password, plainPassword)
       }
 
       /**
@@ -280,7 +279,7 @@ export function withPassword(options: WithPasswordOptions = {}) {
       }
 
       async generatePasswordResetToken(options: GeneratePasswordResetTokenOptions = {}) {
-        return sentinel.password.generatePasswordResetToken(
+        return manager.generatePasswordResetToken(
           primaryKeyOf(this, 'generate a password reset token for'),
           { ...defaults, ...options }
         )
@@ -291,7 +290,7 @@ export function withPassword(options: WithPasswordOptions = {}) {
        * of every purpose unless one is given.
        */
       async invalidatePasswordResetTokens(options: InvalidatePasswordResetTokensOptions = {}) {
-        return sentinel.password.invalidatePasswordResetTokens(
+        return manager.invalidatePasswordResetTokens(
           primaryKeyOf(this, 'invalidate the password reset tokens of'),
           options
         )

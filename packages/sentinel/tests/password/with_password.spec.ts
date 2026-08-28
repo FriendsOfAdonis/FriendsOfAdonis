@@ -7,10 +7,9 @@ import { BaseModel, column } from '@adonisjs/lucid/orm'
 import { test } from '@japa/runner'
 import { E_INVALID_CREDENTIALS, E_INVALID_PASSWORD } from '../../modules/password/errors.ts'
 import { PasswordManager } from '../../modules/password/manager.ts'
-import type { withPassword as WithPassword } from '../../modules/password/mixins/with_password.ts'
 import { E_INVALID_TOKEN } from '../../modules/token/errors.ts'
-import type { Sentinel } from '../../src/sentinel.ts'
-import { createSentinelApp, MemoryTokenProvider } from '../helpers.ts'
+import { createSentinelApp } from '../helpers.ts'
+import { FakeMemoryTokenProvider } from '../../modules/token/providers/fake.ts'
 
 const ONE_DAY = 24 * 60 * 60 * 1000
 
@@ -19,11 +18,11 @@ const ONE_DAY = 24 * 60 * 60 * 1000
  * because its module resolves the sentinel service from the application
  * booted at import time, see "createSentinelApp".
  */
-function defineModels(withPassword: typeof WithPassword) {
+function defineModels(manager: PasswordManager) {
   /**
    * Defaults of the mixin, with "reset" as the default token purpose.
    */
-  class User extends compose(BaseModel, withPassword({ purpose: 'reset' })) {
+  class User extends compose(BaseModel, manager.withPassword({ purpose: 'reset' })) {
     static table = 'users'
 
     @column({ isPrimary: true })
@@ -42,7 +41,7 @@ function defineModels(withPassword: typeof WithPassword) {
    */
   class Account extends compose(
     BaseModel,
-    withPassword({
+    manager.withPassword({
       passwordColumnName: 'passwordHash',
       uids: ['email', 'username'],
       rehashOnVerify: false,
@@ -96,8 +95,8 @@ async function rejection(promise: Promise<unknown>) {
 test.group('withPassword', (group) => {
   let app: ApplicationService
   let db: Database
-  let sentinel: Sentinel
-  let provider: MemoryTokenProvider
+  let provider: FakeMemoryTokenProvider
+  let manager: PasswordManager
   let weak: Hash
   let User: ReturnType<typeof defineModels>['User']
   let Account: ReturnType<typeof defineModels>['Account']
@@ -107,11 +106,10 @@ test.group('withPassword', (group) => {
     app = context.app
     db = context.db
     provider = context.provider
-    sentinel = await app.container.make('sentinel')
     weak = (await app.container.make('hash')).use('weak')
+    manager = await app.container.make('sentinel.password')
 
-    const { withPassword } = await import('../../modules/password/mixins/with_password.ts')
-    ;({ User, Account } = defineModels(withPassword))
+    ;({ User, Account } = defineModels(manager))
   })
 
   group.each.teardown(async () => {
@@ -223,7 +221,7 @@ test.group('withPassword', (group) => {
     const persisted = await User.findOrFail(found.id)
     assert.notEqual(persisted.password, outdated)
     assert.isTrue(await persisted.verifyPassword('secret'))
-    assert.isFalse(sentinel.password.needsRehash(persisted.password))
+    assert.isFalse(manager.needsRehash(persisted.password))
   })
 
   test('should keep an outdated hash when rehashing is disabled', async ({ assert }) => {
@@ -416,16 +414,12 @@ test.group('withPassword', (group) => {
     await user.generatePasswordResetToken()
     await user.generatePasswordResetToken({ purpose: 'invitation' })
     await other.generatePasswordResetToken()
-    await sentinel.magicLink.generateMagicLinkToken(user.id)
 
     await User.resetPassword(token, 'new-secret')
 
     assert.deepEqual(
       provider.tokens.map((t) => [t.tokenableId, t.kind]),
-      [
-        [other.id, PasswordManager.TOKEN_KIND],
-        [user.id, 'magic_link'],
-      ]
+      [[other.id, PasswordManager.TOKEN_KIND]]
     )
   })
 

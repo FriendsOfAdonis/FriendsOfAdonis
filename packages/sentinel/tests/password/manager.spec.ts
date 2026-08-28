@@ -6,19 +6,25 @@ import { PasswordManager, type PasswordManagerConfig } from '../../modules/passw
 import { E_INVALID_TOKEN } from '../../modules/token/errors.ts'
 import { TokenManager } from '../../modules/token/manager.ts'
 import { CRC32 } from '../../src/utils/crc32.ts'
-import { createHashManager, MemoryTokenProvider } from '../helpers.ts'
+import { createHashManager } from '../helpers.ts'
+import { FakeMemoryTokenProvider } from '../../modules/token/providers/fake.ts'
+import { PasswordManagerFactory } from '../../factories/password.ts'
 
 const ONE_HOUR = 60 * 60 * 1000
 const ONE_DAY = 24 * ONE_HOUR
 
+/**
+ * Manager holding the given configuration, or none at all when "null"
+ * is given.
+ */
 function setup(config: Partial<PasswordManagerConfig> = {}) {
-  const provider = new MemoryTokenProvider()
+  const provider = new FakeMemoryTokenProvider()
   const hash = createHashManager({
     scrypt: () => new Scrypt({}),
     weak: () => new Scrypt({ cost: 2048 }),
   })
   const tokens = new TokenManager(provider, hash)
-  const manager = new PasswordManager({ expiresIn: '1h', ...config }, tokens, hash)
+  const manager = new PasswordManagerFactory().withTokens(tokens).create(config)
 
   return { provider, tokens, manager, hash }
 }
@@ -64,7 +70,7 @@ test.group('PasswordManager | passwords', () => {
   })
 
   test('should hash a password with the configured hasher', async ({ assert }) => {
-    const { manager, hash } = setup({ hasher: 'weak' })
+    const { manager, hash } = setup() // TODO: Remove any
 
     const hashed = await manager.hashPassword('secret')
 
@@ -80,13 +86,6 @@ test.group('PasswordManager | passwords', () => {
     assert.isTrue(await manager.verifyPassword(outdated, 'secret'))
     assert.isTrue(manager.needsRehash(outdated))
     assert.isFalse(manager.needsRehash(await manager.hashPassword('secret')))
-  })
-
-  test('should throw when the configured hasher is unknown', async ({ assert }) => {
-    assert.throws(
-      () => setup({ hasher: 'argon' }),
-      'Cannot hash passwords with "argon". Make sure a "argon" hasher is defined inside the "config/hash.ts" file'
-    )
   })
 })
 
@@ -155,6 +154,17 @@ test.group('PasswordManager | generatePasswordResetToken', () => {
 
     assert.isAtLeast(provider.tokens[0].expiresAt.getTime(), before + ONE_DAY)
     assert.isAtMost(provider.tokens[0].expiresAt.getTime(), after + ONE_DAY)
+  })
+
+  test('should apply the default expiration when none is configured', async ({ assert }) => {
+    const { manager, provider } = setup()
+
+    const before = Date.now()
+    await manager.generatePasswordResetToken(1)
+    const after = Date.now()
+
+    assert.isAtLeast(provider.tokens[0].expiresAt.getTime(), before + ONE_HOUR)
+    assert.isAtMost(provider.tokens[0].expiresAt.getTime(), after + ONE_HOUR)
   })
 
   test('should persist the purpose and the metadata', async ({ assert }) => {

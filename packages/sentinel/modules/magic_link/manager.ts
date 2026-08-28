@@ -10,17 +10,22 @@ import type {
   GenerateMagicLinkTokenOptions,
   VerifyMagicLinkTokenOptions,
 } from './types.ts'
+import { WithMagicLinkOptions } from './main.ts'
+import { withMagicLink } from './mixins/with_magic_link.ts'
+import { MAGIC_LINK_DEFAULT_EXPIRES_IN } from './constants.ts'
 
 export interface MagicLinkManagerConfig {
-  /**
-   * Expiration of the token.
-   */
-  expiresIn: string | number
-
   /**
    * URL of the endpoint consuming the link.
    */
   url: string
+
+  /**
+   * Expiration of the token.
+   *
+   * @default "20m"
+   */
+  expiresIn?: string
 }
 
 export class MagicLinkManager {
@@ -36,7 +41,7 @@ export class MagicLinkManager {
    * link pointing to the consuming endpoint.
    */
   async generateMagicLink(tokenableId: RecordId, options: GenerateMagicLinkOptions = {}) {
-    const base = options.url ?? this.config.url
+    const base = options.url ?? this.config?.url
 
     if (!base) {
       throw new RuntimeException(
@@ -62,7 +67,7 @@ export class MagicLinkManager {
     await this.tokens.create(tokenableId, value, {
       kind: MagicLinkManager.TOKEN_KIND,
       purpose: options.purpose,
-      expiresIn: options.expiresIn || this.config.expiresIn,
+      expiresIn: options.expiresIn ?? this.config.expiresIn ?? MAGIC_LINK_DEFAULT_EXPIRES_IN,
       metadata: options.metadata,
     })
 
@@ -86,4 +91,6 @@ export class MagicLinkManager {
       purpose: options.purpose,
     })
   }
+
+  withMagicLink = (options: WithMagicLinkOptions) => withMagicLink(this, options)
 }

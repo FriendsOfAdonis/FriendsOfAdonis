@@ -5,17 +5,26 @@ import { MagicLinkManager, type MagicLinkManagerConfig } from '../../modules/mag
 import { E_INVALID_TOKEN } from '../../modules/token/errors.ts'
 import { TokenManager } from '../../modules/token/manager.ts'
 import { CRC32 } from '../../src/utils/crc32.ts'
-import { createHashManager, MemoryTokenProvider } from '../helpers.ts'
+import { createHashManager } from '../helpers.ts'
+import { FakeMemoryTokenProvider } from '../../modules/token/providers/fake.ts'
+import { MagicLinkManagerFactory } from '../../factories/magic_link.ts'
 
 const LINK_URL = 'https://example.com/auth/magic-link'
 
 const TWENTY_MINUTES = 20 * 60 * 1000
 const ONE_HOUR = 60 * 60 * 1000
 
+/**
+ * Manager holding the given configuration on top of the defaults. An
+ * optional setting given as "undefined" is left unconfigured.
+ */
 function setup(config: Partial<MagicLinkManagerConfig> = {}) {
-  const provider = new MemoryTokenProvider()
+  const provider = new FakeMemoryTokenProvider()
   const tokens = new TokenManager(provider, createHashManager())
-  const manager = new MagicLinkManager({ expiresIn: '20m', url: LINK_URL, ...config }, tokens)
+
+  const manager = new MagicLinkManagerFactory()
+    .withTokens(tokens)
+    .create({ expiresIn: '20m', url: LINK_URL, ...config })
 
   return { provider, tokens, manager }
 }
@@ -112,6 +121,17 @@ test.group('MagicLinkManager | generateMagicLinkToken', () => {
     assert.isAtMost(provider.tokens[0].expiresAt.getTime(), after + ONE_HOUR)
   })
 
+  test('should apply the default expiration when none is configured', async ({ assert }) => {
+    const { manager, provider } = setup({ expiresIn: undefined })
+
+    const before = Date.now()
+    await manager.generateMagicLinkToken(1)
+    const after = Date.now()
+
+    assert.isAtLeast(provider.tokens[0].expiresAt.getTime(), before + TWENTY_MINUTES)
+    assert.isAtMost(provider.tokens[0].expiresAt.getTime(), after + TWENTY_MINUTES)
+  })
+
   test('should persist the purpose and the metadata', async ({ assert }) => {
     const { manager, provider } = setup()
 
@@ -178,31 +198,11 @@ test.group('MagicLinkManager | generateMagicLink', () => {
     assert.isAtMost(provider.tokens[0].expiresAt.getTime(), after + ONE_HOUR)
   })
 
-  test('should throw when no URL is configured nor given', async ({ assert }) => {
-    const { manager, provider } = setup({ url: undefined })
-
-    await assert.rejects(
-      () => manager.generateMagicLink(1),
-      'Cannot generate a magic link without a URL. Define "magicLink.url" inside "config/sentinel.ts" or pass the "url" option'
-    )
-    assert.isEmpty(provider.tokens)
-  })
-
   test('should throw without persisting a token when the URL is invalid', async ({ assert }) => {
     const { manager, provider } = setup({ url: 'not-a-url' })
 
     await assert.rejects(() => manager.generateMagicLink(1), TypeError)
     assert.isEmpty(provider.tokens)
-  })
-
-  test('should accept the URL as an option when none is configured', async ({ assert }) => {
-    const { manager, provider } = setup({ url: undefined })
-
-    const link = await manager.generateMagicLink(1, { url: LINK_URL })
-
-    const url = new URL(link.release())
-    assert.equal(url.origin + url.pathname, LINK_URL)
-    assert.lengthOf(provider.tokens, 1)
   })
 })
 

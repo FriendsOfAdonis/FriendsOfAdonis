@@ -4,9 +4,9 @@ import type { ApplicationService } from '@adonisjs/core/types'
 import { BaseModel, column } from '@adonisjs/lucid/orm'
 import { test } from '@japa/runner'
 import { MagicLinkManager } from '../../modules/magic_link/manager.ts'
-import type { withMagicLink as WithMagicLink } from '../../modules/magic_link/mixins/with_magic_link.ts'
 import { E_INVALID_TOKEN } from '../../modules/token/errors.ts'
-import { createSentinelApp, MemoryTokenProvider, SENTINEL_CONFIG } from '../helpers.ts'
+import { createSentinelApp, SENTINEL_CONFIG } from '../helpers.ts'
+import { FakeMemoryTokenProvider } from '../../modules/token/providers/fake.ts'
 
 const LINK_URL = SENTINEL_CONFIG.magicLink.url
 const ONE_HOUR = 60 * 60 * 1000
@@ -17,8 +17,8 @@ const ONE_HOUR = 60 * 60 * 1000
  * sentinel service from the application booted at import time, see
  * "createSentinelApp".
  */
-function defineUser(withMagicLink: typeof WithMagicLink) {
-  class User extends compose(BaseModel, withMagicLink({ purpose: 'signin' })) {
+function defineUser(manager: MagicLinkManager) {
+  class User extends compose(BaseModel, manager.withMagicLink({ purpose: 'signin' })) {
     static table = 'users'
 
     @column({ isPrimary: true })
@@ -47,7 +47,7 @@ async function invalidToken(promise: Promise<unknown>) {
 
 test.group('withMagicLink', (group) => {
   let app: ApplicationService
-  let provider: MemoryTokenProvider
+  let provider: FakeMemoryTokenProvider
   let User: ReturnType<typeof defineUser>
 
   group.setup(async () => {
@@ -55,8 +55,7 @@ test.group('withMagicLink', (group) => {
     app = sentinel.app
     provider = sentinel.provider
 
-    const { withMagicLink } = await import('../../modules/magic_link/mixins/with_magic_link.ts')
-    User = defineUser(withMagicLink)
+    User = defineUser(await app.container.make('sentinel.magic_link'))
   })
 
   group.each.teardown(async () => {

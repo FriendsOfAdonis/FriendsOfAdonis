@@ -11,6 +11,12 @@ export const E_INVALID_BACKUP_CODE = class InvalidBackupCodeException extends Ex
   static message = 'The provided backup code is invalid.'
 }
 
+export const E_INVALID_OTP = class InvalidOTPException extends Exception {
+  static status: number = 401
+  static code = 'E_INVALID_OTP'
+  static message = 'The provided OTP code is invalid.'
+}
+
 /**
  * Raised when a wrong code locks an authenticator by reaching its maximum
  * failed verifications count, or targets an authenticator that is still

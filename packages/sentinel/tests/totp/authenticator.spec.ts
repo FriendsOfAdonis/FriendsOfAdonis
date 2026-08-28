@@ -4,10 +4,18 @@ import type { Database } from '@adonisjs/lucid/database'
 import { BaseModel, column } from '@adonisjs/lucid/orm'
 import { test } from '@japa/runner'
 import { DateTime } from 'luxon'
-import { E_INVALID_BACKUP_CODE, E_TOTP_LOCKED } from '../../modules/totp/errors.ts'
-import type { withTOTP as WithTOTP } from '../../modules/totp/mixins/with_totp.ts'
-import type { TOTPAuthenticator as TOTPAuthenticatorModel } from '../../modules/totp/models/totp_authenticator.ts'
-import { createAuthenticatorsTable, createSentinelApp } from '../helpers.ts'
+import { E_INVALID_BACKUP_CODE, E_INVALID_OTP, E_TOTP_LOCKED } from '../../modules/totp/errors.ts'
+import {
+  TOTPAuthenticator,
+  type TOTPAuthenticator as TOTPAuthenticatorModel,
+} from '../../modules/totp/models/totp_authenticator.ts'
+import { createAuthenticatorsTable, createSentinelApp, SENTINEL_CONFIG } from '../helpers.ts'
+import { TOTPManager } from '../../modules/totp/manager.ts'
+import {
+  TOTP_DEFAULT_ALGORITHM,
+  TOTP_DEFAULT_DIGITS,
+  TOTP_DEFAULT_PERIOD,
+} from '../../modules/totp/constants.ts'
 
 /**
  * Model using the mixin, locked for ten minutes after three consecutive
@@ -15,10 +23,10 @@ import { createAuthenticatorsTable, createSentinelApp } from '../helpers.ts'
  * because its module resolves the sentinel service from the application
  * booted at import time, see "createSentinelApp".
  */
-function defineUser(withTOTP: typeof WithTOTP) {
+function defineUser(manager: TOTPManager) {
   class User extends compose(
     BaseModel,
-    withTOTP({ issuer: 'Sentinel', maximumFailedVerifications: 3, lockDuration: '10m' })
+    manager.withTOTP({ issuer: 'Sentinel', maximumFailedVerifications: 3, lockDuration: '10m' })
   ) {
     static table = 'users'
 
@@ -30,6 +38,23 @@ function defineUser(withTOTP: typeof WithTOTP) {
   }
 
   return User
+}
+
+/**
+ * Model leaving every option to "config/sentinel.ts".
+ */
+function defineConfiguredUser(manager: TOTPManager) {
+  class ConfiguredUser extends compose(BaseModel, manager.withTOTP()) {
+    static table = 'users'
+
+    @column({ isPrimary: true })
+    declare id: number
+
+    @column()
+    declare email: string
+  }
+
+  return ConfiguredUser
 }
 
 /**
@@ -78,11 +103,25 @@ async function lockedError(promise: Promise<unknown>) {
   throw new Error('Expected the authenticator to be locked')
 }
 
+/**
+ * Awaits a rejection with an "E_INVALID_OTP" error and returns it.
+ */
+async function refusedCode(promise: Promise<unknown>) {
+  try {
+    await promise
+  } catch (error) {
+    if (error instanceof E_INVALID_OTP) return error
+    throw error
+  }
+
+  throw new Error('Expected the code to be refused')
+}
+
 test.group('TOTPAuthenticator', (group) => {
   let app: ApplicationService
   let db: Database
   let User: ReturnType<typeof defineUser>
-  let TOTPAuthenticator: typeof TOTPAuthenticatorModel
+  let ConfiguredUser: ReturnType<typeof defineConfiguredUser>
 
   group.setup(async () => {
     const sentinel = await createSentinelApp()
@@ -90,9 +129,9 @@ test.group('TOTPAuthenticator', (group) => {
     db = sentinel.db
     await createAuthenticatorsTable(db)
 
-    const { withTOTP } = await import('../../modules/totp/mixins/with_totp.ts')
-    ;({ TOTPAuthenticator } = await import('../../modules/totp/models/totp_authenticator.ts'))
-    User = defineUser(withTOTP)
+    const manager = await app.container.make('sentinel.totp')
+    User = defineUser(manager)
+    ConfiguredUser = defineConfiguredUser(manager)
   })
 
   group.each.teardown(async () => {
@@ -129,12 +168,44 @@ test.group('TOTPAuthenticator', (group) => {
     assert.isNull(row.lockedUntil)
   })
 
+  test('should fall back to the options of "config/sentinel.ts"', async ({ assert }) => {
+    const user = await ConfiguredUser.create({ email: `john+${Date.now()}@example.com` })
+    const authenticator = await user.createAuthenticator()
+
+    assert.equal(authenticator.$totp.issuer, SENTINEL_CONFIG.totp.issuer)
+
+    /**
+     * The options of the model win over the ones of the configuration.
+     */
+    assert.equal((await createAuthenticator()).$totp.issuer, 'Sentinel')
+  })
+
+  test('should read the code shape from the configuration', async ({ assert }) => {
+    const user = await User.create({ email: `jane+${Date.now()}@example.com` })
+
+    /**
+     * The code shape is read again every time a code is generated or
+     * validated, an enrollment therefore cannot carry its own: the type
+     * refuses it rather than letting it be dropped on the floor.
+     */
+    const authenticator = await user.createAuthenticator({
+      // @ts-expect-error the code shape is not a creation time option
+      digits: 8,
+      period: 60,
+      algorithm: 'SHA256',
+    })
+
+    assert.equal(authenticator.$totp.digits, TOTP_DEFAULT_DIGITS)
+    assert.equal(authenticator.$totp.period, TOTP_DEFAULT_PERIOD)
+    assert.equal(authenticator.$totp.algorithm, TOTP_DEFAULT_ALGORITHM)
+  })
+
   test('should count a wrong code as a failed verification', async ({ assert }) => {
     const authenticator = await createAuthenticator()
     const wrong = wrongCode(authenticator.$totp.generate())
 
-    assert.isFalse(await authenticator.validate(wrong))
-    assert.isFalse(await authenticator.validate(wrong))
+    await refusedCode(authenticator.validate(wrong))
+    await refusedCode(authenticator.validate(wrong))
 
     assert.equal(authenticator.failedVerificationCount, 2)
     assert.isFalse(authenticator.isLocked())
@@ -148,8 +219,8 @@ test.group('TOTPAuthenticator', (group) => {
     const authenticator = await createAuthenticator()
     const wrong = wrongCode(authenticator.$totp.generate())
 
-    await authenticator.validate(wrong)
-    await authenticator.validate(wrong)
+    await refusedCode(authenticator.validate(wrong))
+    await refusedCode(authenticator.validate(wrong))
 
     const error = await lockedError(authenticator.validate(wrong))
 
@@ -172,8 +243,8 @@ test.group('TOTPAuthenticator', (group) => {
     const authenticator = await createAuthenticator()
     const wrong = wrongCode(authenticator.$totp.generate())
 
-    await authenticator.validate(wrong)
-    await authenticator.validate(wrong)
+    await refusedCode(authenticator.validate(wrong))
+    await refusedCode(authenticator.validate(wrong))
     await lockedError(authenticator.validate(wrong))
 
     const error = await lockedError(authenticator.validate(authenticator.$totp.generate()))
@@ -199,7 +270,7 @@ test.group('TOTPAuthenticator', (group) => {
   test('should clear the failures recorded on a right code', async ({ assert }) => {
     const authenticator = await createAuthenticator()
 
-    assert.isFalse(await authenticator.validate(wrongCode(authenticator.$totp.generate())))
+    await refusedCode(authenticator.validate(wrongCode(authenticator.$totp.generate())))
     assert.equal(authenticator.failedVerificationCount, 1)
 
     assert.isTrue(await authenticator.validate(authenticator.$totp.generate()))
@@ -225,7 +296,7 @@ test.group('TOTPAuthenticator', (group) => {
     const code = authenticator.$totp.generate()
 
     assert.isTrue(await authenticator.validate(code))
-    assert.isFalse(await authenticator.validate(code))
+    await refusedCode(authenticator.validate(code))
 
     /**
      * A replayed code is an attempt like any other, it counts towards
@@ -247,7 +318,7 @@ test.group('TOTPAuthenticator', (group) => {
      * what refuses it.
      */
     assert.isNotNull(authenticator.$totp.validate({ token: previous, window: 1 }))
-    assert.isFalse(await authenticator.validate(previous))
+    await refusedCode(authenticator.validate(previous))
   })
 
   test('should accept a code from a step after the last one used', async ({ assert }) => {
@@ -266,12 +337,19 @@ test.group('TOTPAuthenticator', (group) => {
     const user = authenticator.tokenable
 
     const [first, second] = await Promise.all([reload(authenticator), reload(authenticator)])
-    const outcomes = await Promise.all([
+    const outcomes = await Promise.allSettled([
       first.link(user).validate(code),
       second.link(user).validate(code),
     ])
 
-    assert.lengthOf(outcomes.filter(Boolean), 1)
+    assert.lengthOf(
+      outcomes.filter((outcome) => outcome.status === 'fulfilled'),
+      1
+    )
+    assert.instanceOf(
+      outcomes.find((outcome) => outcome.status === 'rejected')?.reason,
+      E_INVALID_OTP
+    )
     assert.equal((await reload(authenticator)).failedVerificationCount, 1)
   })
 
@@ -290,11 +368,15 @@ test.group('TOTPAuthenticator', (group) => {
     const authenticator = await createAuthenticator()
     const wrong = wrongCode(authenticator.$totp.generate())
 
-    for (let attempt = 0; attempt < 4; attempt++) {
-      assert.isFalse(await authenticator.validate(wrong, { maximumFailedVerifications: 0 }))
+    /**
+     * More attempts than the default maximum, which is what a "0" read
+     * through a falsy check would have applied.
+     */
+    for (let attempt = 0; attempt < 8; attempt++) {
+      await refusedCode(authenticator.validate(wrong, { maximumFailedVerifications: 0 }))
     }
 
-    assert.equal(authenticator.failedVerificationCount, 4)
+    assert.equal(authenticator.failedVerificationCount, 8)
     assert.isFalse(authenticator.isLocked())
   })
 
@@ -401,6 +483,42 @@ test.group('TOTPAuthenticator', (group) => {
     assert.equal((await other.retrieveAuthenticator())!.id, theirs.id)
   })
 
+  test('should enroll inside the transaction of the tokenable', async ({ assert }) => {
+    const trx = await db.transaction()
+    const user = await User.create({ email: `jane+${Date.now()}@example.com` }, { client: trx })
+
+    const authenticator = await user.createAuthenticator()
+
+    /**
+     * The enrollment is visible to the flow that created it, which is
+     * what hands the QR code over before the transaction commits.
+     */
+    assert.equal((await user.retrieveAuthenticator(true))!.id, authenticator.id)
+
+    await trx.rollback()
+
+    /**
+     * A flow rolled back leaves no authenticator behind.
+     */
+    assert.lengthOf(await TOTPAuthenticator.query(), 0)
+  }).timeout(5000)
+
+  test('should confirm an enrollment inside the transaction of the tokenable', async ({
+    assert,
+  }) => {
+    const trx = await db.transaction()
+    const user = await User.create({ email: `jane+${Date.now()}@example.com` }, { client: trx })
+    const authenticator = await user.createAuthenticator()
+
+    assert.isTrue(await authenticator.validate(authenticator.$totp.generate()))
+
+    await trx.commit()
+
+    const row = await reload(authenticator)
+    assert.isNotNull(row.verifiedAt)
+    assert.equal((await user.retrieveAuthenticator())!.id, authenticator.id)
+  }).timeout(5000)
+
   test('should not retire the previous authenticator on a backup code', async ({ assert }) => {
     const user = await User.create({ email: `jane+${Date.now()}@example.com` })
     const current = await user.createAuthenticator({ label: 'current' })
@@ -443,11 +561,39 @@ test.group('TOTPAuthenticator', (group) => {
     assert.lengthOf((await reload(authenticator)).getBackupCodes().release(), codes.length)
   })
 
+  test('should refuse to verify on an unlinked authenticator', async ({ assert }) => {
+    const authenticator = await createAuthenticator()
+    const codes = authenticator.getBackupCodes().release()
+    const code = authenticator.$totp.generate()
+
+    /**
+     * A row read outside "retrieveAuthenticator" carries no tokenable,
+     * both verifications refuse it up front, whether the code is right
+     * or wrong.
+     */
+    const unlinked = await reload(authenticator)
+    const unlinkedError = /link\(tokenable\)/
+
+    await assert.rejects(() => unlinked.verifyBackupCode(codes[0]), unlinkedError)
+    await assert.rejects(() => unlinked.verifyBackupCode(wrongBackupCode(codes[0])), unlinkedError)
+    await assert.rejects(() => unlinked.validate(code), unlinkedError)
+    await assert.rejects(() => unlinked.validate(wrongCode(code)), unlinkedError)
+
+    /**
+     * Refused before anything was compared: no code was spent, no step
+     * was consumed and no attempt was recorded.
+     */
+    const row = await reload(authenticator)
+    assert.lengthOf(row.getBackupCodes().release(), codes.length)
+    assert.isNull(row.lastUsedCounter)
+    assert.equal(row.failedVerificationCount, 0)
+  })
+
   test('should clear the failures recorded on a right backup code', async ({ assert }) => {
     const authenticator = await createAuthenticator()
     const codes = authenticator.getBackupCodes().release()
 
-    assert.isFalse(await authenticator.validate(wrongCode(authenticator.$totp.generate())))
+    await refusedCode(authenticator.validate(wrongCode(authenticator.$totp.generate())))
     assert.equal(authenticator.failedVerificationCount, 1)
 
     await authenticator.verifyBackupCode(codes[0])

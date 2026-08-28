@@ -20,6 +20,7 @@ export function defineConfig(config: SentinelConfig): ConfigProvider<SentinelOpt
       tokens: await config.tokens.resolver(app),
       magicLink: config.magicLink,
       otp: config.otp,
+      totp: config.totp,
       password: config.password,
     }
   })

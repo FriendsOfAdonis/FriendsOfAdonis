@@ -11,17 +11,23 @@ export type TOTPAlgorithm =
 
 export interface AuthenticatorOptions {
   /**
-   * Name displayed in the user authenticator app.
+   * Name displayed in the user authenticator app. Required to hand an
+   * enrollment over, either from "config/sentinel.ts" or from the
+   * "withTOTP" mixin.
    */
   issuer: string
 
   /**
    * Length of the generated tokens.
+   *
+   * @default 6
    */
   digits?: number
 
   /**
    * Interval of time in seconds for which a token is valid.
+   *
+   * @default 30
    */
   period?: number
 
@@ -31,6 +37,11 @@ export interface AuthenticatorOptions {
    * @default 1
    */
   window?: number
+
+  /**
+   * @default "sha1"
+   */
+  algorithm?: TOTPAlgorithm
 
   /**
    * Number of random bytes of the generated secret.
@@ -73,9 +84,16 @@ export interface AuthenticatorOptions {
   lockDuration?: string | number
 }
 
-export interface CreateAuthenticatorOptions extends Omit<
+/**
+ * Options an enrollment accepts. Only the ones an authenticator carries
+ * in its own row are creation time concerns: the code shape ("digits",
+ * "period", "algorithm") is read again every time a code is generated or
+ * validated, so it belongs to "config/sentinel.ts" or to the "withTOTP"
+ * mixin rather than to a single enrollment.
+ */
+export interface CreateAuthenticatorOptions extends Pick<
   AuthenticatorOptions,
-  'issuer' | 'window' | 'maximumFailedVerifications' | 'lockDuration'
+  'secretLength' | 'backupCodesCount' | 'backupCodesLength'
 > {
   /**
    * Account identifier.
@@ -101,5 +119,6 @@ export interface ValidateAuthenticatorTokenOptions extends Pick<
 }
 
 export interface TOTPAuthenticableContract {
-  $totpOptions: AuthenticatorOptions
+  getTOTPOptions(): AuthenticatorOptions
+  getTOTPLabel(): string
 }

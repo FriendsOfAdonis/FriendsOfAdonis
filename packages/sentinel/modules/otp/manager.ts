@@ -3,6 +3,11 @@ import { GenerateOTPOptions, VerifyOTPOptions } from './types.ts'
 import { TokenManager } from '../token/manager.ts'
 import { RecordId } from '../../src/types.ts'
 import { withOTP, WithOTPOptions } from './main.ts'
+import {
+  OTP_DEFAULT_EXPIRES_IN,
+  OTP_DEFAULT_LENGTH,
+  OTP_DEFAULT_MAXIMUM_FAILED_ATTEMPTS,
+} from './constants.ts'
 
 export interface OTPManagerConfig {
   /**
@@ -10,28 +15,30 @@ export interface OTPManagerConfig {
    *
    * @default 6
    */
-  length: number
+  length?: number
 
   /**
    * Expiration of the token.
    *
    * @default "20m"
    */
-  expiresIn: string | number
+  expiresIn?: string | number
 
   /**
    * Number of wrong codes tolerated before the OTP is invalidated.
    * Without a limit, a short numeric code can be brute-forced
    * within its lifetime.
+   *
+   * @default 5
    */
-  maximumFailedAttempts: number
+  maximumFailedAttempts?: number
 }
 
 export class OTPManager {
   static TOKEN_KIND = 'otp'
 
   constructor(
-    private config: OTPManagerConfig,
+    private config: OTPManagerConfig = {},
     private tokens: TokenManager
   ) {}
 
@@ -40,13 +47,18 @@ export class OTPManager {
    * is persisted, the returned value is the only copy of the code.
    */
   async generateOTP(tokenableId: RecordId, options: GenerateOTPOptions = {}) {
-    const value = new Secret(this.randomOTP(options.length ?? this.config.length))
+    const value = new Secret(
+      this.randomOTP(options.length ?? this.config.length ?? OTP_DEFAULT_LENGTH)
+    )
 
     await this.tokens.create(tokenableId, value, {
       kind: OTPManager.TOKEN_KIND,
       purpose: options.purpose,
-      expiresIn: options.expiresIn || this.config.expiresIn,
-      maximumFailedAttempts: options.maximumFailedAttempts ?? this.config.maximumFailedAttempts,
+      expiresIn: options.expiresIn ?? this.config.expiresIn ?? OTP_DEFAULT_EXPIRES_IN,
+      maximumFailedAttempts:
+        options.maximumFailedAttempts ??
+        this.config.maximumFailedAttempts ??
+        OTP_DEFAULT_MAXIMUM_FAILED_ATTEMPTS,
       metadata: options.metadata,
       hasher: 'scrypt',
     })

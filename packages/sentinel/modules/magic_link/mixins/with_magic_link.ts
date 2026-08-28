@@ -1,7 +1,6 @@
 import type { Secret } from '@adonisjs/core/helpers'
 import type { NormalizeConstructor } from '@adonisjs/core/types/helpers'
 import type { BaseModel } from '@adonisjs/lucid/orm'
-import sentinel from '../../../services/main.ts'
 import { primaryKeyOf, staticImplements } from '../../../src/helpers.ts'
 import { E_INVALID_TOKEN } from '../../token/errors.ts'
 import type { SentinelToken } from '../../token/token.ts'
@@ -32,7 +31,7 @@ type WithMagicLinkClass<
   new (...args: any[]): WithMagicLinkRow
 }
 
-export function withMagicLink(defaults: WithMagicLinkOptions = {}) {
+export function withMagicLink(manager: MagicLinkManager, defaults: WithMagicLinkOptions) {
   return function <Model extends NormalizeConstructor<typeof BaseModel>>(
     superclass: Model
   ): WithMagicLinkClass<Model> {
@@ -53,7 +52,7 @@ export function withMagicLink(defaults: WithMagicLinkOptions = {}) {
         options: VerifyMagicLinkTokenOptions = {}
       ): Promise<[InstanceType<T>, MagicLinkTokenMetadata]> {
         const purpose = 'purpose' in options ? options.purpose : defaults.purpose
-        const token = await sentinel.magicLink.verifyMagicLinkToken(value, { purpose })
+        const token = await manager.verifyMagicLinkToken(value, { purpose })
 
         const instance = await this.find(token.tokenableId)
         if (!instance) {
@@ -64,17 +63,17 @@ export function withMagicLink(defaults: WithMagicLinkOptions = {}) {
       }
 
       async generateMagicLinkToken(options: GenerateMagicLinkTokenOptions = {}) {
-        return sentinel.magicLink.generateMagicLinkToken(
+        return manager.generateMagicLinkToken(
           primaryKeyOf(this, 'generate a magic link token for'),
           { ...defaults, ...options }
         )
       }
 
-      async generateMagicLink(options: GenerateMagicLinkOptions = {}) {
-        return sentinel.magicLink.generateMagicLink(
-          primaryKeyOf(this, 'generate a magic link token for'),
-          { ...defaults, ...options }
-        )
+      async generateMagicLink(options: Partial<GenerateMagicLinkOptions> = {}) {
+        return manager.generateMagicLink(primaryKeyOf(this, 'generate a magic link token for'), {
+          ...defaults,
+          ...options,
+        })
       }
     }
 

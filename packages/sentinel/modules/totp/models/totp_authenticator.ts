@@ -21,13 +21,13 @@ import {
   TOTP_DEFAULT_SECRET_LENGTH,
   TOTP_DEFAULT_WINDOW,
 } from '../constants.ts'
-import sentinel from '../../../services/main.ts'
 import { primaryKeyOf } from '../../../src/helpers.ts'
 import { LucidRow } from '@adonisjs/lucid/types/model'
 import { normalizeBackupCode } from '../utils.ts'
 import { importQRCode } from '../dependencies.ts'
-import { E_INVALID_BACKUP_CODE, E_TOTP_LOCKED } from '../errors.ts'
+import { E_INVALID_BACKUP_CODE, E_INVALID_OTP, E_TOTP_LOCKED } from '../errors.ts'
 import { TOTP } from 'otpauth'
+import { TOTPManager } from '../manager.ts'
 
 export class TOTPAuthenticator extends BaseModel {
   @column({ isPrimary: true })
@@ -68,13 +68,28 @@ export class TOTPAuthenticator extends BaseModel {
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
-  $tokenable: TOTPAuthenticableContract | undefined
+  protected static $manager: TOTPManager
 
-  get tokenable() {
-    if (!this.$tokenable)
+  protected $tokenable: TOTPAuthenticableContract | undefined
+
+  static useManager(manager: TOTPManager) {
+    this.$manager = manager
+  }
+
+  /**
+   * @throws {RuntimeException} When the authenticator has not been
+   * linked to its tokenable.
+   */
+  protected $assertLinked(): asserts this is { $tokenable: TOTPAuthenticableContract } {
+    if (!this.$tokenable) {
       throw new RuntimeException(
         'You tried to use authenticator without tokenable. Did you forget to call `.link(tokenable)?`'
       )
+    }
+  }
+
+  get tokenable() {
+    this.$assertLinked()
     return this.$tokenable
   }
 
@@ -84,21 +99,17 @@ export class TOTPAuthenticator extends BaseModel {
   }
 
   /**
-   * The "otpauth" package holds the algorithm alone: it is loaded on
-   * the first validation rather than imported by the module, so that
-   * the applications not enabling TOTP do not have to install it.
-   *
    * @internal
    */
   get $totp() {
-    const options = this.tokenable.$totpOptions
+    const options = this.tokenable.getTOTPOptions()
 
     return new TOTP({
       issuer: options.issuer,
-      label: this.label || options.issuer,
-      algorithm: TOTP_DEFAULT_ALGORITHM,
-      digits: options.digits || TOTP_DEFAULT_DIGITS,
-      period: options.period || TOTP_DEFAULT_PERIOD,
+      label: this.label || undefined,
+      algorithm: options.algorithm ?? TOTP_DEFAULT_ALGORITHM,
+      digits: options.digits ?? TOTP_DEFAULT_DIGITS,
+      period: options.period ?? TOTP_DEFAULT_PERIOD,
       secret: this.getSecret().release(),
     })
   }
@@ -141,7 +152,7 @@ export class TOTPAuthenticator extends BaseModel {
    * @see https://datatracker.ietf.org/doc/html/rfc6238#section-5.2
    */
   async validate(token: Secret<string> | string, options: ValidateAuthenticatorTokenOptions = {}) {
-    const defaults = this.tokenable.$totpOptions
+    const resolved = { ...options }
 
     this.$assertUnlocked()
 
@@ -155,13 +166,13 @@ export class TOTPAuthenticator extends BaseModel {
     const timestamp = Date.now()
     const delta = this.$totp.validate({
       token: value,
-      window: options.window ?? defaults.window ?? TOTP_DEFAULT_WINDOW,
+      window: resolved.window ?? TOTP_DEFAULT_WINDOW,
       timestamp,
     })
 
     if (delta === null) {
       await this.$recordFailedVerification(options)
-      return false
+      throw new E_INVALID_OTP()
     }
 
     /**
@@ -196,7 +207,7 @@ export class TOTPAuthenticator extends BaseModel {
      */
     if (!affected) {
       await this.$recordFailedVerification(options)
-      return false
+      throw new E_INVALID_OTP()
     }
 
     /**
@@ -240,7 +251,7 @@ export class TOTPAuthenticator extends BaseModel {
   }
 
   getSecret() {
-    return sentinel.totp.decryptSecret(this.secret)
+    return TOTPAuthenticator.$manager.decryptSecret(this.secret)
   }
 
   async generateQRCode() {
@@ -254,7 +265,7 @@ export class TOTPAuthenticator extends BaseModel {
    * stored encrypted and can therefore be displayed again.
    */
   getBackupCodes() {
-    return new Secret(sentinel.totp.decryptBackupCodes(this.backupCodes))
+    return new Secret(TOTPAuthenticator.$manager.decryptBackupCodes(this.backupCodes))
   }
 
   /**
@@ -271,12 +282,18 @@ export class TOTPAuthenticator extends BaseModel {
    * consumed a code first.
    */
   async verifyBackupCode(code: Secret<string> | string) {
-    const value = normalizeBackupCode(typeof code === 'string' ? code : code.release())
-
+    /**
+     * A failed attempt resolves the lock policy from the tokenable: an
+     * authenticator left unlinked is refused up front, before any code
+     * is compared or spent, rather than half way through the attempt.
+     */
+    this.$assertLinked()
     this.$assertUnlocked()
 
+    const value = normalizeBackupCode(typeof code === 'string' ? code : code.release())
+
     const stored = this.backupCodes
-    const codes = sentinel.totp.decryptBackupCodes(stored)
+    const codes = TOTPAuthenticator.$manager.decryptBackupCodes(stored)
     const index = codes.findIndex((candidate) => safeEqual(normalizeBackupCode(candidate), value))
 
     if (index === -1) {
@@ -284,7 +301,7 @@ export class TOTPAuthenticator extends BaseModel {
       throw new E_INVALID_BACKUP_CODE()
     }
 
-    const remaining = sentinel.totp.encryptBackupCodes(codes.toSpliced(index, 1))
+    const remaining = TOTPAuthenticator.$manager.encryptBackupCodes(codes.toSpliced(index, 1))
     const result = await TOTPAuthenticator.query({ client: this.$trx })
       .where('id', this.id as any)
       .where('backup_codes', stored)
@@ -318,11 +335,8 @@ export class TOTPAuthenticator extends BaseModel {
    * @throws {E_TOTP_LOCKED} When the failure locks the authenticator.
    */
   protected async $recordFailedVerification(options: ValidateAuthenticatorTokenOptions = {}) {
-    const defaults = this.tokenable.$totpOptions
-    const maximum =
-      options.maximumFailedVerifications ??
-      defaults.maximumFailedVerifications ??
-      TOTP_DEFAULT_MAXIMUM_FAILED_VERIFICATIONS
+    const resolved = { ...this.tokenable.getTOTPOptions(), ...options }
+    const maximum = resolved.maximumFailedVerifications ?? TOTP_DEFAULT_MAXIMUM_FAILED_VERIFICATIONS
 
     await TOTPAuthenticator.query({ client: this.$trx })
       .where('id', this.id as any)
@@ -338,9 +352,7 @@ export class TOTPAuthenticator extends BaseModel {
      */
     this.failedVerificationCount = 0
     this.lockedUntil = DateTime.now().plus({
-      seconds: string.seconds.parse(
-        options.lockDuration ?? defaults.lockDuration ?? TOTP_DEFAULT_LOCK_DURATION
-      ),
+      seconds: string.seconds.parse(resolved.lockDuration ?? TOTP_DEFAULT_LOCK_DURATION),
     })
     await this.save()
 
@@ -352,11 +364,11 @@ export class TOTPAuthenticator extends BaseModel {
    * ones handed previously.
    */
   async regenerateBackupCodes(options: RegenerateBackupCodesOptions = {}) {
-    const defaults = this.tokenable.$totpOptions
+    const resolved = { ...this.tokenable.getTOTPOptions(), ...options }
 
-    const { codes, encryptedCodes } = sentinel.totp.createBackupCodes(
-      options.backupCodesCount || defaults.backupCodesCount || TOTP_DEFAULT_BACKUP_CODES_COUNT,
-      options.backupCodesLength || defaults.backupCodesLength || TOTP_DEFAULT_BACKUP_CODES_LENGTH
+    const { codes, encryptedCodes } = TOTPAuthenticator.$manager.createBackupCodes(
+      resolved.backupCodesCount ?? TOTP_DEFAULT_BACKUP_CODES_COUNT,
+      resolved.backupCodesLength ?? TOTP_DEFAULT_BACKUP_CODES_LENGTH
     )
 
     this.backupCodes = encryptedCodes
@@ -374,38 +386,46 @@ export class TOTPAuthenticator extends BaseModel {
    * call, see {@link TOTPAuthenticator.validate}. Only the enrollments
    * left unconfirmed are replaced, so that a tokenable opening the
    * enrollment page twice does not pile up secrets it never scanned.
+   *
+   * The enrollment joins the transaction the tokenable is bound to: a
+   * flow rolled back leaves no authenticator behind, and the queries do
+   * not wait on a lock the caller is holding.
    */
   static async createFor(
     tokenable: TOTPAuthenticableContract & LucidRow,
     options: CreateAuthenticatorOptions = {}
   ) {
-    const defaults = tokenable.$totpOptions
+    const resolved = { ...tokenable.getTOTPOptions(), ...options }
     const tokenableId = primaryKeyOf(tokenable, 'create authenticator for')
+    const client = tokenable.$trx
 
-    const { encryptedSecret } = sentinel.totp.createSecret(
-      options.secretLength || defaults.secretLength || TOTP_DEFAULT_SECRET_LENGTH
+    const { encryptedSecret } = TOTPAuthenticator.$manager.createSecret(
+      resolved.secretLength ?? TOTP_DEFAULT_SECRET_LENGTH
     )
 
-    const { encryptedCodes } = sentinel.totp.createBackupCodes(
-      options.backupCodesCount || defaults.backupCodesCount || TOTP_DEFAULT_BACKUP_CODES_COUNT,
-      options.backupCodesLength || defaults.backupCodesLength || TOTP_DEFAULT_BACKUP_CODES_LENGTH
+    const { encryptedCodes } = TOTPAuthenticator.$manager.createBackupCodes(
+      resolved.backupCodesCount ?? TOTP_DEFAULT_BACKUP_CODES_COUNT,
+      resolved.backupCodesLength ?? TOTP_DEFAULT_BACKUP_CODES_LENGTH
     )
 
-    await TOTPAuthenticator.query()
+    await TOTPAuthenticator.query({ client })
       .where('tokenable_id', tokenableId as any)
       .whereNull('verified_at')
       .delete()
 
-    const authenticator = await TOTPAuthenticator.create({
-      tokenableId,
-      label: options.label,
-      secret: encryptedSecret,
-      backupCodes: encryptedCodes,
-      lastUsedCounter: null,
-      failedVerificationCount: 0,
-      lockedUntil: null,
-      verifiedAt: null,
-    })
+    const authenticator = await TOTPAuthenticator.create(
+      {
+        tokenableId,
+        label: tokenable.getTOTPLabel(),
+        secret: encryptedSecret,
+        backupCodes: encryptedCodes,
+        lastUsedCounter: null,
+        failedVerificationCount: 0,
+        lockedUntil: null,
+        verifiedAt: null,
+      },
+      { client }
+    )
 
     return authenticator.link(tokenable)
   }

@@ -5,9 +5,10 @@ import { BaseModel, column } from '@adonisjs/lucid/orm'
 import { test } from '@japa/runner'
 import { OTPManager } from '../../modules/otp/manager.ts'
 import { E_INVALID_TOKEN, E_TOO_MANY_ATTEMPTS } from '../../modules/token/errors.ts'
-import { createSentinelApp, MemoryTokenProvider, SENTINEL_CONFIG } from '../helpers.ts'
+import { createSentinelApp, SENTINEL_CONFIG } from '../helpers.ts'
 import { OTPManagerFactory } from '../../factories/otp.ts'
 import { TokenManagerFactory } from '../../factories/token.ts'
+import { FakeMemoryTokenProvider } from '../../modules/token/providers/fake.ts'
 
 const ONE_HOUR = 60 * 60 * 1000
 
@@ -55,7 +56,7 @@ async function invalidToken(promise: Promise<unknown>) {
 
 test.group('withOTP', (group) => {
   let app: ApplicationService
-  let provider: MemoryTokenProvider
+  let provider: FakeMemoryTokenProvider
   let User: ReturnType<typeof defineUser>
 
   group.setup(async () => {
@@ -64,7 +65,7 @@ test.group('withOTP', (group) => {
     provider = sentinel.provider
 
     const token = new TokenManagerFactory().withProvider(provider).create()
-    const otp = new OTPManagerFactory().withTokens(token).create()
+    const otp = new OTPManagerFactory().withTokens(token).create(SENTINEL_CONFIG.otp)
     User = defineUser(otp)
   })
 

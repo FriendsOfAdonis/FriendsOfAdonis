@@ -1,4 +1,5 @@
 export * from './manager.ts'
+export * from './schema.ts'
 export * from './errors.ts'
 export * from './types.ts'
 
