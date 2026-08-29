@@ -1,8 +1,17 @@
 import { Knex } from 'knex'
 
+/**
+ * Helpers to define the schema of the tokens table inside a migration
+ *
+ * @example
+ * this.schema.createTable('sentinel_tokens', (table) => {
+ *   TokenSchema.configureTokensTable(table)
+ * })
+ */
 export class TokenSchema {
   /**
-   * Configures tokens table columns.
+   * Adds the columns expected by the lucid token provider to the
+   * table
    */
   static configureTokensTable(table: Knex.CreateTableBuilder) {
     table.increments('id')

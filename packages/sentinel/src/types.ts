@@ -6,47 +6,41 @@ import { PasswordManagerConfig } from '../modules/password/manager.ts'
 import { TOTPManagerConfig } from '../modules/totp/manager.ts'
 
 /**
- * Configuration accepted by the "defineConfig" helper inside
- * "config/sentinel.ts". Each building block (email verification,
- * password management, magic links...) contributes its own options here.
+ * Config accepted by the "defineConfig" method
  */
 export interface SentinelConfig {
   /**
-   * Provider used to persist tokens.
-   *
-   * @example tokens.lucid({})
+   * The provider used to persist the tokens of the OTP, magic link
+   * and password modules. Use the "tokens.lucid()" helper to store
+   * them in the database.
    */
   tokens: ConfigProvider<TokenProviderContract>
 
   /**
-   * MagicLinkManager configuration. Left out, the manager falls back to
-   * the defaults of the package.
+   * Config of the magic link manager. The manager cannot be resolved
+   * from the container when left out.
    */
   magicLink?: MagicLinkManagerConfig
 
   /**
-   * OTPManager configuration. Left out, the manager falls back to the
-   * defaults of the package.
+   * Config of the OTP manager
    */
   otp?: OTPManagerConfig
 
   /**
-   * TOTPManager configuration. Left out, the manager falls back to the
-   * defaults of the package.
+   * Config of the TOTP manager. The manager cannot be resolved from
+   * the container when left out.
    */
   totp?: TOTPManagerConfig
 
   /**
-   * PasswordManager configuration. Left out, the manager falls back to
-   * the defaults of the package.
+   * Config of the password manager
    */
   password?: PasswordManagerConfig
 }
 
 /**
- * Configuration resolved from a "SentinelConfig" and handed to the
- * managers by the provider. Every module is optional, the managers
- * apply the defaults of the package to the options left out.
+ * Resolved config, as consumed by the service provider
  */
 export interface SentinelOptions {
   tokens: TokenProviderContract
@@ -56,4 +50,8 @@ export interface SentinelOptions {
   password?: PasswordManagerConfig
 }
 
+/**
+ * Accepted values for the primary key of a record. It can be an
+ * integer, a bigInteger or a UUID or any other string based value.
+ */
 export type RecordId = string | number | bigint

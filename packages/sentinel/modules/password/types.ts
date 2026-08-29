@@ -1,37 +1,47 @@
+/**
+ * Options accepted when creating a password reset token
+ */
 export interface GeneratePasswordResetTokenOptions {
   /**
-   * Expiration of the token.
+   * The lifetime of the token, in seconds or as a duration string
+   * like "1h".
    *
-   * @default "password.expiresIn" from "config/sentinel.ts", "1h" when
-   * it is not configured
+   * Defaults to "password.expiresIn" from "config/sentinel.ts", then "1h"
    */
   expiresIn?: string | number
 
   /**
-   * Purpose to ensure that the token cannot be used
-   * for a different purpose than the one given originally.
+   * The purpose the token is created for. It must be given again to
+   * verify the token.
    */
   purpose?: string
 
   /**
-   * Additional metadata associated to the generated token.
-   * Useful for storing a redirect URL.
+   * Arbitrary data handed back by the verification, a redirect URL
+   * for example
    */
   metadata?: Record<string, unknown>
 }
 
+/**
+ * Options accepted when verifying a password reset token
+ */
 export interface VerifyPasswordResetTokenOptions {
   /**
-   * Purpose the token was generated with. A token generated with
-   * a purpose can only be verified with the same purpose.
+   * The purpose the token was created with, if any
    */
   purpose?: string
 }
 
+/**
+ * Options accepted when invalidating the password reset tokens of a
+ * subject
+ */
 export interface InvalidatePasswordResetTokensOptions {
   /**
-   * Purpose of the tokens to invalidate. `null` targets tokens without
-   * a purpose, leaving it out targets tokens of every purpose.
+   * The purpose of the tokens to invalidate. A null value targets
+   * the tokens without a purpose, leaving the option out targets
+   * every purpose.
    */
   purpose?: string | null
 }

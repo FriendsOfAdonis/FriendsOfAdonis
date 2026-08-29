@@ -1,32 +1,31 @@
-/*
-|--------------------------------------------------------------------------
-| Configure hook
-|--------------------------------------------------------------------------
-|
-| The configure hook is called when someone runs "node ace configure <package>"
-| command. You are free to perform any operations inside this function to
-| configure the package.
-|
-| To make things easier, you have access to the underlying "ConfigureCommand"
-| instance and you can use codemods to modify the source files.
-|
-*/
-
 import type ConfigureCommand from '@adonisjs/core/commands/configure'
 import { stubsRoot } from './stubs/main.ts'
 
+/**
+ * Configures the package
+ */
 export async function configure(command: ConfigureCommand) {
   const codemods = await command.createCodemods()
 
+  /**
+   * Register the service provider
+   */
   await codemods.updateRcFile((rcFile) => {
     rcFile.addProvider('@foadonis/sentinel/sentinel_provider')
   })
 
+  /**
+   * Publish the config file
+   */
   await codemods.makeUsingStub(stubsRoot, 'config/sentinel.stub', {})
 
   logSuccess(command)
 }
 
+/**
+ * Prints the welcome message with the links to the documentation
+ * and the repository
+ */
 function logSuccess(command: ConfigureCommand) {
   const c = command.colors
   const foadonis = c.bold('Friends Of Adonis')

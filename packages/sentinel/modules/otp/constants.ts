@@ -1,16 +1,16 @@
 /**
- * Number of digits of a code when the OTP module does not configure one.
+ * Default number of digits of a code
  */
 export const OTP_DEFAULT_LENGTH = 6
 
 /**
- * Expiration of a code when the OTP module does not configure one.
+ * Default lifetime of a code
  */
 export const OTP_DEFAULT_EXPIRES_IN = '20m'
 
 /**
- * Number of wrong codes tolerated when the OTP module does not
- * configure one. A short numeric code can be brute-forced within its
- * lifetime, it is therefore never left unlimited.
+ * Default number of failed attempts after which a code is
+ * invalidated. Never unlimited, since a short numeric code is
+ * brute-forced within its lifetime
  */
 export const OTP_DEFAULT_MAXIMUM_FAILED_ATTEMPTS = 5

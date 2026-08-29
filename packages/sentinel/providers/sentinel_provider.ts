@@ -9,9 +9,29 @@ import { MagicLinkManager } from '../modules/magic_link/manager.ts'
 import { PasswordManager } from '../modules/password/manager.ts'
 import { TOTPAuthenticator } from '../modules/totp/models/totp_authenticator.ts'
 
+/**
+ * Registers the sentinel managers with the container
+ *
+ * Each manager is registered as a singleton resolved from the
+ * "config/sentinel.ts" file and aliased under the "sentinel.*"
+ * namespace. The OTP, magic link and password managers share the
+ * token manager to persist their tokens.
+ *
+ * @example
+ * const tokens = await app.container.make('sentinel.tokens')
+ * const password = await app.container.make(PasswordManager)
+ */
 export default class SentinelProvider {
+  /**
+   * Sentinel service provider constructor
+   *
+   * @param app - The application service instance
+   */
   constructor(protected app: ApplicationService) {}
 
+  /**
+   * Registers bindings
+   */
   register() {
     this.registerToken()
     this.registerOTP()
@@ -21,8 +41,9 @@ export default class SentinelProvider {
   }
 
   /**
-   * Resolves the configuration of "config/sentinel.ts". Every module is
-   * optional, only the token provider has to be defined.
+   * Resolves the config from the config provider created by the
+   * "defineConfig" method. Throws when the config file does not
+   * use it.
    */
   protected async resolveConfig(): Promise<SentinelOptions> {
     const sentinelConfigProvider = this.app.config.get('sentinel')
@@ -37,6 +58,10 @@ export default class SentinelProvider {
     return config
   }
 
+  /**
+   * Registers the token manager with the container. The manager
+   * hashes tokens using the hash manager from "config/hash.ts".
+   */
   protected registerToken() {
     this.app.container.singleton(TokenManager, async (resolver) => {
       const config = await this.resolveConfig()
@@ -47,6 +72,9 @@ export default class SentinelProvider {
     this.app.container.alias('sentinel.tokens', TokenManager)
   }
 
+  /**
+   * Registers the OTP manager with the container
+   */
   protected registerOTP() {
     this.app.container.singleton(OTPManager, async (resolver) => {
       const config = await this.resolveConfig()
@@ -57,6 +85,14 @@ export default class SentinelProvider {
     this.app.container.alias('sentinel.otp', OTPManager)
   }
 
+  /**
+   * Registers the TOTP manager with the container. The manager is also
+   * handed to the "TOTPAuthenticator" model, which needs it to encrypt
+   * and decrypt secrets.
+   *
+   * Throws when the "totp" config is missing, since the issuer is
+   * required.
+   */
   protected registerTOTP() {
     this.app.container.singleton(TOTPManager, async (resolver) => {
       const config = await this.resolveConfig()
@@ -77,6 +113,10 @@ export default class SentinelProvider {
     this.app.container.alias('sentinel.totp', TOTPManager)
   }
 
+  /**
+   * Registers the magic link manager with the container. Throws when
+   * the "magicLink" config is missing, since the URL is required.
+   */
   protected registerMagicLink() {
     this.app.container.singleton(MagicLinkManager, async (resolver) => {
       const config = await this.resolveConfig()
@@ -93,6 +133,10 @@ export default class SentinelProvider {
     this.app.container.alias('sentinel.magic_link', MagicLinkManager)
   }
 
+  /**
+   * Registers the password manager with the container. Passwords are
+   * hashed using the default hasher from "config/hash.ts".
+   */
   protected registerPassword() {
     this.app.container.singleton(PasswordManager, async (resolver) => {
       const config = await this.resolveConfig()

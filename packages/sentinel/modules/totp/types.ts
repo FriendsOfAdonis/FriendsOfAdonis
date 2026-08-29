@@ -1,3 +1,6 @@
+/**
+ * Hashing algorithms supported by the authenticator apps
+ */
 export type TOTPAlgorithm =
   | 'SHA1'
   | 'SHA224'
@@ -9,116 +12,136 @@ export type TOTPAlgorithm =
   | 'SHA3-384'
   | 'SHA3-512'
 
+/**
+ * Options accepted to configure the authenticators. They are defined
+ * inside "config/sentinel.ts", overridden by the "withTOTP" mixin,
+ * then by the options of each call.
+ */
 export interface AuthenticatorOptions {
   /**
-   * Name displayed in the user authenticator app. Required to hand an
-   * enrollment over, either from "config/sentinel.ts" or from the
-   * "withTOTP" mixin.
+   * Name of the application, displayed by the authenticator app
    */
   issuer: string
 
   /**
-   * Length of the generated tokens.
+   * Number of digits of a code.
    *
-   * @default 6
+   * Defaults to 6
    */
   digits?: number
 
   /**
-   * Interval of time in seconds for which a token is valid.
+   * Duration of a time step, in seconds.
    *
-   * @default 30
+   * Defaults to 30
    */
   period?: number
 
   /**
-   * Number of allowed steps before and after the current step.
+   * Number of time steps accepted on either side of the current one,
+   * to tolerate clock drift.
    *
-   * @default 1
+   * Defaults to 1
    */
   window?: number
 
   /**
-   * @default "sha1"
+   * Hashing algorithm of the codes. Some authenticator apps only
+   * support SHA1.
+   *
+   * Defaults to "SHA1"
    */
   algorithm?: TOTPAlgorithm
 
   /**
-   * Number of random bytes of the generated secret.
+   * Length of the secret in bytes, before base32 encoding.
    *
-   * @default 40
+   * Defaults to 40
    */
   secretLength?: number
 
   /**
-   * Length of recovery codes
+   * Number of characters of a backup code, separator aside.
    *
-   * @default 10
+   * Defaults to 10
    */
   backupCodesLength?: number
 
   /**
-   * Number of recovery codes generated.
+   * Number of backup codes generated for an authenticator.
    *
-   * @default 10
+   * Defaults to 10
    */
   backupCodesCount?: number
 
   /**
-   * Number of wrong codes tolerated before the authenticator is locked.
-   * Without a limit, a short numeric code can be brute-forced.
+   * Number of consecutive failed verifications after which the
+   * authenticator is locked. Use 0 to never lock, for applications
+   * rate limiting the endpoint themselves.
    *
-   * Set it to 0 to never lock the authenticator, for applications rate
-   * limiting the verification endpoint themselves.
-   *
-   * @default 5
+   * Defaults to 5
    */
   maximumFailedVerifications?: number
 
   /**
-   * Duration of the lock applied once the maximum failed verifications
-   * count is reached.
+   * Duration of the lock, in seconds or as a duration string like
+   * "15m".
    *
-   * @default "15m"
+   * Defaults to "15m"
    */
   lockDuration?: string | number
 }
 
 /**
- * Options an enrollment accepts. Only the ones an authenticator carries
- * in its own row are creation time concerns: the code shape ("digits",
- * "period", "algorithm") is read again every time a code is generated or
- * validated, so it belongs to "config/sentinel.ts" or to the "withTOTP"
- * mixin rather than to a single enrollment.
+ * Options accepted when creating an authenticator.
+ *
+ * Deliberately narrow: digits, period and algorithm are read again at
+ * every validation, so they belong to the config or the mixin rather
+ * than to one enrollment. The label comes from "getTOTPLabel", so
+ * that every enrollment of an account agrees on it.
  */
 export interface CreateAuthenticatorOptions extends Pick<
   AuthenticatorOptions,
   'secretLength' | 'backupCodesCount' | 'backupCodesLength'
-> {
-  /**
-   * Account identifier.
-   */
-  label?: string
-}
+> {}
 
+/**
+ * Options accepted when regenerating the backup codes of an
+ * authenticator
+ */
 export interface RegenerateBackupCodesOptions extends Pick<
   AuthenticatorOptions,
   'backupCodesCount' | 'backupCodesLength'
 > {}
 
+/**
+ * Options accepted when validating a code
+ */
 export interface ValidateAuthenticatorTokenOptions extends Pick<
   AuthenticatorOptions,
   'maximumFailedVerifications' | 'lockDuration'
 > {
   /**
-   * Number of allowed steps before and after the current step.
+   * Number of time steps accepted on either side of the current one.
    *
-   * @default 1
+   * Defaults to 1
    */
   window?: number
 }
 
+/**
+ * A set of properties a model must implement to own authenticators.
+ * The "withTOTP" mixin implements them.
+ */
 export interface TOTPAuthenticableContract {
+  /**
+   * Returns the options of the authenticators of the model
+   */
   getTOTPOptions(): AuthenticatorOptions
+
+  /**
+   * Returns the label displayed by the authenticator app, usually the
+   * email of the account
+   */
   getTOTPLabel(): string
 }

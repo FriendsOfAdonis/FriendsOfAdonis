@@ -14,21 +14,31 @@ import type {
 import { WithPasswordOptions } from './main.ts'
 import { withPassword } from './mixins/with_password.ts'
 
+/**
+ * Config accepted by the password manager
+ */
 export interface PasswordManagerConfig {
   /**
-   * Expiration of the password reset tokens.
+   * The lifetime of the password reset tokens, in seconds or as a
+   * duration string like "1h".
    *
-   * @default "1h"
+   * Defaults to "1h"
    */
   expiresIn?: string | number
 }
 
 /**
- * Hashes and verifies passwords, and issues the single-use tokens of
- * the "forgot password" flow. Passwords are written to the models by
- * the "withPassword" mixin.
+ * Password manager hashes and verifies passwords using the default
+ * hasher of "config/hash.ts", and manages the password reset tokens.
+ *
+ * @example
+ * const token = await password.generatePasswordResetToken(user.id)
+ * await password.verifyPasswordResetToken(token)
  */
 export class PasswordManager {
+  /**
+   * The kind under which the reset tokens are persisted
+   */
   static TOKEN_KIND = 'password_reset'
 
   #hash: Hash
@@ -42,35 +52,42 @@ export class PasswordManager {
   }
 
   /**
-   * Hashes a password with the configured hasher.
+   * Hashes a plain password
    */
   hashPassword(password: string): Promise<string> {
     return this.#hash.make(password)
   }
 
   /**
-   * Verifies a password against a persisted hash.
+   * Verifies a plain password against its hash
    */
   verifyPassword(hash: string, password: string): Promise<boolean> {
     return this.#hash.verify(hash, password)
   }
 
   /**
-   * Whether a persisted hash was created with outdated options and
-   * should be computed again.
+   * Check if the hash was made with outdated options and should be
+   * computed again
    */
   needsRehash(hash: string): boolean {
     return this.#hash.needsReHash(hash)
   }
 
   /**
-   * Generates a password reset token for the given subject. Only the
-   * hash is persisted, the returned value is the only copy of the token.
+   * Creates a password reset token for a subject and returns its
+   * value, the only copy of it. Only the hash is persisted.
+   *
+   * @param tokenableId - The primary key of the subject
+   * @param options - Options to configure the token
    */
   async generatePasswordResetToken(
     tokenableId: RecordId,
     options: GeneratePasswordResetTokenOptions = {}
   ) {
+    /**
+     * Suffix the random seed with its checksum, so that secret
+     * scanning tools recognize the token
+     */
     const seed = string.random(40)
     const value = new Secret(`${seed}${new CRC32().calculate(seed)}`)
 
@@ -85,12 +102,14 @@ export class PasswordManager {
   }
 
   /**
-   * Verifies a password reset token and consumes it. The returned token
-   * carries the subject (`tokenableId`) and the metadata given at
-   * generation time.
+   * Verifies a password reset token and consumes it, so that
+   * verifying it again fails.
+   *
+   * @param value - The value of the token
+   * @param options - Options to find the token
    *
    * @throws {E_INVALID_TOKEN} When the token is unknown, expired,
-   * already used or generated for a different purpose.
+   * already used, or was created for another purpose
    */
   async verifyPasswordResetToken(
     value: Secret<string> | string,
@@ -103,9 +122,10 @@ export class PasswordManager {
   }
 
   /**
-   * Invalidates the pending password reset tokens of the given subject,
-   * so that tokens issued before a password was reset or updated can no
-   * longer be used.
+   * Invalidates the password reset tokens of a subject
+   *
+   * @param tokenableId - The primary key of the subject
+   * @param options - Options to select the tokens to invalidate
    */
   invalidatePasswordResetTokens(
     tokenableId: RecordId,
@@ -117,5 +137,12 @@ export class PasswordManager {
     })
   }
 
+  /**
+   * Mixin to add password hashing, verification and reset tokens to
+   * a Lucid model. See "withPassword" for the details.
+   *
+   * @example
+   * class User extends compose(BaseModel, password.withPassword()) {}
+   */
   withPassword = (options: WithPasswordOptions = {}) => withPassword(this, options)
 }

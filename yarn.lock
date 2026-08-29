@@ -2479,6 +2479,7 @@ __metadata:
     luxon: "npm:^3.7.2"
     otpauth: "npm:^9.5.1"
     qrcode: "npm:^1.5.4"
+    timekeeper: "npm:^2.3.1"
     ts-node: "npm:^10.9.2"
     typescript: "catalog:"
     youch: "catalog:"

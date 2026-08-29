@@ -1,17 +1,14 @@
 /**
- * Model property holding the password when the "withPassword" mixin
- * does not specify one.
+ * Default column holding the hashed password
  */
 export const DEFAULT_PASSWORD_COLUMN_NAME = 'password'
 
 /**
- * Columns a user can be looked up by when the "withPassword" mixin
- * does not specify any.
+ * Default columns used to find a user by its uid
  */
 export const DEFAULT_PASSWORD_UIDS = ['email']
 
 /**
- * Expiration of a password reset token when the password module does
- * not configure one.
+ * Default lifetime of a password reset token
  */
 export const DEFAULT_PASSWORD_EXPIRES_IN = '1h'

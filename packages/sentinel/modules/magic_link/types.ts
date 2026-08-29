@@ -1,37 +1,46 @@
+/**
+ * Options accepted when generating a magic link token
+ */
 export interface GenerateMagicLinkTokenOptions {
   /**
-   * Expiration of the token.
+   * The lifetime of the token, in seconds or as a duration string
+   * like "20m".
    *
-   * @default "20m"
+   * Defaults to "magicLink.expiresIn" from "config/sentinel.ts", then "20m"
    */
   expiresIn?: string | number
 
   /**
-   * Purpose to ensure that the token cannot be used
-   * for a different purpose than the one given originally.
+   * The purpose the token is created for. It must be given again to
+   * verify the token.
    */
   purpose?: string
 
   /**
-   * Additional metadata associated to the generated token.
-   * Useful for storing a redirect URL.
+   * Arbitrary data handed back by the verification, a redirect URL
+   * for example
    */
   metadata?: Record<string, unknown>
 }
 
+/**
+ * Options accepted when generating a magic link
+ */
 export interface GenerateMagicLinkOptions extends GenerateMagicLinkTokenOptions {
   /**
-   * URL of the endpoint consuming the link.
+   * The URL the link points to.
    *
-   * @default "magicLink.url" from "config/sentinel.ts"
+   * Defaults to "magicLink.url" from "config/sentinel.ts"
    */
   url?: string
 }
 
+/**
+ * Options accepted when verifying a magic link token
+ */
 export interface VerifyMagicLinkTokenOptions {
   /**
-   * Purpose the token was generated with. A token generated with
-   * a purpose can only be verified with the same purpose.
+   * The purpose the token was created with, if any
    */
   purpose?: string
 }

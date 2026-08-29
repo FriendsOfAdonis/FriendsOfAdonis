@@ -1,11 +1,14 @@
+/**
+ * Default table used by the lucid token provider
+ */
 export const DEFAULT_TOKENS_TABLE_NAME = 'sentinel_tokens'
 
 /**
- * Hasher used when a token kind does not specify one.
+ * Default hasher used to hash the tokens
  */
 export const DEFAULT_TOKEN_HASHER = 'sha256'
 
 /**
- * Expiration used when a token kind does not specify one.
+ * Default lifetime of a token
  */
 export const DEFAULT_TOKEN_EXPIRES_IN = '20m'

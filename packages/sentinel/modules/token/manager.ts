@@ -16,7 +16,21 @@ import type {
   VerifyTokenOptions,
 } from './types.ts'
 
+/**
+ * Token manager creates, verifies and invalidates the tokens used by
+ * the OTP, magic link and password modules. It hashes the token values
+ * and delegates their persistence to the token provider.
+ *
+ * @example
+ * const value = new Secret(string.random(40))
+ * await tokens.create(user.id, value, { kind: 'magic_link' })
+ *
+ * const token = await tokens.verify(value, { kind: 'magic_link' })
+ */
 export class TokenManager {
+  /**
+   * Hashers instantiated so far, keyed by their name
+   */
   #hashers = new Map<TokenHasher, TokenHasherContract>()
 
   constructor(
@@ -25,7 +39,10 @@ export class TokenManager {
   ) {}
 
   /**
-   * Returns the hasher registered under the given name.
+   * Returns the hasher for the given name. Hashers are created once
+   * and cached for the next calls.
+   *
+   * @param name - The name of the hasher. Defaults to "sha256"
    */
   hasher(name: TokenHasher = DEFAULT_TOKEN_HASHER): TokenHasherContract {
     const cached = this.#hashers.get(name)
@@ -37,8 +54,12 @@ export class TokenManager {
   }
 
   /**
-   * Persists a token. Only the hash of the value is stored, the value
-   * must be handed to the user by the caller.
+   * Creates a token for a subject. Only the hash of the value is
+   * persisted.
+   *
+   * @param tokenableId - The primary key of the subject
+   * @param value - The secret value of the token
+   * @param options - Options to configure the token
    */
   async create(
     tokenableId: RecordId,
@@ -47,6 +68,9 @@ export class TokenManager {
   ): Promise<SentinelToken> {
     const hasher = this.hasher(options.hasher)
 
+    /**
+     * Compute the expiry date from the "expiresIn" option
+     */
     const expiresAt = new Date()
     expiresAt.setSeconds(
       expiresAt.getSeconds() + string.seconds.parse(options.expiresIn ?? DEFAULT_TOKEN_EXPIRES_IN)
@@ -66,38 +90,52 @@ export class TokenManager {
   }
 
   /**
-   * Verifies a token value and returns the matching {@link SentinelToken}.
+   * Verifies a value and spends one usage of the matching token. The
+   * token is invalidated once expired or exhausted.
    *
-   * Checks the purpose, the expiration and the usage count, then records
-   * the usage. Tokens that can no longer be used are invalidated.
+   * When the lookup is narrowed to a subject using the "tokenableId"
+   * option, a value matching none of its tokens counts as a failed
+   * attempt against each of them.
    *
-   * When the lookup is narrowed to a subject, a value matching none of
-   * its tokens counts as a failed attempt against each of them. Tokens
-   * reaching their maximum failed attempts count are invalidated.
+   * @param value - The secret value of the token
+   * @param options - Options to find the token
    *
-   * @throws {E_TOO_MANY_ATTEMPTS} When no token matches the value and a
-   * token of the subject is locked, either before or by this attempt.
-   * @throws {E_INVALID_TOKEN} When no usable token matches the value.
+   * @throws {E_TOO_MANY_ATTEMPTS} When a token of the subject is
+   * locked, before or by this attempt
+   * @throws {E_INVALID_TOKEN} When no usable token matches the value
    */
   async verify(value: Secret<string>, options: VerifyTokenOptions): Promise<SentinelToken> {
     const hasher = this.hasher(options.hasher)
     const invalid = () => new E_INVALID_TOKEN(options.kind, options.purpose)
 
+    /**
+     * The purpose must be the one the token was created with
+     */
     const token = await this.match(value, hasher, options)
     if (!token) throw invalid()
     if (token.purpose !== (options.purpose ?? null)) throw invalid()
 
+    /**
+     * Expired tokens are removed on the way
+     */
     if (token.isExpired()) {
       await this.provider.invalidate(token)
       throw invalid()
     }
 
+    /**
+     * The provider refuses to mark an exhausted token as used. It
+     * happens when two verifications race for the last usage.
+     */
     const used = await this.provider.markAsUsed(token)
     if (!used) {
       await this.provider.invalidate(token)
       throw invalid()
     }
 
+    /**
+     * Remove the token once its last usage is spent
+     */
     if (used.isExhausted()) {
       await this.provider.invalidate(used)
     }
@@ -106,18 +144,20 @@ export class TokenManager {
   }
 
   /**
-   * Invalidates the tokens of a given subject.
+   * Invalidates the tokens of a subject
+   *
+   * @param tokenableId - The primary key of the subject
+   * @param options - Options to select the tokens to invalidate
    */
   invalidate(tokenableId: RecordId, options: InvalidateTokensOptions): Promise<void> {
     return this.provider.invalidateByTokenableId(tokenableId, options)
   }
 
   /**
-   * Finds the persisted token matching the given value, if any. When no
-   * candidate matches, a failed attempt is recorded against each of them.
+   * Finds the token matching the value among the candidates. A failed
+   * attempt is recorded against every candidate that does not match.
    *
-   * @throws {E_TOO_MANY_ATTEMPTS} When no candidate matches and one of
-   * them is locked, either before or by this attempt.
+   * Throws when a candidate is locked, before or by this attempt.
    */
   protected async match(
     value: Secret<string>,
@@ -129,6 +169,9 @@ export class TokenManager {
     let locked = false
 
     for (const candidate of await this.candidates(plain, hasher, options)) {
+      /**
+       * Locked tokens are removed on the way
+       */
       if (candidate.isLocked()) {
         await this.provider.invalidate(candidate)
         locked = true
@@ -139,6 +182,10 @@ export class TokenManager {
       mismatched.push(candidate)
     }
 
+    /**
+     * Record the failed attempts and find out if one of them locked
+     * its token
+     */
     const outcomes = await Promise.all(
       mismatched.map((candidate) => this.recordFailedAttempt(candidate))
     )
@@ -151,10 +198,8 @@ export class TokenManager {
   }
 
   /**
-   * Records a failed attempt against a token and invalidates it once
-   * its maximum failed attempts count is reached.
-   *
-   * @returns Whether the token is now locked.
+   * Records a failed attempt against the token and invalidates it
+   * once locked. Returns true when the token is locked.
    */
   protected async recordFailedAttempt(token: SentinelToken): Promise<boolean> {
     const updated = await this.provider.recordFailedAttempt(token)
@@ -168,9 +213,9 @@ export class TokenManager {
   }
 
   /**
-   * Looks the persisted tokens that may match the given value up. Tokens
-   * hashed with a non deterministic hasher can only be found through
-   * their subject.
+   * Returns the tokens the value may match. The lookup is narrowed to
+   * the tokens of the subject when given, otherwise the token is found
+   * by its hash, which requires a deterministic hasher.
    */
   protected async candidates(
     plain: string,
@@ -194,6 +239,10 @@ export class TokenManager {
     return token ? [token] : []
   }
 
+  /**
+   * Creates the hasher for the given name. The "scrypt" hasher must
+   * be defined inside the "config/hash.ts" file.
+   */
   protected createHasher(name: TokenHasher): TokenHasherContract {
     switch (name) {
       case 'sha256':

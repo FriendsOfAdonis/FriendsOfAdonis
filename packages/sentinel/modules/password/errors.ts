@@ -2,8 +2,8 @@ import { Exception } from '@adonisjs/core/exceptions'
 import type { HttpContext } from '@adonisjs/core/http'
 
 /**
- * Session store of "@adonisjs/session", used to flash the error when
- * the package is installed.
+ * Shape of the "@adonisjs/session" store, which is not a dependency
+ * of the package
  */
 interface SessionLike {
   flashExcept(keys: string[]): void
@@ -12,18 +12,20 @@ interface SessionLike {
 }
 
 /**
- * Translator of "@adonisjs/i18n", used to translate the response
- * message when the package is installed.
+ * Shape of the "@adonisjs/i18n" translator, which is not a dependency
+ * of the package
  */
 interface I18nLike {
   t(identifier: string, data?: Record<string, unknown>, fallbackMessage?: string): string
 }
 
 /**
- * Raised when the credentials given to "verifyCredentials" do not match
- * any user. Mirrors the exception of "@adonisjs/auth" (same code, same
- * status, same rendering) so that replacing the "withAuthFinder" mixin
- * does not change how a failed login is reported.
+ * The "E_INVALID_CREDENTIALS" exception is raised when the uid or the
+ * password given to "verifyCredentials" is wrong.
+ *
+ * It mirrors the exception of "@adonisjs/auth", code, status and
+ * rendering alike, so that swapping "withAuthFinder" for
+ * "withPassword" reports a failed login the same way.
  */
 export const E_INVALID_CREDENTIALS = class InvalidCredentialsException extends Exception {
   static status: number = 400
@@ -31,12 +33,13 @@ export const E_INVALID_CREDENTIALS = class InvalidCredentialsException extends E
   static message = 'Invalid user credentials'
 
   /**
-   * Translation identifier. Can be customized.
+   * Translation identifier. Can be customized
    */
   identifier = 'errors.E_INVALID_CREDENTIALS'
 
   /**
-   * Returns the message to be sent in the HTTP response.
+   * Returns the message to be sent in the HTTP response. Feel free
+   * to override this method and return a custom response.
    */
   getResponseMessage(error: this, ctx: HttpContext) {
     if ('i18n' in ctx) {
@@ -47,7 +50,7 @@ export const E_INVALID_CREDENTIALS = class InvalidCredentialsException extends E
   }
 
   /**
-   * Converts the exception to an HTTP response.
+   * Converts exception to an HTTP response
    */
   async handle(error: this, ctx: HttpContext) {
     const message = this.getResponseMessage(error, ctx)
@@ -55,6 +58,10 @@ export const E_INVALID_CREDENTIALS = class InvalidCredentialsException extends E
     switch (ctx.request.accepts(['html', 'application/vnd.api+json', 'json'])) {
       case 'html':
       case null: {
+        /**
+         * Flash the error and redirect back when the session is
+         * available, otherwise send the message as is
+         */
         const session = (ctx as { session?: SessionLike }).session
 
         if (session) {
@@ -78,8 +85,8 @@ export const E_INVALID_CREDENTIALS = class InvalidCredentialsException extends E
 }
 
 /**
- * Raised when the current password given to "updatePassword" does not
- * match the persisted one.
+ * The "E_INVALID_PASSWORD" exception is raised when the current
+ * password given to "updatePassword" is wrong.
  */
 export const E_INVALID_PASSWORD = class InvalidPasswordException extends Exception {
   static status: number = 400

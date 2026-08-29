@@ -5,11 +5,26 @@ import type { SentinelConfig, SentinelOptions } from './types.ts'
 import { LucidTokenProvider, LucidTokenProviderOptions } from '../modules/token/providers/lucid.ts'
 
 /**
- * Creates the Sentinel configuration. The returned config provider is
- * resolved lazily by the provider when the service is first resolved.
+ * Define config for the sentinel package. The token provider is
+ * resolved lazily, when the service provider first needs it.
+ *
+ * @param config - Configuration object with the token provider and the
+ * options of each module
+ *
+ * @example
+ * ```ts
+ * const sentinelConfig = defineConfig({
+ *   tokens: tokens.lucid(),
+ *   totp: { issuer: 'My app' },
+ *   magicLink: { url: 'https://example.com/login/magic' },
+ * })
+ * ```
  */
 export function defineConfig(config: SentinelConfig): ConfigProvider<SentinelOptions> {
   return configProvider.create(async (app) => {
+    /**
+     * The token provider should always be provided
+     */
     if (!config.tokens) {
       throw new RuntimeException(
         'Missing "tokens" inside "config/sentinel.ts". Use "tokens.lucid()" to define the token provider'
@@ -26,6 +41,17 @@ export function defineConfig(config: SentinelConfig): ConfigProvider<SentinelOpt
   })
 }
 
+/**
+ * Helpers to configure the token provider inside the config file. The
+ * provider is constructed when the sentinel config is first resolved.
+ *
+ * @example
+ * ```ts
+ * const sentinelConfig = defineConfig({
+ *   tokens: tokens.lucid({ table: 'sentinel_tokens' }),
+ * })
+ * ```
+ */
 export const tokens = {
   lucid: (config: LucidTokenProviderOptions = {}) => {
     return configProvider.create(async (app) => {

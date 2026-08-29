@@ -3,6 +3,10 @@ import type { TOTPManager } from '../modules/totp/manager.ts'
 
 let totp: TOTPManager
 
+/**
+ * Returns a singleton instance of the TOTPManager from the
+ * container
+ */
 await app.booted(async () => {
   totp = await app.container.make('sentinel.totp')
 })

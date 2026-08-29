@@ -29,26 +29,53 @@ import { E_INVALID_BACKUP_CODE, E_INVALID_OTP, E_TOTP_LOCKED } from '../errors.t
 import { TOTP } from 'otpauth'
 import { TOTPManager } from '../manager.ts'
 
+/**
+ * TOTP authenticator represents the enrollment of an authenticator
+ * app for a model. It validates the codes, consumes the backup codes
+ * and locks itself after too many failed verifications.
+ *
+ * An authenticator must be linked to its owner using the "link"
+ * method before use, since the options come from the owner. The
+ * "withTOTP" mixin links the authenticators it returns.
+ *
+ * @example
+ * const authenticator = await user.createAuthenticator()
+ * const qrcode = await authenticator.generateQRCode()
+ *
+ * await authenticator.validate(code)
+ */
 export class TOTPAuthenticator extends BaseModel {
   @column({ isPrimary: true })
   declare id: RecordId
 
+  /**
+   * Label displayed by the authenticator app, usually the email of
+   * the account
+   */
   @column()
   declare label: string | null
 
+  /**
+   * Reference to the primary key of the owner
+   */
   @column()
   declare tokenableId: RecordId
 
+  /**
+   * Encrypted list of the remaining backup codes
+   */
   @column()
   declare backupCodes: string
 
+  /**
+   * Encrypted base32 secret shared with the authenticator app
+   */
   @column()
   declare secret: string
 
   /**
-   * Last time step a code was accepted for, "null" until the first one
-   * is. Stored as a 64 bits integer, which the drivers hand back as a
-   * string.
+   * Time step of the last accepted code. A bigint column, handed
+   * back as a string by the drivers
    */
   @column({
     consume: (value: string | number | null | undefined) =>
@@ -56,29 +83,50 @@ export class TOTPAuthenticator extends BaseModel {
   })
   declare lastUsedCounter: number | null
 
+  /**
+   * Number of consecutive failed verifications
+   */
   @column()
   declare failedVerificationCount: number
 
+  /**
+   * Timestamp at which the lock lifts. Null when the authenticator
+   * is not locked
+   */
   @column.dateTime()
   declare lockedUntil: DateTime | null
 
+  /**
+   * Timestamp of the first valid code. Null until the enrollment is
+   * confirmed
+   */
   @column.dateTime()
   declare verifiedAt: DateTime | null
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
+  /**
+   * The manager used to encrypt and decrypt the secrets, defined by
+   * the service provider
+   */
   protected static $manager: TOTPManager
 
+  /**
+   * The owner of the authenticator, defined by the "link" method
+   */
   protected $tokenable: TOTPAuthenticableContract | undefined
 
+  /**
+   * Defines the manager used by the model. Called by the service
+   * provider once the manager is resolved.
+   */
   static useManager(manager: TOTPManager) {
     this.$manager = manager
   }
 
   /**
-   * @throws {RuntimeException} When the authenticator has not been
-   * linked to its tokenable.
+   * Ensures the authenticator has been linked to its owner
    */
   protected $assertLinked(): asserts this is { $tokenable: TOTPAuthenticableContract } {
     if (!this.$tokenable) {
@@ -88,17 +136,27 @@ export class TOTPAuthenticator extends BaseModel {
     }
   }
 
+  /**
+   * The owner of the authenticator. Throws when the authenticator
+   * has not been linked.
+   */
   get tokenable() {
     this.$assertLinked()
     return this.$tokenable
   }
 
+  /**
+   * Links the authenticator to its owner, whose options configure
+   * the validation
+   */
   link(tokenable: TOTPAuthenticableContract) {
     this.$tokenable = tokenable
     return this
   }
 
   /**
+   * The "otpauth" instance configured from the options of the owner
+   *
    * @internal
    */
   get $totp() {
@@ -115,15 +173,15 @@ export class TOTPAuthenticator extends BaseModel {
   }
 
   /**
-   * Whether the authenticator refuses codes following too many failed
-   * verifications. Locks are lifted by time alone.
+   * Check if the authenticator is locked. The lock is lifted by time
+   * alone.
    */
   isLocked() {
     return !!this.lockedUntil && this.lockedUntil > DateTime.now()
   }
 
   /**
-   * @throws {E_TOTP_LOCKED} When the authenticator is still locked.
+   * Ensures the authenticator is not locked
    */
   protected $assertUnlocked() {
     if (this.lockedUntil && this.lockedUntil > DateTime.now()) {
@@ -132,36 +190,33 @@ export class TOTPAuthenticator extends BaseModel {
   }
 
   /**
-   * Validates a code and records the outcome: a wrong code counts as a
-   * failed verification, a right one clears the failures recorded so far
-   * and marks the authenticator as verified.
+   * Validates a code and confirms the enrollment on the first valid
+   * one.
    *
-   * The first valid code confirms the enrollment and retires the
-   * authenticators the tokenable enrolled before it, which is what makes
-   * a re-enrollment safe: the authenticator in use keeps answering until
-   * the new one has been proven to work.
+   * Each code is accepted once, as RFC 6238 section 5.2 requires. The
+   * time step of the code is written with a compare and swap, so that
+   * a replay is refused even while the window still covers it.
    *
-   * A code is accepted once. The time step it was generated for is
-   * written with a compare and swap on the stored one, a code handed
-   * twice is therefore refused even while the validation window still
-   * covers it, as RFC 6238 requires.
+   * @param token - The code typed by the user
+   * @param options - Options overriding the ones of the owner
    *
-   * @throws {E_TOTP_LOCKED} When the authenticator is locked, either
-   * before or by this attempt.
+   * @throws {E_INVALID_OTP} When the code is wrong or was accepted
+   * already
+   * @throws {E_TOTP_LOCKED} When the authenticator is locked, before
+   * or by this attempt
    *
    * @see https://datatracker.ietf.org/doc/html/rfc6238#section-5.2
    */
   async validate(token: Secret<string> | string, options: ValidateAuthenticatorTokenOptions = {}) {
-    const resolved = { ...options }
+    const resolved = { ...this.tokenable.getTOTPOptions(), ...options }
 
     this.$assertUnlocked()
 
     const value = typeof token === 'string' ? token : token.release()
 
     /**
-     * The same instant is handed to the validation and to the counter,
-     * a period elapsing between the two would otherwise shift the step
-     * the code is credited to.
+     * Use one instant for both calls, since a step boundary between
+     * them would credit the code to the wrong step
      */
     const timestamp = Date.now()
     const delta = this.$totp.validate({
@@ -176,13 +231,16 @@ export class TOTPAuthenticator extends BaseModel {
     }
 
     /**
-     * Step the code was generated for. The window accepts the steps
-     * around the current one, comparing against the last consumed step
-     * rather than the current one therefore closes the codes reached by
-     * going backwards too.
+     * The step the code belongs to. Requiring it to exceed the last
+     * one consumed also refuses the older codes the window still
+     * covers
      */
     const counter = this.$totp.counter({ timestamp }) + delta
 
+    /**
+     * Only consecutive failures lock, so a right code resets the
+     * count
+     */
     const result = await TOTPAuthenticator.query({ client: this.$trx })
       .where('id', this.id as any)
       .where((query) =>
@@ -195,30 +253,29 @@ export class TOTPAuthenticator extends BaseModel {
       })
 
     /**
-     * Write queries are handed back as reported by the driver: an array
-     * holding the affected rows count for some of them, the count
-     * itself for the others.
+     * Affected rows are a bare count with some drivers and wrapped
+     * in an array with others
      */
     const affected = Array.isArray(result) ? result[0] : result
 
     /**
-     * The step was consumed already, by this very code handed a second
-     * time or by a concurrent validation that won it.
+     * Zero rows means the step was spent already, by a replay or a
+     * concurrent validation
      */
     if (!affected) {
       await this.$recordFailedVerification(options)
       throw new E_INVALID_OTP()
     }
 
-    /**
-     * A right code clears the failures recorded so far, only consecutive
-     * ones lock the authenticator.
-     */
     this.lastUsedCounter = counter
     this.failedVerificationCount = 0
     this.lockedUntil = null
 
     if (!this.verifiedAt) {
+      /**
+       * Retire the previous authenticators only now, so that the one
+       * in use keeps answering until the new one is proven to work
+       */
       this.verifiedAt = DateTime.now()
       await this.save()
       await this.$retirePreviousAuthenticators()
@@ -228,12 +285,7 @@ export class TOTPAuthenticator extends BaseModel {
   }
 
   /**
-   * Deletes the other authenticators of the tokenable, called once this
-   * one has been confirmed by a first valid code.
-   *
-   * An enrollment only replaces the one in use once the tokenable proves
-   * it can read the new secret: a re-enrollment left unconfirmed
-   * therefore never costs it the authenticator it still logs in with.
+   * Deletes the other authenticators of the owner
    */
   protected async $retirePreviousAuthenticators() {
     await TOTPAuthenticator.query({ client: this.$trx })
@@ -243,17 +295,24 @@ export class TOTPAuthenticator extends BaseModel {
   }
 
   /**
-   * The "otpauth://" URI holding the enrollment, usually handed to the
-   * user as a QR code.
+   * The "otpauth://" URI to share with the authenticator app. It is
+   * what the QR code encodes.
    */
   get uri() {
     return this.$totp.toString()
   }
 
+  /**
+   * Returns the decrypted secret
+   */
   getSecret() {
     return TOTPAuthenticator.$manager.decryptSecret(this.secret)
   }
 
+  /**
+   * Renders the URI as a PNG data URL. Requires the optional "qrcode"
+   * package.
+   */
   async generateQRCode() {
     const uri = this.uri
     const qrcode = await importQRCode()
@@ -261,31 +320,29 @@ export class TOTPAuthenticator extends BaseModel {
   }
 
   /**
-   * Returns the backup codes left. Unlike a password, the codes are
-   * stored encrypted and can therefore be displayed again.
+   * Returns the decrypted list of the remaining backup codes
    */
   getBackupCodes() {
     return new Secret(TOTPAuthenticator.$manager.decryptBackupCodes(this.backupCodes))
   }
 
   /**
-   * Verifies a backup code and consumes it.
+   * Consumes a backup code. The remaining codes are rewritten with a
+   * compare and swap, so that two concurrent verifications never
+   * spend the same one.
    *
-   * The codes left are written with a compare and swap on the stored
-   * value, two concurrent verifications can therefore never spend the
-   * same code.
+   * @param code - The code typed by the user
    *
-   * @throws {E_TOTP_LOCKED} When the authenticator is locked, either
-   * before or by this attempt.
-   * @throws {E_INVALID_BACKUP_CODE} When the code matches none of the
-   * codes left on the authenticator, or when a concurrent verification
-   * consumed a code first.
+   * @throws {E_TOTP_LOCKED} When the authenticator is locked, before
+   * or by this attempt
+   * @throws {E_INVALID_BACKUP_CODE} When the code is unknown, or a
+   * concurrent verification spent it first
    */
   async verifyBackupCode(code: Secret<string> | string) {
     /**
-     * A failed attempt resolves the lock policy from the tokenable: an
-     * authenticator left unlinked is refused up front, before any code
-     * is compared or spent, rather than half way through the attempt.
+     * Assert the link up front. Only the failure path reads the
+     * owner, and an unlinked authenticator must not spend a code
+     * before failing
      */
     this.$assertLinked()
     this.$assertUnlocked()
@@ -308,15 +365,14 @@ export class TOTPAuthenticator extends BaseModel {
       .update({ backup_codes: remaining, failed_verification_count: 0, locked_until: null })
 
     /**
-     * Write queries are handed back as reported by the driver: an array
-     * holding the affected rows count for some of them, the count
-     * itself for the others.
+     * Affected rows are a bare count with some drivers and wrapped
+     * in an array with others
      */
     const affected = Array.isArray(result) ? result[0] : result
 
     /**
-     * The codes changed under this verification, the one that changed
-     * them won the code.
+     * Zero rows means a concurrent verification rewrote the codes
+     * first
      */
     if (!affected) throw new E_INVALID_BACKUP_CODE()
 
@@ -326,18 +382,19 @@ export class TOTPAuthenticator extends BaseModel {
   }
 
   /**
-   * Records a failed verification and locks the authenticator once the
-   * maximum failed verifications count is reached.
+   * Records a failed verification and locks the authenticator once
+   * the maximum is reached
    *
-   * The count is incremented by the database rather than in memory, two
-   * concurrent verifications can therefore never spend the same attempt.
-   *
-   * @throws {E_TOTP_LOCKED} When the failure locks the authenticator.
+   * @throws {E_TOTP_LOCKED} When this failure locks the authenticator
    */
   protected async $recordFailedVerification(options: ValidateAuthenticatorTokenOptions = {}) {
     const resolved = { ...this.tokenable.getTOTPOptions(), ...options }
     const maximum = resolved.maximumFailedVerifications ?? TOTP_DEFAULT_MAXIMUM_FAILED_VERIFICATIONS
 
+    /**
+     * Increment in the database, so that concurrent failures all
+     * count
+     */
     await TOTPAuthenticator.query({ client: this.$trx })
       .where('id', this.id as any)
       .increment('failed_verification_count', 1)
@@ -347,8 +404,8 @@ export class TOTPAuthenticator extends BaseModel {
     if (maximum <= 0 || this.failedVerificationCount < maximum) return
 
     /**
-     * The count restarts along with the lock: once it is lifted, the
-     * authenticator is given a fresh window of attempts.
+     * Reset the count along with the lock, so that a fresh window of
+     * attempts opens once the lock lifts
      */
     this.failedVerificationCount = 0
     this.lockedUntil = DateTime.now().plus({
@@ -360,8 +417,9 @@ export class TOTPAuthenticator extends BaseModel {
   }
 
   /**
-   * Replaces the backup codes of the authenticator, invalidating the
-   * ones handed previously.
+   * Replaces the backup codes with new ones and returns them
+   *
+   * @param options - Options overriding the ones of the owner
    */
   async regenerateBackupCodes(options: RegenerateBackupCodesOptions = {}) {
     const resolved = { ...this.tokenable.getTOTPOptions(), ...options }
@@ -378,18 +436,20 @@ export class TOTPAuthenticator extends BaseModel {
   }
 
   /**
-   * Enrolls a new authenticator, which stays unverified until a first
-   * valid code confirms it.
+   * Enrolls a new authenticator for a model.
    *
-   * The authenticator the tokenable currently logs in with is left
-   * untouched: it is retired by the confirmation rather than by this
-   * call, see {@link TOTPAuthenticator.validate}. Only the enrollments
-   * left unconfirmed are replaced, so that a tokenable opening the
-   * enrollment page twice does not pile up secrets it never scanned.
+   * The authenticator stays unverified until a first valid code
+   * confirms it, see "validate". The authenticator in use keeps
+   * answering until then, so a re-enrollment never scanned costs
+   * nothing. The enrollments left unconfirmed are replaced, so that
+   * opening the enrollment page twice does not pile up secrets.
    *
-   * The enrollment joins the transaction the tokenable is bound to: a
-   * flow rolled back leaves no authenticator behind, and the queries do
-   * not wait on a lock the caller is holding.
+   * The queries run in the transaction of the model when it has one:
+   * a rolled back flow leaves nothing behind, and no query waits on
+   * a lock the caller holds.
+   *
+   * @param tokenable - The model enrolling the authenticator
+   * @param options - Options overriding the ones of the model
    */
   static async createFor(
     tokenable: TOTPAuthenticableContract & LucidRow,
@@ -408,6 +468,9 @@ export class TOTPAuthenticator extends BaseModel {
       resolved.backupCodesLength ?? TOTP_DEFAULT_BACKUP_CODES_LENGTH
     )
 
+    /**
+     * Replace the enrollments left unconfirmed
+     */
     await TOTPAuthenticator.query({ client })
       .where('tokenable_id', tokenableId as any)
       .whereNull('verified_at')

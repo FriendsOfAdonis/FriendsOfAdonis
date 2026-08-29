@@ -9,6 +9,10 @@ import {
 } from '../types.ts'
 import { TOTPManager } from '../manager.ts'
 
+/**
+ * Options accepted by the "withTOTP" mixin. They override the config
+ * of the manager for the model.
+ */
 export interface WithTOTPOptions extends Partial<AuthenticatorOptions> {}
 
 type WithTOTPRow = TOTPAuthenticableContract & {
@@ -22,12 +26,34 @@ type WithTOTPClass<
   new (...args: any[]): WithTOTPRow
 }
 
+/**
+ * Mixin to add TOTP authenticators to a model.
+ *
+ * Under the hood, this mixin defines following methods
+ *
+ * - getTOTPOptions and getTOTPLabel methods to configure the
+ *   authenticators of the model
+ * - createAuthenticator method to enroll a new authenticator
+ * - retrieveAuthenticator method to find the authenticator in use
+ *
+ * @param manager - The TOTP manager
+ * @param defaults - Options overriding the config of the manager
+ *
+ * @example
+ * import totp from '@foadonis/sentinel/services/totp'
+ *
+ * class User extends compose(BaseModel, totp.withTOTP({ issuer: 'My app' })) {}
+ */
 export function withTOTP(manager: TOTPManager, defaults: WithTOTPOptions = {}) {
   return function <Model extends NormalizeConstructor<typeof BaseModel>>(
     superclass: Model
   ): WithTOTPClass<Model> {
     @staticImplements<WithTOTPClass>()
     class WithTOTPImpl extends superclass implements WithTOTPRow {
+      /**
+       * Returns the options of the authenticators, the config of the
+       * manager overridden by the options of the mixin
+       */
       getTOTPOptions() {
         return {
           ...manager.config,
@@ -35,10 +61,19 @@ export function withTOTP(manager: TOTPManager, defaults: WithTOTPOptions = {}) {
         }
       }
 
+      /**
+       * Returns the label displayed by the authenticator app. Reads
+       * the "email" attribute, override the method to use another
+       * one.
+       */
       getTOTPLabel() {
         return this.$getAttribute('email')
       }
 
+      /**
+       * Enrolls a new authenticator. See "TOTPAuthenticator.createFor"
+       * for the details.
+       */
       async createAuthenticator(
         options: CreateAuthenticatorOptions = {}
       ): Promise<TOTPAuthenticator> {
@@ -46,19 +81,15 @@ export function withTOTP(manager: TOTPManager, defaults: WithTOTPOptions = {}) {
       }
 
       /**
-       * Returns the authenticator the model logs in with, "null" until
-       * an enrollment has been confirmed by a first valid code.
+       * Returns the authenticator in use, or null until an enrollment
+       * is confirmed by a first valid code. The "unverified" flag
+       * returns the enrollment in flight instead.
        *
-       * Pass "unverified" to reach the enrollment being confirmed, which
-       * is the one the model has just been handed a QR code for.
-       *
-       * The newest authenticator wins: confirming an enrollment retires
-       * the previous ones, so only an enrollment in flight can sit next
-       * to the one in use.
-       *
-       * The read joins the transaction the model is bound to, so that an
-       * enrollment created inside it is visible to the flow that created
-       * it. The authenticator returned stays bound to that transaction.
+       * The newest one is returned. Since confirming an enrollment
+       * retires the older ones, at most one unconfirmed enrollment
+       * sits next to the one in use. The query runs in the
+       * transaction of the model, so an enrollment created inside
+       * it is found.
        */
       async retrieveAuthenticator(unverified = false): Promise<TOTPAuthenticator | null> {
         const authenticator = await TOTPAuthenticator.query({ client: this.$trx })

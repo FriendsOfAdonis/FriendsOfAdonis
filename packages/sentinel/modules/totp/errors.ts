@@ -2,8 +2,8 @@ import { Exception } from '@adonisjs/core/exceptions'
 import type { DateTime } from 'luxon'
 
 /**
- * Raised when the code given to "verifyBackupCode" matches none of the
- * backup codes left on the authenticator.
+ * The "E_INVALID_BACKUP_CODE" exception is raised when a backup code
+ * matches none of the remaining codes of the authenticator.
  */
 export const E_INVALID_BACKUP_CODE = class InvalidBackupCodeException extends Exception {
   static status: number = 401
@@ -11,6 +11,11 @@ export const E_INVALID_BACKUP_CODE = class InvalidBackupCodeException extends Ex
   static message = 'The provided backup code is invalid.'
 }
 
+/**
+ * The "E_INVALID_OTP" exception is raised when a code does not match
+ * the current time step of the authenticator, or has been accepted
+ * already.
+ */
 export const E_INVALID_OTP = class InvalidOTPException extends Exception {
   static status: number = 401
   static code = 'E_INVALID_OTP'
@@ -18,9 +23,11 @@ export const E_INVALID_OTP = class InvalidOTPException extends Exception {
 }
 
 /**
- * Raised when a wrong code locks an authenticator by reaching its maximum
- * failed verifications count, or targets an authenticator that is still
- * locked.
+ * The "E_TOTP_LOCKED" exception is raised when the authenticator has
+ * been locked after too many failed verifications.
+ *
+ * The "error.lockedUntil" property can be used to know when the lock
+ * lifts.
  */
 export const E_TOTP_LOCKED = class TOTPLockedException extends Exception {
   static status: number = 429
@@ -28,7 +35,7 @@ export const E_TOTP_LOCKED = class TOTPLockedException extends Exception {
   static message = 'Too many failed verifications, the authenticator is locked.'
 
   /**
-   * Moment the authenticator accepts codes again.
+   * Timestamp at which the lock lifts
    */
   public lockedUntil: DateTime
 
@@ -38,8 +45,8 @@ export const E_TOTP_LOCKED = class TOTPLockedException extends Exception {
   }
 
   /**
-   * Seconds left before the lock is lifted, ready for a "Retry-After"
-   * header.
+   * Seconds left before the lock lifts, as expected by the
+   * "Retry-After" header
    */
   get retryAfter() {
     return Math.max(0, Math.ceil(this.lockedUntil.diffNow('seconds').seconds))

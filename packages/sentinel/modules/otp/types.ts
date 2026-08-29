@@ -1,45 +1,48 @@
+/**
+ * Options accepted when generating a code
+ */
 export interface GenerateOTPOptions {
   /**
-   * Length of the OTP code.
+   * Number of digits of the code.
    *
-   * @default 6
+   * Defaults to "otp.length" from "config/sentinel.ts", then 6
    */
   length?: number
 
   /**
-   * Expiration of the OTP.
+   * The lifetime of the code, in seconds or as a duration string
+   * like "20m".
    *
-   * @default "20m"
+   * Defaults to "otp.expiresIn" from "config/sentinel.ts", then "20m"
    */
   expiresIn?: string | number
 
   /**
-   * Number of wrong codes tolerated before the OTP is invalidated.
-   * Without a limit, a short numeric code can be brute-forced
-   * within its lifetime.
+   * Number of failed attempts after which the code is invalidated.
    *
-   * @default "otp.maximumFailedAttempts" from "config/sentinel.ts", 5
-   * when it is not configured
+   * Defaults to "otp.maximumFailedAttempts" from "config/sentinel.ts", then 5
    */
   maximumFailedAttempts?: number
 
   /**
-   * Purpose to ensure that the OTP cannot be used
-   * for a different purpose than the one given originally.
+   * The purpose the code is generated for. It must be given again to
+   * verify the code.
    */
   purpose?: string
 
   /**
-   * Additional metadata associated to the generated OTP.
-   * Useful for storing a redirect URL.
+   * Arbitrary data handed back by the verification, a redirect URL
+   * for example
    */
   metadata?: Record<string, unknown>
 }
 
+/**
+ * Options accepted when verifying a code
+ */
 export interface VerifyOTPOptions {
   /**
-   * Purpose the OTP was generated with. An OTP generated with
-   * a purpose can only be verified with the same purpose.
+   * The purpose the code was generated with, if any
    */
   purpose?: string
 }
