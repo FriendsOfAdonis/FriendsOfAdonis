@@ -33,8 +33,9 @@ type WithMagicLinkRow = {
 
   /**
    * Invalidates the magic link tokens of the row, so that its
-   * pending links stop working. Leaving the purpose out targets
-   * every purpose, the default one of the mixin included.
+   * pending links stop working. Leaving the purpose out targets the
+   * default one of the mixin, or the tokens without purpose when the
+   * mixin has none.
    */
   invalidateMagicLinkTokens(options?: InvalidateMagicLinkTokensOptions): Promise<void>
 }
@@ -122,9 +123,14 @@ export function withMagicLink(manager: MagicLinkManager, defaults: WithMagicLink
       }
 
       async invalidateMagicLinkTokens(options: InvalidateMagicLinkTokensOptions = {}) {
+        /**
+         * An explicit undefined purpose must not fall back to the
+         * default one
+         */
+        const purpose = 'purpose' in options ? options.purpose : defaults.purpose
         return manager.invalidateMagicLinkTokens(
           primaryKeyOf(this, 'invalidate the magic link tokens of'),
-          options
+          { purpose }
         )
       }
     }

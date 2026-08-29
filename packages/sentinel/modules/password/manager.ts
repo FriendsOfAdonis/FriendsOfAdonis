@@ -138,6 +138,17 @@ export class PasswordManager {
   }
 
   /**
+   * Invalidates the password reset tokens of a subject, whatever
+   * their purpose. The mixin calls it once a password is set, since
+   * a pending reset token is a way in until it expires.
+   *
+   * @param tokenableId - The primary key of the subject
+   */
+  invalidateAllPasswordResetTokens(tokenableId: RecordId): Promise<void> {
+    return this.tokens.invalidateAll(tokenableId, { kind: PasswordManager.TOKEN_KIND })
+  }
+
+  /**
    * Mixin to add password hashing, verification and reset tokens to
    * a Lucid model. See "withPassword" for the details.
    *

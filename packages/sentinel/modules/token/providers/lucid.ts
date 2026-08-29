@@ -8,7 +8,8 @@ import { SentinelToken } from '../token.ts'
 import type {
   FindTokenableTokensOptions,
   FindTokenOptions,
-  InvalidateTokensOptions,
+  InvalidateAllTokensOptions,
+  InvalidateTokenableTokensOptions,
   TokenAttributes,
   TokenProviderContract,
 } from '../types.ts'
@@ -223,19 +224,26 @@ export class LucidTokenProvider implements TokenProviderContract {
   }
 
   /**
-   * Deletes the tokens of a subject. A null purpose targets the
-   * tokens without a purpose, an undefined one every purpose.
+   * Deletes the tokens of a subject matching the kind and purpose
    */
-  async invalidateByTokenableId(tokenableId: RecordId, options: InvalidateTokensOptions) {
+  async invalidateByTokenableId(tokenableId: RecordId, options: InvalidateTokenableTokensOptions) {
     const query = this.query().where({ tokenable_id: tokenableId, kind: options.kind })
 
     if (options.purpose === null) {
       query.whereNull('purpose')
-    } else if (options.purpose !== undefined) {
+    } else {
       query.where('purpose', options.purpose)
     }
 
     await query.del()
+  }
+
+  /**
+   * Deletes the tokens of a subject matching the kind, whatever
+   * their purpose
+   */
+  async invalidateAllByTokenableId(tokenableId: RecordId, options: InvalidateAllTokensOptions) {
+    await this.query().where({ tokenable_id: tokenableId, kind: options.kind }).del()
   }
 
   /**

@@ -52,9 +52,8 @@ export interface VerifyOTPOptions {
  */
 export interface InvalidateOTPsOptions {
   /**
-   * The purpose of the codes to invalidate. A null value targets
-   * the codes without a purpose, leaving the option out targets
-   * every purpose.
+   * The purpose of the codes to invalidate. Leaving the option out
+   * targets the codes without a purpose.
    */
-  purpose?: string | null
+  purpose?: string
 }

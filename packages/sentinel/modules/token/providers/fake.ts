@@ -3,7 +3,8 @@ import { SentinelToken } from '../token.ts'
 import {
   FindTokenableTokensOptions,
   FindTokenOptions,
-  InvalidateTokensOptions,
+  InvalidateAllTokensOptions,
+  InvalidateTokenableTokensOptions,
   TokenAttributes,
   TokenProviderContract,
 } from '../types.ts'
@@ -84,17 +85,22 @@ export class FakeMemoryTokenProvider implements TokenProviderContract {
   }
 
   /**
-   * Removes the tokens of a subject. A null purpose targets the
-   * tokens without a purpose, an undefined one every purpose.
+   * Removes the tokens of a subject matching the kind and purpose
    */
-  async invalidateByTokenableId(tokenableId: RecordId, options: InvalidateTokensOptions) {
+  async invalidateByTokenableId(tokenableId: RecordId, options: InvalidateTokenableTokensOptions) {
     this.tokens = this.tokens.filter(
       (t) =>
-        !(
-          t.tokenableId === tokenableId &&
-          t.kind === options.kind &&
-          (options.purpose === undefined || t.purpose === options.purpose)
-        )
+        !(t.tokenableId === tokenableId && t.kind === options.kind && t.purpose === options.purpose)
+    )
+  }
+
+  /**
+   * Removes the tokens of a subject matching the kind, whatever
+   * their purpose
+   */
+  async invalidateAllByTokenableId(tokenableId: RecordId, options: InvalidateAllTokensOptions) {
+    this.tokens = this.tokens.filter(
+      (t) => !(t.tokenableId === tokenableId && t.kind === options.kind)
     )
   }
 }

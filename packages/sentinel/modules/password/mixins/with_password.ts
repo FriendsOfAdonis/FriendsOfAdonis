@@ -232,8 +232,8 @@ export function withPassword(manager: PasswordManager, options: WithPasswordOpti
 
       /**
        * Resets the password of the user a token was created for. The
-       * token is consumed and the other pending tokens of the user
-       * are invalidated.
+       * token is consumed and the other pending reset tokens of the
+       * user are invalidated, whatever their purpose.
        *
        * @throws {E_INVALID_TOKEN} When the token is unknown, expired,
        * already used, was created for another purpose, or its subject
@@ -248,7 +248,9 @@ export function withPassword(manager: PasswordManager, options: WithPasswordOpti
         const [instance, metadata] = await this.verifyPasswordResetToken(value, options)
 
         await savePassword(instance, passwordColumnName, password)
-        await instance.invalidatePasswordResetTokens()
+        await manager.invalidateAllPasswordResetTokens(
+          primaryKeyOf(instance, 'invalidate the password reset tokens of')
+        )
 
         return [instance, metadata]
       }
@@ -301,7 +303,7 @@ export function withPassword(manager: PasswordManager, options: WithPasswordOpti
 
       /**
        * Replaces the password after verifying the current one. The
-       * pending reset tokens are invalidated.
+       * pending reset tokens are invalidated, whatever their purpose.
        *
        * @throws {E_INVALID_PASSWORD} When the current password is
        * wrong
@@ -312,7 +314,9 @@ export function withPassword(manager: PasswordManager, options: WithPasswordOpti
         }
 
         await savePassword(this, passwordColumnName, password)
-        await this.invalidatePasswordResetTokens()
+        await manager.invalidateAllPasswordResetTokens(
+          primaryKeyOf(this, 'invalidate the password reset tokens of')
+        )
       }
 
       /**
@@ -327,12 +331,19 @@ export function withPassword(manager: PasswordManager, options: WithPasswordOpti
       }
 
       /**
-       * Invalidates the password reset tokens of the row
+       * Invalidates the password reset tokens of the row. Leaving the
+       * purpose out targets the default one of the mixin, or the
+       * tokens without purpose when the mixin has none.
        */
       async invalidatePasswordResetTokens(options: InvalidatePasswordResetTokensOptions = {}) {
+        /**
+         * An explicit undefined purpose must not fall back to the
+         * default one
+         */
+        const purpose = 'purpose' in options ? options.purpose : defaults.purpose
         return manager.invalidatePasswordResetTokens(
           primaryKeyOf(this, 'invalidate the password reset tokens of'),
-          options
+          { purpose }
         )
       }
 

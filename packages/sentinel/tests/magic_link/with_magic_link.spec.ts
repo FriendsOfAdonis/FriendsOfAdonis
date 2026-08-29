@@ -327,7 +327,7 @@ test.group('Magic link mixin | verifyMagicLinkToken', () => {
 })
 
 test.group('Magic link mixin | invalidateMagicLinkTokens', () => {
-  test('invalidate every magic link token of the model', async ({ assert }) => {
+  test('invalidate the tokens without purpose by default', async ({ assert }) => {
     const { db, User, user } = await setup()
     const other = await User.create({ email: 'romain@adonisjs.com' })
 
@@ -338,14 +338,18 @@ test.group('Magic link mixin | invalidateMagicLinkTokens', () => {
     await user.invalidateMagicLinkTokens()
 
     const rows = await tokenRows(db)
-    assert.lengthOf(rows, 1)
-    assert.equal(rows[0].tokenable_id, other.id)
+    assert.deepEqual(
+      rows.map((row) => [row.tokenable_id, row.purpose]),
+      [
+        [user.id, 'signin'],
+        [other.id, null],
+      ]
+    )
 
     await assert.rejects(() => User.verifyMagicLinkToken(plain), E_INVALID_TOKEN)
-    await assert.rejects(
-      () => User.verifyMagicLinkToken(signin, { purpose: 'signin' }),
-      E_INVALID_TOKEN
-    )
+
+    const [self] = await User.verifyMagicLinkToken(signin, { purpose: 'signin' })
+    assert.equal(self.id, user.id)
 
     const [found] = await User.verifyMagicLinkToken(foreign)
     assert.equal(found.id, other.id)
@@ -366,28 +370,35 @@ test.group('Magic link mixin | invalidateMagicLinkTokens', () => {
     )
   })
 
-  test('invalidate the tokens without purpose only', async ({ assert }) => {
-    const { db, user } = await setup()
+  test('inherit the default purpose of the mixin', async ({ assert }) => {
+    const { db, user } = await setup({}, { purpose: 'signin' })
     await user.generateMagicLinkToken()
+    await user.generateMagicLinkToken({ purpose: 'signup' })
     await user.generateMagicLinkToken({ purpose: 'signin' })
 
-    await user.invalidateMagicLinkTokens({ purpose: null })
+    await user.invalidateMagicLinkTokens()
+
+    const rows = await tokenRows(db)
+    assert.deepEqual(
+      rows.map((row) => row.purpose),
+      ['signup']
+    )
+  })
+
+  test('drop the default purpose when the purpose option is explicitly undefined', async ({
+    assert,
+  }) => {
+    const { db, user } = await setup({}, { purpose: 'signin' })
+    await user.generateMagicLinkToken({ purpose: undefined })
+    await user.generateMagicLinkToken({ purpose: 'signin' })
+
+    await user.invalidateMagicLinkTokens({ purpose: undefined })
 
     const rows = await tokenRows(db)
     assert.deepEqual(
       rows.map((row) => row.purpose),
       ['signin']
     )
-  })
-
-  test('target every purpose by default, the one of the mixin included', async ({ assert }) => {
-    const { db, user } = await setup({}, { purpose: 'signin' })
-    await user.generateMagicLinkToken()
-    await user.generateMagicLinkToken({ purpose: 'signup' })
-    assert.lengthOf(await tokenRows(db), 2)
-
-    await user.invalidateMagicLinkTokens()
-    assert.isEmpty(await tokenRows(db))
   })
 
   test('leave the tokens of the other kinds untouched', async ({ assert }) => {

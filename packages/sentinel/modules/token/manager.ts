@@ -9,6 +9,7 @@ import { ScryptTokenHasher, Sha256TokenHasher } from './hashers.ts'
 import type { SentinelToken } from './token.ts'
 import type {
   CreateTokenOptions,
+  InvalidateAllTokensOptions,
   InvalidateTokensOptions,
   TokenHasher,
   TokenHasherContract,
@@ -144,13 +145,27 @@ export class TokenManager {
   }
 
   /**
-   * Invalidates the tokens of a subject
+   * Invalidates the tokens of a subject matching the kind and purpose
    *
    * @param tokenableId - The primary key of the subject
    * @param options - Options to select the tokens to invalidate
    */
   invalidate(tokenableId: RecordId, options: InvalidateTokensOptions): Promise<void> {
-    return this.provider.invalidateByTokenableId(tokenableId, options)
+    return this.provider.invalidateByTokenableId(tokenableId, {
+      kind: options.kind,
+      purpose: options.purpose ?? null,
+    })
+  }
+
+  /**
+   * Invalidates the tokens of a subject matching the kind, whatever
+   * their purpose
+   *
+   * @param tokenableId - The primary key of the subject
+   * @param options - Options to select the tokens to invalidate
+   */
+  invalidateAll(tokenableId: RecordId, options: InvalidateAllTokensOptions): Promise<void> {
+    return this.provider.invalidateAllByTokenableId(tokenableId, options)
   }
 
   /**

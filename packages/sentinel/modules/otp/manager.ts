@@ -76,11 +76,11 @@ export class OTPManager {
 
     /**
      * A code generated without purpose only replaces the codes
-     * without purpose, hence the null. The two calls are not atomic:
-     * two concurrent generations may leave two pending codes, which
-     * the failed attempts budget still bounds.
+     * without purpose. The two calls are not atomic: two concurrent
+     * generations may leave two pending codes, which the failed
+     * attempts budget still bounds.
      */
-    await this.invalidateOTPs(tokenableId, { purpose: options.purpose ?? null })
+    await this.invalidateOTPs(tokenableId, { purpose: options.purpose })
 
     await this.tokens.create(tokenableId, value, {
       kind: OTPManager.TOKEN_KIND,

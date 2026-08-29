@@ -39,9 +39,8 @@ export interface VerifyPasswordResetTokenOptions {
  */
 export interface InvalidatePasswordResetTokensOptions {
   /**
-   * The purpose of the tokens to invalidate. A null value targets
-   * the tokens without a purpose, leaving the option out targets
-   * every purpose.
+   * The purpose of the tokens to invalidate. Leaving the option out
+   * targets the tokens without a purpose.
    */
-  purpose?: string | null
+  purpose?: string
 }

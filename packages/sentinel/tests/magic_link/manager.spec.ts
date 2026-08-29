@@ -379,7 +379,7 @@ test.group('Magic link manager | verifyMagicLinkToken', () => {
 })
 
 test.group('Magic link manager | invalidateMagicLinkTokens', () => {
-  test('invalidate every magic link token of the subject', async ({ assert }) => {
+  test('invalidate the tokens without purpose by default', async ({ assert }) => {
     const { manager, provider } = setup()
     const plain = await manager.generateMagicLinkToken(1)
     const signin = await manager.generateMagicLinkToken(1, { purpose: 'signin' })
@@ -387,13 +387,18 @@ test.group('Magic link manager | invalidateMagicLinkTokens', () => {
 
     await manager.invalidateMagicLinkTokens(1)
 
-    assert.lengthOf(provider.tokens, 1)
-    assert.equal(provider.tokens[0].tokenableId, 2)
+    assert.deepEqual(
+      provider.tokens.map((token) => [token.tokenableId, token.purpose]),
+      [
+        [1, 'signin'],
+        [2, null],
+      ]
+    )
 
     await assert.rejects(() => manager.verifyMagicLinkToken(plain), E_INVALID_TOKEN)
-    await assert.rejects(
-      () => manager.verifyMagicLinkToken(signin, { purpose: 'signin' }),
-      E_INVALID_TOKEN
+    assert.equal(
+      (await manager.verifyMagicLinkToken(signin, { purpose: 'signin' })).purpose,
+      'signin'
     )
     assert.equal((await manager.verifyMagicLinkToken(foreign)).tokenableId, 2)
   })
@@ -409,19 +414,6 @@ test.group('Magic link manager | invalidateMagicLinkTokens', () => {
     assert.deepEqual(
       provider.tokens.map((token) => token.purpose),
       [null, 'signup']
-    )
-  })
-
-  test('invalidate the tokens without purpose only', async ({ assert }) => {
-    const { manager, provider } = setup()
-    await manager.generateMagicLinkToken(1)
-    await manager.generateMagicLinkToken(1, { purpose: 'signin' })
-
-    await manager.invalidateMagicLinkTokens(1, { purpose: null })
-
-    assert.deepEqual(
-      provider.tokens.map((token) => token.purpose),
-      ['signin']
     )
   })
 

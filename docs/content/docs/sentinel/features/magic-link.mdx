@@ -195,7 +195,7 @@ export default sentinelConfig;
 
 The options given to `withMagicLink` become the defaults of every link the model generates. They are the `url` and `expiresIn` options of the global configuration, plus:
 
-- `purpose`: The purpose of the links. It is also the purpose `verifyMagicLinkToken` expects by default, see [Purposes](#purposes). `invalidateMagicLinkTokens` does not inherit it.
+- `purpose`: The purpose of the links. It is also the purpose `verifyMagicLinkToken` and `invalidateMagicLinkTokens` use by default, see [Purposes](#purposes).
 - `metadata`: Data attached to every link, see [Metadata](#metadata).
 
 ```ts title="app/models/user.ts"
@@ -209,10 +209,9 @@ export default class User extends compose(
 
 <Callout type="warn">
   Tokens are stored by primary key, not by model. When several models compose
-  the mixin, give each one its own purpose, and pass it to
-  `invalidateMagicLinkTokens` as well: a link generated for one model could
-  otherwise be verified as another, and revoking the links of one would revoke
-  the links of the other.
+  the mixin, give each one its own purpose: a link generated for one model
+  could otherwise be verified as another, and revoking the links of one would
+  revoke the links of the other.
 </Callout>
 
 <Callout>
@@ -282,7 +281,7 @@ const [user] = await User.verifyMagicLinkToken(request.input("token"), {
 });
 ```
 
-A purpose given to the mixin is the default of `generateMagicLink`, `generateMagicLinkToken` and `verifyMagicLinkToken`, so a model dedicated to one flow never needs the option. To create a token without purpose on such a model, pass `purpose: null` to both the generating and the verifying call. `invalidateMagicLinkTokens` does not inherit the default, see [Invalidating pending links](#invalidating-pending-links).
+A purpose given to the mixin is the default of `generateMagicLink`, `generateMagicLinkToken`, `verifyMagicLinkToken` and `invalidateMagicLinkTokens`, so a model dedicated to one flow never needs the option. To reach the tokens without purpose on such a model, pass `purpose: undefined` explicitly: the mixin only falls back to its default when the option is left out.
 
 ## Metadata
 
@@ -322,7 +321,7 @@ export default class MagicLinkController {
 
 ## Invalidating pending links
 
-Every link generated for a user stays valid until it is used or expires. Call `invalidateMagicLinkTokens` to revoke them all at once, when the user changes their email address or their password for example, or to make sure a single link is pending at a time:
+Every link generated for a user stays valid until it is used or expires. Call `invalidateMagicLinkTokens` to revoke the pending ones, when the user changes their email address for example, or to make sure a single link is pending at a time:
 
 ```ts
 await user.invalidateMagicLinkTokens();
@@ -331,7 +330,7 @@ const link = await user.generateMagicLink();
 
 With this pattern, a user who requested two links and opens the older one gets an invalid link error.
 
-Narrow the revocation to a purpose with the `purpose` option. A `null` purpose targets the links created without purpose, and leaving the option out targets every purpose, the default one of the mixin included. The OTP and password reset tokens of the user are never affected.
+The revocation is scoped to one purpose: the one given with the `purpose` option, otherwise the default one of the mixin, otherwise the links created without purpose. A model using several purposes revokes them one call at a time, and `purpose: undefined` reaches the links without purpose on a model with a default, see [Purposes](#purposes). The OTP and password reset tokens of the user are never affected.
 
 ```ts
 await user.invalidateMagicLinkTokens({ purpose: "email_change" });

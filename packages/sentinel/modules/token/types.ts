@@ -132,11 +132,21 @@ export interface InvalidateTokensOptions {
   kind: string
 
   /**
-   * The purpose of the tokens to invalidate. A null value targets
-   * the tokens without a purpose, leaving the option out targets
-   * every purpose.
+   * The purpose of the tokens to invalidate. Leaving the option out
+   * targets the tokens without a purpose.
    */
-  purpose?: string | null
+  purpose?: string
+}
+
+/**
+ * Options accepted when invalidating every token of a subject,
+ * whatever their purpose
+ */
+export interface InvalidateAllTokensOptions {
+  /**
+   * The kind of the tokens to invalidate
+   */
+  kind: string
 }
 
 /**
@@ -219,6 +229,23 @@ export interface FindTokenableTokensOptions {
 }
 
 /**
+ * Options handed to the token provider to invalidate the tokens of a
+ * subject
+ */
+export interface InvalidateTokenableTokensOptions {
+  /**
+   * The kind of the tokens to invalidate
+   */
+  kind: string
+
+  /**
+   * The purpose of the tokens to invalidate. A null value targets
+   * the tokens without a purpose.
+   */
+  purpose: string | null
+}
+
+/**
  * A set of properties a token provider must implement to persist
  * tokens. The lucid provider stores them in the database.
  */
@@ -264,7 +291,19 @@ export interface TokenProviderContract {
   invalidate(token: SentinelToken): Promise<void>
 
   /**
-   * Removes the tokens of a subject
+   * Removes the tokens of a subject matching the kind and purpose
    */
-  invalidateByTokenableId(tokenableId: RecordId, options: InvalidateTokensOptions): Promise<void>
+  invalidateByTokenableId(
+    tokenableId: RecordId,
+    options: InvalidateTokenableTokensOptions
+  ): Promise<void>
+
+  /**
+   * Removes the tokens of a subject matching the kind, whatever
+   * their purpose
+   */
+  invalidateAllByTokenableId(
+    tokenableId: RecordId,
+    options: InvalidateAllTokensOptions
+  ): Promise<void>
 }
