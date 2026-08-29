@@ -7,6 +7,7 @@ import { LoggerFactory } from '@adonisjs/core/factories/logger'
 import { EmitterFactory } from '@adonisjs/core/factories/events'
 import { Database } from '@adonisjs/lucid/database'
 import { BaseModel } from '@adonisjs/lucid/orm'
+import { TokenSchema } from '../modules/token/schema.ts'
 import { TOTPSchema } from '../modules/totp/schema.ts'
 
 export const BASE_URL = new URL('./tmp/', import.meta.url)
@@ -45,12 +46,17 @@ export async function createTables(db: Database) {
   const schema = db.connection().schema
 
   await schema.dropTableIfExists('users')
+  await schema.dropTableIfExists('sentinel_tokens')
   await schema.dropTableIfExists('totp_authenticators')
 
   await schema.createTable('users', (table) => {
     table.increments()
     table.string('email').nullable()
     table.string('username').nullable()
+  })
+
+  await schema.createTable('sentinel_tokens', (table) => {
+    TokenSchema.configureTokensTable(table)
   })
 
   await schema.createTable('totp_authenticators', (table) => {

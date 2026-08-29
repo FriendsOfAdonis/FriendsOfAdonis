@@ -1,4 +1,14 @@
 /**
+ * Builds the URL of a magic link from its token. The URL must be
+ * absolute, since the link is sent by email.
+ *
+ * @example
+ * const url: MagicLinkUrlBuilder = (token) =>
+ *   `https://example.com/auth/magic-link?token=${token}`
+ */
+export type MagicLinkUrlBuilder = (token: string) => string
+
+/**
  * Options accepted when generating a magic link token
  */
 export interface GenerateMagicLinkTokenOptions {
@@ -28,11 +38,12 @@ export interface GenerateMagicLinkTokenOptions {
  */
 export interface GenerateMagicLinkOptions extends GenerateMagicLinkTokenOptions {
   /**
-   * The URL the link points to.
+   * Builds the URL of the link from its token. The URL must be
+   * absolute, since the link is sent by email.
    *
    * Defaults to "magicLink.url" from "config/sentinel.ts"
    */
-  url?: string
+  url?: MagicLinkUrlBuilder
 }
 
 /**
@@ -43,4 +54,17 @@ export interface VerifyMagicLinkTokenOptions {
    * The purpose the token was created with, if any
    */
   purpose?: string
+}
+
+/**
+ * Options accepted when invalidating the magic link tokens of a
+ * subject
+ */
+export interface InvalidateMagicLinkTokensOptions {
+  /**
+   * The purpose of the tokens to invalidate. A null value targets
+   * the tokens without a purpose, leaving the option out targets
+   * every purpose.
+   */
+  purpose?: string | null
 }

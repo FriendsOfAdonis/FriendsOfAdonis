@@ -12,6 +12,7 @@ import { type ComponentProps, type FC, type ReactElement } from 'react'
 import { LLMCopyButton, ViewOptions } from '@/components/ai/page-actions'
 import { ConfigurationSteps } from '@/components/configuration-steps'
 import { NotFound } from '@/components/not-found'
+import { SetupPrompt } from '@/components/setup-prompt'
 import { source } from '@/lib/source'
 import {
   createMetadata,
@@ -62,6 +63,7 @@ export default async function Page(props: {
             Accordion,
             Accordions,
             ConfigurationSteps,
+            SetupPrompt,
             File,
             Folder,
             Files,

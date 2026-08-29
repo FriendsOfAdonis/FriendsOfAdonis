@@ -100,7 +100,7 @@ export default class SentinelProvider {
 
       if (!config.totp) {
         throw new RuntimeException(
-          'Invalid "config/sentinel.ts". Make sure you have configure `totp`.'
+          'Invalid "config/sentinel.ts". Make sure you have configured "totp".'
         )
       }
 
@@ -123,7 +123,7 @@ export default class SentinelProvider {
 
       if (!config.magicLink) {
         throw new RuntimeException(
-          'Invalid "config/sentinel.ts". Make sure you have configure `magicLink`.'
+          'Invalid "config/sentinel.ts". Make sure you have configured "magicLink".'
         )
       }
 

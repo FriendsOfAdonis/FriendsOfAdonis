@@ -16,7 +16,7 @@ import { LucidTokenProvider, LucidTokenProviderOptions } from '../modules/token/
  * const sentinelConfig = defineConfig({
  *   tokens: tokens.lucid(),
  *   totp: { issuer: 'My app' },
- *   magicLink: { url: 'https://example.com/login/magic' },
+ *   magicLink: { url: (token) => `https://example.com/login/magic?token=${token}` },
  * })
  * ```
  */

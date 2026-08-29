@@ -1,4 +1,4 @@
-import type { Secret } from '@adonisjs/core/helpers'
+import { type Secret } from '@adonisjs/core/helpers'
 import type { NormalizeConstructor } from '@adonisjs/core/types/helpers'
 import type { BaseModel } from '@adonisjs/lucid/orm'
 import { primaryKeyOf, staticImplements } from '../../../src/helpers.ts'
@@ -8,6 +8,7 @@ import { MagicLinkManager } from '../manager.ts'
 import type {
   GenerateMagicLinkOptions,
   GenerateMagicLinkTokenOptions,
+  InvalidateMagicLinkTokensOptions,
   VerifyMagicLinkTokenOptions,
 } from '../types.ts'
 
@@ -20,18 +21,42 @@ export interface WithMagicLinkOptions extends GenerateMagicLinkOptions {}
 type MagicLinkTokenMetadata = SentinelToken['metadata']
 
 type WithMagicLinkRow = {
+  /**
+   * Creates a token for the row and returns its value
+   */
   generateMagicLinkToken(options?: GenerateMagicLinkTokenOptions): Promise<Secret<string>>
+
+  /**
+   * Creates a token for the row and returns the link carrying it
+   */
   generateMagicLink(options?: GenerateMagicLinkOptions): Promise<Secret<string>>
+
+  /**
+   * Invalidates the magic link tokens of the row, so that its
+   * pending links stop working. Leaving the purpose out targets
+   * every purpose, the default one of the mixin included.
+   */
+  invalidateMagicLinkTokens(options?: InvalidateMagicLinkTokensOptions): Promise<void>
 }
 
 type WithMagicLinkClass<
   Model extends NormalizeConstructor<typeof BaseModel> = NormalizeConstructor<typeof BaseModel>,
 > = Model & {
+  /**
+   * Verifies a token and returns the user it was created for,
+   * along with the metadata of the token. The token is consumed,
+   * so verifying it again fails.
+   *
+   * @throws {E_INVALID_TOKEN} When the token is unknown, expired,
+   * already used, was created for another purpose, or its subject
+   * no longer exists
+   */
   verifyMagicLinkToken<T extends WithMagicLinkClass>(
     this: T,
     value: Secret<string> | string,
     options?: VerifyMagicLinkTokenOptions
   ): Promise<[InstanceType<T>, MagicLinkTokenMetadata]>
+
   new (...args: any[]): WithMagicLinkRow
 }
 
@@ -42,6 +67,8 @@ type WithMagicLinkClass<
  *
  * - generateMagicLinkToken and generateMagicLink methods to create a
  *   link for the row
+ * - invalidateMagicLinkTokens method to revoke the pending links of
+ *   the row
  * - verifyMagicLinkToken static method to find the user a link was
  *   generated for
  *
@@ -51,24 +78,15 @@ type WithMagicLinkClass<
  * @example
  * class User extends compose(
  *   BaseModel,
- *   withMagicLink(manager, { url: 'https://example.com/login/magic' })
+ *   withMagicLink(manager, { url: (token) => `https://example.com/login/magic?token=${token}` })
  * ) {}
  */
-export function withMagicLink(manager: MagicLinkManager, defaults: WithMagicLinkOptions) {
+export function withMagicLink(manager: MagicLinkManager, defaults: WithMagicLinkOptions = {}) {
   return function <Model extends NormalizeConstructor<typeof BaseModel>>(
     superclass: Model
   ): WithMagicLinkClass<Model> {
     @staticImplements<WithMagicLinkClass>()
     class WithMagicLinkImpl extends superclass implements WithMagicLinkRow {
-      /**
-       * Verifies a token and returns the user it was created for,
-       * along with the metadata of the token. The token is consumed,
-       * so verifying it again fails.
-       *
-       * @throws {E_INVALID_TOKEN} When the token is unknown, expired,
-       * already used, was created for another purpose, or its subject
-       * no longer exists
-       */
       static async verifyMagicLinkToken<T extends WithMagicLinkClass>(
         this: T,
         value: Secret<string> | string,
@@ -89,9 +107,6 @@ export function withMagicLink(manager: MagicLinkManager, defaults: WithMagicLink
         return [instance, token.metadata]
       }
 
-      /**
-       * Creates a token for the row and returns its value
-       */
       async generateMagicLinkToken(options: GenerateMagicLinkTokenOptions = {}) {
         return manager.generateMagicLinkToken(
           primaryKeyOf(this, 'generate a magic link token for'),
@@ -99,14 +114,18 @@ export function withMagicLink(manager: MagicLinkManager, defaults: WithMagicLink
         )
       }
 
-      /**
-       * Creates a token for the row and returns the link carrying it
-       */
-      async generateMagicLink(options: Partial<GenerateMagicLinkOptions> = {}) {
-        return manager.generateMagicLink(primaryKeyOf(this, 'generate a magic link token for'), {
+      async generateMagicLink(options: GenerateMagicLinkOptions = {}) {
+        return manager.generateMagicLink(primaryKeyOf(this, 'generate a magic link for'), {
           ...defaults,
           ...options,
         })
+      }
+
+      async invalidateMagicLinkTokens(options: InvalidateMagicLinkTokensOptions = {}) {
+        return manager.invalidateMagicLinkTokens(
+          primaryKeyOf(this, 'invalidate the magic link tokens of'),
+          options
+        )
       }
     }
 
