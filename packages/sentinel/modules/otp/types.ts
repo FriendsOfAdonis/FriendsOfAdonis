@@ -46,3 +46,15 @@ export interface VerifyOTPOptions {
    */
   purpose?: string
 }
+
+/**
+ * Options accepted when invalidating the codes of a subject
+ */
+export interface InvalidateOTPsOptions {
+  /**
+   * The purpose of the codes to invalidate. A null value targets
+   * the codes without a purpose, leaving the option out targets
+   * every purpose.
+   */
+  purpose?: string | null
+}

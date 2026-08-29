@@ -1,7 +1,7 @@
 import { Secret } from '@adonisjs/core/helpers'
-import { GenerateOTPOptions, VerifyOTPOptions } from './types.ts'
-import { TokenManager } from '../token/manager.ts'
-import { RecordId } from '../../src/types.ts'
+import type { GenerateOTPOptions, InvalidateOTPsOptions, VerifyOTPOptions } from './types.ts'
+import type { TokenManager } from '../token/manager.ts'
+import type { RecordId } from '../../src/types.ts'
 import { withOTP, WithOTPOptions } from './main.ts'
 import {
   OTP_DEFAULT_EXPIRES_IN,
@@ -61,6 +61,11 @@ export class OTPManager {
    * Creates a code for a subject and returns it, the only copy of it.
    * Only the hash is persisted.
    *
+   * The pending codes of the subject for the same purpose are
+   * invalidated first, so that a single code is valid at a time: a
+   * short numeric code is guessed more easily when several of them
+   * are pending.
+   *
    * @param tokenableId - The primary key of the subject
    * @param options - Options to configure the code
    */
@@ -68,6 +73,14 @@ export class OTPManager {
     const value = new Secret(
       this.randomOTP(options.length ?? this.config.length ?? OTP_DEFAULT_LENGTH)
     )
+
+    /**
+     * A code generated without purpose only replaces the codes
+     * without purpose, hence the null. The two calls are not atomic:
+     * two concurrent generations may leave two pending codes, which
+     * the failed attempts budget still bounds.
+     */
+    await this.invalidateOTPs(tokenableId, { purpose: options.purpose ?? null })
 
     await this.tokens.create(tokenableId, value, {
       kind: OTPManager.TOKEN_KIND,
@@ -86,7 +99,7 @@ export class OTPManager {
 
   /**
    * Verifies a code and consumes it, so that verifying it again
-   * fails. A wrong code counts as a failed attempt against every
+   * fails. A wrong code counts as a failed attempt against the
    * pending code of the subject.
    *
    * @param tokenableId - The primary key of the subject
@@ -108,6 +121,19 @@ export class OTPManager {
       purpose: options.purpose,
       tokenableId,
       hasher: 'scrypt',
+    })
+  }
+
+  /**
+   * Invalidates the pending codes of a subject
+   *
+   * @param tokenableId - The primary key of the subject
+   * @param options - Options to select the codes to invalidate
+   */
+  invalidateOTPs(tokenableId: RecordId, options: InvalidateOTPsOptions = {}): Promise<void> {
+    return this.tokens.invalidate(tokenableId, {
+      kind: OTPManager.TOKEN_KIND,
+      purpose: options.purpose,
     })
   }
 
@@ -146,5 +172,5 @@ export class OTPManager {
    * @example
    * class User extends compose(BaseModel, otp.withOTP()) {}
    */
-  withOTP = (options: WithOTPOptions) => withOTP(this, options)
+  withOTP = (options: WithOTPOptions = {}) => withOTP(this, options)
 }

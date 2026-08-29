@@ -6,7 +6,7 @@ import type { RecordId } from '../../../src/types.ts'
 import { E_INVALID_TOKEN } from '../../token/errors.ts'
 import type { SentinelToken } from '../../token/token.ts'
 import { OTPManager } from '../manager.ts'
-import type { GenerateOTPOptions, VerifyOTPOptions } from '../types.ts'
+import type { GenerateOTPOptions, InvalidateOTPsOptions, VerifyOTPOptions } from '../types.ts'
 
 /**
  * Options accepted by the "withOTP" mixin. They are the defaults of
@@ -17,18 +17,41 @@ export interface WithOTPOptions extends GenerateOTPOptions {}
 type OTPTokenMetadata = SentinelToken['metadata']
 
 type WithOTPRow = {
+  /**
+   * Creates a code for the row and returns it. The pending codes of
+   * the row for the same purpose are invalidated first.
+   */
   generateOTP(options?: GenerateOTPOptions): Promise<Secret<string>>
+
+  /**
+   * Invalidates the pending codes of the row. Leaving the purpose
+   * out targets every purpose, the default one of the mixin
+   * included.
+   */
+  invalidateOTPs(options?: InvalidateOTPsOptions): Promise<void>
 }
 
 type WithOTPClass<
   Model extends NormalizeConstructor<typeof BaseModel> = NormalizeConstructor<typeof BaseModel>,
 > = Model & {
+  /**
+   * Verifies a code and returns the user it was generated for, along
+   * with the metadata of the code. The code is consumed, so verifying
+   * it again fails.
+   *
+   * @throws {E_TOO_MANY_ATTEMPTS} When the wrong code reached the
+   * maximum failed attempts
+   * @throws {E_INVALID_TOKEN} When the code is unknown, expired,
+   * already used, was generated for another purpose, or its subject
+   * no longer exists
+   */
   verifyOTP<T extends WithOTPClass>(
     this: T,
     tokenableId: RecordId,
     value: Secret<string> | string,
     options?: VerifyOTPOptions
   ): Promise<[InstanceType<T>, OTPTokenMetadata]>
+
   new (...args: any[]): WithOTPRow
 }
 
@@ -38,6 +61,7 @@ type WithOTPClass<
  * Under the hood, this mixin defines following methods
  *
  * - generateOTP method to create a code for the row
+ * - invalidateOTPs method to revoke the pending codes of the row
  * - verifyOTP static method to find the user a code was generated
  *   for
  *
@@ -55,17 +79,6 @@ export function withOTP(manager: OTPManager, defaults: WithOTPOptions = {}) {
   ): WithOTPClass<Model> {
     @staticImplements<WithOTPClass>()
     class WithOTPImpl extends superclass implements WithOTPRow {
-      /**
-       * Verifies a code and returns the user it was generated for,
-       * along with the metadata of the code. The code is consumed, so
-       * verifying it again fails.
-       *
-       * @throws {E_TOO_MANY_ATTEMPTS} When the wrong code reached the
-       * maximum failed attempts
-       * @throws {E_INVALID_TOKEN} When the code is unknown, expired,
-       * already used, was generated for another purpose, or its
-       * subject no longer exists
-       */
       static async verifyOTP<T extends WithOTPClass>(
         this: T,
         tokenableId: RecordId,
@@ -87,14 +100,15 @@ export function withOTP(manager: OTPManager, defaults: WithOTPOptions = {}) {
         return [instance, token.metadata]
       }
 
-      /**
-       * Creates a code for the row and returns it
-       */
       async generateOTP(options: GenerateOTPOptions = {}) {
         return manager.generateOTP(primaryKeyOf(this, 'generate an OTP for'), {
           ...defaults,
           ...options,
         })
+      }
+
+      async invalidateOTPs(options: InvalidateOTPsOptions = {}) {
+        return manager.invalidateOTPs(primaryKeyOf(this, 'invalidate the OTPs of'), options)
       }
     }
 
