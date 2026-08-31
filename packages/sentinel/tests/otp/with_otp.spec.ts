@@ -199,7 +199,7 @@ test.group('OTP mixin | generateOTP', () => {
     await assert.rejects(
       () => user.generateOTP(),
       RuntimeException,
-      /Cannot generate an OTP for [\s\S]+: the primary key is empty/
+      /Cannot generate an OTP for an unsaved "User": the primary key is empty/
     )
     assert.isEmpty(await tokenRows(db))
   })
@@ -478,7 +478,7 @@ test.group('OTP mixin | invalidateOTPs', () => {
     await assert.rejects(
       () => user.invalidateOTPs(),
       RuntimeException,
-      /Cannot invalidate the OTPs of [\s\S]+: the primary key is empty/
+      /Cannot invalidate the OTPs of an unsaved "User": the primary key is empty/
     )
   })
 })

@@ -1,4 +1,3 @@
-import { inspect } from 'node:util'
 import { RuntimeException } from '@adonisjs/core/exceptions'
 import type { LucidRow } from '@adonisjs/lucid/types/model'
 import type { RecordId } from './types.ts'
@@ -20,6 +19,9 @@ export function staticImplements<T>() {
  * Returns the primary key value of a model instance. Throws when the
  * instance has not been persisted yet and has no primary key.
  *
+ * The error names the model only. Dumping the instance would leak its
+ * attributes into the logs, a password not hashed yet for example.
+ *
  * @param instance - The model instance to read the primary key from
  * @param intent - The action to mention in the error message, for
  * example "generate an OTP for"
@@ -28,7 +30,9 @@ export function primaryKeyOf(instance: LucidRow, intent: string): RecordId {
   const id = instance.$primaryKeyValue
 
   if (id === undefined || id === null) {
-    throw new RuntimeException(`Cannot ${intent} ${inspect(instance)}: the primary key is empty`)
+    throw new RuntimeException(
+      `Cannot ${intent} an unsaved "${instance.constructor.name}": the primary key is empty`
+    )
   }
 
   return id

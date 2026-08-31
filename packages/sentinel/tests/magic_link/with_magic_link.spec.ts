@@ -143,7 +143,7 @@ test.group('Magic link mixin | generateMagicLinkToken', () => {
     await assert.rejects(
       () => user.generateMagicLinkToken(),
       RuntimeException,
-      /Cannot generate a magic link token for [\s\S]+: the primary key is empty/
+      /Cannot generate a magic link token for an unsaved "User": the primary key is empty/
     )
     assert.isEmpty(await tokenRows(db))
   })
@@ -199,7 +199,7 @@ test.group('Magic link mixin | generateMagicLink', () => {
     await assert.rejects(
       () => user.generateMagicLink(),
       RuntimeException,
-      /Cannot generate a magic link for [\s\S]+: the primary key is empty/
+      /Cannot generate a magic link for an unsaved "User": the primary key is empty/
     )
     assert.isEmpty(await tokenRows(db))
   })
@@ -422,7 +422,7 @@ test.group('Magic link mixin | invalidateMagicLinkTokens', () => {
     await assert.rejects(
       () => user.invalidateMagicLinkTokens(),
       RuntimeException,
-      /Cannot invalidate the magic link tokens of [\s\S]+: the primary key is empty/
+      /Cannot invalidate the magic link tokens of an unsaved "User": the primary key is empty/
     )
   })
 })

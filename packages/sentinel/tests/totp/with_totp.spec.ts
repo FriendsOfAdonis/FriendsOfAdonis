@@ -142,7 +142,7 @@ test.group('TOTP mixin | createAuthenticator', () => {
     await assert.rejects(
       () => user.createAuthenticator(),
       RuntimeException,
-      /Cannot create authenticator for [\s\S]+: the primary key is empty/
+      /Cannot create authenticator for an unsaved "User": the primary key is empty/
     )
   })
 })
@@ -221,7 +221,7 @@ test.group('TOTP mixin | retrieveAuthenticator', () => {
     await assert.rejects(
       () => user.retrieveAuthenticator(),
       RuntimeException,
-      /Cannot retrieve authenticator for [\s\S]+: the primary key is empty/
+      /Cannot retrieve authenticator for an unsaved "User": the primary key is empty/
     )
   })
 })
