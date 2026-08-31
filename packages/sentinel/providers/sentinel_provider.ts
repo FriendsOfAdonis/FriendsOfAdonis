@@ -2,6 +2,7 @@ import { configProvider } from '@adonisjs/core'
 import { RuntimeException } from '@adonisjs/core/exceptions'
 import type { ApplicationService } from '@adonisjs/core/types'
 import type { SentinelOptions } from '../src/types.ts'
+import { EmailManager } from '../modules/email/manager.ts'
 import { OTPManager } from '../modules/otp/main.ts'
 import { TokenManager } from '../modules/token/manager.ts'
 import { TOTPManager } from '../modules/totp/manager.ts'
@@ -37,6 +38,7 @@ export default class SentinelProvider {
     this.registerTOTP()
     this.registerMagicLink()
     this.registerPassword()
+    this.registerEmail()
   }
 
   /**
@@ -141,6 +143,19 @@ export default class SentinelProvider {
 
     this.app.container.alias('sentinel.password', PasswordManager)
   }
+
+  /**
+   * Registers the email manager with the container
+   */
+  protected registerEmail() {
+    this.app.container.singleton(EmailManager, async (resolver) => {
+      const config = await this.resolveConfig()
+
+      return new EmailManager(config.email, await resolver.make('sentinel.tokens'))
+    })
+
+    this.app.container.alias('sentinel.email', EmailManager)
+  }
 }
 
 declare module '@adonisjs/core/types' {
@@ -150,5 +165,6 @@ declare module '@adonisjs/core/types' {
     'sentinel.totp': TOTPManager
     'sentinel.magic_link': MagicLinkManager
     'sentinel.password': PasswordManager
+    'sentinel.email': EmailManager
   }
 }

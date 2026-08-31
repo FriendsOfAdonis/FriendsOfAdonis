@@ -2459,7 +2459,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@foadonis/sentinel@workspace:packages/sentinel":
+"@foadonis/sentinel@workspace:*, @foadonis/sentinel@workspace:packages/sentinel":
   version: 0.0.0-use.local
   resolution: "@foadonis/sentinel@workspace:packages/sentinel"
   dependencies:
@@ -10730,6 +10730,7 @@ __metadata:
     "@foadonis/magnify": "workspace:*"
     "@foadonis/maintenance": "workspace:*"
     "@foadonis/openapi": "workspace:*"
+    "@foadonis/sentinel": "workspace:*"
     "@fumadocs/mdx-remote": "npm:^1.5.1"
     "@orama/core": "npm:^1.2.14"
     "@oramacloud/client": "npm:^2.1.4"

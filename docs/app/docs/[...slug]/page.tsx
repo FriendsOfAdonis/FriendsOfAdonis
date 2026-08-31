@@ -21,6 +21,7 @@ import {
   siteDescription,
   withPageImage,
 } from '@/utils/metadata'
+import { Workbook } from '@/components/workbook'
 
 export const revalidate = false
 
@@ -67,6 +68,7 @@ export default async function Page(props: {
             File,
             Folder,
             Files,
+            Workbook,
             blockquote: Callout as unknown as FC<ComponentProps<'blockquote'>>,
           }}
         />

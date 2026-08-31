@@ -54,6 +54,8 @@ export async function createTables(db: Database) {
   await schema.createTable('users', (table) => {
     table.increments()
     table.string('email').nullable()
+    table.string('unverified_email').nullable()
+    table.timestamp('email_verified_at').nullable()
     table.string('username').nullable()
   })
 

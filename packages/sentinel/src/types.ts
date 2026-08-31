@@ -1,5 +1,6 @@
 import type { ConfigProvider } from '@adonisjs/core/types'
 import type { TokenProviderContract } from '../modules/token/types.ts'
+import { EmailManagerConfig } from '../modules/email/manager.ts'
 import { OTPManagerConfig } from '../modules/otp/manager.ts'
 import { MagicLinkManagerConfig } from '../modules/magic_link/manager.ts'
 import { PasswordManagerConfig } from '../modules/password/manager.ts'
@@ -37,6 +38,11 @@ export interface SentinelConfig {
    * Config of the password manager
    */
   password?: PasswordManagerConfig
+
+  /**
+   * Config of the email manager
+   */
+  email?: EmailManagerConfig
 }
 
 /**
@@ -48,6 +54,7 @@ export interface SentinelOptions {
   otp?: OTPManagerConfig
   totp?: TOTPManagerConfig
   password?: PasswordManagerConfig
+  email?: EmailManagerConfig
 }
 
 /**

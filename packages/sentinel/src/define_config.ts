@@ -37,6 +37,7 @@ export function defineConfig(config: SentinelConfig): ConfigProvider<SentinelOpt
       otp: config.otp,
       totp: config.totp,
       password: config.password,
+      email: config.email,
     }
   })
 }

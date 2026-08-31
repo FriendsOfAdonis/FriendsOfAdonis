@@ -45,7 +45,7 @@ export function SetupPrompt({ prompt, children }: SetupPromptProps) {
           type="button"
         >
           {checked ? <Check /> : <Copy />}
-          Copy setup prompt
+          Copy prompt
         </button>
       </div>
       <Collapsible onOpenChange={setOpen} open={open}>

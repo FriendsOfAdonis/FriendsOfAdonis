@@ -14,7 +14,8 @@ const ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ'
 const BASE32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'
 
 /**
- * Generates a random backup code, split in two halves by a dash
+ * Generates a random backup code, split in two halves by a dash. An
+ * odd length leaves the extra character in the first half.
  *
  * @param length - The number of characters, separator aside
  */
@@ -22,7 +23,16 @@ export function generateBackupCode(length = 10) {
   const bytes = randomBytes(length)
   let code = ''
   for (const b of bytes) code += ALPHABET[b & 31]
-  return `${code.slice(0, 5)}-${code.slice(5)}`
+
+  /**
+   * A single character has no halves to separate, and a dash with
+   * nothing on one side of it would only confuse the user typing the
+   * code back
+   */
+  if (length < 2) return code
+
+  const half = Math.ceil(length / 2)
+  return `${code.slice(0, half)}-${code.slice(half)}`
 }
 
 /**

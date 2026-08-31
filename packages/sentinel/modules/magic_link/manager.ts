@@ -1,9 +1,8 @@
-import { crc32 } from 'node:zlib'
 import { Secret } from '@adonisjs/core/helpers'
-import string from '@adonisjs/core/helpers/string'
 import type { RecordId } from '../../src/types.ts'
 import type { TokenManager } from '../token/manager.ts'
 import type { SentinelToken } from '../token/token.ts'
+import { makeTokenValue } from '../token/value.ts'
 import type {
   GenerateMagicLinkOptions,
   GenerateMagicLinkTokenOptions,
@@ -63,7 +62,7 @@ export class MagicLinkManager {
    */
   async generateMagicLink(tokenableId: RecordId, options: GenerateMagicLinkOptions = {}) {
     const url = options.url ?? this.config.url
-    const value = this.#makeValue()
+    const value = makeTokenValue()
 
     /**
      * The link is built and checked before the token is persisted, so
@@ -85,22 +84,10 @@ export class MagicLinkManager {
    * @param options - Options to configure the token
    */
   async generateMagicLinkToken(tokenableId: RecordId, options: GenerateMagicLinkTokenOptions = {}) {
-    const value = this.#makeValue()
+    const value = makeTokenValue()
     await this.#persist(tokenableId, value, options)
 
     return value
-  }
-
-  /**
-   * Creates the value of a token, a random seed followed by its CRC32
-   * checksum, so that secret scanning tools recognize the token, the
-   * same way GitHub tokens carry one.
-   *
-   * @see https://github.blog/2021-04-05-behind-githubs-new-authentication-token-formats/
-   */
-  #makeValue() {
-    const seed = string.random(40)
-    return new Secret(`${seed}${crc32(seed)}`)
   }
 
   /**

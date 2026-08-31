@@ -1,17 +1,16 @@
 {
   "title": "Sentinel",
-  "description": "Authentication building blocks for AdonisJS: email verification, password management and magic links on top of your existing auth setup.",
+  "description": "Composable authentication building blocks for AdonisJS: magic links, one-time passwords, TOTP two-factor and password resets on top of your existing auth setup.",
   "icon": "ShieldCheck",
   "root": true,
   "pages": [
     "index",
     "getting-started",
     "---Features---",
+    "features/password",
+    "features/email",
     "features/otp",
     "features/totp",
-    "features/password",
-    "features/magic-link",
-    "features/email",
-    "features/identity"
+    "features/magic-link"
   ]
 }

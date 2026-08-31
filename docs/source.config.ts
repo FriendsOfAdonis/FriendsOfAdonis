@@ -38,6 +38,13 @@ export const blog = defineCollections({
   }),
 })
 
+export const workbooks = defineCollections({
+  type: 'doc',
+  dir: 'content/workbooks',
+  async: true,
+  schema: z.object({}),
+})
+
 export default defineConfig({
   plugins: [lastModified()],
   mdxOptions: async () => {

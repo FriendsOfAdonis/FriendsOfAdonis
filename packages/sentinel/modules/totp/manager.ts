@@ -10,8 +10,7 @@ import {
 } from './constants.ts'
 import { AuthenticatorOptions } from './types.ts'
 import { generateBackupCodes, generateSecret } from './utils.ts'
-import { WithTOTPOptions } from './main.ts'
-import { withTOTP } from './mixins/with_totp.ts'
+import { withTOTP, WithTOTPOptions } from './mixins/with_totp.ts'
 
 /**
  * Config accepted by the TOTP manager. The options can be overridden

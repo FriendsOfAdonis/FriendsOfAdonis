@@ -131,6 +131,16 @@ test.group('TOTP authenticator | enroll', () => {
     }
   })
 
+  test('keep the secret and the backup codes out of the serialized payload', async ({ assert }) => {
+    const { authenticator } = await enroll()
+    const serialized = authenticator.toJSON()
+
+    assert.notProperty(serialized, 'secret')
+    assert.notProperty(serialized, 'backupCodes')
+    assert.notProperty(serialized, 'lastUsedCounter')
+    assert.containsSubset(serialized, { id: authenticator.id, label: 'virk@adonisjs.com' })
+  })
+
   test('refuse the secrets of an authenticator left unlinked', async ({ assert }) => {
     const { authenticator } = await enroll()
     const unlinked = await TOTPAuthenticator.findOrFail(authenticator.id)
@@ -345,6 +355,41 @@ test.group('TOTP authenticator | validate', () => {
     await assert.rejects(() => authenticator.validate(code), E_INVALID_TOTP)
   })
 
+  test('refuse a code once the enrollment has been replaced', async ({ assert }) => {
+    freezeTime(NOW)
+    const { user, authenticator } = await enroll()
+
+    /**
+     * A second enrollment replaces the one left unconfirmed, so the
+     * row of the first is gone by the time its code is handed back
+     */
+    await user.createAuthenticator()
+
+    await assert.rejects(() => authenticator.validate(codeAt(authenticator, NOW)), E_INVALID_TOTP)
+    await assert.rejects(
+      () => authenticator.validate(wrongCodeAt(authenticator, NOW)),
+      E_INVALID_TOTP
+    )
+  })
+
+  test('refuse a code once the enrollment has been retired', async ({ assert }) => {
+    freezeTime(NOW)
+    const { user, authenticator } = await enroll()
+    assert.isTrue(await authenticator.validate(codeAt(authenticator, NOW)))
+
+    /**
+     * Confirming the new enrollment retires the one in use
+     */
+    const next = await user.createAuthenticator()
+    freezeTime(after(NOW, 30))
+    assert.isTrue(await next.validate(codeAt(next, after(NOW, 30))))
+
+    await assert.rejects(
+      () => authenticator.validate(codeAt(authenticator, after(NOW, 30))),
+      E_INVALID_TOTP
+    )
+  })
+
   test('refuse the codes of the steps before the last accepted one', async ({ assert }) => {
     freezeTime(NOW)
     const { authenticator } = await enroll()
@@ -365,6 +410,12 @@ test.group('TOTP authenticator | validate', () => {
     freezeTime(after(NOW, 30))
     assert.isTrue(await authenticator.validate(codeAt(authenticator, after(NOW, 30))))
     assert.equal(authenticator.lastUsedCounter, stepOf(NOW) + 1)
+
+    /**
+     * The compare and swap persisted the columns already, so nothing
+     * is left for a later "save" to write
+     */
+    assert.deepEqual(authenticator.$dirty, {})
   })
 
   test('widen the window with the validation options', async ({ assert }) => {
@@ -502,6 +553,38 @@ test.group('TOTP authenticator | validate', () => {
     const row = await db.from('totp_authenticators').first()
     assert.equal(Number(row.last_used_counter), stepOf(NOW))
     assert.equal(row.failed_verification_count, 1)
+  })
+
+  test('keep the counter consumed through another instance out of a later save', async ({
+    assert,
+  }) => {
+    freezeTime(NOW)
+    const { db, user, authenticator } = await enroll()
+    await authenticator.validate(codeAt(authenticator, NOW))
+
+    /**
+     * A validation on the confirmed enrollment, so no save flushes
+     * the instance inside "validate" itself
+     */
+    freezeTime(after(NOW, 30))
+    assert.isTrue(await authenticator.validate(codeAt(authenticator, after(NOW, 30))))
+
+    const other = (await TOTPAuthenticator.findOrFail(authenticator.id)).link(user)
+    freezeTime(after(NOW, 60))
+    const code = codeAt(authenticator, after(NOW, 60))
+    assert.isTrue(await other.validate(code))
+
+    /**
+     * An unrelated save must not rewind the counter under the step
+     * another instance consumed, or its code becomes replayable
+     */
+    await authenticator.regenerateBackupCodes()
+
+    const row = await db.from('totp_authenticators').first()
+    assert.equal(Number(row.last_used_counter), stepOf(NOW) + 2)
+
+    const fresh = (await TOTPAuthenticator.findOrFail(authenticator.id)).link(user)
+    await assert.rejects(() => fresh.validate(code), E_INVALID_TOTP)
   })
 
   test('stay bound to the transaction of the enrollment', async ({ assert }) => {
@@ -684,6 +767,12 @@ test.group('TOTP authenticator | backup codes', () => {
     const row = await db.from('totp_authenticators').first()
     assert.deepEqual(manager.decryptBackupCodes(row.backup_codes), remaining)
 
+    /**
+     * The compare and swap persisted the columns already, so nothing
+     * is left for a later "save" to write
+     */
+    assert.deepEqual(authenticator.$dirty, {})
+
     await assert.rejects(() => authenticator.verifyBackupCode(codes[0]), E_INVALID_BACKUP_CODE)
   })
 
@@ -736,6 +825,19 @@ test.group('TOTP authenticator | backup codes', () => {
     assert.isNull(await user.retrieveAuthenticator())
   })
 
+  test('refuse a backup code once the enrollment has been replaced', async ({ assert }) => {
+    const { user, authenticator } = await enroll()
+    const codes = authenticator.getBackupCodes().release()
+
+    await user.createAuthenticator()
+
+    await assert.rejects(() => authenticator.verifyBackupCode(codes[0]), E_INVALID_BACKUP_CODE)
+    await assert.rejects(
+      () => authenticator.verifyBackupCode(UNKNOWN_BACKUP_CODE),
+      E_INVALID_BACKUP_CODE
+    )
+  })
+
   test('refuse an authenticator left unlinked before spending anything', async ({ assert }) => {
     const { db, authenticator } = await enroll()
     const unlinked = await TOTPAuthenticator.findOrFail(authenticator.id)
@@ -760,6 +862,29 @@ test.group('TOTP authenticator | backup codes', () => {
 
     const row = await db.from('totp_authenticators').first()
     assert.lengthOf(manager.decryptBackupCodes(row.backup_codes), 9)
+  })
+
+  test('keep the codes spent through another instance out of a later save', async ({ assert }) => {
+    const { db, manager, user, authenticator } = await enroll()
+    const [first, second] = authenticator.getBackupCodes().release()
+
+    await authenticator.verifyBackupCode(first)
+
+    const other = (await TOTPAuthenticator.findOrFail(authenticator.id)).link(user)
+    await other.verifyBackupCode(second)
+
+    /**
+     * An unrelated save, as the confirmation inside "validate" or a
+     * "regenerateBackupCodes" would flush, must not resurrect the
+     * codes spent since the instance last wrote
+     */
+    await authenticator.save()
+
+    const row = await db.from('totp_authenticators').first()
+    assert.lengthOf(manager.decryptBackupCodes(row.backup_codes), 8)
+
+    const fresh = (await TOTPAuthenticator.findOrFail(authenticator.id)).link(user)
+    await assert.rejects(() => fresh.verifyBackupCode(second), E_INVALID_BACKUP_CODE)
   })
 
   test('regenerate the backup codes', async ({ assert }) => {

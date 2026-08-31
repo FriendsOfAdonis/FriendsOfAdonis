@@ -29,6 +29,14 @@ import { E_INVALID_BACKUP_CODE, E_INVALID_TOTP, E_TOTP_LOCKED } from '../errors.
 import { TOTP } from 'otpauth'
 
 /**
+ * Reads the number of rows an update affected. It is a bare count
+ * with some drivers and wrapped in an array with others.
+ */
+function affectedRows(result: number | number[]) {
+  return Array.isArray(result) ? result[0] : result
+}
+
+/**
  * TOTP authenticator represents the enrollment of an authenticator
  * app for a model. It validates the codes, consumes the backup codes
  * and locks itself after too many failed verifications.
@@ -62,22 +70,27 @@ export class TOTPAuthenticator extends BaseModel {
   declare tokenableId: RecordId
 
   /**
-   * Encrypted list of the remaining backup codes
+   * Encrypted list of the remaining backup codes. Kept out of the
+   * serialized payload: a response handing the authenticator back to
+   * the client has no use for the ciphertext
    */
-  @column()
+  @column({ serializeAs: null })
   declare backupCodes: string
 
   /**
-   * Encrypted base32 secret shared with the authenticator app
+   * Encrypted base32 secret shared with the authenticator app. Kept
+   * out of the serialized payload, like the backup codes
    */
-  @column()
+  @column({ serializeAs: null })
   declare secret: string
 
   /**
    * Time step of the last accepted code. A bigint column, handed
-   * back as a string by the drivers
+   * back as a string by the drivers. Kept out of the serialized
+   * payload, since it only tracks the replay protection
    */
   @column({
+    serializeAs: null,
     consume: (value: string | number | null | undefined) =>
       value === null || value === undefined ? null : Number(value),
   })
@@ -186,8 +199,8 @@ export class TOTPAuthenticator extends BaseModel {
    * @param token - The code typed by the user
    * @param options - Options overriding the ones of the owner
    *
-   * @throws {E_INVALID_TOTP} When the code is wrong or was accepted
-   * already
+   * @throws {E_INVALID_TOTP} When the code is wrong, was accepted
+   * already, or the enrollment has been retired since
    * @throws {E_TOTP_LOCKED} When the authenticator is locked, before
    * or by this attempt
    *
@@ -239,23 +252,19 @@ export class TOTPAuthenticator extends BaseModel {
       })
 
     /**
-     * Affected rows are a bare count with some drivers and wrapped
-     * in an array with others
-     */
-    const affected = Array.isArray(result) ? result[0] : result
-
-    /**
      * Zero rows means the step was spent already, by a replay or a
      * concurrent validation
      */
-    if (!affected) {
+    if (!affectedRows(result)) {
       await this.$recordFailedVerification(options)
       throw new E_INVALID_TOTP()
     }
 
-    this.lastUsedCounter = counter
-    this.failedVerificationCount = 0
-    this.lockedUntil = null
+    this.$syncSwappedColumns({
+      lastUsedCounter: counter,
+      failedVerificationCount: 0,
+      lockedUntil: null,
+    })
 
     if (!this.verifiedAt) {
       /**
@@ -355,25 +364,43 @@ export class TOTPAuthenticator extends BaseModel {
       .update({ backup_codes: remaining, failed_verification_count: 0, locked_until: null })
 
     /**
-     * Affected rows are a bare count with some drivers and wrapped
-     * in an array with others
-     */
-    const affected = Array.isArray(result) ? result[0] : result
-
-    /**
      * Zero rows means a concurrent verification rewrote the codes
      * first
      */
-    if (!affected) throw new E_INVALID_BACKUP_CODE()
+    if (!affectedRows(result)) throw new E_INVALID_BACKUP_CODE()
 
-    this.backupCodes = remaining
-    this.failedVerificationCount = 0
-    this.lockedUntil = null
+    this.$syncSwappedColumns({
+      backupCodes: remaining,
+      failedVerificationCount: 0,
+      lockedUntil: null,
+    })
+  }
+
+  /**
+   * Applies the values a compare and swap update just persisted,
+   * without leaving the columns dirty. The update wrote them
+   * already, so a later "save" must not write them again: it would
+   * replay values gone stale over the rows the concurrent instances
+   * rewrote since.
+   */
+  protected $syncSwappedColumns(
+    values: Partial<
+      Pick<
+        TOTPAuthenticator,
+        'backupCodes' | 'lastUsedCounter' | 'failedVerificationCount' | 'lockedUntil'
+      >
+    >
+  ) {
+    for (const [column, value] of Object.entries(values)) {
+      ;(this as any)[column] = value
+      this.$original[column] = value
+    }
   }
 
   /**
    * Records a failed verification and locks the authenticator once
-   * the maximum is reached
+   * the maximum is reached. Does nothing when the authenticator is
+   * gone from the database.
    *
    * @throws {E_TOTP_LOCKED} When this failure locks the authenticator
    */
@@ -385,9 +412,18 @@ export class TOTPAuthenticator extends BaseModel {
      * Increment in the database, so that concurrent failures all
      * count
      */
-    await TOTPAuthenticator.query({ client: this.$trx })
+    const result = await TOTPAuthenticator.query({ client: this.$trx })
       .where('id', this.id as any)
       .increment('failed_verification_count', 1)
+
+    /**
+     * Zero rows means the authenticator is gone, retired by a
+     * confirmed enrollment or replaced by a new one. There is no row
+     * left to count the failure against, and refreshing the instance
+     * would raise over the missing row instead of the invalid code
+     * the caller is about to report
+     */
+    if (!affectedRows(result)) return
 
     await this.refresh()
 

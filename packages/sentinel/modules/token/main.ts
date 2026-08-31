@@ -4,6 +4,7 @@
  */
 export * from './manager.ts'
 export * from './token.ts'
+export * from './value.ts'
 export * from './schema.ts'
 export * from './errors.ts'
 export * from './hashers.ts'

@@ -39,6 +39,7 @@
     "./services/totp": "./build/services/totp.js",
     "./services/magic_link": "./build/services/magic_link.js",
     "./services/password": "./build/services/password.js",
+    "./services/email": "./build/services/email.js",
     "./factories/*": "./build/factories/*.js",
     "./types": "./build/src/types.js",
     "./token": "./build/modules/token/main.js",
@@ -46,6 +47,7 @@
     "./totp": "./build/modules/totp/main.js",
     "./magic_link": "./build/modules/magic_link/main.js",
     "./password": "./build/modules/password/main.js",
+    "./email": "./build/modules/email/main.js",
     "./errors": "./build/src/errors.js"
   },
   "publishConfig": {

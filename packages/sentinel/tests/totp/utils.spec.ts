@@ -11,6 +11,11 @@ import {
 
 const CROCKFORD = /^[0-9A-HJKMNP-TV-Z]+$/
 
+/**
+ * A code as it is handed to the user, the separator kept
+ */
+const CROCKFORD_CODE = /^[0-9A-HJKMNP-TV-Z]+(-[0-9A-HJKMNP-TV-Z]+)?$/
+
 test.group('TOTP utils | base32Encode', () => {
   test('encode "{input}" to "{output}"')
     .with([
@@ -66,9 +71,22 @@ test.group('TOTP utils | generateBackupCode', () => {
     const code = generateBackupCode(16)
     const [head, tail] = code.split('-')
 
-    assert.lengthOf(head, 5)
-    assert.lengthOf(tail, 11)
+    assert.lengthOf(head, 8)
+    assert.lengthOf(tail, 8)
     assert.match(head + tail, CROCKFORD)
+  })
+
+  test('leave the extra character of an odd length in the first half', ({ assert }) => {
+    const [head, tail] = generateBackupCode(9).split('-')
+
+    assert.lengthOf(head, 5)
+    assert.lengthOf(tail, 4)
+  })
+
+  test('never hand a code with nothing on one side of the separator', ({ assert }) => {
+    for (const length of [1, 2, 3]) {
+      assert.match(generateBackupCode(length), CROCKFORD_CODE)
+    }
   })
 
   test('never use the characters confused with others', ({ assert }) => {

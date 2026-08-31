@@ -1,10 +1,9 @@
-import { crc32 } from 'node:zlib'
 import type { Hash } from '@adonisjs/core/hash'
 import { Secret } from '@adonisjs/core/helpers'
-import string from '@adonisjs/core/helpers/string'
 import type { RecordId } from '../../src/types.ts'
 import type { TokenManager } from '../token/manager.ts'
 import type { SentinelToken } from '../token/token.ts'
+import { makeTokenValue } from '../token/value.ts'
 import { DEFAULT_PASSWORD_EXPIRES_IN } from './constants.ts'
 import type {
   GeneratePasswordResetTokenOptions,
@@ -83,15 +82,7 @@ export class PasswordManager {
     tokenableId: RecordId,
     options: GeneratePasswordResetTokenOptions = {}
   ) {
-    /**
-     * Suffix the random seed with its CRC32 checksum, so that secret
-     * scanning tools recognize the token, the same way GitHub tokens
-     * carry one.
-     *
-     * @see https://github.blog/2021-04-05-behind-githubs-new-authentication-token-formats/
-     */
-    const seed = string.random(40)
-    const value = new Secret(`${seed}${crc32(seed)}`)
+    const value = makeTokenValue()
 
     await this.tokens.create(tokenableId, value, {
       kind: PasswordManager.TOKEN_KIND,
