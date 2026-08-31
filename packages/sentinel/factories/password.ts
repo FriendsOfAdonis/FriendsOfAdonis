@@ -27,6 +27,14 @@ export class PasswordManagerFactory {
   }
 
   /**
+   * Use a custom hash instance
+   */
+  withHash(hash: Hash) {
+    this.#hash = hash
+    return this
+  }
+
+  /**
    * Create password manager instance
    */
   create(config: PasswordManagerConfig = {}) {

@@ -297,13 +297,14 @@ test.group('OTP mixin | verifyOTP', () => {
   })
 
   test('lock the code once the wrong attempts reach the maximum', async ({ assert }) => {
-    const { db, User, user } = await setup({ maximumFailedAttempts: 2 })
+    const { db, User, user } = await setup({ maximumFailedAttempts: 2 }, { purpose: 'signin' })
     const code = await user.generateOTP()
     const wrong = wrongCode(code)
 
-    const first = await rejection(() => User.verifyOTP(user.id, wrong))
+    const first = await rejection<InvalidTokenException>(() => User.verifyOTP(user.id, wrong))
     assert.instanceOf(first, E_INVALID_TOKEN)
     assert.notInstanceOf(first, E_TOO_MANY_ATTEMPTS)
+    assert.equal(first.purpose, 'signin')
     assert.equal((await tokenRows(db))[0].failed_attempts_count, 1)
 
     const error = await rejection<TooManyAttemptsException>(() => User.verifyOTP(user.id, wrong))
@@ -312,6 +313,7 @@ test.group('OTP mixin | verifyOTP', () => {
     assert.equal(error.code, 'E_TOO_MANY_ATTEMPTS')
     assert.equal(error.status, 429)
     assert.equal(error.kind, OTPManager.TOKEN_KIND)
+    assert.equal(error.purpose, 'signin')
     assert.isEmpty(await tokenRows(db))
 
     /**

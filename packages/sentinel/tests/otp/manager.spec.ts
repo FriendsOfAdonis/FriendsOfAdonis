@@ -1,4 +1,4 @@
-import { test } from '@japa/runner'
+import { getActiveTestOrFail, test } from '@japa/runner'
 import { Secret } from '@adonisjs/core/helpers'
 import { RuntimeException } from '@adonisjs/core/exceptions'
 import { HashManagerFactory } from '@adonisjs/core/factories/hash'
@@ -31,6 +31,37 @@ function after(at: Date, seconds: number) {
 function wrongCode(code: Secret<string>) {
   const plain = code.release()
   return `${(Number(plain[0]) + 1) % 10}${plain.slice(1)}`
+}
+
+/**
+ * Scripts the bytes drawn by "crypto.getRandomValues", one array per
+ * call. The real generator is restored once the test is over.
+ */
+function scriptRandomBytes(draws: number[][]) {
+  const test = getActiveTestOrFail()
+  const queue = [...draws]
+
+  Object.defineProperty(crypto, 'getRandomValues', {
+    configurable: true,
+    value: (bytes: Uint8Array) => {
+      const draw = queue.shift()
+      if (!draw) throw new Error('No scripted bytes left to draw')
+      if (draw.length !== bytes.length) {
+        throw new Error(`Expected a draw of ${bytes.length} bytes, got ${draw.length}`)
+      }
+
+      bytes.set(draw)
+      return bytes
+    },
+  })
+
+  /**
+   * The stub is an own property shadowing the method of the
+   * prototype, so deleting it restores the real generator
+   */
+  test.cleanup(() => {
+    delete (crypto as { getRandomValues?: unknown }).getRandomValues
+  })
 }
 
 /**
@@ -83,6 +114,41 @@ test.group('OTP manager | generateOTP', () => {
     const code = await manager.generateOTP(1, { length: 1000 })
 
     assert.equal(new Set(code.release()).size, 10)
+  })
+
+  /**
+   * Every digit is the last one of a random byte. The bytes from 250
+   * to 255 are skipped, since 256 is not a multiple of 10 and they
+   * would make the digits from 0 to 5 more likely than the others.
+   */
+  test('map every byte to its last digit, keeping the leading zeros', async ({ assert }) => {
+    scriptRandomBytes([[0, 11, 22, 33, 44, 249]])
+    const { manager } = setup()
+    const code = await manager.generateOTP(1)
+
+    assert.equal(code.release(), '012349')
+  })
+
+  test('skip the bytes above 249 so that they do not bias the digits', async ({ assert }) => {
+    scriptRandomBytes([
+      [250, 5, 255, 16, 27, 38],
+      [9, 0, 1, 2, 3, 4],
+    ])
+    const { manager } = setup()
+    const code = await manager.generateOTP(1)
+
+    assert.equal(code.release(), '567890')
+  })
+
+  test('draw again when every byte is skipped', async ({ assert }) => {
+    scriptRandomBytes([
+      [250, 251, 252, 253, 254, 255],
+      [0, 11, 22, 33, 44, 249],
+    ])
+    const { manager } = setup()
+    const code = await manager.generateOTP(1)
+
+    assert.equal(code.release(), '012349')
   })
 
   test('refuse a length of {length}')
@@ -507,6 +573,55 @@ test.group('OTP manager | verifyOTP', () => {
     )
 
     assert.equal((await manager.verifyOTP(1, code)).tokenableId, 1)
+  })
+
+  test('count a wrong code against the pending code of the purpose only', async ({ assert }) => {
+    const { manager, provider } = setup()
+    await manager.generateOTP(1)
+    const code = await manager.generateOTP(1, { purpose: 'signin' })
+    await manager.generateOTP(1, { purpose: 'signup' })
+
+    await assert.rejects(
+      () => manager.verifyOTP(1, wrongCode(code), { purpose: 'signin' }),
+      E_INVALID_TOKEN
+    )
+
+    assert.deepEqual(
+      provider.tokens.map((token) => [token.purpose, token.failedAttemptsCount]),
+      [
+        [null, 0],
+        ['signin', 1],
+        ['signup', 0],
+      ]
+    )
+  })
+
+  test('count a wrong code against every pending code of the subject', async ({ assert }) => {
+    const { manager, tokens, provider } = setup({ maximumFailedAttempts: 2 })
+    const code = await manager.generateOTP(1)
+
+    /**
+     * A second pending code, as two concurrent generations may leave
+     * behind. A longer one, so that the two cannot collide
+     */
+    await tokens.create(1, new Secret('12345678'), {
+      kind: OTPManager.TOKEN_KIND,
+      hasher: 'scrypt',
+      maximumFailedAttempts: 2,
+    })
+
+    await assert.rejects(() => manager.verifyOTP(1, wrongCode(code)), E_INVALID_TOKEN)
+    assert.deepEqual(
+      provider.tokens.map((token) => token.failedAttemptsCount),
+      [1, 1]
+    )
+
+    /**
+     * The failed attempts budget bounds the guesses at both codes, so
+     * the next wrong code locks both
+     */
+    await assert.rejects(() => manager.verifyOTP(1, wrongCode(code)), E_TOO_MANY_ATTEMPTS)
+    assert.isEmpty(provider.tokens)
   })
 
   test('refuse a token of another kind', async ({ assert }) => {
