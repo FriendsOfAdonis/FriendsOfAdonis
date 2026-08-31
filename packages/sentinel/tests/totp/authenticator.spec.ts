@@ -8,7 +8,7 @@ import { TOTPManagerFactory } from '../../factories/totp.ts'
 import type { TOTPManagerConfig } from '../../modules/totp/manager.ts'
 import type { WithTOTPOptions } from '../../modules/totp/mixins/with_totp.ts'
 import { TOTPAuthenticator } from '../../modules/totp/models/totp_authenticator.ts'
-import { E_INVALID_BACKUP_CODE, E_INVALID_OTP, E_TOTP_LOCKED } from '../../modules/totp/errors.ts'
+import { E_INVALID_BACKUP_CODE, E_INVALID_TOTP, E_TOTP_LOCKED } from '../../modules/totp/errors.ts'
 import { createDatabase, createTables, freezeTime, rejection } from '../helpers.ts'
 
 type TOTPLockedException = InstanceType<typeof E_TOTP_LOCKED>
@@ -78,7 +78,7 @@ async function lock(authenticator: TOTPAuthenticator, at: Date, maximum = 5) {
 
   for (let attempt = 1; attempt < maximum; attempt++) {
     const error = await rejection(() => authenticator.validate(wrong))
-    if (!(error instanceof E_INVALID_OTP)) throw error
+    if (!(error instanceof E_INVALID_TOTP)) throw error
   }
 
   const error = await rejection<TOTPLockedException>(() => authenticator.validate(wrong))
@@ -213,7 +213,7 @@ test.group('TOTP authenticator | enroll', () => {
     await assert.rejects(
       () => user.createAuthenticator(),
       RuntimeException,
-      /Cannot create authenticator for [\s\S]+: the primary key is empty/
+      /Cannot create authenticator for an unsaved "User": the primary key is empty/
     )
   })
 })
@@ -265,11 +265,11 @@ test.group('TOTP authenticator | validate', () => {
 
     await assert.rejects(
       () => authenticator.validate(codeAt(authenticator, after(NOW, -60))),
-      E_INVALID_OTP
+      E_INVALID_TOTP
     )
     await assert.rejects(
       () => authenticator.validate(codeAt(authenticator, after(NOW, 60))),
-      E_INVALID_OTP
+      E_INVALID_TOTP
     )
 
     const row = await db.from('totp_authenticators').first()
@@ -284,7 +284,7 @@ test.group('TOTP authenticator | validate', () => {
 
     await assert.rejects(
       () => authenticator.validate(wrongCodeAt(authenticator, NOW)),
-      E_INVALID_OTP
+      E_INVALID_TOTP
     )
 
     assert.equal(authenticator.failedVerificationCount, 1)
@@ -299,9 +299,9 @@ test.group('TOTP authenticator | validate', () => {
     freezeTime(NOW)
     const { authenticator } = await enroll()
 
-    await assert.rejects(() => authenticator.validate(''), E_INVALID_OTP)
-    await assert.rejects(() => authenticator.validate('12345'), E_INVALID_OTP)
-    await assert.rejects(() => authenticator.validate('1234567'), E_INVALID_OTP)
+    await assert.rejects(() => authenticator.validate(''), E_INVALID_TOTP)
+    await assert.rejects(() => authenticator.validate('12345'), E_INVALID_TOTP)
+    await assert.rejects(() => authenticator.validate('1234567'), E_INVALID_TOTP)
 
     assert.equal(authenticator.failedVerificationCount, 3)
   })
@@ -312,7 +312,7 @@ test.group('TOTP authenticator | validate', () => {
     const code = codeAt(authenticator, NOW)
 
     assert.isTrue(await authenticator.validate(code))
-    await assert.rejects(() => authenticator.validate(code), E_INVALID_OTP)
+    await assert.rejects(() => authenticator.validate(code), E_INVALID_TOTP)
 
     const row = await db.from('totp_authenticators').first()
     assert.equal(row.failed_verification_count, 1)
@@ -331,7 +331,7 @@ test.group('TOTP authenticator | validate', () => {
      * expiry
      */
     freezeTime(after(NOW, 30))
-    await assert.rejects(() => authenticator.validate(code), E_INVALID_OTP)
+    await assert.rejects(() => authenticator.validate(code), E_INVALID_TOTP)
   })
 
   test('refuse the codes of the steps before the last accepted one', async ({ assert }) => {
@@ -341,7 +341,7 @@ test.group('TOTP authenticator | validate', () => {
     assert.isTrue(await authenticator.validate(codeAt(authenticator, NOW)))
     await assert.rejects(
       () => authenticator.validate(codeAt(authenticator, after(NOW, -30))),
-      E_INVALID_OTP
+      E_INVALID_TOTP
     )
   })
 
@@ -371,7 +371,7 @@ test.group('TOTP authenticator | validate', () => {
 
     await assert.rejects(
       () => authenticator.validate(codeAt(authenticator, after(NOW, -30)), { window: 0 }),
-      E_INVALID_OTP
+      E_INVALID_TOTP
     )
     assert.isTrue(await authenticator.validate(codeAt(authenticator, NOW), { window: 0 }))
   })
@@ -382,7 +382,7 @@ test.group('TOTP authenticator | validate', () => {
 
     await assert.rejects(
       () => authenticator.validate(codeAt(authenticator, after(NOW, -30))),
-      E_INVALID_OTP
+      E_INVALID_TOTP
     )
   })
 
@@ -407,7 +407,7 @@ test.group('TOTP authenticator | validate', () => {
     const shape = { digits: 8, period: 60, algorithm: 'SHA256' as const }
     const { authenticator } = await enroll(shape)
 
-    await assert.rejects(() => authenticator.validate(codeAt(authenticator, NOW)), E_INVALID_OTP)
+    await assert.rejects(() => authenticator.validate(codeAt(authenticator, NOW)), E_INVALID_TOTP)
     assert.isTrue(await authenticator.validate(codeAt(authenticator, NOW, shape)))
     assert.equal(authenticator.lastUsedCounter, Math.floor(NOW.getTime() / 60_000))
   })
@@ -416,7 +416,7 @@ test.group('TOTP authenticator | validate', () => {
     freezeTime(NOW)
     const { authenticator } = await enroll({ digits: 6 }, { digits: 8 })
 
-    await assert.rejects(() => authenticator.validate(codeAt(authenticator, NOW)), E_INVALID_OTP)
+    await assert.rejects(() => authenticator.validate(codeAt(authenticator, NOW)), E_INVALID_TOTP)
     assert.isTrue(await authenticator.validate(codeAt(authenticator, NOW, { digits: 8 })))
   })
 
@@ -461,7 +461,7 @@ test.group('TOTP authenticator | validate', () => {
     const wrong = wrongCodeAt(authenticator, NOW)
 
     for (let attempt = 0; attempt < 4; attempt++) {
-      await assert.rejects(() => authenticator.validate(wrong), E_INVALID_OTP)
+      await assert.rejects(() => authenticator.validate(wrong), E_INVALID_TOTP)
     }
     assert.equal((await db.from('totp_authenticators').first()).failed_verification_count, 4)
 
@@ -472,7 +472,7 @@ test.group('TOTP authenticator | validate', () => {
      * Four more would have locked, had the count not been cleared
      */
     for (let attempt = 0; attempt < 4; attempt++) {
-      await assert.rejects(() => authenticator.validate(wrong), E_INVALID_OTP)
+      await assert.rejects(() => authenticator.validate(wrong), E_INVALID_TOTP)
     }
     assert.isFalse(authenticator.isLocked())
   })
@@ -486,7 +486,7 @@ test.group('TOTP authenticator | validate', () => {
     const code = codeAt(authenticator, NOW)
 
     assert.isTrue(await authenticator.validate(code))
-    await assert.rejects(() => other.validate(code), E_INVALID_OTP)
+    await assert.rejects(() => other.validate(code), E_INVALID_TOTP)
 
     const row = await db.from('totp_authenticators').first()
     assert.equal(Number(row.last_used_counter), stepOf(NOW))
@@ -634,7 +634,7 @@ test.group('TOTP authenticator | lock', () => {
     const wrong = wrongCodeAt(authenticator, NOW)
 
     for (let attempt = 0; attempt < 10; attempt++) {
-      await assert.rejects(() => authenticator.validate(wrong), E_INVALID_OTP)
+      await assert.rejects(() => authenticator.validate(wrong), E_INVALID_TOTP)
     }
 
     assert.isFalse(authenticator.isLocked())
@@ -650,7 +650,7 @@ test.group('TOTP authenticator | lock', () => {
     const wrong = wrongCodeAt(authenticator, NOW)
 
     for (let attempt = 0; attempt < 4; attempt++) {
-      await assert.rejects(() => authenticator.validate(wrong), E_INVALID_OTP)
+      await assert.rejects(() => authenticator.validate(wrong), E_INVALID_TOTP)
     }
 
     await assert.rejects(() => authenticator.verifyBackupCode(UNKNOWN_BACKUP_CODE), E_TOTP_LOCKED)
@@ -705,8 +705,8 @@ test.group('TOTP authenticator | backup codes', () => {
     const { db, authenticator } = await enroll()
     const wrong = wrongCodeAt(authenticator, NOW)
 
-    await assert.rejects(() => authenticator.validate(wrong), E_INVALID_OTP)
-    await assert.rejects(() => authenticator.validate(wrong), E_INVALID_OTP)
+    await assert.rejects(() => authenticator.validate(wrong), E_INVALID_TOTP)
+    await assert.rejects(() => authenticator.validate(wrong), E_INVALID_TOTP)
     assert.equal((await db.from('totp_authenticators').first()).failed_verification_count, 2)
 
     await authenticator.verifyBackupCode(authenticator.getBackupCodes().release()[0])

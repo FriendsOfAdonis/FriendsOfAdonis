@@ -12,14 +12,14 @@ export const E_INVALID_BACKUP_CODE = class InvalidBackupCodeException extends Ex
 }
 
 /**
- * The "E_INVALID_OTP" exception is raised when a code does not match
+ * The "E_INVALID_TOTP" exception is raised when a code does not match
  * the current time step of the authenticator, or has been accepted
  * already.
  */
-export const E_INVALID_OTP = class InvalidOTPException extends Exception {
+export const E_INVALID_TOTP = class InvalidTOTPException extends Exception {
   static status: number = 401
-  static code = 'E_INVALID_OTP'
-  static message = 'The provided OTP code is invalid.'
+  static code = 'E_INVALID_TOTP'
+  static message = 'The provided authenticator code is invalid.'
 }
 
 /**

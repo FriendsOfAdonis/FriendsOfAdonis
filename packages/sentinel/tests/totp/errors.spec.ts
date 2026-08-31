@@ -1,15 +1,16 @@
 import { test } from '@japa/runner'
 import { DateTime } from 'luxon'
-import { E_INVALID_BACKUP_CODE, E_INVALID_OTP, E_TOTP_LOCKED } from '../../modules/totp/errors.ts'
+import { E_INVALID_BACKUP_CODE, E_INVALID_TOTP, E_TOTP_LOCKED } from '../../modules/totp/errors.ts'
+import * as errors from '../../src/errors.ts'
 import { freezeTime } from '../helpers.ts'
 
 test.group('TOTP errors', () => {
-  test('describe an invalid OTP as an unauthorized request', ({ assert }) => {
-    const error = new E_INVALID_OTP()
+  test('describe an invalid code as an unauthorized request', ({ assert }) => {
+    const error = new E_INVALID_TOTP()
 
     assert.equal(error.status, 401)
-    assert.equal(error.code, 'E_INVALID_OTP')
-    assert.equal(error.message, 'The provided OTP code is invalid.')
+    assert.equal(error.code, 'E_INVALID_TOTP')
+    assert.equal(error.message, 'The provided authenticator code is invalid.')
   })
 
   test('describe an invalid backup code as an unauthorized request', ({ assert }) => {
@@ -49,5 +50,11 @@ test.group('TOTP errors', () => {
 
     const error = new E_TOTP_LOCKED(DateTime.now().minus({ minutes: 1 }))
     assert.equal(error.retryAfter, 0)
+  })
+
+  test('expose the errors from the errors entrypoint', ({ assert }) => {
+    assert.strictEqual(errors.E_INVALID_TOTP, E_INVALID_TOTP)
+    assert.strictEqual(errors.E_INVALID_BACKUP_CODE, E_INVALID_BACKUP_CODE)
+    assert.strictEqual(errors.E_TOTP_LOCKED, E_TOTP_LOCKED)
   })
 })

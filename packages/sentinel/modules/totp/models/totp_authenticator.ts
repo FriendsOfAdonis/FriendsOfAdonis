@@ -25,7 +25,7 @@ import { primaryKeyOf } from '../../../src/helpers.ts'
 import { LucidRow } from '@adonisjs/lucid/types/model'
 import { normalizeBackupCode } from '../utils.ts'
 import { importQRCode } from '../dependencies.ts'
-import { E_INVALID_BACKUP_CODE, E_INVALID_OTP, E_TOTP_LOCKED } from '../errors.ts'
+import { E_INVALID_BACKUP_CODE, E_INVALID_TOTP, E_TOTP_LOCKED } from '../errors.ts'
 import { TOTP } from 'otpauth'
 import { TOTPManager } from '../manager.ts'
 
@@ -200,7 +200,7 @@ export class TOTPAuthenticator extends BaseModel {
    * @param token - The code typed by the user
    * @param options - Options overriding the ones of the owner
    *
-   * @throws {E_INVALID_OTP} When the code is wrong or was accepted
+   * @throws {E_INVALID_TOTP} When the code is wrong or was accepted
    * already
    * @throws {E_TOTP_LOCKED} When the authenticator is locked, before
    * or by this attempt
@@ -227,7 +227,7 @@ export class TOTPAuthenticator extends BaseModel {
 
     if (delta === null) {
       await this.$recordFailedVerification(options)
-      throw new E_INVALID_OTP()
+      throw new E_INVALID_TOTP()
     }
 
     /**
@@ -264,7 +264,7 @@ export class TOTPAuthenticator extends BaseModel {
      */
     if (!affected) {
       await this.$recordFailedVerification(options)
-      throw new E_INVALID_OTP()
+      throw new E_INVALID_TOTP()
     }
 
     this.lastUsedCounter = counter
