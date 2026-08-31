@@ -1,4 +1,5 @@
 import type ConfigureCommand from '@adonisjs/core/commands/configure'
+import type { Codemods } from '@adonisjs/core/ace/codemods'
 import { stubsRoot } from './stubs/main.ts'
 
 /**
@@ -7,19 +8,27 @@ import { stubsRoot } from './stubs/main.ts'
 export async function configure(command: ConfigureCommand) {
   const codemods = await command.createCodemods()
 
-  /**
-   * Register the service provider
-   */
   await codemods.updateRcFile((rcFile) => {
     rcFile.addProvider('@foadonis/sentinel/sentinel_provider')
   })
 
-  /**
-   * Publish the config file
-   */
   await codemods.makeUsingStub(stubsRoot, 'config/sentinel.stub', {})
 
+  await makeMigration(command, codemods, 'create_sentinel_tokens_table')
+  await makeMigration(command, codemods, 'create_totp_authenticators_table')
+
   logSuccess(command)
+}
+
+/**
+ * Publishes a migration from its stub. The file name is prefixed with
+ * the current timestamp, so that the migration runs after the
+ * existing ones.
+ */
+async function makeMigration(command: ConfigureCommand, codemods: Codemods, name: string) {
+  await codemods.makeUsingStub(stubsRoot, `database/migrations/${name}.stub`, {
+    filePath: command.app.migrationsPath(`${Date.now()}_${name}.ts`),
+  })
 }
 
 /**
