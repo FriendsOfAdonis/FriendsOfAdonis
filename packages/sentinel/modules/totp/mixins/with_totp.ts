@@ -16,7 +16,23 @@ import { TOTPManager } from '../manager.ts'
 export interface WithTOTPOptions extends Partial<AuthenticatorOptions> {}
 
 type WithTOTPRow = TOTPAuthenticableContract & {
+  /**
+   * Enrolls a new authenticator. See "TOTPAuthenticator.createFor"
+   * for the details.
+   */
   createAuthenticator(options?: CreateAuthenticatorOptions): Promise<TOTPAuthenticator>
+
+  /**
+   * Returns the authenticator in use, or null until an enrollment
+   * is confirmed by a first valid code. The "unverified" flag
+   * returns the enrollment in flight instead.
+   *
+   * The newest one is returned. Since confirming an enrollment
+   * retires the older ones, at most one unconfirmed enrollment
+   * sits next to the one in use. The query runs in the
+   * transaction of the model, so an enrollment created inside
+   * it is found.
+   */
   retrieveAuthenticator(unverified?: boolean): Promise<TOTPAuthenticator | null>
 }
 
@@ -50,10 +66,6 @@ export function withTOTP(manager: TOTPManager, defaults: WithTOTPOptions = {}) {
   ): WithTOTPClass<Model> {
     @staticImplements<WithTOTPClass>()
     class WithTOTPImpl extends superclass implements WithTOTPRow {
-      /**
-       * Returns the options of the authenticators, the config of the
-       * manager overridden by the options of the mixin
-       */
       getTOTPOptions() {
         return {
           ...manager.config,
@@ -61,36 +73,16 @@ export function withTOTP(manager: TOTPManager, defaults: WithTOTPOptions = {}) {
         }
       }
 
-      /**
-       * Returns the label displayed by the authenticator app. Reads
-       * the "email" attribute, override the method to use another
-       * one.
-       */
       getTOTPLabel() {
         return this.$getAttribute('email')
       }
 
-      /**
-       * Enrolls a new authenticator. See "TOTPAuthenticator.createFor"
-       * for the details.
-       */
       async createAuthenticator(
         options: CreateAuthenticatorOptions = {}
       ): Promise<TOTPAuthenticator> {
         return TOTPAuthenticator.createFor(this, options)
       }
 
-      /**
-       * Returns the authenticator in use, or null until an enrollment
-       * is confirmed by a first valid code. The "unverified" flag
-       * returns the enrollment in flight instead.
-       *
-       * The newest one is returned. Since confirming an enrollment
-       * retires the older ones, at most one unconfirmed enrollment
-       * sits next to the one in use. The query runs in the
-       * transaction of the model, so an enrollment created inside
-       * it is found.
-       */
       async retrieveAuthenticator(unverified = false): Promise<TOTPAuthenticator | null> {
         const authenticator = await TOTPAuthenticator.query({ client: this.$trx })
           .where('tokenable_id', primaryKeyOf(this, 'retrieve authenticator for') as any)

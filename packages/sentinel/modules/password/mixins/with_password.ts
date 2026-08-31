@@ -46,39 +46,116 @@ export interface WithPasswordOptions extends GeneratePasswordResetTokenOptions {
 type PasswordResetTokenMetadata = SentinelToken['metadata']
 
 type WithPasswordRow = {
+  /**
+   * Verifies a plain password against the hash of the row
+   */
   verifyPassword(plainPassword: string): Promise<boolean>
+
+  /**
+   * Verifies a plain password and throws a validation error when
+   * it is wrong. The error is shaped like a VineJS failure on the
+   * given field, so that the exception handler renders it like
+   * any form error.
+   *
+   * @param plainPassword - The password to verify
+   * @param passwordFieldName - The field to report the error on.
+   * Defaults to "currentPassword"
+   *
+   * @throws {E_VALIDATION_ERROR} When the password is wrong
+   */
   validatePassword(plainPassword: string, passwordFieldName?: string): Promise<void>
+
+  /**
+   * Replaces the password after verifying the current one. The
+   * pending reset tokens are invalidated, whatever their purpose.
+   *
+   * @throws {E_INVALID_PASSWORD} When the current password is
+   * wrong
+   */
   updatePassword(currentPassword: string, password: string): Promise<void>
+
+  /**
+   * Creates a password reset token for the row and returns its
+   * value
+   */
   generatePasswordResetToken(options?: GeneratePasswordResetTokenOptions): Promise<Secret<string>>
+
+  /**
+   * Invalidates the password reset tokens of the row. Leaving the
+   * purpose out targets the default one of the mixin, or the
+   * tokens without purpose when the mixin has none.
+   */
   invalidatePasswordResetTokens(options?: InvalidatePasswordResetTokensOptions): Promise<void>
+
+  /**
+   * Returns the hashed password of the row
+   */
   getPassword(): string | null
 }
 
 type WithPasswordClass<
   Model extends NormalizeConstructor<typeof BaseModel> = NormalizeConstructor<typeof BaseModel>,
 > = Model & {
+  /**
+   * Hashes the password before saving the row, when it has
+   * changed
+   */
   hashPassword<T extends WithPasswordClass>(this: T, row: InstanceType<T>): Promise<void>
+
+  /**
+   * Finds a user by the value of one of the uids
+   */
   findForAuth<T extends WithPasswordClass>(
     this: T,
     uids: string[],
     value: string
   ): Promise<InstanceType<T> | null>
+
+  /**
+   * Finds a user by uid and verifies its password. An unknown uid
+   * and a wrong password fail the same way, so that neither can
+   * be told apart.
+   *
+   * @throws {E_INVALID_CREDENTIALS} When the uid is unknown or
+   * the password is wrong
+   */
   verifyCredentials<T extends WithPasswordClass>(
     this: T,
     uid: string,
     password: string
   ): Promise<InstanceType<T>>
+
+  /**
+   * Verifies a password reset token and returns the user it was
+   * created for, along with the metadata of the token. The token
+   * is consumed, so verifying it again fails.
+   *
+   * @throws {E_INVALID_TOKEN} When the token is unknown, expired,
+   * already used, was created for another purpose, or its subject
+   * no longer exists
+   */
   verifyPasswordResetToken<T extends WithPasswordClass>(
     this: T,
     value: Secret<string> | string,
     options?: VerifyPasswordResetTokenOptions
   ): Promise<[InstanceType<T>, PasswordResetTokenMetadata]>
+
+  /**
+   * Resets the password of the user a token was created for. The
+   * token is consumed and the other pending reset tokens of the
+   * user are invalidated, whatever their purpose.
+   *
+   * @throws {E_INVALID_TOKEN} When the token is unknown, expired,
+   * already used, was created for another purpose, or its subject
+   * no longer exists
+   */
   resetPassword<T extends WithPasswordClass>(
     this: T,
     value: Secret<string> | string,
     password: string,
     options?: VerifyPasswordResetTokenOptions
   ): Promise<[InstanceType<T>, PasswordResetTokenMetadata]>
+
   new (...args: any[]): WithPasswordRow
 }
 
@@ -128,10 +205,6 @@ export function withPassword(manager: PasswordManager, options: WithPasswordOpti
   ): WithPasswordClass<Model> {
     @staticImplements<WithPasswordClass>()
     class WithPasswordImpl extends superclass implements WithPasswordRow {
-      /**
-       * Hashes the password before saving the row, when it has
-       * changed
-       */
       @beforeSave()
       static async hashPassword<T extends WithPasswordClass>(this: T, row: InstanceType<T>) {
         if (row.$dirty[passwordColumnName]) {
@@ -141,9 +214,6 @@ export function withPassword(manager: PasswordManager, options: WithPasswordOpti
         }
       }
 
-      /**
-       * Finds a user by the value of one of the uids
-       */
       static findForAuth<T extends WithPasswordClass>(this: T, uidsList: string[], value: string) {
         const query = this.query()
         uidsList.forEach((uid) => query.orWhere(uid, value))
@@ -151,14 +221,6 @@ export function withPassword(manager: PasswordManager, options: WithPasswordOpti
         return query.limit(1).first() as Promise<InstanceType<T> | null>
       }
 
-      /**
-       * Finds a user by uid and verifies its password. An unknown uid
-       * and a wrong password fail the same way, so that neither can
-       * be told apart.
-       *
-       * @throws {E_INVALID_CREDENTIALS} When the uid is unknown or
-       * the password is wrong
-       */
       static async verifyCredentials<T extends WithPasswordClass>(
         this: T,
         uid: string,
@@ -201,15 +263,6 @@ export function withPassword(manager: PasswordManager, options: WithPasswordOpti
         return row
       }
 
-      /**
-       * Verifies a password reset token and returns the user it was
-       * created for, along with the metadata of the token. The token
-       * is consumed, so verifying it again fails.
-       *
-       * @throws {E_INVALID_TOKEN} When the token is unknown, expired,
-       * already used, was created for another purpose, or its subject
-       * no longer exists
-       */
       static async verifyPasswordResetToken<T extends WithPasswordClass>(
         this: T,
         value: Secret<string> | string,
@@ -230,15 +283,6 @@ export function withPassword(manager: PasswordManager, options: WithPasswordOpti
         return [instance, token.metadata]
       }
 
-      /**
-       * Resets the password of the user a token was created for. The
-       * token is consumed and the other pending reset tokens of the
-       * user are invalidated, whatever their purpose.
-       *
-       * @throws {E_INVALID_TOKEN} When the token is unknown, expired,
-       * already used, was created for another purpose, or its subject
-       * no longer exists
-       */
       static async resetPassword<T extends WithPasswordClass>(
         this: T,
         value: Secret<string> | string,
@@ -255,9 +299,6 @@ export function withPassword(manager: PasswordManager, options: WithPasswordOpti
         return [instance, metadata]
       }
 
-      /**
-       * Verifies a plain password against the hash of the row
-       */
       verifyPassword(plainPassword: string) {
         const password = this.getPassword()
 
@@ -270,18 +311,6 @@ export function withPassword(manager: PasswordManager, options: WithPasswordOpti
         return manager.verifyPassword(password, plainPassword)
       }
 
-      /**
-       * Verifies a plain password and throws a validation error when
-       * it is wrong. The error is shaped like a VineJS failure on the
-       * given field, so that the exception handler renders it like
-       * any form error.
-       *
-       * @param plainPassword - The password to verify
-       * @param passwordFieldName - The field to report the error on.
-       * Defaults to "currentPassword"
-       *
-       * @throws {E_VALIDATION_ERROR} When the password is wrong
-       */
       async validatePassword(plainPassword: string, passwordFieldName?: string) {
         if (!(await this.verifyPassword(plainPassword))) {
           const error = new Error('Validation Error')
@@ -301,13 +330,6 @@ export function withPassword(manager: PasswordManager, options: WithPasswordOpti
         }
       }
 
-      /**
-       * Replaces the password after verifying the current one. The
-       * pending reset tokens are invalidated, whatever their purpose.
-       *
-       * @throws {E_INVALID_PASSWORD} When the current password is
-       * wrong
-       */
       async updatePassword(currentPassword: string, password: string) {
         if (!(await this.verifyPassword(currentPassword))) {
           throw new E_INVALID_PASSWORD()
@@ -319,10 +341,6 @@ export function withPassword(manager: PasswordManager, options: WithPasswordOpti
         )
       }
 
-      /**
-       * Creates a password reset token for the row and returns its
-       * value
-       */
       async generatePasswordResetToken(options: GeneratePasswordResetTokenOptions = {}) {
         return manager.generatePasswordResetToken(
           primaryKeyOf(this, 'generate a password reset token for'),
@@ -330,11 +348,6 @@ export function withPassword(manager: PasswordManager, options: WithPasswordOpti
         )
       }
 
-      /**
-       * Invalidates the password reset tokens of the row. Leaving the
-       * purpose out targets the default one of the mixin, or the
-       * tokens without purpose when the mixin has none.
-       */
       async invalidatePasswordResetTokens(options: InvalidatePasswordResetTokensOptions = {}) {
         /**
          * An explicit undefined purpose must not fall back to the
@@ -347,9 +360,6 @@ export function withPassword(manager: PasswordManager, options: WithPasswordOpti
         )
       }
 
-      /**
-       * Returns the hashed password of the row
-       */
       getPassword(): string | null {
         return (
           this.$getAttribute(options.passwordColumnName ?? DEFAULT_PASSWORD_COLUMN_NAME) ?? null
