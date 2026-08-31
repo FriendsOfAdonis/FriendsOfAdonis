@@ -49,7 +49,6 @@ function wrongCodeAt(authenticator: TOTPAuthenticator, at: Date) {
 
 function setupModel(config: Partial<TOTPManagerConfig> = {}, defaults: WithTOTPOptions = {}) {
   const manager = new TOTPManagerFactory().create({ issuer: 'FriendsOfAdonis', ...config })
-  TOTPAuthenticator.useManager(manager)
 
   class User extends compose(BaseModel, manager.withTOTP(defaults)) {
     @column({ isPrimary: true })
@@ -130,6 +129,18 @@ test.group('TOTP authenticator | enroll', () => {
       assert.match(code, /^[0-9A-HJKMNP-TV-Z]{5}-[0-9A-HJKMNP-TV-Z]{5}$/)
       assert.notInclude(row.backup_codes, code)
     }
+  })
+
+  test('refuse the secrets of an authenticator left unlinked', async ({ assert }) => {
+    const { authenticator } = await enroll()
+    const unlinked = await TOTPAuthenticator.findOrFail(authenticator.id)
+
+    assert.throws(
+      () => unlinked.getSecret(),
+      RuntimeException,
+      /Did you forget to call `.link\(tokenable\)\?`/
+    )
+    assert.throws(() => unlinked.getBackupCodes(), RuntimeException)
   })
 
   test('size the secret and the backup codes from the tokenable options', async ({ assert }) => {

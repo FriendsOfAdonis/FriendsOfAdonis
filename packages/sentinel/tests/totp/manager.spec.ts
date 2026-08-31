@@ -1,20 +1,13 @@
 import { test } from '@japa/runner'
 import { Secret } from '@adonisjs/core/helpers'
 import { RuntimeException } from '@adonisjs/core/exceptions'
-import { ChaCha20Poly1305 } from '@adonisjs/core/encryption/drivers/chacha20_poly1305'
 import { EncryptionFactory } from '@adonisjs/core/factories/encryption'
 import { TOTPManagerFactory } from '../../factories/totp.ts'
 import { TOTPManager } from '../../modules/totp/manager.ts'
 import { TOTP_BACKUP_CODES_PURPOSE, TOTP_SECRET_PURPOSE } from '../../modules/totp/constants.ts'
+import { createForeignEncryption } from '../helpers.ts'
 
 const BACKUP_CODE = /^[0-9A-HJKMNP-TV-Z]{5}-[0-9A-HJKMNP-TV-Z]{5}$/
-
-function createForeignEncryption() {
-  return new EncryptionFactory({
-    driver: (key) => new ChaCha20Poly1305({ id: 'foreign', key }),
-    keys: ['anotherverylongrandom32charsstri'],
-  }).create()
-}
 
 test.group('TOTP manager | secret', () => {
   test('create a secret of 40 random bytes by default', ({ assert }) => {

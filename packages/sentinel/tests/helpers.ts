@@ -5,6 +5,8 @@ import { getActiveTestOrFail } from '@japa/runner'
 import { AppFactory } from '@adonisjs/core/factories/app'
 import { LoggerFactory } from '@adonisjs/core/factories/logger'
 import { EmitterFactory } from '@adonisjs/core/factories/events'
+import { EncryptionFactory } from '@adonisjs/core/factories/encryption'
+import { ChaCha20Poly1305 } from '@adonisjs/core/encryption/drivers/chacha20_poly1305'
 import { Database } from '@adonisjs/lucid/database'
 import { BaseModel } from '@adonisjs/lucid/orm'
 import { TokenSchema } from '../modules/token/schema.ts'
@@ -62,6 +64,13 @@ export async function createTables(db: Database) {
   await schema.createTable('totp_authenticators', (table) => {
     TOTPSchema.configureAuthenticatorsTable(table)
   })
+}
+
+export function createForeignEncryption() {
+  return new EncryptionFactory({
+    driver: (key) => new ChaCha20Poly1305({ id: 'foreign', key }),
+    keys: ['anotherverylongrandom32charsstri'],
+  }).create()
 }
 
 export function freezeTime(at: Date) {

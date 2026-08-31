@@ -1,3 +1,5 @@
+import type { TOTPManager } from './manager.ts'
+
 /**
  * Hashing algorithms supported by the authenticator apps
  */
@@ -144,4 +146,10 @@ export interface TOTPAuthenticableContract {
    * email of the account
    */
   getTOTPLabel(): string
+
+  /**
+   * Returns the manager encrypting and decrypting the secrets of the
+   * authenticators of the model
+   */
+  getTOTPManager(): TOTPManager
 }

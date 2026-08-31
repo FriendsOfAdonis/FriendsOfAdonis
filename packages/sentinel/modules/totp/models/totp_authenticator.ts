@@ -27,7 +27,6 @@ import { normalizeBackupCode } from '../utils.ts'
 import { importQRCode } from '../dependencies.ts'
 import { E_INVALID_BACKUP_CODE, E_INVALID_TOTP, E_TOTP_LOCKED } from '../errors.ts'
 import { TOTP } from 'otpauth'
-import { TOTPManager } from '../manager.ts'
 
 /**
  * TOTP authenticator represents the enrollment of an authenticator
@@ -35,8 +34,9 @@ import { TOTPManager } from '../manager.ts'
  * and locks itself after too many failed verifications.
  *
  * An authenticator must be linked to its owner using the "link"
- * method before use, since the options come from the owner. The
- * "withTOTP" mixin links the authenticators it returns.
+ * method before use, since the options and the manager encrypting
+ * the secrets come from the owner. The "withTOTP" mixin links the
+ * authenticators it returns.
  *
  * @example
  * const authenticator = await user.createAuthenticator()
@@ -107,23 +107,9 @@ export class TOTPAuthenticator extends BaseModel {
   declare createdAt: DateTime
 
   /**
-   * The manager used to encrypt and decrypt the secrets, defined by
-   * the service provider
-   */
-  protected static $manager: TOTPManager
-
-  /**
    * The owner of the authenticator, defined by the "link" method
    */
   protected $tokenable: TOTPAuthenticableContract | undefined
-
-  /**
-   * Defines the manager used by the model. Called by the service
-   * provider once the manager is resolved.
-   */
-  static useManager(manager: TOTPManager) {
-    this.$manager = manager
-  }
 
   /**
    * Ensures the authenticator has been linked to its owner
@@ -303,10 +289,11 @@ export class TOTPAuthenticator extends BaseModel {
   }
 
   /**
-   * Returns the decrypted secret
+   * Returns the decrypted secret. Throws when the authenticator has
+   * not been linked, since the manager comes from the owner.
    */
   getSecret() {
-    return TOTPAuthenticator.$manager.decryptSecret(this.secret)
+    return this.tokenable.getTOTPManager().decryptSecret(this.secret)
   }
 
   /**
@@ -320,10 +307,12 @@ export class TOTPAuthenticator extends BaseModel {
   }
 
   /**
-   * Returns the decrypted list of the remaining backup codes
+   * Returns the decrypted list of the remaining backup codes. Throws
+   * when the authenticator has not been linked, since the manager
+   * comes from the owner.
    */
   getBackupCodes() {
-    return new Secret(TOTPAuthenticator.$manager.decryptBackupCodes(this.backupCodes))
+    return new Secret(this.tokenable.getTOTPManager().decryptBackupCodes(this.backupCodes))
   }
 
   /**
@@ -347,10 +336,11 @@ export class TOTPAuthenticator extends BaseModel {
     this.$assertLinked()
     this.$assertUnlocked()
 
+    const manager = this.tokenable.getTOTPManager()
     const value = normalizeBackupCode(typeof code === 'string' ? code : code.release())
 
     const stored = this.backupCodes
-    const codes = TOTPAuthenticator.$manager.decryptBackupCodes(stored)
+    const codes = manager.decryptBackupCodes(stored)
     const index = codes.findIndex((candidate) => safeEqual(normalizeBackupCode(candidate), value))
 
     if (index === -1) {
@@ -358,7 +348,7 @@ export class TOTPAuthenticator extends BaseModel {
       throw new E_INVALID_BACKUP_CODE()
     }
 
-    const remaining = TOTPAuthenticator.$manager.encryptBackupCodes(codes.toSpliced(index, 1))
+    const remaining = manager.encryptBackupCodes(codes.toSpliced(index, 1))
     const result = await TOTPAuthenticator.query({ client: this.$trx })
       .where('id', this.id as any)
       .where('backup_codes', stored)
@@ -424,7 +414,7 @@ export class TOTPAuthenticator extends BaseModel {
   async regenerateBackupCodes(options: RegenerateBackupCodesOptions = {}) {
     const resolved = { ...this.tokenable.getTOTPOptions(), ...options }
 
-    const { codes, encryptedCodes } = TOTPAuthenticator.$manager.createBackupCodes(
+    const { codes, encryptedCodes } = this.tokenable.getTOTPManager().createBackupCodes(
       resolved.backupCodesCount ?? TOTP_DEFAULT_BACKUP_CODES_COUNT,
       resolved.backupCodesLength ?? TOTP_DEFAULT_BACKUP_CODES_LENGTH
     )
@@ -458,12 +448,13 @@ export class TOTPAuthenticator extends BaseModel {
     const resolved = { ...tokenable.getTOTPOptions(), ...options }
     const tokenableId = primaryKeyOf(tokenable, 'create authenticator for')
     const client = tokenable.$trx
+    const manager = tokenable.getTOTPManager()
 
-    const { encryptedSecret } = TOTPAuthenticator.$manager.createSecret(
+    const { encryptedSecret } = manager.createSecret(
       resolved.secretLength ?? TOTP_DEFAULT_SECRET_LENGTH
     )
 
-    const { encryptedCodes } = TOTPAuthenticator.$manager.createBackupCodes(
+    const { encryptedCodes } = manager.createBackupCodes(
       resolved.backupCodesCount ?? TOTP_DEFAULT_BACKUP_CODES_COUNT,
       resolved.backupCodesLength ?? TOTP_DEFAULT_BACKUP_CODES_LENGTH
     )

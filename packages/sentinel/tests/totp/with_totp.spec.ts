@@ -3,15 +3,15 @@ import { TOTP, URI } from 'otpauth'
 import { BaseModel, column } from '@adonisjs/lucid/orm'
 import { compose } from '@adonisjs/core/helpers'
 import { RuntimeException } from '@adonisjs/core/exceptions'
+import { EncryptionFactory } from '@adonisjs/core/factories/encryption'
 import { TOTPManagerFactory } from '../../factories/totp.ts'
-import type { TOTPManagerConfig } from '../../modules/totp/manager.ts'
+import { TOTPManager, type TOTPManagerConfig } from '../../modules/totp/manager.ts'
 import { withTOTP, type WithTOTPOptions } from '../../modules/totp/mixins/with_totp.ts'
 import { TOTPAuthenticator } from '../../modules/totp/models/totp_authenticator.ts'
-import { createDatabase, createTables } from '../helpers.ts'
+import { createDatabase, createForeignEncryption, createTables } from '../helpers.ts'
 
 function setupModel(config: Partial<TOTPManagerConfig> = {}, defaults: WithTOTPOptions = {}) {
   const manager = new TOTPManagerFactory().create({ issuer: 'FriendsOfAdonis', ...config })
-  TOTPAuthenticator.useManager(manager)
 
   class User extends compose(BaseModel, manager.withTOTP(defaults)) {
     @column({ isPrimary: true })
@@ -65,7 +65,6 @@ test.group('TOTP mixin | options', () => {
     await createTables(db)
 
     const manager = new TOTPManagerFactory().create({ issuer: 'FriendsOfAdonis' })
-    TOTPAuthenticator.useManager(manager)
 
     class User extends compose(BaseModel, manager.withTOTP()) {
       @column({ isPrimary: true })
@@ -91,8 +90,14 @@ test.group('TOTP mixin | options', () => {
     const db = await createDatabase()
     await createTables(db)
 
-    const manager = new TOTPManagerFactory().create({ issuer: 'FriendsOfAdonis' })
-    TOTPAuthenticator.useManager(manager)
+    /**
+     * Built by hand, the way an application without the service
+     * provider would: no container and no wiring beside the mixin
+     */
+    const manager = new TOTPManager(
+      { issuer: 'FriendsOfAdonis' },
+      new EncryptionFactory().create()
+    )
 
     class User extends compose(BaseModel, withTOTP(manager, { digits: 8 })) {
       @column({ isPrimary: true })
@@ -104,10 +109,93 @@ test.group('TOTP mixin | options', () => {
 
     const user = await User.create({ email: 'virk@adonisjs.com' })
     assert.deepEqual(user.getTOTPOptions(), { issuer: 'FriendsOfAdonis', digits: 8 })
+    assert.strictEqual(user.getTOTPManager(), manager)
 
     const authenticator = await user.createAuthenticator()
     assert.instanceOf(authenticator, TOTPAuthenticator)
     assert.strictEqual(authenticator.tokenable, user)
+    assert.lengthOf(authenticator.getBackupCodes().release(), 10)
+
+    const totp = new TOTP({ secret: authenticator.getSecret().release(), digits: 8 })
+    assert.isTrue(await authenticator.validate(totp.generate()))
+    assert.isNotNull(authenticator.verifiedAt)
+  })
+})
+
+test.group('TOTP mixin | manager', () => {
+  async function setupTwoManagers() {
+    const db = await createDatabase()
+    await createTables(db)
+
+    const first = new TOTPManagerFactory().create({ issuer: 'First' })
+    const second = new TOTPManagerFactory()
+      .withEncryption(createForeignEncryption())
+      .create({ issuer: 'Second' })
+
+    class FirstUser extends compose(BaseModel, first.withTOTP()) {
+      static table = 'users'
+
+      @column({ isPrimary: true })
+      declare id: number
+
+      @column()
+      declare email: string
+    }
+
+    class SecondUser extends compose(BaseModel, second.withTOTP()) {
+      static table = 'users'
+
+      @column({ isPrimary: true })
+      declare id: number
+
+      @column()
+      declare email: string
+    }
+
+    const firstUser = await FirstUser.create({ email: 'virk@adonisjs.com' })
+    const secondUser = await SecondUser.create({ email: 'romain@adonisjs.com' })
+
+    return { db, first, second, firstUser, secondUser }
+  }
+
+  test('hand each model the manager of its mixin', async ({ assert }) => {
+    const { db, first, second, firstUser, secondUser } = await setupTwoManagers()
+
+    assert.strictEqual(firstUser.getTOTPManager(), first)
+    assert.strictEqual(secondUser.getTOTPManager(), second)
+
+    const firstAuthenticator = await firstUser.createAuthenticator()
+    const secondAuthenticator = await secondUser.createAuthenticator()
+
+    /**
+     * Each row round-trips through the manager of its model, even
+     * though the managers hold different encryption keys
+     */
+    const rows = new Map<unknown, any>(
+      (await db.from('totp_authenticators')).map((row) => [row.tokenable_id, row])
+    )
+    assert.equal(
+      first.decryptSecret(rows.get(firstUser.id).secret).release(),
+      firstAuthenticator.getSecret().release()
+    )
+    assert.equal(
+      second.decryptSecret(rows.get(secondUser.id).secret).release(),
+      secondAuthenticator.getSecret().release()
+    )
+  })
+
+  test('refuse the rows encrypted under another manager', async ({ assert }) => {
+    const { firstUser, secondUser } = await setupTwoManagers()
+    const authenticator = await firstUser.createAuthenticator()
+
+    const foreign = (await TOTPAuthenticator.findOrFail(authenticator.id)).link(secondUser)
+
+    assert.throws(
+      () => foreign.getSecret(),
+      RuntimeException,
+      /encrypted with a different application key/
+    )
+    assert.throws(() => foreign.getBackupCodes(), RuntimeException)
   })
 })
 

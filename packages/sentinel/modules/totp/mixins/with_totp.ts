@@ -47,8 +47,8 @@ type WithTOTPClass<
  *
  * Under the hood, this mixin defines following methods
  *
- * - getTOTPOptions and getTOTPLabel methods to configure the
- *   authenticators of the model
+ * - getTOTPOptions, getTOTPLabel and getTOTPManager methods to
+ *   configure the authenticators of the model
  * - createAuthenticator method to enroll a new authenticator
  * - retrieveAuthenticator method to find the authenticator in use
  *
@@ -75,6 +75,10 @@ export function withTOTP(manager: TOTPManager, defaults: WithTOTPOptions = {}) {
 
       getTOTPLabel() {
         return this.$getAttribute('email')
+      }
+
+      getTOTPManager() {
+        return manager
       }
 
       async createAuthenticator(

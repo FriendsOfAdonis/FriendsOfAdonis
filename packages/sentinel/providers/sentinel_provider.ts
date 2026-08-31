@@ -7,7 +7,6 @@ import { TokenManager } from '../modules/token/manager.ts'
 import { TOTPManager } from '../modules/totp/manager.ts'
 import { MagicLinkManager } from '../modules/magic_link/manager.ts'
 import { PasswordManager } from '../modules/password/manager.ts'
-import { TOTPAuthenticator } from '../modules/totp/models/totp_authenticator.ts'
 
 /**
  * Registers the sentinel managers with the container
@@ -86,12 +85,8 @@ export default class SentinelProvider {
   }
 
   /**
-   * Registers the TOTP manager with the container. The manager is also
-   * handed to the "TOTPAuthenticator" model, which needs it to encrypt
-   * and decrypt secrets.
-   *
-   * Throws when the "totp" config is missing, since the issuer is
-   * required.
+   * Registers the TOTP manager with the container. Throws when the
+   * "totp" config is missing, since the issuer is required.
    */
   protected registerTOTP() {
     this.app.container.singleton(TOTPManager, async (resolver) => {
@@ -104,10 +99,7 @@ export default class SentinelProvider {
         )
       }
 
-      const manager = new TOTPManager(config.totp, encryption.use())
-      TOTPAuthenticator.useManager(manager)
-
-      return manager
+      return new TOTPManager(config.totp, encryption.use())
     })
 
     this.app.container.alias('sentinel.totp', TOTPManager)
