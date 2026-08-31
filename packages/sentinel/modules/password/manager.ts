@@ -11,8 +11,7 @@ import type {
   InvalidatePasswordResetTokensOptions,
   VerifyPasswordResetTokenOptions,
 } from './types.ts'
-import { WithPasswordOptions } from './main.ts'
-import { withPassword } from './mixins/with_password.ts'
+import { withPassword, WithPasswordOptions } from './mixins/with_password.ts'
 
 /**
  * Config accepted by the password manager

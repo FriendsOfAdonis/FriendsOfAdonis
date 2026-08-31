@@ -2,7 +2,7 @@ import { Secret } from '@adonisjs/core/helpers'
 import type { GenerateOTPOptions, InvalidateOTPsOptions, VerifyOTPOptions } from './types.ts'
 import type { TokenManager } from '../token/manager.ts'
 import type { RecordId } from '../../src/types.ts'
-import { withOTP, WithOTPOptions } from './main.ts'
+import { withOTP, type WithOTPOptions } from './mixins/with_otp.ts'
 import {
   OTP_DEFAULT_EXPIRES_IN,
   OTP_DEFAULT_LENGTH,
@@ -53,8 +53,8 @@ export class OTPManager {
   static TOKEN_KIND = 'otp'
 
   constructor(
-    private config: OTPManagerConfig = {},
-    private tokens: TokenManager
+    protected config: OTPManagerConfig = {},
+    protected tokens: TokenManager
   ) {}
 
   /**

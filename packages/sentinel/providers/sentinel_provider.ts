@@ -141,13 +141,10 @@ export default class SentinelProvider {
     this.app.container.singleton(PasswordManager, async (resolver) => {
       const config = await this.resolveConfig()
 
-      const hasher = await this.app.container.make('hash')
+      const hasher = await resolver.make('hash')
+      const tokens = await resolver.make('sentinel.tokens')
 
-      return new PasswordManager(
-        config.password,
-        await resolver.make('sentinel.tokens'),
-        hasher.use()
-      )
+      return new PasswordManager(config.password, tokens, hasher.use())
     })
 
     this.app.container.alias('sentinel.password', PasswordManager)
