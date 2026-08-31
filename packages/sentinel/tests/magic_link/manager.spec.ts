@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto'
+import { crc32 } from 'node:zlib'
 import { test } from '@japa/runner'
 import { Secret } from '@adonisjs/core/helpers'
 import { MagicLinkManagerFactory } from '../../factories/magic_link.ts'
@@ -7,7 +8,6 @@ import { MagicLinkManager, type MagicLinkManagerConfig } from '../../modules/mag
 import { E_INVALID_TOKEN } from '../../modules/token/errors.ts'
 import { FakeMemoryTokenProvider } from '../../modules/token/providers/fake.ts'
 import { SentinelToken } from '../../modules/token/token.ts'
-import { CRC32 } from '../../src/utils/crc32.ts'
 import { freezeTime, rejection } from '../helpers.ts'
 
 type InvalidTokenException = InstanceType<typeof E_INVALID_TOKEN>
@@ -68,7 +68,7 @@ test.group('Magic link manager | generateMagicLinkToken', () => {
     assert.isNotNull(match)
 
     const [, seed, checksum] = match!
-    assert.equal(Number(checksum), new CRC32().calculate(seed))
+    assert.equal(Number(checksum), crc32(seed))
   })
 
   test('create a different token every time', async ({ assert }) => {
