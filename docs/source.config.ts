@@ -1,11 +1,6 @@
 import { remarkStructureDefaultOptions } from 'fumadocs-core/mdx-plugins'
-import {
-  defineDocs,
-  defineConfig,
-  defineCollections,
-  metaSchema,
-  frontmatterSchema,
-} from 'fumadocs-mdx/config'
+import { metaSchema, pageSchema } from 'fumadocs-core/source/schema'
+import { defineDocs, defineConfig, defineCollections } from 'fumadocs-mdx/config'
 import lastModified from 'fumadocs-mdx/plugins/last-modified'
 import { ModuleResolutionKind } from 'typescript'
 import { z } from 'zod'
@@ -13,10 +8,12 @@ import { z } from 'zod'
 export const docs = defineDocs({
   docs: {
     async: true,
-    schema: frontmatterSchema.extend({
+    schema: pageSchema.extend({
       preview: z.string().optional(),
       index: z.boolean().default(false),
       method: z.string().optional(),
+      /** Keep unwritten stub pages out of search engines and the sitemap. */
+      noindex: z.boolean().default(false),
     }),
     postprocess: {
       includeProcessedMarkdown: true,
@@ -34,7 +31,7 @@ export const blog = defineCollections({
   type: 'doc',
   dir: 'content/blog',
   async: true,
-  schema: frontmatterSchema.extend({
+  schema: pageSchema.extend({
     author: z.string(),
     thumbnail: z.string(),
     date: z.iso.date().or(z.date()),

@@ -86,7 +86,7 @@ export default class GraphQLServer<
    * When configured, also starts the PubSub and websocket server.
    */
   async start() {
-    const schema = await this.#buildSchema()
+    const schema = await this.buildSchema()
 
     await Promise.all([
       this.#driver.start(schema),
@@ -109,7 +109,7 @@ export default class GraphQLServer<
       return
     }
 
-    const schema = await this.#buildSchema()
+    const schema = await this.buildSchema()
     await this.#driver.reload(schema)
   }
 
@@ -161,7 +161,7 @@ export default class GraphQLServer<
     return resolvers
   }
 
-  async #buildSchema(): Promise<GraphQLSchema> {
+  async buildSchema(): Promise<GraphQLSchema> {
     const { scalarsMap, ...buildSchemaOptions } = this.#config
 
     const resolvers = await this.#loadResolvers()

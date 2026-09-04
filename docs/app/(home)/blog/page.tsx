@@ -1,6 +1,15 @@
+import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import { blog } from '@/lib/source'
+import { createMetadata } from '@/utils/metadata'
+
+export const metadata: Metadata = createMetadata({
+  title: { absolute: 'AdonisJS Articles and Tutorials | Friends Of Adonis' },
+  description:
+    'Guides, tutorials and deep dives on building AdonisJS applications, written by the Friends Of Adonis community.',
+  path: '/blog',
+})
 
 export default function Page() {
   const posts = [...blog.getPages()].sort(

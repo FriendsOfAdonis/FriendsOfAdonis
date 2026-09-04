@@ -1,6 +1,6 @@
 {
   "title": "Flick",
-  "description": "Feature flags for AdonisJS",
+  "description": "Typed, driver-based feature flags for AdonisJS: variants, per-scope caching, Edge tags, and test fakes.",
   "icon": "ToggleRight",
   "root": true,
   "pages": [

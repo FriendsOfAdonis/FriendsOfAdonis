@@ -1,5 +1,11 @@
 # @foadonis/graphql
 
+## 1.1.1
+
+### Patch Changes
+
+- [#146](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/146) [`8c1a901`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/8c1a901964797d22da8c2fff49c70ba5f19a0fb3) Thanks [@kerwanp](https://github.com/kerwanp)! - Set GraphQLServer.buildSchema method public allowing building schema without starting the server.
+
 ## 1.1.0
 
 ### Minor Changes

@@ -1,6 +1,6 @@
 {
   "title": "OpenAPI",
-  "description": "Generate OpenAPI specifications",
+  "description": "Generate OpenAPI V3 documentation from your AdonisJS controllers and models using TypeScript decorators.",
   "root": true,
   "icon": "Server",
   "pages": [

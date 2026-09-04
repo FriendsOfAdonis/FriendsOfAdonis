@@ -5,19 +5,28 @@ import { TreeContextProvider } from 'fumadocs-ui/contexts/tree'
 import { Analytics } from '@vercel/analytics/next'
 import { GeistMono } from 'geist/font/mono'
 import { GeistSans } from 'geist/font/sans'
-import Script from 'next/script'
+import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 import { source } from '@/lib/source'
-import { baseUrl, createMetadata } from '@/utils/metadata'
+import { baseUrl, createMetadata, siteDescription, siteName } from '@/utils/metadata'
 import { Body } from './layout.client'
 import { Provider } from './provider'
 
-export const metadata = createMetadata({
+export const metadata: Metadata = createMetadata({
   title: {
     template: '%s | Friends Of Adonis',
-    default: 'Friends Of Adonis',
+    default: 'Friends Of Adonis - AdonisJS packages by the community',
   },
-  description: 'Well-crafted and battle-tested Adonis packages made with ♥ by the community',
+  description: siteDescription,
+  keywords: ['AdonisJS', 'Adonis', 'TypeScript', 'Node.js', 'AdonisJS packages'],
+  applicationName: siteName,
+  authors: [{ name: 'Friends Of Adonis', url: 'https://github.com/FriendsOfAdonis' }],
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { 'index': true, 'follow': true, 'max-image-preview': 'large', 'max-snippet': -1 },
+  },
+  path: '/',
   metadataBase: baseUrl,
 })
 
@@ -53,7 +62,6 @@ export default async function Layout({ children }: { readonly children: ReactNod
         </NextProvider>
         <Analytics />
       </Body>
-      <Script data-domain="friendsofadonis.com" src="https://plausible.io/js/script.js" />
     </html>
   )
 }
