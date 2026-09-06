@@ -17,6 +17,15 @@ export function Searchable<T extends Constructor>(superclass: T) {
   @staticImplements<SearchableModel>()
   class SearchableImpl extends superclass {
     /**
+     * Model attributes used for full-text matching by the Lucid engine.
+     *
+     * Defaults to all model columns.
+     */
+    static get $searchableColumns(): string[] {
+      return Object.keys(this.$columnsDefinitions)
+    }
+
+    /**
      * Get the Magnify engine for the model.
      */
     static async $getSearchEngine(): Promise<MagnifyEngine> {

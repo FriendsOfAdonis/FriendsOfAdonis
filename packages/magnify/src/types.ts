@@ -8,7 +8,12 @@ import { type MagnifyManager } from './magnify_manager.js'
 import { type ConfigProvider } from '@adonisjs/core/types'
 import { type MagnifyEngine } from './engines/main.js'
 import { type CollectionCreateSchema } from 'typesense/lib/Typesense/Collections.js'
-import { type LucidModel, type LucidRow, type ModelObject } from '@adonisjs/lucid/types/model'
+import {
+  type LucidModel,
+  type LucidRow,
+  type ModelAttributes,
+  type ModelObject,
+} from '@adonisjs/lucid/types/model'
 import { type SearchBuilder } from './builder.js'
 
 export type MeilisearchConfig = MeilisearchClientConfig & {
@@ -74,7 +79,33 @@ export interface SearchableRow extends LucidRow {
   $makeUnsearchable(): Promise<void>
 }
 
+type InferredSearchableColumns<Model extends LucidRow> = Extract<
+  Exclude<keyof ModelAttributes<Model>, keyof SearchableRow>,
+  string
+>
+
+/**
+ * Attribute names that can be used for Lucid full-text search.
+ *
+ * Prefers a static `$columns` list on the model constructor when present,
+ * otherwise infers column names from the instance attributes.
+ */
+export type SearchableColumnName<Model extends LucidModel> = Model extends {
+  $columns: readonly string[]
+}
+  ? Model['$columns'][number]
+  : [InferredSearchableColumns<InstanceType<Model>>] extends [never]
+    ? string
+    : InferredSearchableColumns<InstanceType<Model>>
+
 export interface SearchableModel extends Omit<LucidModel, 'constructor'> {
+  /**
+   * Model attributes used for full-text matching by the Lucid engine.
+   *
+   * Defaults to all model columns.
+   */
+  get $searchableColumns(): SearchableColumnName<this>[]
+
   /**
    * Get the index name for the model.
    */
