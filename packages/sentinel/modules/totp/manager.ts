@@ -10,7 +10,6 @@ import {
 } from './constants.ts'
 import { AuthenticatorOptions } from './types.ts'
 import { generateBackupCodes, generateSecret } from './utils.ts'
-import { withTOTP, WithTOTPOptions } from './mixins/with_totp.ts'
 
 /**
  * Config accepted by the TOTP manager. The options can be overridden
@@ -105,14 +104,4 @@ export class TOTPManager {
 
     return codes
   }
-
-  /**
-   * Mixin to add TOTP authenticators to a Lucid model. The given
-   * options override the config of the manager. See "withTOTP" for
-   * the details.
-   *
-   * @example
-   * class User extends compose(BaseModel, totp.withTOTP()) {}
-   */
-  withTOTP = (options: WithTOTPOptions = {}) => withTOTP(this, options)
 }

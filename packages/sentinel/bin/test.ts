@@ -1,7 +1,23 @@
 import { assert } from '@japa/assert'
 import { fileSystem } from '@japa/file-system'
 import { configure, processCLIArgs, run } from '@japa/runner'
+import type { ApplicationService } from '@adonisjs/core/types'
+import { setApp } from '@adonisjs/core/services/app'
+import { AppFactory } from '@adonisjs/core/factories/app'
 import { BASE_URL } from '../tests/helpers.ts'
+
+/*
+|--------------------------------------------------------------------------
+| Register an application
+|--------------------------------------------------------------------------
+|
+| The mixins read the services of the package, which register a "booted"
+| hook on the global application when imported. The tests give their
+| managers explicitly, so the application only has to exist: it is never
+| booted and the services stay undefined.
+|
+*/
+setApp(new AppFactory().create(BASE_URL, () => {}) as ApplicationService)
 
 /*
 |--------------------------------------------------------------------------

@@ -1,7 +1,7 @@
 import { test } from '@japa/runner'
 import { RuntimeException } from '@adonisjs/core/exceptions'
 import { BaseModel, column } from '@adonisjs/lucid/orm'
-import { primaryKeyOf } from '../../src/helpers.ts'
+import { primaryKeyOf, resolveManager } from '../../src/helpers.ts'
 
 class User extends BaseModel {
   @column({ isPrimary: true })
@@ -50,5 +50,43 @@ test.group('Helpers | primaryKeyOf', () => {
     assert.equal(message, 'Cannot generate an OTP for an unsaved "User": the primary key is empty')
     assert.notInclude(message, 'plain-text-secret')
     assert.notInclude(message, 'jane@example.com')
+  })
+})
+
+test.group('Helpers | resolveManager', () => {
+  const service = { name: 'service' }
+  const explicit = { name: 'explicit' }
+
+  test('return the given manager', ({ assert }) => {
+    assert.strictEqual(
+      resolveManager(explicit, () => service, 'magic link'),
+      explicit
+    )
+  })
+
+  test('call the given function', ({ assert }) => {
+    assert.strictEqual(
+      resolveManager(
+        () => explicit,
+        () => service,
+        'magic link'
+      ),
+      explicit
+    )
+  })
+
+  test('read the service when no manager is given', ({ assert }) => {
+    assert.strictEqual(
+      resolveManager(undefined, () => service, 'magic link'),
+      service
+    )
+  })
+
+  test('throw when the service is not booted yet', ({ assert }) => {
+    assert.throws(
+      () => resolveManager(undefined, () => undefined, 'magic link'),
+      RuntimeException,
+      'Cannot use the magic link manager before the application has booted. Make sure the "@foadonis/sentinel/sentinel_provider" provider is registered in "adonisrc.ts"'
+    )
   })
 })

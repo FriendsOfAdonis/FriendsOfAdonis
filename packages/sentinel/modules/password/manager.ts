@@ -10,7 +10,6 @@ import type {
   InvalidatePasswordResetTokensOptions,
   VerifyPasswordResetTokenOptions,
 } from './types.ts'
-import { withPassword, WithPasswordOptions } from './mixins/with_password.ts'
 
 /**
  * Config accepted by the password manager
@@ -140,13 +139,4 @@ export class PasswordManager {
   invalidateAllPasswordResetTokens(tokenableId: RecordId): Promise<void> {
     return this.tokens.invalidateAll(tokenableId, { kind: PasswordManager.TOKEN_KIND })
   }
-
-  /**
-   * Mixin to add password hashing, verification and reset tokens to
-   * a Lucid model. See "withPassword" for the details.
-   *
-   * @example
-   * class User extends compose(BaseModel, password.withPassword()) {}
-   */
-  withPassword = (options: WithPasswordOptions = {}) => withPassword(this, options)
 }

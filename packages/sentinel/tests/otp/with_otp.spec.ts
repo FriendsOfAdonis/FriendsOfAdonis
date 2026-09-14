@@ -57,7 +57,7 @@ function createManager(db: Database, config: OTPManagerConfig = {}) {
 }
 
 function setupModel(manager: OTPManager, defaults: WithOTPOptions = {}) {
-  class User extends compose(BaseModel, manager.withOTP(defaults)) {
+  class User extends compose(BaseModel, withOTP({ ...defaults, manager })) {
     @column({ isPrimary: true })
     declare id: number
 
@@ -486,12 +486,12 @@ test.group('OTP mixin | invalidateOTPs', () => {
 })
 
 test.group('OTP mixin | apply', () => {
-  test('apply the mixin through the manager without defaults', async ({ assert }) => {
+  test('apply the mixin with a manager and no defaults', async ({ assert }) => {
     const db = await createDatabase()
     await createTables(db)
     const { manager } = createManager(db)
 
-    class User extends compose(BaseModel, manager.withOTP()) {
+    class User extends compose(BaseModel, withOTP({ manager })) {
       @column({ isPrimary: true })
       declare id: number
 
@@ -508,12 +508,12 @@ test.group('OTP mixin | apply', () => {
     assert.equal(found.id, user.id)
   })
 
-  test('apply the mixin standalone with a manager', async ({ assert }) => {
+  test('apply the mixin with a manager and defaults', async ({ assert }) => {
     const db = await createDatabase()
     await createTables(db)
     const { manager } = createManager(db)
 
-    class User extends compose(BaseModel, withOTP(manager, { purpose: 'signin' })) {
+    class User extends compose(BaseModel, withOTP({ manager, purpose: 'signin' })) {
       @column({ isPrimary: true })
       declare id: number
 
@@ -528,5 +528,69 @@ test.group('OTP mixin | apply', () => {
     const [found] = await User.verifyOTP(user.id, code)
     assert.instanceOf(found, User)
     assert.equal(found.id, user.id)
+  })
+})
+
+test.group('OTP mixin | resolve', () => {
+  test('resolve the manager from a function on every call', async ({ assert }) => {
+    const db = await createDatabase()
+    await createTables(db)
+
+    /**
+     * The manager does not exist yet when the model is defined, the
+     * way a service is undefined until the application has booted
+     */
+    let current: OTPManager | undefined
+
+    class User extends compose(BaseModel, withOTP({ manager: () => current! })) {
+      @column({ isPrimary: true })
+      declare id: number
+
+      @column()
+      declare email: string
+    }
+
+    current = createManager(db).manager
+    const user = await User.create({ email: 'virk@adonisjs.com' })
+    const code = await user.generateOTP()
+
+    const [found] = await User.verifyOTP(user.id, code)
+    assert.equal(found.id, user.id)
+  })
+
+  test('override the manager on the model', async ({ assert }) => {
+    const db = await createDatabase()
+    await createTables(db)
+    const { manager } = createManager(db)
+
+    class User extends compose(BaseModel, withOTP()) {
+      static get $otpManager() {
+        return manager
+      }
+
+      @column({ isPrimary: true })
+      declare id: number
+
+      @column()
+      declare email: string
+    }
+
+    assert.strictEqual(User.$otpManager, manager)
+    assert.strictEqual(new User().$otpManager, manager)
+  })
+
+  test('refuse to use the service before the application has booted', async ({ assert }) => {
+    class User extends compose(BaseModel, withOTP()) {
+      @column({ isPrimary: true })
+      declare id: number
+
+      @column()
+      declare email: string
+    }
+
+    const error = await rejection<RuntimeException>(() => User.verifyOTP(1, '123456'))
+
+    assert.instanceOf(error, RuntimeException)
+    assert.match(error.message, /Cannot use the OTP manager before the application has booted/)
   })
 })

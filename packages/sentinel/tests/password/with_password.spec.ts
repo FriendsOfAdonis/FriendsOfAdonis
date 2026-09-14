@@ -72,11 +72,9 @@ function outdatedHasher() {
  * has none since the other modules do not need one
  */
 async function addPasswordColumn(db: Database, columnName = 'password') {
-  await db
-    .connection()
-    .schema.alterTable('users', (table) => {
-      table.string(columnName).nullable()
-    })
+  await db.connection().schema.alterTable('users', (table) => {
+    table.string(columnName).nullable()
+  })
 }
 
 /**
@@ -91,7 +89,7 @@ function createManager(db: Database, config: PasswordManagerConfig = {}, hash?: 
 }
 
 function setupModel(manager: PasswordManager, defaults: WithPasswordOptions = {}) {
-  class User extends compose(BaseModel, manager.withPassword(defaults)) {
+  class User extends compose(BaseModel, withPassword({ ...defaults, manager })) {
     @column({ isPrimary: true })
     declare id: number
 
@@ -169,7 +167,7 @@ test.group('Password mixin | hashPassword', () => {
 
     class User extends compose(
       BaseModel,
-      manager.withPassword({ passwordColumnName: 'hashedPassword' })
+      withPassword({ manager, passwordColumnName: 'hashedPassword' })
     ) {
       @column({ isPrimary: true })
       declare id: number
@@ -538,9 +536,7 @@ test.group('Password mixin | verifyPasswordResetToken', () => {
     const { db, User, user } = await setup({}, { purpose: 'invite' })
     const token = await user.generatePasswordResetToken({ purpose: 'recovery' })
 
-    const error = await rejection<InvalidTokenException>(() =>
-      User.verifyPasswordResetToken(token)
-    )
+    const error = await rejection<InvalidTokenException>(() => User.verifyPasswordResetToken(token))
     assert.instanceOf(error, E_INVALID_TOKEN)
     assert.equal(error.purpose, 'invite')
 
@@ -560,9 +556,7 @@ test.group('Password mixin | verifyPasswordResetToken', () => {
     const token = await user.generatePasswordResetToken({ purpose: undefined })
     assert.isNull((await db.from('sentinel_tokens').first()).purpose)
 
-    const error = await rejection<InvalidTokenException>(() =>
-      User.verifyPasswordResetToken(token)
-    )
+    const error = await rejection<InvalidTokenException>(() => User.verifyPasswordResetToken(token))
     assert.instanceOf(error, E_INVALID_TOKEN)
     assert.equal(error.purpose, 'invite')
     assert.lengthOf(await tokenRows(db), 1)
@@ -577,9 +571,7 @@ test.group('Password mixin | verifyPasswordResetToken', () => {
     const token = await user.generatePasswordResetToken()
     await user.delete()
 
-    const error = await rejection<InvalidTokenException>(() =>
-      User.verifyPasswordResetToken(token)
-    )
+    const error = await rejection<InvalidTokenException>(() => User.verifyPasswordResetToken(token))
 
     assert.instanceOf(error, E_INVALID_TOKEN)
     assert.equal(error.kind, PasswordManager.TOKEN_KIND)
@@ -752,13 +744,13 @@ test.group('Password mixin | invalidatePasswordResetTokens', () => {
 })
 
 test.group('Password mixin | apply', () => {
-  test('apply the mixin through the manager without defaults', async ({ assert }) => {
+  test('apply the mixin with a manager and no defaults', async ({ assert }) => {
     const db = await createDatabase()
     await createTables(db)
     await addPasswordColumn(db)
     const { manager } = createManager(db)
 
-    class User extends compose(BaseModel, manager.withPassword()) {
+    class User extends compose(BaseModel, withPassword({ manager })) {
       @column({ isPrimary: true })
       declare id: number
 
@@ -783,13 +775,13 @@ test.group('Password mixin | apply', () => {
     assert.equal(verified.id, user.id)
   })
 
-  test('apply the mixin standalone with a manager', async ({ assert }) => {
+  test('apply the mixin with a manager and defaults', async ({ assert }) => {
     const db = await createDatabase()
     await createTables(db)
     await addPasswordColumn(db)
     const { manager } = createManager(db)
 
-    class User extends compose(BaseModel, withPassword(manager, { purpose: 'invite' })) {
+    class User extends compose(BaseModel, withPassword({ manager, purpose: 'invite' })) {
       @column({ isPrimary: true })
       declare id: number
 
@@ -807,5 +799,78 @@ test.group('Password mixin | apply', () => {
     const [found] = await User.verifyPasswordResetToken(token)
     assert.instanceOf(found, User)
     assert.equal(found.id, user.id)
+  })
+})
+
+test.group('Password mixin | resolve', () => {
+  test('resolve the manager from a function on every call', async ({ assert }) => {
+    const db = await createDatabase()
+    await createTables(db)
+
+    /**
+     * The manager does not exist yet when the model is defined, the
+     * way a service is undefined until the application has booted
+     */
+    let current: PasswordManager | undefined
+
+    class User extends compose(BaseModel, withPassword({ manager: () => current! })) {
+      @column({ isPrimary: true })
+      declare id: number
+
+      @column()
+      declare email: string
+
+      @column()
+      declare password: string | null
+    }
+
+    await addPasswordColumn(db)
+    current = createManager(db).manager
+
+    const user = await User.create({ email: 'virk@adonisjs.com', password: 'secret' })
+    assert.isTrue(await user.verifyPassword('secret'))
+
+    const token = await user.generatePasswordResetToken()
+    const [found] = await User.verifyPasswordResetToken(token)
+    assert.equal(found.id, user.id)
+  })
+
+  test('override the manager on the model', async ({ assert }) => {
+    const db = await createDatabase()
+    await createTables(db)
+    const { manager } = createManager(db)
+
+    class User extends compose(BaseModel, withPassword()) {
+      static get $passwordManager() {
+        return manager
+      }
+
+      @column({ isPrimary: true })
+      declare id: number
+
+      @column()
+      declare email: string
+    }
+
+    assert.strictEqual(User.$passwordManager, manager)
+    assert.strictEqual(new User().$passwordManager, manager)
+  })
+
+  test('refuse to use the service before the application has booted', async ({ assert }) => {
+    class User extends compose(BaseModel, withPassword()) {
+      @column({ isPrimary: true })
+      declare id: number
+
+      @column()
+      declare email: string
+
+      @column()
+      declare password: string | null
+    }
+
+    const error = await rejection<RuntimeException>(() => User.verifyPasswordResetToken('token'))
+
+    assert.instanceOf(error, RuntimeException)
+    assert.match(error.message, /Cannot use the password manager before the application has booted/)
   })
 })

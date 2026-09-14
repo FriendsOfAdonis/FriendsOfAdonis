@@ -11,7 +11,7 @@ Then implement the flow:
 
 1. Install the package with "node ace add @foadonis/sentinel" if it is not installed yet, and add the migration of the "sentinel_tokens" table.
 2. Configure "magicLink.url" in config/sentinel.ts: a function receiving the token and returning the absolute URL of the link, pointing to the endpoint verifying the token.
-3. Compose the "withMagicLink" mixin from "@foadonis/sentinel/services/magic_link" into the users model.
+3. Compose the "withMagicLink" mixin from "@foadonis/sentinel/magic_link" into the users model.
 4. Add an endpoint that finds the user by email, generates a link with "generateMagicLink" and emails it, responding the same way whether or not the user exists.
 5. Add an endpoint that verifies the "token" with "User.verifyMagicLinkToken", authenticates the user with the guard of the project and responds the way the project does after a login.
 6. Handle the E_INVALID_TOKEN exception from "@foadonis/sentinel/errors" the way the project handles authentication errors.

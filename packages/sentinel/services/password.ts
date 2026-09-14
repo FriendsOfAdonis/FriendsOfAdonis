@@ -1,5 +1,5 @@
 import app from '@adonisjs/core/services/app'
-import { PasswordManager } from '../modules/password/main.ts'
+import type { PasswordManager } from '../modules/password/main.ts'
 
 let password: PasswordManager
 

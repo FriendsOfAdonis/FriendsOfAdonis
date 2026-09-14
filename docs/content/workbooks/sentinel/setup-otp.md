@@ -10,7 +10,7 @@ Before writing any code, study how this project is organized and follow its conv
 Then implement the flow:
 
 1. Install the package with "node ace add @foadonis/sentinel" if it is not installed yet, and add the migration of the "sentinel_tokens" table.
-2. Compose the "withOTP" mixin from "@foadonis/sentinel/services/otp" into the users model.
+2. Compose the "withOTP" mixin from "@foadonis/sentinel/otp" into the users model.
 3. Add an endpoint that finds the user by email, generates a code with "generateOTP" and emails it, responding the same way whether or not the user exists, and remembers the address for the verification step, in the session for example.
 4. Add the pages of the flow: a form asking for the address, unless a page of the project already collects it, and a form where the user types the code they received.
 5. Add an endpoint that finds the user back from the remembered address, verifies the code with "User.verifyOTP", authenticates the user with the guard of the project and responds the way the project does after a login. Respond to an unknown or missing address the same way as to a wrong code.

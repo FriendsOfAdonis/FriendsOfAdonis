@@ -11,17 +11,17 @@ Sentinel does not ship routes, controllers nor mail templates. It integrates nic
 ```ts tab="app/models/user.ts"
 import { compose } from "@adonisjs/core/helpers";
 import { BaseModel, column } from "@adonisjs/lucid/orm";
-import magicLink from "@foadonis/sentinel/services/magic_link";
-import otp from "@foadonis/sentinel/services/otp";
-import password from "@foadonis/sentinel/services/password";
-import totp from "@foadonis/sentinel/services/totp";
+import { withMagicLink } from "@foadonis/sentinel/magic_link";
+import { withOTP } from "@foadonis/sentinel/otp";
+import { withPassword } from "@foadonis/sentinel/password";
+import { withTOTP } from "@foadonis/sentinel/totp";
 
 export default class User extends compose(
   BaseModel,
-  magicLink.withMagicLink(),
-  otp.withOTP(),
-  password.withPassword(),
-  totp.withTOTP(),
+  withMagicLink(),
+  withOTP(),
+  withPassword(),
+  withTOTP(),
 ) {
   @column({ isPrimary: true })
   declare id: number;

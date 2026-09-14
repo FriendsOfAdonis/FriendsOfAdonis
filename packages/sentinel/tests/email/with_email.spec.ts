@@ -48,7 +48,7 @@ function createManager(db: Database, config: EmailManagerConfig = {}) {
 }
 
 function setupModel(manager: EmailManager, defaults: WithEmailOptions = {}) {
-  class User extends compose(BaseModel, manager.withEmail(defaults)) {
+  class User extends compose(BaseModel, withEmail({ ...defaults, manager })) {
     @column({ isPrimary: true })
     declare id: number
 
@@ -551,12 +551,12 @@ test.group('Email mixin | invalidateEmailVerificationTokens', () => {
 })
 
 test.group('Email mixin | apply', () => {
-  test('apply the mixin standalone with a manager', async ({ assert }) => {
+  test('apply the mixin with a manager and defaults', async ({ assert }) => {
     const db = await createDatabase()
     await createTables(db)
     const { manager } = createManager(db)
 
-    class User extends compose(BaseModel, withEmail(manager, { purpose: 'signup' })) {
+    class User extends compose(BaseModel, withEmail({ manager, purpose: 'signup' })) {
       @column({ isPrimary: true })
       declare id: number
 
@@ -593,7 +593,8 @@ test.group('Email mixin | apply', () => {
 
     class Account extends compose(
       BaseModel,
-      withEmail(manager, {
+      withEmail({
+        manager,
         emailColumnName: 'address',
         unverifiedEmailColumnName: 'pendingAddress',
         emailVerifiedAtColumnName: 'addressVerifiedAt',
@@ -633,7 +634,7 @@ test.group('Email mixin | apply', () => {
     await createTables(db)
     const { manager } = createManager(db)
 
-    class User extends compose(BaseModel, withEmail(manager)) {
+    class User extends compose(BaseModel, withEmail({ manager })) {
       @column({ isPrimary: true })
       declare id: number
 
@@ -648,5 +649,88 @@ test.group('Email mixin | apply', () => {
       RuntimeException,
       /The "unverifiedEmail" property is not a column of the "User" model/
     )
+  })
+})
+
+test.group('Email mixin | resolve', () => {
+  test('resolve the manager from a function on every call', async ({ assert }) => {
+    const db = await createDatabase()
+    await createTables(db)
+
+    /**
+     * The manager does not exist yet when the model is defined, the
+     * way a service is undefined until the application has booted
+     */
+    let current: EmailManager | undefined
+
+    class User extends compose(BaseModel, withEmail({ manager: () => current! })) {
+      @column({ isPrimary: true })
+      declare id: number
+
+      @column()
+      declare email: string | null
+
+      @column()
+      declare unverifiedEmail: string | null
+
+      @column.dateTime()
+      declare emailVerifiedAt: DateTime | null
+    }
+
+    current = createManager(db).manager
+    const user = await User.create({ email: EMAIL })
+    const token = await user.generateEmailVerificationToken()
+
+    const [found] = await User.verifyEmail(token)
+    assert.equal(found.id, user.id)
+    assert.isTrue(found.hasVerifiedEmail)
+  })
+
+  test('override the manager on the model', async ({ assert }) => {
+    const db = await createDatabase()
+    await createTables(db)
+    const { manager } = createManager(db)
+
+    class User extends compose(BaseModel, withEmail()) {
+      static get $emailManager() {
+        return manager
+      }
+
+      @column({ isPrimary: true })
+      declare id: number
+
+      @column()
+      declare email: string | null
+
+      @column()
+      declare unverifiedEmail: string | null
+
+      @column.dateTime()
+      declare emailVerifiedAt: DateTime | null
+    }
+
+    assert.strictEqual(User.$emailManager, manager)
+    assert.strictEqual(new User().$emailManager, manager)
+  })
+
+  test('refuse to use the service before the application has booted', async ({ assert }) => {
+    class User extends compose(BaseModel, withEmail()) {
+      @column({ isPrimary: true })
+      declare id: number
+
+      @column()
+      declare email: string | null
+
+      @column()
+      declare unverifiedEmail: string | null
+
+      @column.dateTime()
+      declare emailVerifiedAt: DateTime | null
+    }
+
+    const error = await rejection<RuntimeException>(() => User.verifyEmail('token'))
+
+    assert.instanceOf(error, RuntimeException)
+    assert.match(error.message, /Cannot use the email manager before the application has booted/)
   })
 })

@@ -6,7 +6,7 @@ import { compose, Secret } from '@adonisjs/core/helpers'
 import { RuntimeException } from '@adonisjs/core/exceptions'
 import { TOTPManagerFactory } from '../../factories/totp.ts'
 import type { TOTPManagerConfig } from '../../modules/totp/manager.ts'
-import type { WithTOTPOptions } from '../../modules/totp/mixins/with_totp.ts'
+import { withTOTP, type WithTOTPOptions } from '../../modules/totp/mixins/with_totp.ts'
 import { TOTPAuthenticator } from '../../modules/totp/models/totp_authenticator.ts'
 import { E_INVALID_BACKUP_CODE, E_INVALID_TOTP, E_TOTP_LOCKED } from '../../modules/totp/errors.ts'
 import { createDatabase, createTables, freezeTime, rejection } from '../helpers.ts'
@@ -50,7 +50,7 @@ function wrongCodeAt(authenticator: TOTPAuthenticator, at: Date) {
 function setupModel(config: Partial<TOTPManagerConfig> = {}, defaults: WithTOTPOptions = {}) {
   const manager = new TOTPManagerFactory().create({ issuer: 'FriendsOfAdonis', ...config })
 
-  class User extends compose(BaseModel, manager.withTOTP(defaults)) {
+  class User extends compose(BaseModel, withTOTP({ ...defaults, manager })) {
     @column({ isPrimary: true })
     declare id: number
 

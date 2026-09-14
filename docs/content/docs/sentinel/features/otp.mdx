@@ -23,14 +23,14 @@ Sentinel must be installed and configured as described in the [installation guid
 
 ### Prepare the model
 
-Compose the `withOTP` mixin into the model your users sign in with. The OTP service, default export of `@foadonis/sentinel/services/otp`, exposes it. The mixin adds `generateOTP` and `invalidateOTPs` to the instances, and the static `verifyOTP` method to the model:
+Compose the `withOTP` mixin, exported by `@foadonis/sentinel/otp`, into the model your users sign in with. The mixin adds `generateOTP` and `invalidateOTPs` to the instances, and the static `verifyOTP` method to the model:
 
 ```ts title="app/models/user.ts"
 import { compose } from "@adonisjs/core/helpers";
 import { BaseModel, column } from "@adonisjs/lucid/orm";
-import otp from "@foadonis/sentinel/services/otp";
+import { withOTP } from "@foadonis/sentinel/otp";
 
-export default class User extends compose(BaseModel, otp.withOTP()) {
+export default class User extends compose(BaseModel, withOTP()) {
   @column({ isPrimary: true })
   declare id: number;
 
@@ -162,7 +162,7 @@ The options given to `withOTP` become the defaults of every code the model gener
 ```ts title="app/models/user.ts"
 export default class User extends compose(
   BaseModel,
-  otp.withOTP({ purpose: "signin", expiresIn: "5m" }),
+  withOTP({ purpose: "signin", expiresIn: "5m" }),
 ) {
   // ...
 }
@@ -315,9 +315,12 @@ const verified = await otp.verifyOTP(device.id, request.input("code"), {
 ```
 
 <Callout>
-  The `withOTP` mixin is also exported by `@foadonis/sentinel/otp` as a
-  standalone function taking the manager as its first argument. Use it when you
-  construct a manager yourself, in tests for example.
+  The mixin resolves the manager through the static `$otpManager` getter of
+  the model, on every access and never when the model is defined, so the model
+  can be imported before the application has booted. Pass a `manager` option,
+  an instance or a function returning one, when you construct the manager
+  yourself, in tests for example, or override the getter on the model to give
+  it a manager of its own.
 </Callout>
 
 ## Under the hood

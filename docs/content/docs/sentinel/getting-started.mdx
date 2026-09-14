@@ -62,18 +62,18 @@ Each building block adds its own key next to `tokens`, like `magicLink` or `totp
 
 ## Compose the mixins
 
-Every building block is a [mixin](https://www.typescriptlang.org/docs/handbook/mixins.html) exposed by its service. Compose the ones you need into the model they belong to, and they add their methods on the model:
+Every building block is a [mixin](https://www.typescriptlang.org/docs/handbook/mixins.html) exported by its module, `@foadonis/sentinel/magic_link` for example. Compose the ones you need into the model they belong to, and they add their methods on the model. The mixins reach their manager on every call, never when the model is defined, so the model can be imported anywhere, even before the application has booted:
 
 ```ts title="app/models/user.ts"
 import { compose } from "@adonisjs/core/helpers";
 import { BaseModel, column } from "@adonisjs/lucid/orm";
-import magicLink from "@foadonis/sentinel/services/magic_link";
-import password from "@foadonis/sentinel/services/password";
+import { withMagicLink } from "@foadonis/sentinel/magic_link";
+import { withPassword } from "@foadonis/sentinel/password";
 
 export default class User extends compose(
   BaseModel,
-  magicLink.withMagicLink(),
-  password.withPassword(),
+  withMagicLink(),
+  withPassword(),
 ) {
   @column({ isPrimary: true })
   declare id: number;

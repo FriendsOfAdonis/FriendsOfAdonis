@@ -63,7 +63,7 @@ function createManager(db: Database, config: Partial<MagicLinkManagerConfig> = {
 }
 
 function setupModel(manager: MagicLinkManager, defaults: WithMagicLinkOptions = {}) {
-  class User extends compose(BaseModel, manager.withMagicLink(defaults)) {
+  class User extends compose(BaseModel, withMagicLink({ ...defaults, manager })) {
     @column({ isPrimary: true })
     declare id: number
 
@@ -428,12 +428,12 @@ test.group('Magic link mixin | invalidateMagicLinkTokens', () => {
 })
 
 test.group('Magic link mixin | apply', () => {
-  test('apply the mixin through the manager without defaults', async ({ assert }) => {
+  test('apply the mixin with a manager and no defaults', async ({ assert }) => {
     const db = await createDatabase()
     await createTables(db)
     const { manager } = createManager(db)
 
-    class User extends compose(BaseModel, manager.withMagicLink()) {
+    class User extends compose(BaseModel, withMagicLink({ manager })) {
       @column({ isPrimary: true })
       declare id: number
 
@@ -450,12 +450,12 @@ test.group('Magic link mixin | apply', () => {
     assert.equal(found.id, user.id)
   })
 
-  test('apply the mixin standalone with a manager', async ({ assert }) => {
+  test('apply the mixin with a manager and defaults', async ({ assert }) => {
     const db = await createDatabase()
     await createTables(db)
     const { manager } = createManager(db)
 
-    class User extends compose(BaseModel, withMagicLink(manager, { purpose: 'signin' })) {
+    class User extends compose(BaseModel, withMagicLink({ manager, purpose: 'signin' })) {
       @column({ isPrimary: true })
       declare id: number
 
@@ -470,5 +470,72 @@ test.group('Magic link mixin | apply', () => {
     const [found] = await User.verifyMagicLinkToken(token)
     assert.instanceOf(found, User)
     assert.equal(found.id, user.id)
+  })
+})
+
+test.group('Magic link mixin | resolve', () => {
+  test('resolve the manager from a function on every call', async ({ assert }) => {
+    const db = await createDatabase()
+    await createTables(db)
+
+    /**
+     * The manager does not exist yet when the model is defined, the
+     * way a service is undefined until the application has booted
+     */
+    let current: MagicLinkManager | undefined
+
+    class User extends compose(BaseModel, withMagicLink({ manager: () => current! })) {
+      @column({ isPrimary: true })
+      declare id: number
+
+      @column()
+      declare email: string
+    }
+
+    current = createManager(db).manager
+    const user = await User.create({ email: 'virk@adonisjs.com' })
+    const token = await user.generateMagicLinkToken()
+
+    const [found] = await User.verifyMagicLinkToken(token)
+    assert.equal(found.id, user.id)
+  })
+
+  test('override the manager on the model', async ({ assert }) => {
+    const db = await createDatabase()
+    await createTables(db)
+    const { manager } = createManager(db)
+
+    class User extends compose(BaseModel, withMagicLink()) {
+      static get $magicLinkManager() {
+        return manager
+      }
+
+      @column({ isPrimary: true })
+      declare id: number
+
+      @column()
+      declare email: string
+    }
+
+    assert.strictEqual(User.$magicLinkManager, manager)
+    assert.strictEqual(new User().$magicLinkManager, manager)
+  })
+
+  test('refuse to use the service before the application has booted', async ({ assert }) => {
+    class User extends compose(BaseModel, withMagicLink()) {
+      @column({ isPrimary: true })
+      declare id: number
+
+      @column()
+      declare email: string
+    }
+
+    const error = await rejection<RuntimeException>(() => User.verifyMagicLinkToken('token'))
+
+    assert.instanceOf(error, RuntimeException)
+    assert.match(
+      error.message,
+      /Cannot use the magic link manager before the application has booted/
+    )
   })
 })

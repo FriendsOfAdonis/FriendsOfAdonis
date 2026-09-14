@@ -10,7 +10,7 @@ Before writing any code, study how this project is organized and follow its conv
 Then implement the flow:
 
 1. Install the package with "node ace add @foadonis/sentinel" if it is not installed yet, and add the migration of the "sentinel_tokens" table.
-2. Compose the "withPassword" mixin from "@foadonis/sentinel/services/password" into the users model. If the model composes "withAuthFinder" from "@adonisjs/auth", remove it: "withPassword" is a drop-in replacement, and composing both would hash the passwords twice.
+2. Compose the "withPassword" mixin from "@foadonis/sentinel/password" into the users model. If the model composes "withAuthFinder" from "@adonisjs/auth", remove it: "withPassword" is a drop-in replacement, and composing both would hash the passwords twice.
 3. Add an endpoint that finds the user by email, generates a token with "generatePasswordResetToken" and emails it as a link to the reset form, responding the same way whether or not the user exists.
 4. Add the page rendering the reset form, holding the token from the query string in a hidden field. Do not verify the token when rendering the page, verification consumes it.
 5. Add an endpoint that validates the new password the way the project validates forms, hands the token and the password to "User.resetPassword", authenticates the user with the guard of the project and responds the way the project does after a login.

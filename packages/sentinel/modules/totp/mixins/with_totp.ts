@@ -1,19 +1,34 @@
 import type { NormalizeConstructor } from '@adonisjs/core/types/helpers'
 import type { BaseModel } from '@adonisjs/lucid/orm'
-import { primaryKeyOf, staticImplements } from '../../../src/helpers.ts'
+import {
+  type ManagerReference,
+  primaryKeyOf,
+  resolveManager,
+  staticImplements,
+} from '../../../src/helpers.ts'
+import totp from '../../../services/totp.ts'
 import { TOTPAuthenticator } from '../models/totp_authenticator.ts'
 import {
   AuthenticatorOptions,
   CreateAuthenticatorOptions,
   TOTPAuthenticableContract,
 } from '../types.ts'
-import { TOTPManager } from '../manager.ts'
+import type { TOTPManager } from '../manager.ts'
 
 /**
- * Options accepted by the "withTOTP" mixin. They override the config
- * of the manager for the model.
+ * Options accepted by the "withTOTP" mixin. The authenticator options
+ * override the config of the manager for the model.
  */
-export interface WithTOTPOptions extends Partial<AuthenticatorOptions> {}
+export interface WithTOTPOptions extends Partial<AuthenticatorOptions> {
+  /**
+   * The manager encrypting the secrets, or a function returning it.
+   *
+   * Defaults to the TOTP service of the application, read on every
+   * call. Give one when you construct the manager yourself, in
+   * tests for example.
+   */
+  manager?: ManagerReference<TOTPManager>
+}
 
 type WithTOTPRow = TOTPAuthenticableContract & {
   /**
@@ -34,11 +49,24 @@ type WithTOTPRow = TOTPAuthenticableContract & {
    * it is found.
    */
   retrieveAuthenticator(unverified?: boolean): Promise<TOTPAuthenticator | null>
+
+  /**
+   * The manager of the model. See the static getter
+   */
+  readonly $totpManager: TOTPManager
 }
 
 type WithTOTPClass<
   Model extends NormalizeConstructor<typeof BaseModel> = NormalizeConstructor<typeof BaseModel>,
 > = Model & {
+  /**
+   * The manager encrypting the secrets. It is resolved on every
+   * access, from the "manager" option of the mixin or the TOTP
+   * service of the application. Override it on the model to give
+   * it a manager of its own.
+   */
+  get $totpManager(): TOTPManager
+
   new (...args: any[]): WithTOTPRow
 }
 
@@ -51,24 +79,39 @@ type WithTOTPClass<
  *   configure the authenticators of the model
  * - createAuthenticator method to enroll a new authenticator
  * - retrieveAuthenticator method to find the authenticator in use
+ * - $totpManager static getter to resolve the manager of the model
  *
- * @param manager - The TOTP manager
- * @param defaults - Options overriding the config of the manager
+ * The manager is resolved on every call, not when the mixin is
+ * composed, so the model can be defined before the application
+ * has booted.
+ *
+ * @param options - Options to configure the mixin and the
+ * authenticators
  *
  * @example
- * import totp from '@foadonis/sentinel/services/totp'
+ * import { withTOTP } from '@foadonis/sentinel/totp'
  *
- * class User extends compose(BaseModel, totp.withTOTP({ issuer: 'My app' })) {}
+ * class User extends compose(BaseModel, withTOTP({ issuer: 'My app' })) {}
  */
-export function withTOTP(manager: TOTPManager, defaults: WithTOTPOptions = {}) {
+export function withTOTP(options: WithTOTPOptions = {}) {
+  const { manager, ...defaults } = options
+
   return function <Model extends NormalizeConstructor<typeof BaseModel>>(
     superclass: Model
   ): WithTOTPClass<Model> {
     @staticImplements<WithTOTPClass>()
     class WithTOTPImpl extends superclass implements WithTOTPRow {
+      static get $totpManager() {
+        return resolveManager(manager, () => totp, 'TOTP')
+      }
+
+      get $totpManager() {
+        return (this.constructor as WithTOTPClass).$totpManager
+      }
+
       getTOTPOptions() {
         return {
-          ...manager.config,
+          ...this.$totpManager.config,
           ...defaults,
         }
       }
@@ -78,7 +121,7 @@ export function withTOTP(manager: TOTPManager, defaults: WithTOTPOptions = {}) {
       }
 
       getTOTPManager() {
-        return manager
+        return this.$totpManager
       }
 
       async createAuthenticator(

@@ -63,3 +63,51 @@ export function optionalDependency<T>(name: string, loader: () => Promise<T>): (
     }
   }
 }
+
+/**
+ * A manager, or a function returning it. The function form defers
+ * the resolution to the first use, so that a model can be defined
+ * before the manager exists.
+ */
+export type ManagerReference<T> = T | (() => T)
+
+/**
+ * Resolves the manager a mixin works with.
+ *
+ * An explicit manager is returned as is, and a function is called.
+ * Without either, the manager is read from the service of the
+ * package. The mixins call it from a static getter of the model, so
+ * that composing the mixin never touches the service: the model can
+ * be defined before the application has booted, in a config file or
+ * a provider for example.
+ *
+ * @param manager - The manager given to the mixin, when any
+ * @param service - Function reading the service of the package. It
+ * returns undefined until the application has booted
+ * @param name - The name of the manager, mentioned in the error when
+ * it is used before the application has booted
+ *
+ * @example
+ * static get $magicLinkManager() {
+ *   return resolveManager(manager, () => magicLink, 'magic link')
+ * }
+ */
+export function resolveManager<T extends object>(
+  manager: ManagerReference<T> | undefined,
+  service: () => T | undefined,
+  name: string
+): T {
+  if (manager) {
+    return typeof manager === 'function' ? (manager as () => T)() : manager
+  }
+
+  const instance = service()
+
+  if (!instance) {
+    throw new RuntimeException(
+      `Cannot use the ${name} manager before the application has booted. Make sure the "@foadonis/sentinel/sentinel_provider" provider is registered in "adonisrc.ts"`
+    )
+  }
+
+  return instance
+}

@@ -41,17 +41,14 @@ export default sentinelConfig;
 
 ### Prepare the model
 
-Compose the `withMagicLink` mixin into the model your users sign in with. The magic link service, default export of `@foadonis/sentinel/services/magic_link`, exposes it. The mixin adds `generateMagicLink`, `generateMagicLinkToken` and `invalidateMagicLinkTokens` to the instances, and the static `verifyMagicLinkToken` method to the model:
+Compose the `withMagicLink` mixin, exported by `@foadonis/sentinel/magic_link`, into the model your users sign in with. The mixin adds `generateMagicLink`, `generateMagicLinkToken` and `invalidateMagicLinkTokens` to the instances, and the static `verifyMagicLinkToken` method to the model:
 
 ```ts title="app/models/user.ts"
 import { compose } from "@adonisjs/core/helpers";
 import { BaseModel, column } from "@adonisjs/lucid/orm";
-import magicLink from "@foadonis/sentinel/services/magic_link";
+import { withMagicLink } from "@foadonis/sentinel/magic_link";
 
-export default class User extends compose(
-  BaseModel,
-  magicLink.withMagicLink(),
-) {
+export default class User extends compose(BaseModel, withMagicLink()) {
   @column({ isPrimary: true })
   declare id: number;
 
@@ -183,7 +180,7 @@ The options given to `withMagicLink` become the defaults of every link the model
 ```ts title="app/models/user.ts"
 export default class User extends compose(
   BaseModel,
-  magicLink.withMagicLink({ purpose: "signin", expiresIn: "15m" }),
+  withMagicLink({ purpose: "signin", expiresIn: "15m" }),
 ) {
   // ...
 }
@@ -354,9 +351,12 @@ const member = await Member.findOrFail(verified.tokenableId);
 ```
 
 <Callout>
-  The `withMagicLink` mixin is also exported by `@foadonis/sentinel/magic_link`
-  as a standalone function taking the manager as its first argument. Use it when
-  you construct a manager yourself, in tests for example.
+  The mixin resolves the manager through the static `$magicLinkManager` getter of
+  the model, on every access and never when the model is defined, so the model
+  can be imported before the application has booted. Pass a `manager` option,
+  an instance or a function returning one, when you construct the manager
+  yourself, in tests for example, or override the getter on the model to give
+  it a manager of its own.
 </Callout>
 
 ## Under the hood

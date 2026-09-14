@@ -13,7 +13,7 @@ import { createDatabase, createForeignEncryption, createTables } from '../helper
 function setupModel(config: Partial<TOTPManagerConfig> = {}, defaults: WithTOTPOptions = {}) {
   const manager = new TOTPManagerFactory().create({ issuer: 'FriendsOfAdonis', ...config })
 
-  class User extends compose(BaseModel, manager.withTOTP(defaults)) {
+  class User extends compose(BaseModel, withTOTP({ ...defaults, manager })) {
     @column({ isPrimary: true })
     declare id: number
 
@@ -66,7 +66,7 @@ test.group('TOTP mixin | options', () => {
 
     const manager = new TOTPManagerFactory().create({ issuer: 'FriendsOfAdonis' })
 
-    class User extends compose(BaseModel, manager.withTOTP()) {
+    class User extends compose(BaseModel, withTOTP({ manager })) {
       @column({ isPrimary: true })
       declare id: number
 
@@ -86,7 +86,7 @@ test.group('TOTP mixin | options', () => {
     assert.equal((URI.parse(authenticator.uri) as TOTP).label, 'virk')
   })
 
-  test('apply the mixin standalone with a manager', async ({ assert }) => {
+  test('apply the mixin with a manager and defaults', async ({ assert }) => {
     const db = await createDatabase()
     await createTables(db)
 
@@ -94,12 +94,9 @@ test.group('TOTP mixin | options', () => {
      * Built by hand, the way an application without the service
      * provider would: no container and no wiring beside the mixin
      */
-    const manager = new TOTPManager(
-      { issuer: 'FriendsOfAdonis' },
-      new EncryptionFactory().create()
-    )
+    const manager = new TOTPManager({ issuer: 'FriendsOfAdonis' }, new EncryptionFactory().create())
 
-    class User extends compose(BaseModel, withTOTP(manager, { digits: 8 })) {
+    class User extends compose(BaseModel, withTOTP({ manager, digits: 8 })) {
       @column({ isPrimary: true })
       declare id: number
 
@@ -132,7 +129,7 @@ test.group('TOTP mixin | manager', () => {
       .withEncryption(createForeignEncryption())
       .create({ issuer: 'Second' })
 
-    class FirstUser extends compose(BaseModel, first.withTOTP()) {
+    class FirstUser extends compose(BaseModel, withTOTP({ manager: first })) {
       static table = 'users'
 
       @column({ isPrimary: true })
@@ -142,7 +139,7 @@ test.group('TOTP mixin | manager', () => {
       declare email: string
     }
 
-    class SecondUser extends compose(BaseModel, second.withTOTP()) {
+    class SecondUser extends compose(BaseModel, withTOTP({ manager: second })) {
       static table = 'users'
 
       @column({ isPrimary: true })
@@ -310,6 +307,76 @@ test.group('TOTP mixin | retrieveAuthenticator', () => {
       () => user.retrieveAuthenticator(),
       RuntimeException,
       /Cannot retrieve authenticator for an unsaved "User": the primary key is empty/
+    )
+  })
+})
+
+test.group('TOTP mixin | resolve', () => {
+  test('resolve the manager from a function on every call', async ({ assert }) => {
+    const db = await createDatabase()
+    await createTables(db)
+
+    /**
+     * The manager does not exist yet when the model is defined, the
+     * way a service is undefined until the application has booted
+     */
+    let current: TOTPManager | undefined
+
+    class User extends compose(BaseModel, withTOTP({ manager: () => current! })) {
+      @column({ isPrimary: true })
+      declare id: number
+
+      @column()
+      declare email: string
+    }
+
+    current = new TOTPManagerFactory().create({ issuer: 'FriendsOfAdonis' })
+    const user = await User.create({ email: 'virk@adonisjs.com' })
+
+    assert.strictEqual(user.getTOTPManager(), current)
+    assert.deepEqual(user.getTOTPOptions(), { issuer: 'FriendsOfAdonis' })
+
+    const authenticator = await user.createAuthenticator()
+    assert.instanceOf(authenticator, TOTPAuthenticator)
+  })
+
+  test('override the manager on the model', async ({ assert }) => {
+    const db = await createDatabase()
+    await createTables(db)
+    const manager = new TOTPManagerFactory().create({ issuer: 'FriendsOfAdonis' })
+
+    class User extends compose(BaseModel, withTOTP()) {
+      static get $totpManager() {
+        return manager
+      }
+
+      @column({ isPrimary: true })
+      declare id: number
+
+      @column()
+      declare email: string
+    }
+
+    assert.strictEqual(User.$totpManager, manager)
+    assert.strictEqual(new User().$totpManager, manager)
+    assert.strictEqual(new User().getTOTPManager(), manager)
+  })
+
+  test('refuse to use the service before the application has booted', async ({ assert }) => {
+    class User extends compose(BaseModel, withTOTP()) {
+      @column({ isPrimary: true })
+      declare id: number
+
+      @column()
+      declare email: string
+    }
+
+    const user = new User()
+
+    assert.throws(
+      () => user.getTOTPManager(),
+      RuntimeException,
+      /Cannot use the TOTP manager before the application has booted/
     )
   })
 })
