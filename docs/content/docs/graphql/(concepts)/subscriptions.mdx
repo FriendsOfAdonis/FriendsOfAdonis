@@ -235,6 +235,8 @@ export default defineConfig({
 })
 ```
 
+The Redis clients connect lazily: the web server connects them when it starts, any other process (an Ace command, a seeder, a queue worker) connects them on its first publish. In both cases they are closed when the application terminates, so a process that published an event exits on its own once its work is done.
+
 ## Context
 
 When doing Subscriptions over Websocket there is no [ServerResponse](https://nodejs.org/api/http.html#class-httpserverresponse) as once the Weboscket handshake has been performed there is no way to write to the response.

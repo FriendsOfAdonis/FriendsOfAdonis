@@ -79,6 +79,7 @@ export class ApolloDriver implements GraphQLDriverContract {
   }
 
   async stop(): Promise<void> {
+    this.#isReady = false
     await this.#server?.stop()
   }
 }

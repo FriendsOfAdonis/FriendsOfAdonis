@@ -119,6 +119,7 @@ export class YogaDriver<
   }
 
   async stop(): Promise<void> {
-    await this.yoga.dispose()
+    this.#isReady = false
+    await this.#server?.dispose()
   }
 }
