@@ -3,6 +3,7 @@ import { BaseModel, column, hasMany } from '@adonisjs/lucid/orm'
 import { Searchable } from '../../src/mixins/searchable.js'
 import { DateTime } from 'luxon'
 import { HasMany } from '@adonisjs/lucid/types/relations'
+import type { SearchableColumnName } from '../../src/types.js'
 import Post from './post.js'
 
 export default class User extends compose(BaseModel, Searchable) {
@@ -28,5 +29,9 @@ export default class User extends compose(BaseModel, Searchable) {
 
   shouldBeSearchable(): boolean {
     return User.shouldBeSearchable
+  }
+
+  static get $searchableColumns(): SearchableColumnName<typeof User>[] {
+    return ['name']
   }
 }

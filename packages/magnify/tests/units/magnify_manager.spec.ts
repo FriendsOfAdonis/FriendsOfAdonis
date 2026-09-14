@@ -7,6 +7,8 @@ import { MeilisearchEngine } from '../../src/engines/meilisearch.js'
 import { TypesenseEngine } from '../../src/engines/typesense.js'
 import { MagnifyManager } from '../../src/magnify_manager.js'
 import { AlgoliaEngine } from '../../src/engines/algolia.js'
+import { LucidEngine } from '../../src/engines/lucid.js'
+import { NoopEngine } from '../../src/engines/noop.js'
 
 test.group('Magnify manager', () => {
   test('create engine instance from the manager', ({ assert, expectTypeOf }) => {
@@ -28,20 +30,26 @@ test.group('Magnify manager', () => {
             collectionSettings: {},
             apiKey: '',
           }),
+        lucid: () => new LucidEngine(),
+        noop: () => new NoopEngine(),
       },
     })
 
     expectTypeOf(manager.engine)
       .parameter(0)
-      .toEqualTypeOf<'meilisearch' | 'typesense' | 'algolia' | undefined>()
+      .toEqualTypeOf<'meilisearch' | 'typesense' | 'algolia' | 'lucid' | 'noop' | undefined>()
 
     expectTypeOf(manager.engine('meilisearch')).toEqualTypeOf<MeilisearchEngine>()
     expectTypeOf(manager.engine('algolia')).toEqualTypeOf<AlgoliaEngine>()
     expectTypeOf(manager.engine('typesense')).toEqualTypeOf<TypesenseEngine>()
+    expectTypeOf(manager.engine('lucid')).toEqualTypeOf<LucidEngine>()
+    expectTypeOf(manager.engine('noop')).toEqualTypeOf<NoopEngine>()
 
     assert.instanceOf(manager.engine('meilisearch'), MeilisearchEngine)
     assert.instanceOf(manager.engine('algolia'), AlgoliaEngine)
     assert.instanceOf(manager.engine('typesense'), TypesenseEngine)
+    assert.instanceOf(manager.engine('lucid'), LucidEngine)
+    assert.instanceOf(manager.engine('noop'), NoopEngine)
   })
 
   test('get the client from an engine', ({ expectTypeOf }) => {

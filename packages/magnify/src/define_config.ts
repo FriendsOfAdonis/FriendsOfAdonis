@@ -10,6 +10,8 @@ import { InvalidArgumentsException } from '@adonisjs/core/exceptions'
 import type { MeilisearchEngine } from './engines/meilisearch.js'
 import type { TypesenseEngine } from './engines/typesense.js'
 import type { AlgoliaEngine } from './engines/algolia.js'
+import type { LucidEngine } from './engines/lucid.js'
+import type { NoopEngine } from './engines/noop.js'
 
 type ResolvedConfig<
   KnownEngines extends Record<string, ManagerEngineFactory | ConfigProvider<ManagerEngineFactory>>,
@@ -63,6 +65,8 @@ export const engines: {
   meilisearch: (config: MeilisearchConfig) => ConfigProvider<() => MeilisearchEngine>
   typesense: (config: TypesenseConfig) => ConfigProvider<() => TypesenseEngine>
   algolia: (config: AlgoliaConfig) => ConfigProvider<() => AlgoliaEngine>
+  lucid: () => ConfigProvider<() => LucidEngine>
+  noop: () => ConfigProvider<() => NoopEngine>
 } = {
   meilisearch: (config) => {
     return configProvider.create(async () => {
@@ -80,6 +84,18 @@ export const engines: {
     return configProvider.create(async () => {
       const { AlgoliaEngine } = await import('./engines/algolia.js')
       return () => new AlgoliaEngine(config)
+    })
+  },
+  lucid: () => {
+    return configProvider.create(async () => {
+      const { LucidEngine } = await import('./engines/lucid.js')
+      return () => new LucidEngine()
+    })
+  },
+  noop: () => {
+    return configProvider.create(async () => {
+      const { NoopEngine } = await import('./engines/noop.js')
+      return () => new NoopEngine()
     })
   },
 }

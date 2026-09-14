@@ -2,7 +2,7 @@ import { type ApplicationService } from '@adonisjs/core/types'
 import { configProvider } from '@adonisjs/core'
 import { RuntimeException } from '@adonisjs/core/exceptions'
 
-export default class SchedulerProvider {
+export default class MagnifyProvider {
   constructor(protected app: ApplicationService) {}
 
   register() {
