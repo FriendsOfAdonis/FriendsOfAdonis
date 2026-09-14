@@ -46,11 +46,7 @@ async function setupPluginApp(driver: Driver, options: PluginAppOptions = {}) {
   const graphqlConfig =
     driver === 'apollo'
       ? defineConfig({ path, driver: drivers.apollo({}), pubSub: drivers.pubsub.native() })
-      : defineConfig({
-          path,
-          driver: drivers.yoga({ graphqlEndpoint: path }),
-          pubSub: drivers.pubsub.native(),
-        })
+      : defineConfig({ path, driver: drivers.yoga({}), pubSub: drivers.pubsub.native() })
 
   return setupApp(
     (factory) =>

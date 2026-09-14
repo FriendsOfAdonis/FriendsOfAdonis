@@ -31,6 +31,10 @@ It is highly recommended **to disable the playground and introspection** in prod
 
 </Callout>
 
+### Endpoint path
+
+Yoga only answers requests whose URL matches its `graphqlEndpoint` option. The driver sets it to the `path` of your GraphQL configuration, so a custom path such as `/api/v1/gql` works without further setup. Pass `graphqlEndpoint` explicitly to `drivers.yoga()` to override it.
+
 ## File Uploads
 
 GraphQL Yoga supports file uploads out of the box using the [GraphQL multipart request specification](https://github.com/jaydenseric/graphql-multipart-request-spec). For the uploads to reach Yoga, the AdonisJS bodyparser must not consume the multipart stream: add your GraphQL endpoint to the `processManually` list in your bodyparser configuration.

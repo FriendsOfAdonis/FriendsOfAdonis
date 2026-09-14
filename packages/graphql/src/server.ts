@@ -89,7 +89,7 @@ export default class GraphQLServer<
     const schema = await this.buildSchema()
 
     await Promise.all([
-      this.#driver.start(schema),
+      this.#driver.start(schema, { path: this.#config.path }),
       this.#pubSub?.start(),
       this.#subscription?.start(schema),
     ])

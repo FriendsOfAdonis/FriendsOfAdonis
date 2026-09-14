@@ -107,8 +107,18 @@ export interface PolicyAuthorizationRule {
  */
 export type AuthorizationRule = BouncerAbility<any> | PolicyAuthorizationRule | string
 
+/**
+ * Options received by a driver when the server starts it.
+ */
+export interface GraphQLDriverStartOptions {
+  /**
+   * Path of the GraphQL endpoint, as configured in `config/graphql.ts`.
+   */
+  path: string
+}
+
 export interface GraphQLDriverContract {
-  start(schema: GraphQLSchema): Promise<void>
+  start(schema: GraphQLSchema, options: GraphQLDriverStartOptions): Promise<void>
   reload(schema: GraphQLSchema): Promise<void>
   handle(ctx: HttpContext): Promise<void>
   stop(): Promise<void>
