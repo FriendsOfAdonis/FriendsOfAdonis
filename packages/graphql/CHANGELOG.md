@@ -1,5 +1,28 @@
 # @foadonis/graphql
 
+## 1.2.0
+
+### Minor Changes
+
+- [#153](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/153) [`b1c669a`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/b1c669afcd8902fc4af046734497297c0b993bac) Thanks [@kerwanp](https://github.com/kerwanp)! - Test your GraphQL API with the new Japa plugin exported from `@foadonis/graphql/plugins/api_client`. It adds `client.query` and `client.mutate` to the API client, along with GraphQL assertions on the response.
+
+  ```ts
+  test("lists posts", async ({ client }) => {
+    const response = await client
+      .query(`query { posts { id title } }`)
+      .loginAs(user);
+
+    response.assertNoErrors();
+    response.assertData({ posts: [{ id: "1", title: "Hello" }] });
+  });
+  ```
+
+### Patch Changes
+
+- [#155](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/155) [`82d51d1`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/82d51d1a10dd9b541809bc8dabebf464b4efb58c) Thanks [@kerwanp](https://github.com/kerwanp)! - The Redis PubSub clients are now closed when the application terminates in every environment, not only the web server. An ace command, a seeder or a queue worker that published an event no longer keeps the process alive, and shutdown waits for the publishes still in flight to reach Redis instead of dropping them.
+
+- [#153](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/153) [`b1c669a`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/b1c669afcd8902fc4af046734497297c0b993bac) Thanks [@kerwanp](https://github.com/kerwanp)! - The Yoga driver now serves the `path` configured in `config/graphql.ts`. Previously, any path not ending with `/graphql` answered a 404 unless `graphqlEndpoint` was also passed to the driver.
+
 ## 1.1.1
 
 ### Patch Changes
