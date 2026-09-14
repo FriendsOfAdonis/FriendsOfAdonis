@@ -1,6 +1,6 @@
 import { type HttpContext } from '@adonisjs/http-server'
 import { type GraphQLSchema } from 'graphql'
-import { type GraphQLDriverContract } from '../types.js'
+import { type GraphQLDriverContract, type GraphQLDriverStartOptions } from '../types.js'
 import { createYoga, type YogaServerOptions, type YogaServerInstance } from 'graphql-yoga'
 import { Readable } from 'node:stream'
 import { RuntimeException } from '@adonisjs/core/exceptions'
@@ -19,6 +19,7 @@ export class YogaDriver<
   #server?: YogaServerInstance<TServerContext, TUserContext>
   #logger: Logger
   #isReady = false
+  #path?: string
 
   constructor(config: YogaDriverConfig<TServerContext, TUserContext>, logger: Logger) {
     this.#config = config
@@ -37,10 +38,19 @@ export class YogaDriver<
     return this.#isReady
   }
 
-  async start(schema: GraphQLSchema): Promise<void> {
+  async start(schema: GraphQLSchema, options?: GraphQLDriverStartOptions): Promise<void> {
+    this.#path = options?.path ?? this.#path
+
+    /**
+     * Yoga answers 404 to any URL that does not end with its own
+     * `graphqlEndpoint`, so it must learn the path AdonisJS mounted
+     * the driver on. Defaults to the configured path, an explicit
+     * `graphqlEndpoint` in the driver config still wins.
+     */
     this.#server = createYoga({
       schema: schema,
       logging: this.#logger,
+      graphqlEndpoint: this.#path,
       ...this.#config,
     })
 

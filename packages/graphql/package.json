@@ -36,6 +36,7 @@
     "./commands": "./build/commands/main.js",
     "./services/main": "./build/services/main.js",
     "./graphql_provider": "./build/providers/graphql_provider.js",
+    "./plugins/api_client": "./build/src/plugins/api_client/main.js",
     "./types": "./build/src/types.js"
   },
   "publishConfig": {
@@ -56,6 +57,7 @@
     "prepublishOnly": "yarn build"
   },
   "dependencies": {
+    "@graphql-typed-document-node/core": "^3.2.0",
     "@graphql-yoga/subscription": "^5.0.5",
     "@npmcli/package-json": "^7.0.4",
     "@poppinss/middleware": "^3.2.7",
@@ -72,6 +74,7 @@
     "@apollo/client": "^4.0.11",
     "@graphql-yoga/apollo-link": "^5.2.1",
     "@graphql-yoga/redis-event-target": "^3.0.3",
+    "@japa/api-client": "^3.2.1",
     "@japa/assert": "^4.2.0",
     "@japa/expect": "^3.0.7",
     "@japa/expect-type": "^2.0.4",
@@ -101,9 +104,15 @@
   "peerDependencies": {
     "@adonisjs/core": "^7.0.0",
     "@adonisjs/lucid": "^22.0.0",
+    "@japa/api-client": "^3.0.0",
     "graphql": "^16.9.0",
     "graphql-scalars": "^1.24.0",
     "luxon": "^3.5.0"
+  },
+  "peerDependenciesMeta": {
+    "@japa/api-client": {
+      "optional": true
+    }
   },
   "optionalDependencies": {
     "@adonisjs/auth": "^9.5.1 || ^10.0.0",
