@@ -10,8 +10,8 @@ import {
 } from './types.js'
 import { configProvider } from '@adonisjs/core'
 import { type Logger } from '@adonisjs/core/logger'
-import type { RedisPubSub, RedisPubSubConfig } from './pubsub/redis_pubsub.js'
-import type { NativePubSub, NativePubSubConfig } from './pubsub/native_pubsub.js'
+import type { RedisPubSub, RedisPubSubConfig } from './drivers/pubsub/redis_pubsub_driver.js'
+import type { NativePubSub, NativePubSubConfig } from './drivers/pubsub/native_pubsub_driver.js'
 import {
   type WebsocketSubscriptionDriver,
   type WebsocketSubscriptionDriverConfig,
@@ -75,13 +75,13 @@ export const drivers: {
   pubsub: {
     native(config) {
       return configProvider.create(async () => {
-        const { NativePubSub } = await import('./pubsub/native_pubsub.js')
+        const { NativePubSub } = await import('./drivers/pubsub/native_pubsub_driver.js')
         return () => new NativePubSub(config)
       })
     },
     redis(config) {
       return configProvider.create(async () => {
-        const { RedisPubSub } = await import('./pubsub/redis_pubsub.js')
+        const { RedisPubSub } = await import('./drivers/pubsub/redis_pubsub_driver.js')
         return () => new RedisPubSub(config)
       })
     },

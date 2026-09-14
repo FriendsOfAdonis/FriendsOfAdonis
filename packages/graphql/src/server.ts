@@ -118,7 +118,11 @@ export default class GraphQLServer<
    * When configured, also stops the PubSub and websocket server.
    */
   async stop() {
-    await Promise.all([this.#driver.stop(), this.#pubSub?.stop(), this.#subscription?.stop()])
+    await Promise.all([
+      this.#driver.stop(),
+      this.#subscription?.stop(),
+      this.#pubSub?.stop(),
+    ])
   }
 
   /**

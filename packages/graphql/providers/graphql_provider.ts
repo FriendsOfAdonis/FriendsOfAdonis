@@ -39,9 +39,7 @@ export default class GraphQlProvider {
   }
 
   async shutdown() {
-    if (this.app.getEnvironment() === 'web') {
-      const graphql = await this.app.container.make('graphql')
-      await graphql.stop()
-    }
+    const graphql = await this.app.container.make('graphql')
+    await graphql.stop()
   }
 }
