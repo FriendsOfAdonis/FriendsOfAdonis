@@ -37,9 +37,7 @@
     "yaml": "^2.8.2"
   },
   "resolutions": {
-    "yargs": "^18.0.0",
-    "jsonschema@npm:^1.5.0": "patch:jsonschema@npm%3A1.5.0#~/.yarn/patches/jsonschema-npm-1.5.0-a1e4a2d9f7.patch",
-    "jsonschema@npm:^1.4.1": "patch:jsonschema@npm%3A1.5.0#~/.yarn/patches/jsonschema-npm-1.5.0-a1e4a2d9f7.patch"
+    "yargs": "^18.0.0"
   },
   "engines": {
     "node": ">=18"
