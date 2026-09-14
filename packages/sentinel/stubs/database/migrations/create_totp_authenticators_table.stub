@@ -1,0 +1,19 @@
+{{{
+  exports({ to: filePath })
+}}}
+import { BaseSchema } from '@adonisjs/lucid/schema'
+import { TOTPSchema } from '@foadonis/sentinel/totp'
+
+export default class extends BaseSchema {
+  protected tableName = 'totp_authenticators'
+
+  async up() {
+    this.schema.createTable(this.tableName, (table) => {
+      TOTPSchema.configureAuthenticatorsTable(table)
+    })
+  }
+
+  async down() {
+    this.schema.dropTable(this.tableName)
+  }
+}

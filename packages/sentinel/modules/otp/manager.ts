@@ -1,0 +1,165 @@
+import { Secret } from '@adonisjs/core/helpers'
+import type { GenerateOTPOptions, InvalidateOTPsOptions, VerifyOTPOptions } from './types.ts'
+import type { TokenManager } from '../token/manager.ts'
+import type { RecordId } from '../../src/types.ts'
+import {
+  OTP_DEFAULT_EXPIRES_IN,
+  OTP_DEFAULT_LENGTH,
+  OTP_DEFAULT_MAXIMUM_FAILED_ATTEMPTS,
+} from './constants.ts'
+
+/**
+ * Config accepted by the OTP manager
+ */
+export interface OTPManagerConfig {
+  /**
+   * Number of digits of a code.
+   *
+   * Defaults to 6
+   */
+  length?: number
+
+  /**
+   * The lifetime of a code, in seconds or as a duration string like
+   * "20m".
+   *
+   * Defaults to "20m"
+   */
+  expiresIn?: string | number
+
+  /**
+   * Number of failed attempts after which a code is invalidated.
+   *
+   * Defaults to 5
+   */
+  maximumFailedAttempts?: number
+}
+
+/**
+ * OTP manager generates and verifies the numeric one-time passwords
+ * sent to a user out of band. The codes are hashed with scrypt, since
+ * their entropy is too low for a fast hash, and can only be verified
+ * against their subject.
+ *
+ * @example
+ * const code = await otp.generateOTP(user.id)
+ * await otp.verifyOTP(user.id, code)
+ */
+export class OTPManager {
+  /**
+   * The kind under which the codes are persisted
+   */
+  static TOKEN_KIND = 'otp'
+
+  constructor(
+    protected config: OTPManagerConfig = {},
+    protected tokens: TokenManager
+  ) {}
+
+  /**
+   * Creates a code for a subject and returns it, the only copy of it.
+   * Only the hash is persisted.
+   *
+   * The pending codes of the subject for the same purpose are
+   * invalidated first, so that a single code is valid at a time: a
+   * short numeric code is guessed more easily when several of them
+   * are pending.
+   *
+   * @param tokenableId - The primary key of the subject
+   * @param options - Options to configure the code
+   */
+  async generateOTP(tokenableId: RecordId, options: GenerateOTPOptions = {}) {
+    const value = new Secret(
+      this.randomOTP(options.length ?? this.config.length ?? OTP_DEFAULT_LENGTH)
+    )
+
+    /**
+     * A code generated without purpose only replaces the codes
+     * without purpose. The two calls are not atomic: two concurrent
+     * generations may leave two pending codes, which the failed
+     * attempts budget still bounds.
+     */
+    await this.invalidateOTPs(tokenableId, { purpose: options.purpose })
+
+    await this.tokens.create(tokenableId, value, {
+      kind: OTPManager.TOKEN_KIND,
+      purpose: options.purpose,
+      expiresIn: options.expiresIn ?? this.config.expiresIn ?? OTP_DEFAULT_EXPIRES_IN,
+      maximumFailedAttempts:
+        options.maximumFailedAttempts ??
+        this.config.maximumFailedAttempts ??
+        OTP_DEFAULT_MAXIMUM_FAILED_ATTEMPTS,
+      metadata: options.metadata,
+      hasher: 'scrypt',
+    })
+
+    return value
+  }
+
+  /**
+   * Verifies a code and consumes it, so that verifying it again
+   * fails. A wrong code counts as a failed attempt against the
+   * pending code of the subject.
+   *
+   * @param tokenableId - The primary key of the subject
+   * @param value - The code typed by the user
+   * @param options - Options to find the code
+   *
+   * @throws {E_TOO_MANY_ATTEMPTS} When the wrong code reached the
+   * maximum failed attempts
+   * @throws {E_INVALID_TOKEN} When the code is unknown, expired,
+   * already used, or was generated for another purpose
+   */
+  async verifyOTP(
+    tokenableId: RecordId,
+    value: Secret<string> | string,
+    options: VerifyOTPOptions = {}
+  ) {
+    return this.tokens.verify(typeof value === 'string' ? new Secret(value) : value, {
+      kind: OTPManager.TOKEN_KIND,
+      purpose: options.purpose,
+      tokenableId,
+      hasher: 'scrypt',
+    })
+  }
+
+  /**
+   * Invalidates the pending codes of a subject
+   *
+   * @param tokenableId - The primary key of the subject
+   * @param options - Options to select the codes to invalidate
+   */
+  invalidateOTPs(tokenableId: RecordId, options: InvalidateOTPsOptions = {}): Promise<void> {
+    return this.tokens.invalidate(tokenableId, {
+      kind: OTPManager.TOKEN_KIND,
+      purpose: options.purpose,
+    })
+  }
+
+  /**
+   * Generates a random numeric code of the given length
+   */
+  protected randomOTP(length: number) {
+    if (!Number.isInteger(length) || length < 1) {
+      throw new RangeError('length must be a positive integer')
+    }
+
+    const bytes = new Uint8Array(length)
+    let otp = ''
+
+    while (otp.length < length) {
+      crypto.getRandomValues(bytes)
+      for (const byte of bytes) {
+        /**
+         * Skip the bytes from 250 to 255, since 256 is not a
+         * multiple of 10 and they would bias the digits
+         */
+        if (byte >= 250) continue
+        otp += byte % 10
+        if (otp.length === length) break
+      }
+    }
+
+    return otp
+  }
+}

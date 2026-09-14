@@ -1,0 +1,98 @@
+---
+title: Introduction
+description: "AdonisJS Sentinel provides composable authentication building blocks: magic links, one-time passwords, TOTP two-factor and password resets."
+icon: Album
+---
+
+Adonis Sentinel provides composable authentication building blocks for AdonisJS applications. It does not replace `@adonisjs/auth`: your guards keep deciding who is making each request, while Sentinel takes care of the flows around them, like passwordless sign-in, password resets and second factors.
+
+Sentinel does not ship routes, controllers nor mail templates. It integrates nicely with your codebase.
+
+```ts tab="app/models/user.ts"
+import { compose } from "@adonisjs/core/helpers";
+import { BaseModel, column } from "@adonisjs/lucid/orm";
+import { withMagicLink } from "@foadonis/sentinel/magic_link";
+import { withOTP } from "@foadonis/sentinel/otp";
+import { withPassword } from "@foadonis/sentinel/password";
+import { withTOTP } from "@foadonis/sentinel/totp";
+
+export default class User extends compose(
+  BaseModel,
+  withMagicLink(),
+  withOTP(),
+  withPassword(),
+  withTOTP(),
+) {
+  @column({ isPrimary: true })
+  declare id: number;
+
+  @column()
+  declare email: string;
+
+  @column({ serializeAs: null })
+  declare password: string;
+}
+```
+
+```ts tab="Magic links"
+// Email a single-use sign-in link
+const link = await user.generateMagicLink();
+
+// When it is opened, exchange its token for the user
+const [owner] = await User.verifyMagicLinkToken(token);
+```
+
+```ts tab="One-time passwords"
+// Send a short single-use code by email or SMS
+const code = await user.generateOTP();
+
+// Check the code typed back against its user
+const [owner] = await User.verifyOTP(user.id, code);
+```
+
+```ts tab="TOTP"
+// Enroll an authenticator app by QR code
+const authenticator = await user.createAuthenticator();
+const qrCode = await authenticator.generateQRCode();
+
+// At sign-in, validate the six-digit code
+await authenticator.validate(code);
+```
+
+```ts tab="Passwords"
+// Verify credentials at sign-in
+const user = await User.verifyCredentials(email, password);
+
+// Reset a forgotten password with a single-use token
+const token = await user.generatePasswordResetToken();
+const [owner] = await User.resetPassword(token, newPassword);
+```
+
+## Building blocks
+
+<Cards>
+  <Card
+    href="/docs/sentinel/features/magic-link"
+    title="Magic links"
+    description="Sign users in with a single-use link sent by email"
+  />
+  <Card
+    href="/docs/sentinel/features/otp"
+    title="One-time passwords"
+    description="Send short single-use codes by email or SMS"
+  />
+  <Card
+    href="/docs/sentinel/features/totp"
+    title="Authenticators"
+    description="Add two-factor authentication with an authenticator app"
+  />
+  <Card
+    href="/docs/sentinel/features/password"
+    title="Password management"
+    description="Verify credentials and reset forgotten passwords"
+  />
+</Cards>
+
+## Next steps
+
+Head over to the [Getting Started](/docs/sentinel/getting-started) guide to install Sentinel in your application.

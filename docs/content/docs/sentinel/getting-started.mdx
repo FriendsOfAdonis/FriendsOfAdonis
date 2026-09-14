@@ -1,0 +1,116 @@
+---
+title: Getting Started
+description: "Install @foadonis/sentinel with node ace add, migrate the shared tokens table and compose the authentication mixins into your Lucid models."
+icon: Rocket
+---
+
+Sentinel is installed with a single ace command, followed by a migration run. This guide covers the setup shared by every building block; each feature page then walks you through its own flow.
+
+<Workbook
+  title="Install and configure Sentinel using your coding agent"
+  path="sentinel/setup"
+/>
+
+<div className="fd-steps [&_h2]:fd-step">
+
+## Installation
+
+Install and configure the package using the following command:
+
+```sh
+node ace add @foadonis/sentinel
+```
+
+<ConfigurationSteps
+  pkg="@foadonis/sentinel"
+  providers={["@foadonis/sentinel/sentinel_provider"]}
+  config="sentinel"
+  migrations={[
+    "create_sentinel_tokens_table",
+    "create_totp_authenticators_table",
+  ]}
+/>
+
+## Run the migrations
+
+The command published migrations for two tables. `sentinel_tokens` is the shared storage of the [magic link](/docs/sentinel/features/magic-link), [OTP](/docs/sentinel/features/otp) and [password reset](/docs/sentinel/features/password) tokens, and `totp_authenticators` holds the authenticator apps enrolled for [TOTP two-factor](/docs/sentinel/features/totp). Create them:
+
+```sh
+node ace migration:run
+```
+
+## Configure the token storage
+
+The generated `config/sentinel.ts` works out of the box: `tokens.lucid()` persists the tokens through Lucid, in the table the migration created.
+
+```ts title="config/sentinel.ts"
+import { defineConfig, tokens } from "@foadonis/sentinel";
+
+const sentinelConfig = defineConfig({
+  tokens: tokens.lucid(),
+});
+
+export default sentinelConfig;
+```
+
+`tokens.lucid()` accepts two options when your database layout differs from the defaults:
+
+- `connection`: The database connection to use. Defaults to the primary connection.
+- `table`: The table to store the tokens in. Defaults to `sentinel_tokens`, the name used by the published migration.
+
+Each building block adds its own key next to `tokens`, like `magicLink` or `totp`. They are all optional and documented on their feature page.
+
+## Compose the mixins
+
+Every building block is a [mixin](https://www.typescriptlang.org/docs/handbook/mixins.html) exported by its module, `@foadonis/sentinel/magic_link` for example. Compose the ones you need into the model they belong to, and they add their methods on the model. The mixins reach their manager on every call, never when the model is defined, so the model can be imported anywhere, even before the application has booted:
+
+```ts title="app/models/user.ts"
+import { compose } from "@adonisjs/core/helpers";
+import { BaseModel, column } from "@adonisjs/lucid/orm";
+import { withMagicLink } from "@foadonis/sentinel/magic_link";
+import { withPassword } from "@foadonis/sentinel/password";
+
+export default class User extends compose(
+  BaseModel,
+  withMagicLink(),
+  withPassword(),
+) {
+  @column({ isPrimary: true })
+  declare id: number;
+
+  @column()
+  declare email: string;
+
+  @column({ serializeAs: null })
+  declare password: string;
+}
+```
+
+</div>
+
+## Next steps
+
+Sentinel is ready. Pick a building block and follow its page from the mixin to a working flow:
+
+<Cards>
+  <Card
+    href="/docs/sentinel/features/magic-link"
+    title="Magic links"
+    description="Sign users in with a single-use link sent by email"
+  />
+  <Card
+    href="/docs/sentinel/features/otp"
+    title="One-time passwords"
+    description="Send short single-use codes by email or SMS"
+  />
+  <Card
+    href="/docs/sentinel/features/totp"
+    title="TOTP"
+    description="Add two-factor authentication with an authenticator app"
+  />
+  <Card
+    href="/docs/sentinel/features/password"
+    title="Password management"
+    description="Verify credentials and reset forgotten passwords"
+  />
+</Cards>

@@ -1,0 +1,10 @@
+{{{
+  exports({ to: app.configPath('sentinel.ts') })
+}}}
+import { defineConfig, tokens } from '@foadonis/sentinel'
+
+const sentinelConfig = defineConfig({
+  tokens: tokens.lucid({}),
+})
+
+export default sentinelConfig

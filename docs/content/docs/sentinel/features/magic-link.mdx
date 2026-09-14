@@ -1,0 +1,372 @@
+---
+title: Magic Links
+icon: WandSparkles
+description: "Sign users in with single-use links: compose withMagicLink into a model, generate a link with generateMagicLink and consume it with verifyMagicLinkToken."
+---
+
+A magic link is a URL carrying a single-use token. You email it to a user, they open it, and they are signed in without typing a password.
+
+Sentinel takes care of the token: it generates it, stores its hash and verifies it exactly once. Sending the email and opening the session stay in your hands, so the flow fits any mail setup and any `@adonisjs/auth` guard.
+
+<Workbook
+  title="Setup Magic Link authentication using your coding agent"
+  path="sentinel/setup-magic-link"
+/>
+
+## Getting started
+
+Sentinel must be installed and configured as described in the [installation guide](/docs/sentinel/getting-started), with the `sentinel_tokens` table migrated. The examples below use the session guard of `@adonisjs/auth` and `@adonisjs/mail`: adapt them to the guard and the mailer of your application.
+
+<div className="fd-steps [&_h3]:fd-step">
+
+### Configure the URL
+
+Register how the links are built under the `magicLink` key of `config/sentinel.ts`. The `url` function receives the token as a string and returns the URL the link points to:
+
+```ts title="config/sentinel.ts"
+import env from "#start/env";
+import { defineConfig, tokens } from "@foadonis/sentinel";
+
+const sentinelConfig = defineConfig({
+  tokens: tokens.lucid(),
+  magicLink: {
+    url: (token) => `${env.get("APP_URL")}/auth/magic-link?token=${token}`,
+  },
+});
+
+export default sentinelConfig;
+```
+
+`APP_URL` is not part of the default environment schema: declare it as a required string in `start/env.ts` if your application does not define it yet.
+
+### Prepare the model
+
+Compose the `withMagicLink` mixin, exported by `@foadonis/sentinel/magic_link`, into the model your users sign in with. The mixin adds `generateMagicLink`, `generateMagicLinkToken` and `invalidateMagicLinkTokens` to the instances, and the static `verifyMagicLinkToken` method to the model:
+
+```ts title="app/models/user.ts"
+import { compose } from "@adonisjs/core/helpers";
+import { BaseModel, column } from "@adonisjs/lucid/orm";
+import { withMagicLink } from "@foadonis/sentinel/magic_link";
+
+export default class User extends compose(BaseModel, withMagicLink()) {
+  @column({ isPrimary: true })
+  declare id: number;
+
+  @column()
+  declare email: string;
+}
+```
+
+### Send a link
+
+Generate a link for the user and email it. The link is wrapped in a `Secret`, so it stays out of the logs: call `release` to read the URL.
+
+```ts title="app/controllers/magic_link_controller.ts"
+import type { HttpContext } from "@adonisjs/core/http";
+import mail from "@adonisjs/mail/services/main";
+import User from "#models/user";
+
+export default class MagicLinkController {
+  async send({ request, response, session }: HttpContext) {
+    const user = await User.findBy("email", request.input("email"));
+
+    if (user) {
+      const link = await user.generateMagicLink();
+
+      await mail.sendLater((message) => {
+        message
+          .to(user.email)
+          .subject("Your sign-in link")
+          .htmlView("emails/magic_link", { link: link.release() });
+      });
+    }
+
+    session.flash(
+      "success",
+      "If an account exists for this address, a link is on its way.",
+    );
+    return response.redirect().back();
+  }
+}
+```
+
+<Callout type="warn">
+  Respond the same way whether or not the address is known. Telling the visitor
+  that no account exists lets anyone enumerate your users.
+</Callout>
+
+### Verify the link
+
+Add a `verify` method to the same controller. It reads the `token` query parameter, hands it to the static `verifyMagicLinkToken` method and opens the session with the user it returns:
+
+```ts title="app/controllers/magic_link_controller.ts"
+export default class MagicLinkController {
+  // ...
+
+  async verify({ request, response, auth }: HttpContext) {
+    const [user] = await User.verifyMagicLinkToken(request.input("token"));
+
+    await auth.use("web").login(user);
+
+    return response.redirect("/dashboard");
+  }
+}
+```
+
+```ts title="start/routes.ts"
+import router from "@adonisjs/core/services/router";
+const MagicLinkController = () => import("#controllers/magic_link_controller");
+
+router.post("/auth/magic-link", [MagicLinkController, "send"]);
+router
+  .get("/auth/magic-link", [MagicLinkController, "verify"])
+  .as("magic_link.verify");
+```
+
+</div>
+
+The first verification consumes the token: opening the link again fails with an `E_INVALID_TOKEN` exception, exactly like an expired link does. See [Handling invalid links](#handling-invalid-links) to turn it into a friendly message.
+
+<Callout type="warn">
+  Some mail providers open the links they find in an email to scan them, which
+  consumes the token before the user gets to click it. If your users are
+  affected, render a page holding the token in a hidden field from the `GET`
+  route, and move the verification to a `POST` route that page submits to.
+</Callout>
+
+## Configuration
+
+### Global configuration
+
+The `magicLink` key of `config/sentinel.ts` accepts the following options. The example below builds the links with the `urlFor` helper of AdonisJS, from the name given to the verifying route in the [Getting started](#getting-started) guide, and `prefixUrl` makes them absolute:
+
+- `url`: A function receiving the token as a string and returning the URL the link points to, usually the route verifying the token. The URL must be absolute, since the link is sent by email: `generateMagicLink` throws before creating any token when it is not, so give `urlFor` a `prefixUrl`.
+- `expiresIn`: The lifetime of the links, in seconds or as a duration string like `"20m"` or `"1h"`. Defaults to `"20m"`.
+
+```ts title="config/sentinel.ts"
+import env from "#start/env";
+import { urlFor } from "@adonisjs/core/services/url_builder";
+import { defineConfig, tokens } from "@foadonis/sentinel";
+
+const sentinelConfig = defineConfig({
+  tokens: tokens.lucid(),
+  magicLink: {
+    url: (token) =>
+      urlFor("magic_link.verify", undefined, {
+        qs: { token },
+        prefixUrl: env.get("APP_URL"),
+      }),
+    expiresIn: "1h",
+  },
+});
+
+export default sentinelConfig;
+```
+
+<Callout>
+  Magic link tokens are persisted by the token provider configured under
+  `tokens`, in the `sentinel_tokens` table shared with the OTP and password
+  modules. See the [installation guide](/docs/sentinel/getting-started) for the
+  migration.
+</Callout>
+
+### Mixin configuration
+
+The options given to `withMagicLink` become the defaults of every link the model generates. They are the `url` and `expiresIn` options of the global configuration, plus:
+
+- `purpose`: The purpose of the links. It is also the purpose `verifyMagicLinkToken` and `invalidateMagicLinkTokens` use by default, see [Purposes](#purposes).
+- `metadata`: Data attached to every link, see [Metadata](#metadata).
+
+```ts title="app/models/user.ts"
+export default class User extends compose(
+  BaseModel,
+  withMagicLink({ purpose: "signin", expiresIn: "15m" }),
+) {
+  // ...
+}
+```
+
+<Callout type="warn">
+  Tokens are stored by primary key, not by model. When several models compose
+  the mixin, give each one its own purpose: a link generated for one model could
+  otherwise be verified as another, and revoking the links of one would revoke
+  the links of the other.
+</Callout>
+
+<Callout>
+  Options given when generating a link take precedence over the defaults of the
+  mixin, which take precedence over `config/sentinel.ts`. `metadata` is replaced
+  as a whole, not merged.
+</Callout>
+
+### Per-link options
+
+`generateMagicLink` accepts the same four options for a single link, `url`, `expiresIn`, `purpose` and `metadata`:
+
+```ts
+const link = await user.generateMagicLink({
+  url: (token) => `myapp://login?token=${token}`,
+  expiresIn: "5m",
+});
+```
+
+Whatever the link looks like, the token comes back to an endpoint of yours that hands it to `verifyMagicLinkToken`. To handle the token yourself, generate it bare with `generateMagicLinkToken`. It accepts the same options except `url`, and returns the token wrapped in a `Secret`, so call `release` to read it. `verifyMagicLinkToken` accepts a string or a `Secret`:
+
+```ts
+const token = await user.generateMagicLinkToken({ expiresIn: "5m" });
+```
+
+## Handling invalid links
+
+`verifyMagicLinkToken` throws an `E_INVALID_TOKEN` exception, with a `401` status, when the token is unknown, expired, already used, or created for another [purpose](#purposes). The mixin also throws it when the user of the token no longer exists. Catch it in the action, or in the global exception handler:
+
+```ts title="app/exceptions/handler.ts"
+import { ExceptionHandler, type HttpContext } from "@adonisjs/core/http";
+import { errors } from "@foadonis/sentinel";
+
+export default class HttpExceptionHandler extends ExceptionHandler {
+  async handle(error: unknown, ctx: HttpContext) {
+    if (
+      error instanceof errors.E_INVALID_TOKEN &&
+      error.kind === "magic_link"
+    ) {
+      ctx.session.flash(
+        "error",
+        "This link is invalid or has expired. Request a new one.",
+      );
+      return ctx.response.redirect("/login");
+    }
+
+    return super.handle(error, ctx);
+  }
+}
+```
+
+The OTP and password modules throw the same exception, hence the check on its `kind` property. Its `purpose` property carries the purpose the token was verified with.
+
+## Purposes
+
+When magic links serve more than one flow (sign in, sign up confirmation, email change), tag each link with a purpose. A token is only accepted with the purpose it was created for, so a link meant to confirm an email change cannot be used to sign in. When sending the link:
+
+```ts
+const link = await user.generateMagicLink({ purpose: "email_change" });
+```
+
+When verifying it:
+
+```ts
+const [user] = await User.verifyMagicLinkToken(request.input("token"), {
+  purpose: "email_change",
+});
+```
+
+A purpose given to the mixin is the default of `generateMagicLink`, `generateMagicLinkToken`, `verifyMagicLinkToken` and `invalidateMagicLinkTokens`, so a model dedicated to one flow never needs the option. To reach the tokens without purpose on such a model, pass `purpose: undefined` explicitly: the mixin only falls back to its default when the option is left out.
+
+## Metadata
+
+Attach arbitrary data to a link and get it back from the verification. The data is stored next to the token, not in the link, so the user cannot tamper with it. A redirect target is the typical use. Extending the actions of the [Getting started](#getting-started) guide:
+
+```ts title="app/controllers/magic_link_controller.ts"
+export default class MagicLinkController {
+  async send({ request, response, session }: HttpContext) {
+    const redirect = request.input("redirect", "/dashboard");
+    // ...
+    const link = await user.generateMagicLink({ metadata: { redirect } });
+    // ...
+  }
+
+  async verify({ request, response, auth }: HttpContext) {
+    const [user, metadata] = await User.verifyMagicLinkToken(
+      request.input("token"),
+    );
+
+    await auth.use("web").login(user);
+
+    return response.redirect(
+      typeof metadata?.redirect === "string" ? metadata.redirect : "/dashboard",
+    );
+  }
+}
+```
+
+`metadata` is typed `Record<string, unknown> | null`, `null` when the link was generated without metadata, so narrow the values before using them.
+
+<Callout type="warn">
+  Metadata is trusted at verification time, so validate it when you store it. In
+  the example above, accept `redirect` only when it is a path of your
+  application, starting with a single `/`, otherwise the link becomes an open
+  redirect.
+</Callout>
+
+## Invalidating pending links
+
+Every link generated for a user stays valid until it is used or expires. Call `invalidateMagicLinkTokens` to revoke the pending ones, when the user changes their email address for example, or to make sure a single link is pending at a time:
+
+```ts
+await user.invalidateMagicLinkTokens();
+const link = await user.generateMagicLink();
+```
+
+With this pattern, a user who requested two links and opens the older one gets an invalid link error.
+
+The revocation is scoped to one purpose: the one given with the `purpose` option, otherwise the default one of the mixin, otherwise the links created without purpose. A model using several purposes revokes them one call at a time, and `purpose: undefined` reaches the links without purpose on a model with a default, see [Purposes](#purposes). The OTP and password reset tokens of the user are never affected.
+
+```ts
+await user.invalidateMagicLinkTokens({ purpose: "email_change" });
+```
+
+## Using the manager directly
+
+The mixin is a thin layer over the `MagicLinkManager`, the default export of `@foadonis/sentinel/services/magic_link`. Reach for the manager when the subject of the links is not a Lucid model. Inject it wherever the container constructs your classes, or import the service when you are outside a DI context:
+
+```ts title="app/services/invitation_service.ts"
+import { inject } from "@adonisjs/core";
+import { MagicLinkManager } from "@foadonis/sentinel/magic_link";
+
+@inject()
+export default class InvitationService {
+  constructor(protected magicLink: MagicLinkManager) {}
+}
+```
+
+```ts
+import magicLink from "@foadonis/sentinel/services/magic_link";
+```
+
+The manager exposes the same operations as the mixin, `generateMagicLink`, `generateMagicLinkToken`, `verifyMagicLinkToken` and `invalidateMagicLinkTokens`, with the primary key of the subject as the first argument:
+
+```ts
+const token = await magicLink.generateMagicLinkToken(invitee.id, {
+  purpose: "invitation",
+});
+```
+
+`verifyMagicLinkToken` returns the persisted token instead of a model: a `SentinelToken` carrying the `tokenableId`, `purpose`, `metadata` and `expiresAt` of the link. Finding the subject is up to you:
+
+```ts
+const verified = await magicLink.verifyMagicLinkToken(request.input("token"), {
+  purpose: "invitation",
+});
+const member = await Member.findOrFail(verified.tokenableId);
+```
+
+<Callout>
+  The mixin resolves the manager through the static `$magicLinkManager` getter of
+  the model, on every access and never when the model is defined, so the model
+  can be imported before the application has booted. Pass a `manager` option,
+  an instance or a function returning one, when you construct the manager
+  yourself, in tests for example, or override the getter on the model to give
+  it a manager of its own.
+</Callout>
+
+## Under the hood
+
+- The token is made of 40 random characters followed by their CRC32 checksum. Only its SHA-256 hash is persisted, so a leaked database does not leak the pending links.
+- The value is returned once, wrapped in a `Secret`, and never stored.
+- A token is consumed atomically: two concurrent verifications of the same link cannot both succeed.
+- Expired and consumed tokens are deleted as soon as they are seen.
+
+## Next steps
+
+- [OTP Management](/docs/sentinel/features/otp): Send short codes instead of links when the user types them by hand
+- [Password Management](/docs/sentinel/features/password): Reset forgotten passwords with the same token machinery

@@ -1,0 +1,121 @@
+import { Secret } from '@adonisjs/core/helpers'
+import type { RecordId } from '../../src/types.ts'
+import type { TokenManager } from '../token/manager.ts'
+import type { SentinelToken } from '../token/token.ts'
+import { makeTokenValue } from '../token/value.ts'
+import { DEFAULT_EMAIL_EXPIRES_IN } from './constants.ts'
+import type {
+  GenerateEmailVerificationTokenOptions,
+  InvalidateEmailVerificationTokensOptions,
+  VerifyEmailVerificationTokenOptions,
+} from './types.ts'
+
+/**
+ * Config accepted by the email manager
+ */
+export interface EmailManagerConfig {
+  /**
+   * The lifetime of the email verification tokens, in seconds or as
+   * a duration string like "1d".
+   *
+   * Defaults to "1d"
+   */
+  expiresIn?: string | number
+}
+
+/**
+ * Email manager generates and verifies the tokens confirming the
+ * ownership of an email address. Each token is bound to the address
+ * it verifies, carried as its name.
+ *
+ * @example
+ * const token = await email.generateEmailVerificationToken(user.id, user.email)
+ * await email.verifyEmailVerificationToken(token)
+ */
+export class EmailManager {
+  /**
+   * The kind under which the tokens are persisted
+   */
+  static TOKEN_KIND = 'email_verification'
+
+  constructor(
+    protected config: EmailManagerConfig = {},
+    protected tokens: TokenManager
+  ) {}
+
+  /**
+   * Creates a verification token for an address of a subject and
+   * returns its value, the only copy of it. Only the hash is
+   * persisted, along with the address the token verifies.
+   *
+   * @param tokenableId - The primary key of the subject
+   * @param email - The address the token verifies
+   * @param options - Options to configure the token
+   */
+  async generateEmailVerificationToken(
+    tokenableId: RecordId,
+    email: string,
+    options: GenerateEmailVerificationTokenOptions = {}
+  ) {
+    const value = makeTokenValue()
+
+    await this.tokens.create(tokenableId, value, {
+      kind: EmailManager.TOKEN_KIND,
+      name: email,
+      purpose: options.purpose,
+      expiresIn: options.expiresIn ?? this.config.expiresIn ?? DEFAULT_EMAIL_EXPIRES_IN,
+      metadata: options.metadata,
+    })
+
+    return value
+  }
+
+  /**
+   * Verifies a token and consumes it, so that verifying it again
+   * fails. The address the token verifies is the name of the
+   * returned token.
+   *
+   * @param value - The value of the token
+   * @param options - Options to find the token
+   *
+   * @throws {E_INVALID_TOKEN} When the token is unknown, expired,
+   * already used, or was created for another purpose
+   */
+  async verifyEmailVerificationToken(
+    value: Secret<string> | string,
+    options: VerifyEmailVerificationTokenOptions = {}
+  ): Promise<SentinelToken> {
+    return this.tokens.verify(typeof value === 'string' ? new Secret(value) : value, {
+      kind: EmailManager.TOKEN_KIND,
+      purpose: options.purpose,
+    })
+  }
+
+  /**
+   * Invalidates the email verification tokens of a subject
+   *
+   * @param tokenableId - The primary key of the subject
+   * @param options - Options to select the tokens to invalidate
+   */
+  invalidateEmailVerificationTokens(
+    tokenableId: RecordId,
+    options: InvalidateEmailVerificationTokensOptions = {}
+  ): Promise<void> {
+    return this.tokens.invalidate(tokenableId, {
+      kind: EmailManager.TOKEN_KIND,
+      purpose: options.purpose,
+    })
+  }
+
+  /**
+   * Invalidates the email verification tokens of a subject, whatever
+   * their purpose. The mixin calls it once the email changes, since
+   * the pending tokens verify an address that is no longer the one
+   * on the row.
+   *
+   * @param tokenableId - The primary key of the subject
+   */
+  invalidateAllEmailVerificationTokens(tokenableId: RecordId): Promise<void> {
+    return this.tokens.invalidateAll(tokenableId, { kind: EmailManager.TOKEN_KIND })
+  }
+}

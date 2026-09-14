@@ -1,0 +1,19 @@
+{{{
+  exports({ to: filePath })
+}}}
+import { BaseSchema } from '@adonisjs/lucid/schema'
+import { TokenSchema } from '@foadonis/sentinel/token'
+
+export default class extends BaseSchema {
+  protected tableName = 'sentinel_tokens'
+
+  async up() {
+    this.schema.createTable(this.tableName, (table) => {
+      TokenSchema.configureTokensTable(table)
+    })
+  }
+
+  async down() {
+    this.schema.dropTable(this.tableName)
+  }
+}

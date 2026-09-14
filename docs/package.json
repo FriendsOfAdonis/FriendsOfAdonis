@@ -16,6 +16,7 @@
     "@foadonis/magnify": "workspace:*",
     "@foadonis/maintenance": "workspace:*",
     "@foadonis/openapi": "workspace:*",
+    "@foadonis/sentinel": "workspace:*",
     "@fumadocs/mdx-remote": "^1.5.1",
     "@orama/core": "^1.2.14",
     "@oramacloud/client": "^2.1.4",

@@ -1,0 +1,336 @@
+---
+title: One-Time Passwords
+icon: SquareAsterisk
+description: "Sign users in with short single-use codes: compose withOTP into a model, generate a code with generateOTP and check it against its user with verifyOTP."
+---
+
+A one-time password is a short numeric code sent to a user out of band, by email or SMS. Typing it back proves they own the address, which signs them in without a password or confirms a sensitive action.
+
+Sentinel takes care of the code: it generates it, stores its hash, verifies it exactly once and locks it after too many wrong guesses. Sending the code and opening the session stay in your hands, so the flow fits any mail setup and any `@adonisjs/auth` guard.
+
+The codes here are sent to the user. For the codes an authenticator app generates on the user's device, see [TOTP Management](/docs/sentinel/features/totp).
+
+<Workbook
+  title="Setup OTP authentication using your coding agent"
+  path="sentinel/setup-otp"
+/>
+
+## Getting started
+
+Sentinel must be installed and configured as described in the [installation guide](/docs/sentinel/getting-started), with the `sentinel_tokens` table migrated. The examples below use the session guard of `@adonisjs/auth` and `@adonisjs/mail`: adapt them to the guard and the mailer of your application. The code itself is a plain string, so delivering it over SMS instead only changes the sending step.
+
+<div className="fd-steps [&_h3]:fd-step">
+
+### Prepare the model
+
+Compose the `withOTP` mixin, exported by `@foadonis/sentinel/otp`, into the model your users sign in with. The mixin adds `generateOTP` and `invalidateOTPs` to the instances, and the static `verifyOTP` method to the model:
+
+```ts title="app/models/user.ts"
+import { compose } from "@adonisjs/core/helpers";
+import { BaseModel, column } from "@adonisjs/lucid/orm";
+import { withOTP } from "@foadonis/sentinel/otp";
+
+export default class User extends compose(BaseModel, withOTP()) {
+  @column({ isPrimary: true })
+  declare id: number;
+
+  @column()
+  declare email: string;
+}
+```
+
+No configuration is required: the codes are 6 digits and live 20 minutes by default. See [Configuration](#configuration) to change that.
+
+### Send a code
+
+Generate a code for the user and email it: a form with a single `email` field posts to this action. The code is wrapped in a `Secret`, so it stays out of the logs: call `release` to read it. A code is only verified against the user it was generated for, so the flow must remember who is signing in between the two requests. The action below keeps the address in the session; a hidden field in the verification form works as well.
+
+```ts title="app/controllers/otp_controller.ts"
+import type { HttpContext } from "@adonisjs/core/http";
+import mail from "@adonisjs/mail/services/main";
+import User from "#models/user";
+
+export default class OTPController {
+  async send({ request, response, session }: HttpContext) {
+    const email = request.input("email");
+    const user = await User.findBy("email", email);
+
+    if (user) {
+      const code = await user.generateOTP();
+
+      await mail.sendLater((message) => {
+        message
+          .to(user.email)
+          .subject("Your sign-in code")
+          .htmlView("emails/otp", { code: code.release() });
+      });
+    }
+
+    session.put("otp_email", email);
+    return response.redirect("/auth/otp/verify");
+  }
+}
+```
+
+<Callout type="warn">
+  Respond the same way whether or not the address is known. Redirecting to the
+  verification page either way, as above, tells the visitor nothing: an error
+  when no account exists would let anyone enumerate your users.
+</Callout>
+
+### Verify the code
+
+Add a `verify` method to the same controller. It finds the user back from the session, hands the submitted code to the static `verifyOTP` method and opens the session with the user it returns. When the session holds no known address, it responds exactly like a wrong code does, for the reason given above: a distinct response would reveal which addresses exist.
+
+```ts title="app/controllers/otp_controller.ts"
+export default class OTPController {
+  // ...
+
+  async verify({ request, response, session, auth }: HttpContext) {
+    const email = session.get("otp_email");
+    const account = email ? await User.findBy("email", email) : null;
+
+    if (!account) {
+      session.flash("error", "This code is invalid or has expired.");
+      return response.redirect().back();
+    }
+
+    const [user] = await User.verifyOTP(account.id, request.input("code"));
+
+    session.forget("otp_email");
+    await auth.use("web").login(user);
+
+    return response.redirect("/dashboard");
+  }
+}
+```
+
+```ts title="start/routes.ts"
+import router from "@adonisjs/core/services/router";
+const OTPController = () => import("#controllers/otp_controller");
+
+router.post("/auth/otp", [OTPController, "send"]);
+router.on("/auth/otp/verify").render("pages/otp_verify");
+router.post("/auth/otp/verify", [OTPController, "verify"]);
+```
+
+The `pages/otp_verify` template renders the form where the user types the code: a single `code` field posting to the verifying route.
+
+</div>
+
+The first verification consumes the code: submitting it again fails with an `E_INVALID_TOKEN` exception, exactly like an expired code does. A wrong code counts as a failed attempt, and the fifth one invalidates the code with an `E_TOO_MANY_ATTEMPTS` exception. See [Handling invalid codes](#handling-invalid-codes) to turn both into friendly messages.
+
+## Configuration
+
+### Global configuration
+
+The `otp` key of `config/sentinel.ts` accepts the following options:
+
+- `length`: Number of digits of the codes. Defaults to `6`.
+- `expiresIn`: The lifetime of the codes, in seconds or as a duration string like `"20m"` or `"1h"`. Defaults to `"20m"`.
+- `maximumFailedAttempts`: Number of wrong codes after which the pending code is invalidated. Defaults to `5`. Keep it low: each guess at a 6 digit code has a one in a million chance of landing.
+
+```ts title="config/sentinel.ts"
+import { defineConfig, tokens } from "@foadonis/sentinel";
+
+const sentinelConfig = defineConfig({
+  tokens: tokens.lucid(),
+  otp: {
+    length: 8,
+    expiresIn: "10m",
+    maximumFailedAttempts: 3,
+  },
+});
+
+export default sentinelConfig;
+```
+
+<Callout>
+  The codes are persisted by the token provider configured under `tokens`, in
+  the `sentinel_tokens` table shared with the magic link and password modules.
+  See the [installation guide](/docs/sentinel/getting-started) for the
+  migration.
+</Callout>
+
+### Mixin configuration
+
+The options given to `withOTP` become the defaults of every code the model generates. They are the `length`, `expiresIn` and `maximumFailedAttempts` options of the global configuration, plus:
+
+- `purpose`: The purpose of the codes. It is also the purpose `verifyOTP` and `invalidateOTPs` use by default, see [Purposes](#purposes).
+- `metadata`: Data attached to every code, see [Metadata](#metadata).
+
+```ts title="app/models/user.ts"
+export default class User extends compose(
+  BaseModel,
+  withOTP({ purpose: "signin", expiresIn: "5m" }),
+) {
+  // ...
+}
+```
+
+<Callout type="warn">
+  Codes are stored by primary key, not by model. When several models compose the
+  mixin, give each one its own purpose: a code generated for one model could
+  otherwise be verified as another, and revoking the codes of one would revoke
+  the codes of the other.
+</Callout>
+
+<Callout>
+  Options given when generating a code take precedence over the defaults of the
+  mixin, which take precedence over `config/sentinel.ts`. `metadata` is replaced
+  as a whole, not merged.
+</Callout>
+
+### Per-code options
+
+`generateOTP` accepts the same five options for a single code:
+
+```ts
+const code = await user.generateOTP({ length: 8, expiresIn: "5m" });
+```
+
+Whatever the options, the code comes back wrapped in a `Secret`: call `release` to read it when handing it to the mailer. `verifyOTP` accepts a string or a `Secret`.
+
+## Handling invalid codes
+
+`verifyOTP` throws an `E_INVALID_TOKEN` exception, with a `401` status, when the code is unknown, expired, already used, or created for another [purpose](#purposes). The mixin also throws it when the user of the code no longer exists.
+
+A wrong code additionally counts as a failed attempt. The attempt reaching the maximum invalidates the pending code and fails with an `E_TOO_MANY_ATTEMPTS` exception, with a `429` status. It extends `E_INVALID_TOKEN`, so a single handler catches both:
+
+```ts title="app/exceptions/handler.ts"
+import { ExceptionHandler, type HttpContext } from "@adonisjs/core/http";
+import { errors } from "@foadonis/sentinel";
+
+export default class HttpExceptionHandler extends ExceptionHandler {
+  async handle(error: unknown, ctx: HttpContext) {
+    if (error instanceof errors.E_INVALID_TOKEN && error.kind === "otp") {
+      ctx.session.flash(
+        "error",
+        error instanceof errors.E_TOO_MANY_ATTEMPTS
+          ? "Too many wrong codes. Request a new one."
+          : "This code is invalid or has expired.",
+      );
+      return ctx.response.redirect().back();
+    }
+
+    return super.handle(error, ctx);
+  }
+}
+```
+
+The magic link and password modules throw `E_INVALID_TOKEN` as well, hence the check on its `kind` property. Its `purpose` property carries the purpose the code was verified with.
+
+## Purposes
+
+When one-time passwords serve more than one flow (sign in, phone verification, confirming a sensitive action), tag each code with a purpose. A code is only accepted with the purpose it was created for, so a code meant to verify a phone number cannot be used to sign in. When generating the code:
+
+```ts
+const code = await user.generateOTP({ purpose: "phone_verification" });
+```
+
+When verifying it:
+
+```ts
+const [user] = await User.verifyOTP(account.id, request.input("code"), {
+  purpose: "phone_verification",
+});
+```
+
+A purpose given to the mixin is the default of `generateOTP`, `verifyOTP` and `invalidateOTPs`, so a model dedicated to one flow never needs the option. To reach the codes without purpose on such a model, pass `purpose: undefined` explicitly: the mixin only falls back to its default when the option is left out.
+
+Purposes also seal the flows off from one another: a code submitted with the wrong purpose does not count a failed attempt against the codes of the other purposes, and generating a code only replaces the pending one of the same purpose.
+
+## Metadata
+
+Attach arbitrary data to a code and get it back from the verification. The data is stored next to the code, never shown to the user, so it cannot be tampered with. A redirect target is the typical use:
+
+```ts
+const code = await user.generateOTP({ metadata: { redirect: "/billing" } });
+```
+
+```ts
+const [user, metadata] = await User.verifyOTP(
+  account.id,
+  request.input("code"),
+);
+
+return response.redirect(
+  typeof metadata?.redirect === "string" ? metadata.redirect : "/dashboard",
+);
+```
+
+`metadata` is typed `Record<string, unknown> | null`, `null` when the code was generated without metadata, so narrow the values before using them.
+
+<Callout type="warn">
+  Metadata is trusted at verification time, so validate it when you store it. In
+  the example above, accept `redirect` only when it is a path of your
+  application, starting with a single `/`, otherwise the flow becomes an open
+  redirect.
+</Callout>
+
+## Invalidating pending codes
+
+A single code per purpose is valid at a time: `generateOTP` invalidates the pending codes of the same purpose before creating the new one, so a user who requests two codes and types the older one gets an invalid code error. Call `invalidateOTPs` to cancel the pending codes without replacing them, when the user completes the flow another way for example:
+
+```ts
+await user.invalidateOTPs();
+```
+
+The revocation is scoped to one purpose: the one given with the `purpose` option, otherwise the default one of the mixin, otherwise the codes created without purpose. A model using several purposes revokes them one call at a time, and `purpose: undefined` reaches the codes without purpose on a model with a default, see [Purposes](#purposes). The magic link and password reset tokens of the user are never affected.
+
+```ts
+await user.invalidateOTPs({ purpose: "phone_verification" });
+```
+
+## Using the manager directly
+
+The mixin is a thin layer over the `OTPManager`, the default export of `@foadonis/sentinel/services/otp`. Reach for the manager when the subject of the codes is not a Lucid model. Inject it wherever the container constructs your classes, or import the service when you are outside a DI context:
+
+```ts title="app/services/device_pairing_service.ts"
+import { inject } from "@adonisjs/core";
+import { OTPManager } from "@foadonis/sentinel/otp";
+
+@inject()
+export default class DevicePairingService {
+  constructor(protected otp: OTPManager) {}
+}
+```
+
+```ts
+import otp from "@foadonis/sentinel/services/otp";
+```
+
+The manager exposes the same operations as the mixin, `generateOTP`, `verifyOTP` and `invalidateOTPs`, with the primary key of the subject as the first argument:
+
+```ts
+const code = await otp.generateOTP(device.id, { purpose: "pairing" });
+```
+
+`verifyOTP` returns the persisted token instead of a model: a `SentinelToken` carrying the `purpose`, `metadata` and `expiresAt` of the code.
+
+```ts
+const verified = await otp.verifyOTP(device.id, request.input("code"), {
+  purpose: "pairing",
+});
+```
+
+<Callout>
+  The mixin resolves the manager through the static `$otpManager` getter of
+  the model, on every access and never when the model is defined, so the model
+  can be imported before the application has booted. Pass a `manager` option,
+  an instance or a function returning one, when you construct the manager
+  yourself, in tests for example, or override the getter on the model to give
+  it a manager of its own.
+</Callout>
+
+## Under the hood
+
+- The digits are drawn from the cryptographic generator of the runtime, and the draws that would bias them are rejected, so every code is equally likely.
+- Only the scrypt hash of the code is persisted. A short numeric code carries too little entropy for a fast hash like SHA-256: scrypt keeps guessing expensive, so a leaked database does not leak the pending codes.
+- A code is consumed atomically: two concurrent verifications of the same code cannot both succeed. Expired and consumed codes are deleted as soon as they are seen.
+- Wrong guesses count against every pending code of the user and purpose, and a locked code is removed: after a lockout, even the right code is refused.
+
+## Next steps
+
+- [Magic Links](/docs/sentinel/features/magic-link): Send single-use links instead of codes when the user can click them
+- [TOTP Management](/docs/sentinel/features/totp): Let an authenticator app generate the codes, with nothing to send

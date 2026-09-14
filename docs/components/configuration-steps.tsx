@@ -17,8 +17,21 @@ export type ConfigurationSteps = {
   readonly assemblerHooks?: AssemblerHook[]
   readonly commands?: boolean
   readonly config?: string
+
+  /**
+   * Names of the migrations the command publishes, without the
+   * timestamp prefix
+   */
+  readonly migrations?: string[]
+
   readonly packageJsonImports?: PackageJsonImport[]
   readonly pkg: string
+
+  /**
+   * Providers registered inside the adonisrc.ts file. A bare name is
+   * resolved to the "{pkg}/providers/{name}" convention, an entry
+   * containing a slash is a complete import specifier used verbatim
+   */
   readonly providers?: string[]
 }
 
@@ -27,6 +40,7 @@ export const ConfigurationSteps = ({
   providers,
   commands = false,
   config,
+  migrations,
   assemblerHooks,
   packageJsonImports,
 }: ConfigurationSteps) => (
@@ -49,7 +63,12 @@ export const ConfigurationSteps = ({
               code={`{
   providers: [
     // ...other providers
-    ${providers.map((provider) => `() => import("${pkg}/providers/${provider}")`).join(',\n')}
+    ${providers
+      .map(
+        (provider) =>
+          `() => import("${provider.includes('/') ? provider : `${pkg}/providers/${provider}`}")`
+      )
+      .join(',\n')}
   ]
 }`}
               lang="ts"
@@ -80,6 +99,21 @@ export const ConfigurationSteps = ({
               A configuration file <code>config/{config}.ts</code> is generated containing the
               default configuration.
             </p>
+          </Step>
+        )}
+        {migrations && migrations.length > 0 && (
+          <Step>
+            <Heading as="h4">Publishes migrations</Heading>
+            <p>
+              Creates the following migrations inside the <code>database/migrations</code>{' '}
+              directory, prefixed with the current timestamp
+            </p>
+            <DynamicCodeBlock
+              code={migrations
+                .map((migration) => `database/migrations/<timestamp>_${migration}.ts`)
+                .join('\n')}
+              lang="txt"
+            />
           </Step>
         )}
         {assemblerHooks && assemblerHooks.length > 0 && (
