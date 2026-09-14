@@ -1,0 +1,20 @@
+diff --git a/lib/validator.js b/lib/validator.js
+index cca5e9c2216fd72d5da7eb63a38cebdf025e366e..c79bf06040d0752d6ba18d831256f648cffe799b 100644
+--- a/lib/validator.js
++++ b/lib/validator.js
+@@ -259,9 +259,12 @@ Validator.prototype.resolve = function resolve (schema, switchSchema, ctx) {
+   if (ctx.schemas[switchSchema]) {
+     return {subschema: ctx.schemas[switchSchema], switchSchema: switchSchema};
+   }
+-  // Else try walking the property pointer
+-  let parsed = new URL(switchSchema,'thismessage::/');
+-  let fragment = parsed.hash;
++  // Else try walking the property pointer. Split the fragment off by hand:
++  // `switchSchema` may be a bare path such as "/undefined#/$defs/x", which is
++  // not a valid relative reference against an opaque-path base and is rejected
++  // by spec-conformant WHATWG URL parsers (ada >= 4.0.0: Node.js >= 26, and 24.20+).
++  let hashIndex = switchSchema.indexOf('#');
++  let fragment = (hashIndex === -1 || hashIndex === switchSchema.length - 1) ? '' : switchSchema.substr(hashIndex);
+   var document = fragment && fragment.length && switchSchema.substr(0, switchSchema.length - fragment.length);
+   if (!document || !ctx.schemas[document]) {
+     throw new SchemaError("no such schema <" + switchSchema + ">", schema);

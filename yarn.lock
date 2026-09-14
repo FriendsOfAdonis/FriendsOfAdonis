@@ -13291,10 +13291,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jsonschema@npm:^1.4.1, jsonschema@npm:^1.5.0":
+"jsonschema@npm:1.5.0":
   version: 1.5.0
   resolution: "jsonschema@npm:1.5.0"
   checksum: 10c0/c24ddb8d741f02efc0da3ad9b597a275f6b595062903d3edbfaa535c3f9c4c98613df68da5cb6635ed9aeab30d658986fea61d7662fc5b2b92840d5a1e21235e
+  languageName: node
+  linkType: hard
+
+"jsonschema@patch:jsonschema@npm%3A1.5.0#~/.yarn/patches/jsonschema-npm-1.5.0-a1e4a2d9f7.patch":
+  version: 1.5.0
+  resolution: "jsonschema@patch:jsonschema@npm%3A1.5.0#~/.yarn/patches/jsonschema-npm-1.5.0-a1e4a2d9f7.patch::version=1.5.0&hash=07d501"
+  checksum: 10c0/6ddaa50071e800b800914d138c7f9d6df5f873b1acb79756fa6018e30b80ab1c25a0eb0a674624054d0a82abcf223b2d5c8866f581ac96a9e12b2f4d631d15b4
   languageName: node
   linkType: hard
 
