@@ -1,5 +1,11 @@
 # @foadonis/graphql
 
+## 1.2.1
+
+### Patch Changes
+
+- [#157](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/157) [`620e93f`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/620e93f69a447ec6abd9ef9c287fd86ca906d602) Thanks [@kerwanp](https://github.com/kerwanp)! - Cleanup disposable in `WebsocketSubscriptionDriver` for idempotent shutdown.
+
 ## 1.2.0
 
 ### Minor Changes
