@@ -116,18 +116,11 @@ export default class GraphQLServer<
   /**
    * Stops the GraphQL server.
    * When configured, also stops the PubSub and websocket server.
-   *
-   * The driver and websocket server are only stopped when `start` ran.
-   * The PubSub is always stopped: its clients may have connected on
-   * their first publish in a process that never started the server,
-   * such as an ace command or a queue worker.
    */
   async stop() {
-    const started = this.#driver.isReady
-
     await Promise.all([
-      started ? this.#driver.stop() : undefined,
-      started ? this.#subscription?.stop() : undefined,
+      this.#driver.stop(),
+      this.#subscription?.stop(),
       this.#pubSub?.stop(),
     ])
   }
