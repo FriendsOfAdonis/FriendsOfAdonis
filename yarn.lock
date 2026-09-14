@@ -2297,6 +2297,7 @@ __metadata:
   peerDependencies:
     "@adonisjs/core": ^7.0.0
     "@adonisjs/lucid": ^22.0.0
+    "@japa/api-client": ^3.0.0
     graphql: ^16.9.0
     graphql-scalars: ^1.24.0
     luxon: ^3.5.0
@@ -2312,6 +2313,9 @@ __metadata:
     graphql-yoga:
       optional: true
     ioredis:
+      optional: true
+  peerDependenciesMeta:
+    "@japa/api-client":
       optional: true
   languageName: unknown
   linkType: soft
