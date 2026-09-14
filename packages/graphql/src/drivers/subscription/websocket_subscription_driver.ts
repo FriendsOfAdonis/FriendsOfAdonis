@@ -91,6 +91,9 @@ export class WebsocketSubscriptionDriver implements SubscriptionDriverContract {
   async stop(): Promise<void> {
     await this.#disposable?.dispose()
     this.#ws?.close()
+
+    this.#disposable = undefined;
+    this.#ws = undefined;
   }
 
   use(middlewares: LazyImport<MiddlewareAsClass>[]) {
