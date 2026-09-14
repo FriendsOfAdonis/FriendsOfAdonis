@@ -12,4 +12,9 @@ export class UploadResolver {
   async testUpload(@Arg('file', () => FileScalar) file: File) {
     return `${file.name}:${await file.text()}`
   }
+
+  @Mutation(() => [String])
+  async testUploads(@Arg('files', () => [FileScalar]) files: File[]) {
+    return Promise.all(files.map(async (file) => `${file.name}:${await file.text()}`))
+  }
 }
