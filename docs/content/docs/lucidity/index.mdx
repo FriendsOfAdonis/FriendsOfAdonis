@@ -1,0 +1,39 @@
+---
+title: 'Introduction'
+icon: Album
+---
+
+Lucidity is a library for [Lucid ORM](https://lucid.adonisjs.com/) that bring missing features that are too opinionated or domain specific to be part of the official library.
+
+```ts tab="Soft delete"
+import { compose } from '@adonisjs/core/helpers'
+import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { SoftDeletable } from '@foadonis/lucidity'
+
+export default class Post extends compose(BaseModel, SoftDeletable) {
+  @column({ isPrimary: true })
+  declare id: number
+
+  @column()
+  declare title: string
+}
+
+await post.delete() // sets deletedAt
+await Post.query().withTrashed()
+```
+
+```ts tab="Polymorphic relationships"
+import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { morphMany, morphTo, type MorphTo } from '@foadonis/lucidity'
+import type { HasMany } from '@adonisjs/lucid/types/relations'
+
+export class Comment extends BaseModel {
+  @morphTo(() => [Post, Video])
+  declare commentable: MorphTo<[typeof Post, typeof Video]>
+}
+
+export class Post extends BaseModel {
+  @morphMany(() => Comment)
+  declare comments: HasMany<typeof Comment>
+}
+```

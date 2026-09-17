@@ -1,19 +1,21 @@
-import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
+import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import { ObjectType, Field, ID } from '@foadonis/graphql'
 import { DateTime } from 'luxon'
+import User from './user.ts'
 
 @ObjectType()
-export default class Recipe extends BaseModel {
+export default class Post extends BaseModel {
   @column({ isPrimary: true })
   @Field(() => ID)
   declare id: number
 
   @column()
-  declare expiresIn?: string | number
-
-  @column()
   @Field()
   declare title: string
+
+  @column()
+  declare userId: string
 
   @column()
   @Field(() => String, { nullable: true })
@@ -33,4 +35,7 @@ export default class Recipe extends BaseModel {
   @column.dateTime({ autoCreate: true })
   @Field()
   declare createdAt: DateTime
+
+  @belongsTo(() => User)
+  declare author: BelongsTo<typeof User>
 }
