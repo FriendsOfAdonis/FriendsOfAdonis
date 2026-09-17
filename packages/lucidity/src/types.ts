@@ -1,4 +1,7 @@
-export { type ModelWithSoftDeleteClass, type ModelWithSoftDeleteRow } from './mixins/soft_delete.ts'
+export {
+  type ModelWithSoftDeleteClass,
+  type ModelWithSoftDeleteRow,
+} from '../modules/soft_delete/types.ts'
 export {
   type MorphTo,
   type MorphOneOptions,
@@ -6,5 +9,5 @@ export {
   type MorphOneOrManyOptions,
   type MorphToOptions,
   type MorphQueryHook,
-} from './polymorphic/types.ts'
+} from '../modules/polymorphic/types.ts'
 export * from '../modules/filter/types.ts'

@@ -1,7 +1,7 @@
 import { BaseModel, belongsTo, column, hasMany, scope } from '@adonisjs/lucid/orm'
 import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import { DateTime } from 'luxon'
-import { filterScope } from '../../modules/filter/filter.ts'
+import { filterScope } from '../../modules/filter/main.ts'
 
 export class Post extends BaseModel {
   static filter = filterScope<typeof Post>({

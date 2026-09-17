@@ -31,6 +31,8 @@
   "exports": {
     ".": "./build/index.js",
     "./filter": "./build/modules/filter/main.js",
+    "./polymorphic": "./build/modules/polymorphic/main.js",
+    "./soft_delete": "./build/modules/soft_delete/main.js",
     "./types": "./build/src/types.js"
   },
   "publishConfig": {

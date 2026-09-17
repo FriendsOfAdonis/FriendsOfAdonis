@@ -2,7 +2,7 @@ import { test } from '@japa/runner'
 import { type ApplicationService } from '@adonisjs/core/types'
 import { BaseModel, column } from '@adonisjs/lucid/orm'
 import { type HasMany } from '@adonisjs/lucid/types/relations'
-import { morphMany } from '../../src/polymorphic/main.ts'
+import { morphMany } from '../../modules/polymorphic/main.ts'
 import { setupDatabase } from '../helpers.ts'
 
 class Sticker extends BaseModel {

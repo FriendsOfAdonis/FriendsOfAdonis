@@ -4,7 +4,7 @@ import { type Database } from '@adonisjs/lucid/database'
 import { setupDatabase } from '../helpers.ts'
 import { setupSchema } from './schema.ts'
 import { User } from './models.ts'
-import type { FilterScopeParams } from '../../modules/filter/types.ts'
+import type { FilterScopeParams } from '../../modules/filter/main.ts'
 
 test.group('Filter', (group) => {
   let db: Database

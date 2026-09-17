@@ -1,7 +1,7 @@
 import { test } from '@japa/runner'
 import { BaseModel, column } from '@adonisjs/lucid/orm'
 import { type HasMany, type HasOne } from '@adonisjs/lucid/types/relations'
-import { morphTo, type MorphTo } from '../../src/polymorphic/main.ts'
+import { morphTo, type MorphTo } from '../../modules/polymorphic/main.ts'
 import { Comment, Image, Post, Tag, Video } from './models.ts'
 
 /**

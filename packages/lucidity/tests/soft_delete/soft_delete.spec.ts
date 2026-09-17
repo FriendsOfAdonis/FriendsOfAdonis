@@ -1,13 +1,12 @@
 import { ApplicationService } from '@adonisjs/core/types'
 import { Database } from '@adonisjs/lucid/database'
 import { test } from '@japa/runner'
-import { setupDatabase } from './helpers.ts'
+import { setupDatabase } from '../helpers.ts'
 import { BaseModel, column } from '@adonisjs/lucid/orm'
 import { DateTime } from 'luxon'
 import Factory from '@adonisjs/lucid/factories'
 import { compose } from '@adonisjs/core/helpers'
-import { SoftDeletable } from '../src/mixins/soft_delete.ts'
-import { E_MODEL_DELETED } from '../src/exceptions.ts'
+import { E_MODEL_DELETED, SoftDeletable } from '../../modules/soft_delete/main.ts'
 
 async function cleanSchema(db: Database) {
   const connection = db.connection()

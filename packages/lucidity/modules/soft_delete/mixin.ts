@@ -1,45 +1,12 @@
-import '../extensions/soft_delete.ts'
+import './query_builder.ts'
 
 import { NormalizeConstructor } from '@adonisjs/core/types/helpers'
 import { BaseModel, beforeFetch, beforeFind, beforePaginate, column } from '@adonisjs/lucid/orm'
 import { DateTime } from 'luxon'
-import { E_MODEL_DELETED } from '../exceptions.ts'
+import { E_MODEL_DELETED } from './exceptions.ts'
+import type { ModelWithSoftDeleteClass, ModelWithSoftDeleteRow } from './types.ts'
 import { QueryClientContract } from '@adonisjs/lucid/types/database'
 import type { LucidModel, ModelQueryBuilderContract } from '@adonisjs/lucid/types/model'
-
-export type ModelWithSoftDeleteRow = {
-  /**
-   * Wether this row is marked to be force deleted.
-   */
-  $isForceDeleted: boolean
-
-  /**
-   * Time when the row has been soft deleted.
-   */
-  deletedAt: DateTime | null
-
-  /**
-   * Wether the row has been soft deleted.
-   */
-  get isTrashed(): boolean
-
-  /**
-   * Restore trashed row by setting
-   * deletedAt to null.
-   */
-  restore<T>(this: T): Promise<T>
-
-  /**
-   * Force delete the row.
-   */
-  forceDelete(): Promise<void>
-}
-
-export type ModelWithSoftDeleteClass<
-  Model extends NormalizeConstructor<typeof BaseModel> = NormalizeConstructor<typeof BaseModel>,
-> = Model & {
-  new (...args: any[]): ModelWithSoftDeleteRow
-}
 
 export function SoftDeletable<Model extends NormalizeConstructor<typeof BaseModel>>(
   superclass: Model

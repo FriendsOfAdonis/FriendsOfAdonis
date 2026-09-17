@@ -1,6 +1,6 @@
 import { BaseModel, column } from '@adonisjs/lucid/orm'
 import { type HasMany, type HasOne } from '@adonisjs/lucid/types/relations'
-import { morphMany, morphOne, morphTo, type MorphTo } from '../../src/polymorphic/main.ts'
+import { morphMany, morphOne, morphTo, type MorphTo } from '../../modules/polymorphic/main.ts'
 
 /**
  * Shared model graph used by the polymorphic specs.
