@@ -1,43 +1,39 @@
 ---
-title: "Introduction"
+title: 'Introduction'
 icon: Album
 ---
 
 Lucidity is a library for [Lucid ORM](https://lucid.adonisjs.com/) that bring missing features that are too opinionated or domain specific to be part of the official library.
 
-```ts tab="Model"
-export default class Post extends BaseModel {
-  @column.uuid({ isPrimary: true })
-  declare id: string;
+```ts tab="Soft delete"
+import { compose } from '@adonisjs/core/helpers'
+import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { SoftDeletable } from '@foadonis/lucidity'
 
-  @column.string()
-  declare title: string;
+export default class Post extends compose(BaseModel, SoftDeletable) {
+  @column({ isPrimary: true })
+  declare id: number
 
-  @column.text({ nullable: true })
-  declare description: string | null;
-
-  @column.updatedAt()
-  declare updatedAt: DateTime;
-
-  @column.createdAt()
-  declare createdAt: DateTime;
+  @column()
+  declare title: string
 }
+
+await post.delete() // sets deletedAt
+await Post.query().withTrashed()
 ```
 
-```ts tab="Migration"
-export default class extends BaseSchema {
-  async up() {
-    this.createTable("users", (table) => {
-      table.uuid("id").primary().notNullable();
-      table.string("title").notNullable();
-      table.text("description").nullable();
-      table.datetime("updated_at").notNullable();
-      table.datetime("created_at").notNullable();
-    });
-  }
+```ts tab="Polymorphic relationships"
+import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { morphMany, morphTo, type MorphTo } from '@foadonis/lucidity'
+import type { HasMany } from '@adonisjs/lucid/types/relations'
 
-  async down() {
-    this.dropTable("users");
-  }
+export class Comment extends BaseModel {
+  @morphTo(() => [Post, Video])
+  declare commentable: MorphTo<[typeof Post, typeof Video]>
+}
+
+export class Post extends BaseModel {
+  @morphMany(() => Comment)
+  declare comments: HasMany<typeof Comment>
 }
 ```

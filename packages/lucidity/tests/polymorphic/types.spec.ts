@@ -18,9 +18,9 @@ test.group('Polymorphic types', () => {
     expectTypeOf<Post['image']>().toEqualTypeOf<HasOne<typeof Image> | null>()
     expectTypeOf<Post['comments']>().toEqualTypeOf<HasMany<typeof Comment>>()
     expectTypeOf<Post['tags']>().toEqualTypeOf<HasMany<typeof Tag>>()
-    expectTypeOf<Comment['commentable']>().toEqualTypeOf<
-      MorphTo<[typeof Post, typeof Video]> | null
-    >()
+    expectTypeOf<Comment['commentable']>().toEqualTypeOf<MorphTo<
+      [typeof Post, typeof Video]
+    > | null>()
   })
 
   test('relation values resolve to the right model instance types', ({ expectTypeOf }) => {

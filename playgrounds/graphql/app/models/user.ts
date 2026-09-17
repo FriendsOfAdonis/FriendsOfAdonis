@@ -1,8 +1,7 @@
 import { DateTime } from 'luxon'
 import hash from '@adonisjs/core/services/hash'
 import { compose } from '@adonisjs/core/helpers'
-import { BaseModel } from '@adonisjs/lucid/orm'
-import { column } from '@foadonis/lucidity'
+import { BaseModel, column } from '@adonisjs/lucid/orm'
 import { withAuthFinder } from '@adonisjs/auth/mixins/lucid'
 import { Field, ObjectType } from '@foadonis/graphql'
 import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
@@ -16,18 +15,18 @@ const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
 export default class User extends compose(BaseModel, AuthFinder) {
   static accessTokens = DbAccessTokensProvider.forModel(User)
 
-  @column.increments({ isPrimary: true })
+  @column({ isPrimary: true })
   @Field()
   declare id: number
 
-  @column({ type: 'varchar' })
+  @column()
   declare test: string
 
-  @column.string({ isNullable: true })
+  @column()
   @Field(() => String, { nullable: true })
   declare fullName: string | null
 
-  @column.string({ isNullable: false, isUnique: true, maxLength: 254 })
+  @column()
   @Field()
   declare email: string
 

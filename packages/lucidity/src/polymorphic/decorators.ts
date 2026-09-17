@@ -11,9 +11,7 @@ import {
   type MorphToOptions,
 } from './types.ts'
 
-function normalizeOptions(
-  nameOrOptions?: string | MorphOneOrManyOptions
-): MorphOneOrManyOptions {
+function normalizeOptions(nameOrOptions?: string | MorphOneOrManyOptions): MorphOneOrManyOptions {
   if (typeof nameOrOptions === 'string') {
     return { morphName: nameOrOptions }
   }

@@ -1,24 +1,23 @@
-import { BaseModel, belongsTo } from '@adonisjs/lucid/orm'
+import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import { ObjectType, Field, ID } from '@foadonis/graphql'
-import { column } from '@foadonis/lucidity'
 import { DateTime } from 'luxon'
 import User from './user.ts'
 
 @ObjectType()
 export default class Post extends BaseModel {
-  @column.increments({ isPrimary: true })
+  @column({ isPrimary: true })
   @Field(() => ID)
   declare id: number
 
-  @column.string()
+  @column()
   @Field()
   declare title: string
 
-  @column.integer()
+  @column()
   declare userId: string
 
-  @column.text()
+  @column()
   @Field(() => String, { nullable: true })
   declare description: string | null
 

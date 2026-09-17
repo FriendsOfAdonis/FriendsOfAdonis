@@ -88,9 +88,7 @@ test.group('Polymorphic', (group) => {
     const second = await post.related('image').firstOrCreate({}, { url: 'b.jpg' })
     expect(second.id).toBe(first.id)
 
-    const updated = await post
-      .related('image')
-      .updateOrCreate({ id: first.id }, { url: 'c.jpg' })
+    const updated = await post.related('image').updateOrCreate({ id: first.id }, { url: 'c.jpg' })
     expect(updated.url).toBe('c.jpg')
     expect(await Image.query().count('* as total')).toHaveLength(1)
   })
@@ -103,9 +101,7 @@ test.group('Polymorphic', (group) => {
 
   test('morphMany: createMany stamps every row', async ({ expect }) => {
     const post = await Post.create({ title: 'Hello' })
-    const comments = await post
-      .related('comments')
-      .createMany([{ body: 'one' }, { body: 'two' }])
+    const comments = await post.related('comments').createMany([{ body: 'one' }, { body: 'two' }])
 
     expect(comments).toHaveLength(2)
     for (const comment of comments) {
@@ -170,7 +166,10 @@ test.group('Polymorphic', (group) => {
     const post = await Post.create({ title: 'Post' })
     const comment = await post.related('comments').create({ body: 'hi' })
 
-    const loaded = await Comment.query().where('id', comment.id).preload('commentable').firstOrFail()
+    const loaded = await Comment.query()
+      .where('id', comment.id)
+      .preload('commentable')
+      .firstOrFail()
     expect(loaded.commentable).toBeInstanceOf(Post)
     expect((loaded.commentable as Post).title).toBe('Post')
   })
@@ -195,14 +194,20 @@ test.group('Polymorphic', (group) => {
     // Video declares `static morphType = 'video'`, not the table name `videos`.
     expect(comment.commentableType).toBe('video')
 
-    const loaded = await Comment.query().where('id', comment.id).preload('commentable').firstOrFail()
+    const loaded = await Comment.query()
+      .where('id', comment.id)
+      .preload('commentable')
+      .firstOrFail()
     expect(loaded.commentable).toBeInstanceOf(Video)
   })
 
   test('morphTo: resolves to null when the morph columns are empty', async ({ expect }) => {
     const comment = await Comment.create({ body: 'orphan' })
 
-    const loaded = await Comment.query().where('id', comment.id).preload('commentable').firstOrFail()
+    const loaded = await Comment.query()
+      .where('id', comment.id)
+      .preload('commentable')
+      .firstOrFail()
     expect(loaded.commentable).toBeNull()
   })
 

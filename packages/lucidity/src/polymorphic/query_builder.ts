@@ -148,14 +148,10 @@ export class MorphQueryBuilder extends ModelQueryBuilder {
 
   paginate(page: number, perPage: number = 20): any {
     if (this.relation.single) {
-      throw new Error(
-        `Cannot paginate a "morphOne" relationship "(${this.relation.relationName})"`
-      )
+      throw new Error(`Cannot paginate a "morphOne" relationship "(${this.relation.relationName})"`)
     }
     if (this.isRelatedPreloadQuery) {
-      throw new Error(
-        `Cannot paginate relationship "${this.relation.relationName}" during preload`
-      )
+      throw new Error(`Cannot paginate relationship "${this.relation.relationName}" during preload`)
     }
     this.applyConstraints()
     return super.paginate(page, perPage)

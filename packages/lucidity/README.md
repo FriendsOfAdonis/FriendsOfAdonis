@@ -1,21 +1,21 @@
 <div align="center">
 <br/>
 
-## @foadonis/graphql
+## @foadonis/lucidity
 
-### Plug and play full-text search for your Adonis application
+### Quality of life improvements for the Lucid ORM
 
 <br/>
 </div>
 
 <div align="center">
 
-<!-- automd:badges color="brightgreen" license name="@foadonis/graphql" bundlephobia packagephobia -->
+<!-- automd:badges color="brightgreen" license name="@foadonis/lucidity" bundlephobia packagephobia -->
 
-[![npm version](https://img.shields.io/npm/v/@foadonis/graphql?color=brightgreen)](https://npmjs.com/package/@foadonis/graphql)
-[![npm downloads](https://img.shields.io/npm/dm/@foadonis/graphql?color=brightgreen)](https://npm.chart.dev/@foadonis/graphql)
-[![bundle size](https://img.shields.io/bundlephobia/minzip/@foadonis/graphql?color=brightgreen)](https://bundlephobia.com/package/@foadonis/graphql)
-[![install size](https://badgen.net/packagephobia/install/@foadonis/graphql?color=brightgreen)](https://packagephobia.com/result?p=@foadonis/graphql)
+[![npm version](https://img.shields.io/npm/v/@foadonis/lucidity?color=brightgreen)](https://npmjs.com/package/@foadonis/lucidity)
+[![npm downloads](https://img.shields.io/npm/dm/@foadonis/lucidity?color=brightgreen)](https://npm.chart.dev/@foadonis/lucidity)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/@foadonis/lucidity?color=brightgreen)](https://bundlephobia.com/package/@foadonis/lucidity)
+[![install size](https://badgen.net/packagephobia/install/@foadonis/lucidity?color=brightgreen)](https://packagephobia.com/result?p=@foadonis/lucidity)
 
 <!-- /automd -->
 
@@ -29,7 +29,7 @@
 
 ## Quickstart
 
-[Installation & Getting Started](https://friendsofadonis.github.io/docs/openapi/getting-started)
+[Installation & Getting Started](https://friendsofadonis.github.io/docs/lucidity)
 
 ## License
 

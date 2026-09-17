@@ -13,51 +13,51 @@ The `SoftDeletable` mixin brings this behaviour to any Lucid model. Once applied
 Apply the `SoftDeletable` mixin to your model with `compose`, and add a nullable `deleted_at` column to its table. The mixin declares the `deletedAt` property for you, so you do not need to add it to your model.
 
 ```ts tab="Model" title="app/models/post.ts"
-import { compose } from "@adonisjs/core/helpers";
-import { BaseModel, column } from "@adonisjs/lucid/orm";
-import { SoftDeletable } from "@foadonis/lucidity";
-import { DateTime } from "luxon";
+import { compose } from '@adonisjs/core/helpers'
+import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { SoftDeletable } from '@foadonis/lucidity'
+import { DateTime } from 'luxon'
 
 export default class Post extends compose(BaseModel, SoftDeletable) {
   @column({ isPrimary: true })
-  declare id: number;
+  declare id: number
 
   @column()
-  declare title: string;
+  declare title: string
 
   @column.dateTime({ autoCreate: true })
-  declare createdAt: DateTime;
+  declare createdAt: DateTime
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
-  declare updatedAt: DateTime;
+  declare updatedAt: DateTime
 }
 ```
 
 ```ts tab="Migration" title="database/migrations/create_posts_table.ts"
-import { BaseSchema } from "@adonisjs/lucid/schema";
+import { BaseSchema } from '@adonisjs/lucid/schema'
 
 export default class extends BaseSchema {
-  protected tableName = "posts";
+  protected tableName = 'posts'
 
   async up() {
     this.schema.createTable(this.tableName, (table) => {
-      table.increments("id");
-      table.string("title").notNullable();
-      table.timestamp("deleted_at").nullable();
-      table.timestamp("created_at").notNullable();
-      table.timestamp("updated_at").notNullable();
-    });
+      table.increments('id')
+      table.string('title').notNullable()
+      table.timestamp('deleted_at').nullable()
+      table.timestamp('created_at').notNullable()
+      table.timestamp('updated_at').notNullable()
+    })
   }
 
   async down() {
-    this.schema.dropTable(this.tableName);
+    this.schema.dropTable(this.tableName)
   }
 }
 ```
 
 <Callout>
-  The column name follows your model's naming strategy. With the default
-  strategy, `deletedAt` maps to a `deleted_at` column.
+  The column name follows your model's naming strategy. With the default strategy, `deletedAt` maps
+  to a `deleted_at` column.
 </Callout>
 
 ## Soft deleting a record
@@ -65,12 +65,12 @@ export default class extends BaseSchema {
 Call `delete()` as you normally would. Instead of issuing a `DELETE`, the mixin sets `deletedAt` to the current time and keeps the row in the database:
 
 ```ts
-const post = await Post.findOrFail(1);
+const post = await Post.findOrFail(1)
 
-await post.delete();
+await post.delete()
 
-post.isTrashed; // true
-post.deletedAt; // DateTime
+post.isTrashed // true
+post.deletedAt // DateTime
 ```
 
 The instance is not flagged as deleted (`post.$isDeleted` stays `false`) because the underlying row still exists. The `isTrashed` getter tells you whether a record is currently soft deleted.
@@ -78,7 +78,7 @@ The instance is not flagged as deleted (`post.$isDeleted` stays `false`) because
 You can also soft delete in bulk through the query builder. Every matched row is stamped, and no row is removed:
 
 ```ts
-await Post.query().where("status", "archived").delete();
+await Post.query().where('status', 'archived').delete()
 ```
 
 ## Querying records
@@ -86,13 +86,13 @@ await Post.query().where("status", "archived").delete();
 By default, every read query hides trashed records. This applies to `find`, `findBy`, `first`, `all`, `findOrFail`, `query`, pagination, as well as aggregate and `groupBy` queries:
 
 ```ts
-await Post.all(); // only records that are not trashed
-await Post.find(trashedId); // null, the record is hidden
-await Post.findOrFail(trashedId); // throws, the record is hidden
+await Post.all() // only records that are not trashed
+await Post.find(trashedId) // null, the record is hidden
+await Post.findOrFail(trashedId) // throws, the record is hidden
 
 // Aggregates respect the scope too: trashed rows are not counted
-const result = await Post.query().count("* as total");
-result[0].$extras.total;
+const result = await Post.query().count('* as total')
+result[0].$extras.total
 ```
 
 ### Including trashed records
@@ -100,7 +100,7 @@ result[0].$extras.total;
 Use `withTrashed()` to lift the default scope and include trashed records in the results:
 
 ```ts
-const posts = await Post.query().withTrashed();
+const posts = await Post.query().withTrashed()
 ```
 
 ### Only trashed records
@@ -108,7 +108,7 @@ const posts = await Post.query().withTrashed();
 Use `onlyTrashed()` to return exclusively the trashed records, for example to build a trash bin view:
 
 ```ts
-const trashed = await Post.query().onlyTrashed();
+const trashed = await Post.query().onlyTrashed()
 ```
 
 ## Restoring a record
@@ -116,12 +116,12 @@ const trashed = await Post.query().onlyTrashed();
 Restoring clears the `deletedAt` timestamp and makes the record visible to queries again:
 
 ```ts
-const post = await Post.query().withTrashed().where("id", 1).firstOrFail();
+const post = await Post.query().withTrashed().where('id', 1).firstOrFail()
 
-await post.restore();
+await post.restore()
 
-post.isTrashed; // false
-post.deletedAt; // null
+post.isTrashed // false
+post.deletedAt // null
 ```
 
 You need `withTrashed()` (or `onlyTrashed()`) to load the record first, since the default scope would otherwise hide it. Restoring a record that is not trashed is a no-op and returns the instance unchanged, unless it was force deleted, in which case `restore()` throws `E_MODEL_DELETED`.
@@ -129,7 +129,7 @@ You need `withTrashed()` (or `onlyTrashed()`) to load the record first, since th
 You can also restore in bulk through the query builder. A bulk restore is a direct update, so it is not filtered by the soft-delete scope and reaches trashed rows without an explicit `withTrashed()`:
 
 ```ts
-await Post.query().where("status", "archived").restore();
+await Post.query().where('status', 'archived').restore()
 ```
 
 ## Permanently deleting a record
@@ -137,46 +137,46 @@ await Post.query().where("status", "archived").restore();
 When you want a record gone for good, use `forceDelete()`. It issues a real `DELETE` and removes the row from the database, whether or not the record was already soft deleted:
 
 ```ts
-const post = await Post.query().withTrashed().where("id", 1).firstOrFail();
+const post = await Post.query().withTrashed().where('id', 1).firstOrFail()
 
-await post.forceDelete();
+await post.forceDelete()
 
-post.$isDeleted; // true
+post.$isDeleted // true
 ```
 
 The query builder exposes `forceDelete()` too, so you can permanently remove records in bulk:
 
 ```ts
 // Permanently delete every record matched by the query
-await Post.query().where("status", "archived").forceDelete();
+await Post.query().where('status', 'archived').forceDelete()
 
 // Empty the trash: permanently delete only the trashed records
-await Post.query().onlyTrashed().forceDelete();
+await Post.query().onlyTrashed().forceDelete()
 ```
 
 <Callout type="warn">
-  A force deleted record is gone for good and cannot be restored. Calling
-  `restore()` on one throws `E_MODEL_DELETED`.
+  A force deleted record is gone for good and cannot be restored. Calling `restore()` on one throws
+  `E_MODEL_DELETED`.
 </Callout>
 
 ## API reference
 
 ### Instance members
 
-| Member                       | Description                                                                              |
-| ---------------------------- | ---------------------------------------------------------------------------------------- |
-| `deletedAt: DateTime \| null` | Timestamp set when the record is soft deleted, `null` otherwise.                         |
-| `isTrashed: boolean`         | `true` when the record is currently soft deleted.                                        |
-| `delete()`                   | Soft deletes the record by stamping `deletedAt`.                                          |
-| `restore()`                  | Clears `deletedAt` and makes the record visible again. Throws `E_MODEL_DELETED` if the record was force deleted. |
-| `forceDelete()`              | Permanently removes the row from the database.                                           |
+| Member                        | Description                                                                                                      |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `deletedAt: DateTime \| null` | Timestamp set when the record is soft deleted, `null` otherwise.                                                 |
+| `isTrashed: boolean`          | `true` when the record is currently soft deleted.                                                                |
+| `delete()`                    | Soft deletes the record by stamping `deletedAt`.                                                                 |
+| `restore()`                   | Clears `deletedAt` and makes the record visible again. Throws `E_MODEL_DELETED` if the record was force deleted. |
+| `forceDelete()`               | Permanently removes the row from the database.                                                                   |
 
 ### Query builder methods
 
-| Method            | Description                                                          |
-| ----------------- | ------------------------------------------------------------------- |
-| `withTrashed()`   | Include trashed records in the results.                             |
-| `onlyTrashed()`   | Return only trashed records.                                        |
-| `delete()`        | Soft delete every matched record.                                   |
-| `restore()`       | Restore every matched record. Not filtered by the soft-delete scope. |
-| `forceDelete()`   | Permanently delete every matched record.                           |
+| Method          | Description                                                          |
+| --------------- | -------------------------------------------------------------------- |
+| `withTrashed()` | Include trashed records in the results.                              |
+| `onlyTrashed()` | Return only trashed records.                                         |
+| `delete()`      | Soft delete every matched record.                                    |
+| `restore()`     | Restore every matched record. Not filtered by the soft-delete scope. |
+| `forceDelete()` | Permanently delete every matched record.                             |

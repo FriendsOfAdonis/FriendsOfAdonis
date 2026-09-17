@@ -1,0 +1,38 @@
+---
+title: Getting Started
+description: 'Install @foadonis/lucidity in an AdonisJS application and pick the Lucid ORM features you need: soft delete, polymorphic relationships and query filtering.'
+icon: Rocket
+---
+
+Lucidity is a plain library: there is no provider to register and no configuration file to generate. Install the package, then import the features you need into your models.
+
+<div className="fd-steps [&_h2]:fd-step">
+
+## Installation
+
+Install the package using your package manager:
+
+```package-install
+npm install @foadonis/lucidity
+```
+
+Peer dependencies: `@adonisjs/core ^7.0.0`, `@adonisjs/lucid ^22.0.0`, `luxon ^3.5.0`.
+
+## Pick a feature
+
+Each feature is independent and opt-in. Use one, two or all of them in the same model.
+
+<Cards>
+  <Card
+    href="./soft-delete"
+    title="Soft Deletable Models"
+    description="Mark records as deleted instead of removing them, then restore or purge them."
+  />
+  <Card
+    href="./polymorphic-relationships"
+    title="Polymorphic Relationships"
+    description="Let a model belong to more than one type of parent through a single relationship."
+  />
+</Cards>
+
+</div>

@@ -182,7 +182,12 @@ export class MorphTo {
       const morphType = (parent as any)[this.morphTypeKey]
       const morphId = (parent as any)[this.morphForeignKey]
 
-      if (morphType === null || morphType === undefined || morphId === null || morphId === undefined) {
+      if (
+        morphType === null ||
+        morphType === undefined ||
+        morphId === null ||
+        morphId === undefined
+      ) {
         this.setRelated(parent, null)
         continue
       }
@@ -192,7 +197,9 @@ export class MorphTo {
         // Loose equality: morph id columns are often strings while primary keys
         // are numbers (and vice versa).
         // eslint-disable-next-line eqeqeq
-        return (row as any)[MORPH_TYPE] === morphType && (row as any)[RelatedModel.primaryKey] == morphId
+        return (
+          (row as any)[MORPH_TYPE] === morphType && (row as any)[RelatedModel.primaryKey] == morphId
+        )
       })
 
       this.setRelated(parent, match ?? null)
@@ -243,7 +250,12 @@ export class MorphToClient {
     const morphType = (this.parent as any)[this.relation.morphTypeKey]
     const morphId = (this.parent as any)[this.relation.morphForeignKey]
 
-    if (morphType === null || morphType === undefined || morphId === null || morphId === undefined) {
+    if (
+      morphType === null ||
+      morphType === undefined ||
+      morphId === null ||
+      morphId === undefined
+    ) {
       throw new Error(
         `Cannot query "${this.relation.relationName}": ` +
           `"${this.relation.model.name}.${this.relation.morphTypeKey}" and ` +
@@ -256,7 +268,10 @@ export class MorphToClient {
       throw new Error(unknownTypeMessage(this.relation, morphType))
     }
 
-    const query = RelatedModel.query({ client: this.client }).where(RelatedModel.primaryKey, morphId)
+    const query = RelatedModel.query({ client: this.client }).where(
+      RelatedModel.primaryKey,
+      morphId
+    )
     if (typeof this.relation.onQueryHook === 'function') {
       this.relation.onQueryHook(query)
     }
@@ -366,7 +381,12 @@ export class MorphToEagerQuery {
     for (const parent of this.parents) {
       const morphType = (parent as any)[relation.morphTypeKey]
       const morphId = (parent as any)[relation.morphForeignKey]
-      if (morphType === null || morphType === undefined || morphId === null || morphId === undefined) {
+      if (
+        morphType === null ||
+        morphType === undefined ||
+        morphId === null ||
+        morphId === undefined
+      ) {
         continue
       }
       let ids = idsByType.get(morphType)
@@ -396,7 +416,11 @@ export class MorphToEagerQuery {
       for (const [method, args] of this.recordedOps) {
         // Skip a nested relation op when this candidate model does not define
         // the relation, so mixed-type morphTo preloads degrade gracefully.
-        if (RELATION_OPS.has(method) && typeof args[0] === 'string' && !RelatedModel.$hasRelation(args[0])) {
+        if (
+          RELATION_OPS.has(method) &&
+          typeof args[0] === 'string' &&
+          !RelatedModel.$hasRelation(args[0])
+        ) {
           continue
         }
         const fn = (query as any)[method]
@@ -413,7 +437,10 @@ export class MorphToEagerQuery {
       )
       if (selected) {
         const pkColumn = RelatedModel.$getColumn(RelatedModel.primaryKey)?.columnName
-        if (!selected.value.includes(pkColumn) && !selected.value.includes(RelatedModel.primaryKey)) {
+        if (
+          !selected.value.includes(pkColumn) &&
+          !selected.value.includes(RelatedModel.primaryKey)
+        ) {
           query.select(RelatedModel.primaryKey)
         }
       }
