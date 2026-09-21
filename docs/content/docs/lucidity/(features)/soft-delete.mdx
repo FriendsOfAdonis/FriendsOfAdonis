@@ -1,0 +1,330 @@
+---
+icon: Trash
+title: Soft Deletable Models
+description: Mark records as deleted instead of removing them, then query, restore, or permanently delete them.
+---
+
+A soft delete marks a record as deleted by stamping a `deletedAt` timestamp on it instead of removing the row from the database. The record stops appearing in your queries, but the data is still there: you can restore it later, or delete it for good once you no longer need it.
+
+The `SoftDeletable` mixin brings this behaviour to any Lucid model. Once applied, `delete()` becomes a soft delete, every query automatically hides trashed records, and you gain `restore()` and `forceDelete()` to bring records back or remove them permanently.
+
+## Setup
+
+Apply the `SoftDeletable` mixin to your model with `compose`, and add a nullable `deleted_at` column to its table. The mixin declares the `deletedAt` property for you, so you do not need to add it to your model.
+
+```ts tab="Model" title="app/models/post.ts"
+import { compose } from '@adonisjs/core/helpers'
+import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { SoftDeletable } from '@foadonis/lucidity'
+import { DateTime } from 'luxon'
+
+export default class Post extends compose(BaseModel, SoftDeletable) {
+  @column({ isPrimary: true })
+  declare id: number
+
+  @column()
+  declare title: string
+
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+```
+
+```ts tab="Migration" title="database/migrations/create_posts_table.ts"
+import { BaseSchema } from '@adonisjs/lucid/schema'
+
+export default class extends BaseSchema {
+  protected tableName = 'posts'
+
+  async up() {
+    this.schema.createTable(this.tableName, (table) => {
+      table.increments('id')
+      table.string('title').notNullable()
+      table.timestamp('deleted_at').nullable()
+      table.timestamp('created_at').notNullable()
+      table.timestamp('updated_at').notNullable()
+    })
+  }
+
+  async down() {
+    this.schema.dropTable(this.tableName)
+  }
+}
+```
+
+<Callout>
+  The column name follows your model's naming strategy. With the default strategy, `deletedAt` maps
+  to a `deleted_at` column.
+</Callout>
+
+## Soft deleting a record
+
+Call `delete()` as you normally would. Instead of issuing a `DELETE`, the mixin sets `deletedAt` to the current time and keeps the row in the database:
+
+```ts
+const post = await Post.findOrFail(1)
+
+await post.delete()
+
+post.isTrashed // true
+post.deletedAt // DateTime
+```
+
+The instance is not flagged as deleted (`post.$isDeleted` stays `false`) because the underlying row still exists. The `isTrashed` getter tells you whether a record is currently soft deleted.
+
+You can also soft delete in bulk through the query builder. Every matched row is stamped, and no row is removed. Rows that are already trashed keep their original `deletedAt`:
+
+```ts
+await Post.query().where('status', 'archived').delete()
+```
+
+## Querying records
+
+By default, every query hides trashed records. This applies to `find`, `findBy`, `first`, `all`, `findOrFail`, `query`, `pojo()` queries, pagination, as well as aggregate and `groupBy` queries:
+
+```ts
+await Post.all() // only records that are not trashed
+await Post.find(trashedId) // null, the record is hidden
+await Post.findOrFail(trashedId) // throws, the record is hidden
+
+// Aggregates respect the scope too: trashed rows are not counted
+const result = await Post.query().count('* as total')
+result[0].$extras.total
+```
+
+Bulk updates are scoped as well, so `Post.query().update()` leaves trashed records untouched. A loaded record always reaches its own row though: `save()` and `refresh()` keep working on a trashed record.
+
+### Including trashed records
+
+Use `withTrashed()` to lift the default scope and include trashed records in the results:
+
+```ts
+const posts = await Post.query().withTrashed()
+```
+
+### Only trashed records
+
+Use `onlyTrashed()` to return exclusively the trashed records, for example to build a trash bin view:
+
+```ts
+const trashed = await Post.query().onlyTrashed()
+```
+
+Calling `onlyTrashed()` on a model that does not use the `SoftDeletable` mixin throws `E_NOT_SOFT_DELETABLE`.
+
+## Relationships
+
+Relationships hide trashed records too. Related queries, preloads and relationship subqueries (`has`, `whereHas`, `doesntHave`, `withCount` and `withAggregate`) all ignore the trashed rows of a soft deletable related model:
+
+```ts
+// Only the comments that are not trashed
+const comments = await post.related('comments').query()
+
+// Posts having at least one comment that is not trashed
+const commented = await Post.query().has('comments')
+
+// Counts only the comments that are not trashed
+const counted = await Post.query().withCount('comments')
+```
+
+Each query keeps its own scope, so calling `withTrashed()` on the parent query does not reach the relationship queries. Opt out inside the relationship callback instead:
+
+```ts
+const posts = await Post.query()
+  .whereHas('comments', (query) => query.withTrashed())
+  .preload('comments', (query) => query.onlyTrashed())
+  .withCount('comments', (query) => query.withTrashed())
+```
+
+### Has many through
+
+When the through model of a `hasManyThrough` relationship is soft deletable, the related records reached through its trashed rows are hidden as well. For example, the posts of a trashed user no longer show up among the posts of their country:
+
+```ts title="app/models/country.ts"
+import { BaseModel, hasManyThrough } from '@adonisjs/lucid/orm'
+import type { HasManyThrough } from '@adonisjs/lucid/types/relations'
+import Post from '#models/post'
+import User from '#models/user'
+
+export default class Country extends BaseModel {
+  @hasManyThrough([() => Post, () => User])
+  declare posts: HasManyThrough<typeof Post>
+}
+```
+
+```ts
+// Only the posts of the users that are not trashed
+const posts = await country.related('posts').query()
+```
+
+Use `withTrashedParents()` to include them. It is independent from `withTrashed()`, which still applies to the related model only:
+
+```ts
+const posts = await country.related('posts').query().withTrashedParents()
+
+const countries = await Country.query().whereHas('posts', (query) => {
+  query.withTrashedParents()
+})
+```
+
+Calling `withTrashedParents()` on a query that does not belong to a `hasManyThrough` relationship throws `E_NOT_THROUGH_RELATION`.
+
+## Restoring a record
+
+Restoring clears the `deletedAt` timestamp and makes the record visible to queries again:
+
+```ts
+const post = await Post.query().withTrashed().where('id', 1).firstOrFail()
+
+await post.restore()
+
+post.isTrashed // false
+post.deletedAt // null
+```
+
+You need `withTrashed()` (or `onlyTrashed()`) to load the record first, since the default scope would otherwise hide it. Restoring a record that is not trashed is a no-op and returns the instance unchanged, unless it was force deleted, in which case `restore()` throws `E_MODEL_DELETED`.
+
+You can also restore in bulk through the query builder. A bulk restore always reaches the trashed rows, so it does not need an explicit `withTrashed()`:
+
+```ts
+await Post.query().where('status', 'archived').restore()
+```
+
+## Permanently deleting a record
+
+When you want a record gone for good, use `forceDelete()`. It issues a real `DELETE` and removes the row from the database, whether or not the record was already soft deleted:
+
+```ts
+const post = await Post.query().withTrashed().where('id', 1).firstOrFail()
+
+await post.forceDelete()
+
+post.$isDeleted // true
+```
+
+The query builder exposes `forceDelete()` too, so you can permanently remove records in bulk:
+
+```ts
+// Permanently delete every record matched by the query
+await Post.query().where('status', 'archived').forceDelete()
+
+// Empty the trash: permanently delete only the trashed records
+await Post.query().onlyTrashed().forceDelete()
+```
+
+<Callout type="warn">
+  A force deleted record is gone for good and cannot be restored. Calling `restore()` on one throws
+  `E_MODEL_DELETED`.
+</Callout>
+
+## Hooks
+
+Soft deletes and restores run model hooks like any other write. Each method runs its own pair of hooks, and never the save or update hooks:
+
+| Method          | Hooks                              |
+| --------------- | ---------------------------------- |
+| `delete()`      | `beforeDelete` and `afterDelete`   |
+| `forceDelete()` | `beforeDelete` and `afterDelete`   |
+| `restore()`     | `beforeRestore` and `afterRestore` |
+
+A soft delete or a restore only writes `deletedAt` and the `autoUpdate` date columns, such as `updatedAt`. Any other pending change on the model stays unsaved until you call `save()`.
+
+Deleting a record that is already trashed, or restoring one that is not, does nothing and runs no hooks. Query builder methods never run hooks, as with any Lucid query.
+
+### Telling a soft delete from a force delete
+
+The delete hooks run for both kinds of delete. Check `$isForceDeleting` to run code only when the row is removed for good, such as deleting files that `restore()` could not bring back:
+
+```ts title="app/models/post.ts"
+import { compose } from '@adonisjs/core/helpers'
+import drive from '@adonisjs/drive/services/main'
+import { afterDelete, BaseModel, column } from '@adonisjs/lucid/orm'
+import { SoftDeletable } from '@foadonis/lucidity'
+
+export default class Post extends compose(BaseModel, SoftDeletable) {
+  @column()
+  declare coverPath: string
+
+  @afterDelete()
+  static async deleteCover(post: Post) {
+    if (!post.$isForceDeleting) return
+    await drive.use().delete(post.coverPath)
+  }
+}
+```
+
+Inside the delete hooks, `$isDeleted` is `true` only on a force delete, since a soft deleted row still exists.
+
+### Restore hooks
+
+Register restore hooks with the `beforeRestore` and `afterRestore` decorators. For example, to trash the comments of a post along with it, and restore them with it:
+
+```ts title="app/models/post.ts"
+import { compose } from '@adonisjs/core/helpers'
+import { afterDelete, BaseModel, column } from '@adonisjs/lucid/orm'
+import { afterRestore, SoftDeletable } from '@foadonis/lucidity'
+import Comment from '#models/comment'
+
+export default class Post extends compose(BaseModel, SoftDeletable) {
+  @column({ isPrimary: true })
+  declare id: number
+
+  @afterDelete()
+  static async trashComments(post: Post) {
+    if (post.$isForceDeleting) return
+    await Comment.query().where('postId', post.id).delete()
+  }
+
+  @afterRestore()
+  static async restoreComments(post: Post) {
+    await Comment.query().where('postId', post.id).restore()
+  }
+}
+```
+
+### Skipping hooks
+
+Each method has a quiet variant that does the same work without running any hook, like Lucid's `saveQuietly()` and `deleteQuietly()`:
+
+```ts
+await post.deleteQuietly()
+await post.restoreQuietly()
+await post.forceDeleteQuietly()
+```
+
+## API reference
+
+### Instance members
+
+| Member                        | Description                                                                                                      |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `deletedAt: DateTime \| null` | Timestamp set when the record is soft deleted, `null` otherwise.                                                 |
+| `isTrashed: boolean`          | `true` when the record is currently soft deleted.                                                                |
+| `$isForceDeleting: boolean`   | `true` while `forceDelete()` or `forceDeleteQuietly()` runs, so delete hooks can tell a force delete apart.      |
+| `delete()`                    | Soft deletes the record by stamping `deletedAt`. Does nothing when the record is already trashed.                |
+| `deleteQuietly()`             | Same as `delete()` without running hooks.                                                                        |
+| `restore()`                   | Clears `deletedAt` and makes the record visible again. Throws `E_MODEL_DELETED` if the record was force deleted. |
+| `restoreQuietly()`            | Same as `restore()` without running hooks.                                                                       |
+| `forceDelete()`               | Permanently removes the row from the database.                                                                   |
+| `forceDeleteQuietly()`        | Same as `forceDelete()` without running hooks.                                                                   |
+
+### Query builder methods
+
+| Method                 | Description                                                                              |
+| ---------------------- | ---------------------------------------------------------------------------------------- |
+| `withTrashed()`        | Include trashed records in the results.                                                  |
+| `onlyTrashed()`        | Return only trashed records. Throws `E_NOT_SOFT_DELETABLE` on a model without the mixin. |
+| `withTrashedParents()` | Include the records reached through trashed rows of a `hasManyThrough` relationship.     |
+| `delete()`             | Soft delete every matched record that is not trashed yet.                                |
+| `restore()`            | Restore every matched record, without an explicit `withTrashed()`.                       |
+| `forceDelete()`        | Permanently delete every matched record, trashed or not.                                 |
+
+### Decorators
+
+| Decorator          | Description                                                           |
+| ------------------ | --------------------------------------------------------------------- |
+| `@beforeRestore()` | Runs the decorated static method before a trashed record is restored. |
+| `@afterRestore()`  | Runs the decorated static method after a trashed record is restored.  |

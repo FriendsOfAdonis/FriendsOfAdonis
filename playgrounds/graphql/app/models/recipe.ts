@@ -6,10 +6,13 @@ import { DateTime } from 'luxon'
 export default class Recipe extends BaseModel {
   @column({ isPrimary: true })
   @Field(() => ID)
-  declare id: string
+  declare id: number
 
   @column()
   declare expiresIn?: string | number
+
+  @column()
+  @Field()
   declare title: string
 
   @column()

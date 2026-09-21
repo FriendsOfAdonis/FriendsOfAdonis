@@ -73,6 +73,11 @@ export const packages: Record<string, PackageInfo> = {
     description:
       'A typed, driver-based feature flag system for AdonisJS, with scopes, Edge helpers and test fakes.',
   },
+  'lucidity': {
+    package: '@foadonis/lucidity',
+    name: 'Adonis Lucidity',
+    description: 'Quality of life improvements for Lucid ORM',
+  },
 }
 
 export const baseUrl =
