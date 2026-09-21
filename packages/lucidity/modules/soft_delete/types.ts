@@ -4,9 +4,11 @@ import type { DateTime } from 'luxon'
 
 export type ModelWithSoftDeleteRow = {
   /**
-   * Wether this row is marked to be force deleted.
+   * Whether a force delete is in progress on this row. It is `true` only
+   * while `forceDelete()` or `forceDeleteQuietly()` runs, so delete hooks
+   * can tell a force delete from a soft delete.
    */
-  $isForceDeleted: boolean
+  $isForceDeleting: boolean
 
   /**
    * Time when the row has been soft deleted.
@@ -25,9 +27,19 @@ export type ModelWithSoftDeleteRow = {
   restore<T>(this: T): Promise<T>
 
   /**
+   * Same as `restore()` without invoking hooks.
+   */
+  restoreQuietly<T>(this: T): Promise<T>
+
+  /**
    * Force delete the row.
    */
   forceDelete(): Promise<void>
+
+  /**
+   * Same as `forceDelete()` without invoking hooks.
+   */
+  forceDeleteQuietly(): Promise<void>
 }
 
 export type ModelWithSoftDeleteClass<

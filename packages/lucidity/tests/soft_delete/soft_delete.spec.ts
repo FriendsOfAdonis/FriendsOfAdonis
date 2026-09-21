@@ -2,11 +2,26 @@ import { ApplicationService } from '@adonisjs/core/types'
 import { Database } from '@adonisjs/lucid/database'
 import { test } from '@japa/runner'
 import { setupDatabase } from '../helpers.ts'
-import { BaseModel, column } from '@adonisjs/lucid/orm'
+import {
+  afterDelete,
+  afterSave,
+  afterUpdate,
+  BaseModel,
+  beforeDelete,
+  beforeSave,
+  beforeUpdate,
+  column,
+} from '@adonisjs/lucid/orm'
+import { errors } from '@adonisjs/lucid'
 import { DateTime } from 'luxon'
 import Factory from '@adonisjs/lucid/factories'
 import { compose } from '@adonisjs/core/helpers'
-import { E_MODEL_DELETED, SoftDeletable } from '../../modules/soft_delete/main.ts'
+import {
+  afterRestore,
+  beforeRestore,
+  E_MODEL_DELETED,
+  SoftDeletable,
+} from '../../modules/soft_delete/main.ts'
 
 async function cleanSchema(db: Database) {
   const connection = db.connection()
@@ -57,6 +72,93 @@ const UserFactory = Factory.define(User, ({ faker }) => {
   })
   .build()
 
+/**
+ * Hooks run on `HookedUser`, in order, and the state of the row seen by each
+ * delete hook.
+ */
+const hookCalls: string[] = []
+const deleteHookStates: {
+  hook: string
+  isForceDeleting: boolean
+  isDeleted: boolean
+  isTrashed: boolean
+}[] = []
+
+/**
+ * Makes the `beforeDelete` hook of `HookedUser` throw during a force delete.
+ */
+let failForceDelete = false
+
+function trackDeleteHook(hook: string, user: HookedUser) {
+  hookCalls.push(hook)
+  deleteHookStates.push({
+    hook,
+    isForceDeleting: user.$isForceDeleting,
+    isDeleted: user.$isDeleted,
+    isTrashed: user.isTrashed,
+  })
+}
+
+class HookedUser extends compose(BaseModel, SoftDeletable) {
+  static table = 'users'
+
+  @column()
+  declare id: number
+
+  @column()
+  declare firstName: string
+
+  @column()
+  declare lastName: string
+
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+
+  @beforeSave()
+  static trackBeforeSave() {
+    hookCalls.push('before:save')
+  }
+
+  @afterSave()
+  static trackAfterSave() {
+    hookCalls.push('after:save')
+  }
+
+  @beforeUpdate()
+  static trackBeforeUpdate() {
+    hookCalls.push('before:update')
+  }
+
+  @afterUpdate()
+  static trackAfterUpdate() {
+    hookCalls.push('after:update')
+  }
+
+  @beforeDelete()
+  static trackBeforeDelete(user: HookedUser) {
+    trackDeleteHook('before:delete', user)
+    if (failForceDelete && user.$isForceDeleting) throw new Error('force delete failed')
+  }
+
+  @afterDelete()
+  static trackAfterDelete(user: HookedUser) {
+    trackDeleteHook('after:delete', user)
+  }
+
+  @beforeRestore()
+  static trackBeforeRestore() {
+    hookCalls.push('before:restore')
+  }
+
+  @afterRestore()
+  static trackAfterRestore() {
+    hookCalls.push('after:restore')
+  }
+}
+
 test.group('SoftDelete', (group) => {
   let db: Database
   let app: ApplicationService
@@ -80,6 +182,20 @@ test.group('SoftDelete', (group) => {
   })
 
   group.each.setup(() => db.connection().truncateAllTables())
+
+  group.each.setup(() => {
+    failForceDelete = false
+  })
+
+  /**
+   * Creates a `HookedUser`, then clears the hooks tracked during its creation.
+   */
+  async function createHookedUser(attributes: Partial<{ deletedAt: DateTime }> = {}) {
+    const user = await HookedUser.create({ firstName: 'Jane', lastName: 'Doe', ...attributes })
+    hookCalls.length = 0
+    deleteHookStates.length = 0
+    return user
+  }
 
   /**
    * Counts the rows physically present in the table, bypassing the model and
@@ -432,5 +548,214 @@ test.group('SoftDelete', (group) => {
       .groupBy('lastName')
 
     expect(Number(rows[0].$extras.total)).toBe(3)
+  })
+
+  /**
+   * ---------------------------------------------------------------------------
+   * Hooks
+   * ---------------------------------------------------------------------------
+   */
+
+  test('soft delete should only run the delete hooks', async ({ expect }) => {
+    const user = await createHookedUser()
+
+    await user.delete()
+
+    expect(hookCalls).toEqual(['before:delete', 'after:delete'])
+  })
+
+  test('delete hooks should see a soft delete as not force deleting', async ({ expect }) => {
+    const user = await createHookedUser()
+
+    await user.delete()
+
+    expect(deleteHookStates).toEqual([
+      { hook: 'before:delete', isForceDeleting: false, isDeleted: false, isTrashed: false },
+      { hook: 'after:delete', isForceDeleting: false, isDeleted: false, isTrashed: true },
+    ])
+  })
+
+  test('force delete should run the delete hooks while force deleting', async ({ expect }) => {
+    const user = await createHookedUser()
+
+    await user.forceDelete()
+
+    expect(deleteHookStates).toEqual([
+      { hook: 'before:delete', isForceDeleting: true, isDeleted: false, isTrashed: false },
+      { hook: 'after:delete', isForceDeleting: true, isDeleted: true, isTrashed: false },
+    ])
+    expect(user.$isForceDeleting).toBe(false)
+  })
+
+  test('force delete should run the delete hooks on a trashed row', async ({ expect }) => {
+    const user = await createHookedUser({ deletedAt: DateTime.now() })
+
+    await user.forceDelete()
+
+    expect(hookCalls).toEqual(['before:delete', 'after:delete'])
+    expect(await countRows()).toBe(0)
+  })
+
+  test('deleteQuietly should soft delete without running hooks', async ({ expect }) => {
+    const user = await createHookedUser()
+
+    await user.deleteQuietly()
+
+    expect(hookCalls).toEqual([])
+    expect(user.isTrashed).toBe(true)
+    expect(user.$isDeleted).toBe(false)
+    expect(await countRows()).toBe(1)
+
+    // The instance must stay usable after a quiet soft delete.
+    await user.restore()
+    expect(await HookedUser.find(user.id)).not.toBeNull()
+  })
+
+  test('forceDeleteQuietly should remove the row without running hooks', async ({ expect }) => {
+    const user = await createHookedUser()
+
+    await user.forceDeleteQuietly()
+
+    expect(hookCalls).toEqual([])
+    expect(user.$isDeleted).toBe(true)
+    expect(user.$isForceDeleting).toBe(false)
+    expect(await countRows()).toBe(0)
+  })
+
+  test('restore should only run the restore hooks', async ({ expect }) => {
+    const user = await createHookedUser({ deletedAt: DateTime.now() })
+
+    await user.restore()
+
+    expect(hookCalls).toEqual(['before:restore', 'after:restore'])
+    expect(user.isTrashed).toBe(false)
+  })
+
+  test('restoreQuietly should restore without running hooks', async ({ expect }) => {
+    const user = await createHookedUser({ deletedAt: DateTime.now() })
+
+    const result = await user.restoreQuietly()
+
+    expect(result).toBe(user)
+    expect(hookCalls).toEqual([])
+    expect(user.isTrashed).toBe(false)
+    expect((await rawRow(user.id)).deleted_at).toBeNull()
+  })
+
+  test('deleting a trashed row should be a no-op', async ({ expect }) => {
+    const user = await createHookedUser({ deletedAt: DateTime.now().minus({ days: 1 }) })
+    const deletedAt = user.deletedAt
+    const before = await rawRow(user.id)
+
+    await user.delete()
+    await user.deleteQuietly()
+
+    expect(hookCalls).toEqual([])
+    expect(user.deletedAt).toBe(deletedAt)
+    expect(await rawRow(user.id)).toEqual(before)
+  })
+
+  test('restoring a row that is not trashed should be a no-op', async ({ expect }) => {
+    const user = await createHookedUser()
+
+    await user.restore()
+    await user.restoreQuietly()
+
+    expect(hookCalls).toEqual([])
+  })
+
+  test('should throw when deleting a force deleted row', async ({ expect }) => {
+    const user = await createHookedUser()
+    await user.forceDelete()
+
+    await expect(user.delete()).rejects.toThrow(errors.E_MODEL_DELETED)
+    await expect(user.deleteQuietly()).rejects.toThrow(errors.E_MODEL_DELETED)
+  })
+
+  test('should throw when quietly restoring a force deleted row', async ({ expect }) => {
+    const user = await createHookedUser()
+    await user.forceDelete()
+
+    await expect(user.restoreQuietly()).rejects.toThrow(E_MODEL_DELETED)
+  })
+
+  test('a failed force delete should not turn the next delete into a force delete', async ({
+    expect,
+  }) => {
+    const user = await createHookedUser()
+
+    failForceDelete = true
+    await expect(user.forceDelete()).rejects.toThrow('force delete failed')
+    expect(user.$isForceDeleting).toBe(false)
+
+    failForceDelete = false
+    await user.delete()
+
+    // The row must have been soft deleted, not removed.
+    expect(user.isTrashed).toBe(true)
+    expect(await countRows()).toBe(1)
+  })
+
+  /**
+   * ---------------------------------------------------------------------------
+   * Columns written by a soft delete and a restore
+   * ---------------------------------------------------------------------------
+   */
+
+  test('soft delete should bump updatedAt', async ({ expect }) => {
+    const created = await UserFactory.create()
+    await db.from('users').where('id', created.id).update({ updated_at: '2020-01-01 00:00:00' })
+    const user = await User.findOrFail(created.id)
+
+    await user.delete()
+
+    expect(user.updatedAt.year).not.toBe(2020)
+    expect(DateTime.fromSQL((await rawRow(user.id)).updated_at).year).not.toBe(2020)
+  })
+
+  test('restore should bump updatedAt', async ({ expect }) => {
+    const created = await UserFactory.apply('trashed').create()
+    await db.from('users').where('id', created.id).update({ updated_at: '2020-01-01 00:00:00' })
+    const user = await User.query().withTrashed().where('id', created.id).firstOrFail()
+
+    await user.restore()
+
+    expect(user.updatedAt.year).not.toBe(2020)
+    expect(DateTime.fromSQL((await rawRow(user.id)).updated_at).year).not.toBe(2020)
+  })
+
+  test('soft delete should leave other pending changes unsaved', async ({ expect }) => {
+    const user = await UserFactory.merge({ firstName: 'Jane' }).create()
+    user.firstName = 'John'
+
+    await user.delete()
+
+    const row = await rawRow(user.id)
+    expect(row.first_name).toBe('Jane')
+    expect(row.deleted_at).not.toBeNull()
+    expect(user.$dirty).toEqual({ firstName: 'John' })
+  })
+
+  test('restore should leave other pending changes unsaved', async ({ expect }) => {
+    const user = await UserFactory.apply('trashed').merge({ firstName: 'Jane' }).create()
+    user.firstName = 'John'
+
+    await user.restore()
+
+    const row = await rawRow(user.id)
+    expect(row.first_name).toBe('Jane')
+    expect(row.deleted_at).toBeNull()
+    expect(user.$dirty).toEqual({ firstName: 'John' })
+  })
+
+  test('soft delete should run inside the model transaction', async ({ expect }) => {
+    const user = await UserFactory.create()
+    const trx = await db.transaction()
+    user.useTransaction(trx)
+
+    await user.delete()
+    await trx.rollback()
+
+    expect((await rawRow(user.id)).deleted_at).toBeNull()
   })
 })
