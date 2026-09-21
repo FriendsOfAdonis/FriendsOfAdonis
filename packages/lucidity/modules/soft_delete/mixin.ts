@@ -2,9 +2,10 @@ import './query_builder.ts'
 
 import { errors } from '@adonisjs/lucid'
 import { NormalizeConstructor } from '@adonisjs/core/types/helpers'
-import { BaseModel, beforeFetch, beforeFind, beforePaginate, column } from '@adonisjs/lucid/orm'
+import { BaseModel, column } from '@adonisjs/lucid/orm'
 import { DateTime } from 'luxon'
 import { E_MODEL_DELETED } from './exceptions.ts'
+import { SOFT_DELETABLE } from './scope.ts'
 import type { ModelWithSoftDeleteClass, ModelWithSoftDeleteRow } from './types.ts'
 import { QueryClientContract } from '@adonisjs/lucid/types/database'
 import type { LucidModel, LucidRow, ModelQueryBuilderContract } from '@adonisjs/lucid/types/model'
@@ -49,8 +50,8 @@ async function persistDeletedAt(row: LucidRow, deletedAt: DateTime | null) {
 
 /**
  * Mixin turning `delete()` into a soft delete that stamps a "deletedAt"
- * timestamp, hiding trashed rows from every read query and adding
- * `restore()` and `forceDelete()` to the model.
+ * timestamp, hiding trashed rows from every query and adding `restore()` and
+ * `forceDelete()` to the model.
  *
  * @example
  * ```ts
@@ -61,6 +62,11 @@ export function SoftDeletable<Model extends NormalizeConstructor<typeof BaseMode
   superclass: Model
 ): ModelWithSoftDeleteClass<Model> {
   class ModelWithSoftDelete extends superclass implements ModelWithSoftDeleteRow {
+    /**
+     * Marks the model as soft deletable for the query scope.
+     */
+    static [SOFT_DELETABLE] = true
+
     /**
      * Whether a force delete is in progress on this row.
      */
@@ -164,8 +170,10 @@ export function SoftDeletable<Model extends NormalizeConstructor<typeof BaseMode
 
     /**
      * Returns the query used by the model adapter for the given action. The
-     * adapter only deletes a row on a force delete, since soft deletes are
-     * written as updates, so the delete query always removes the row.
+     * query targets this very row, trashed or not, hence it ignores the soft
+     * delete scope. The adapter only deletes a row on a force delete, since
+     * soft deletes are written as updates, so the delete query always removes
+     * the row.
      */
     $getQueryFor(
       action: 'insert',
@@ -179,40 +187,9 @@ export function SoftDeletable<Model extends NormalizeConstructor<typeof BaseMode
       if (action === 'insert') return super.$getQueryFor(action, client)
 
       const query = super.$getQueryFor(action, client)
+      query.withTrashed()
       if (action === 'delete') query.enforceDelete = true
       return query
-    }
-
-    /**
-     * Hides trashed rows from fetch and find queries, unless the query opted
-     * out with `withTrashed()` or `onlyTrashed()`.
-     */
-    @beforeFetch()
-    @beforeFind()
-    static __filterTrashed(query: ModelQueryBuilderContract<Model>) {
-      if (query.ignoreDeleted === true) return
-
-      const deletedAtColumn = query.model.$getColumn('deletedAt')
-      if (!deletedAtColumn) return
-
-      query.whereNull(`${query.model.table}.${deletedAtColumn.columnName}`)
-    }
-
-    /**
-     * Hides trashed rows from paginated queries and their count query.
-     */
-    @beforePaginate()
-    static __filterTrashedPaginate([countQuery, query]: [
-      ModelQueryBuilderContract<Model>,
-      ModelQueryBuilderContract<Model>,
-    ]) {
-      if (query.ignoreDeleted === true) return
-
-      const deletedAtColumn = query.model.$getColumn('deletedAt')
-      if (!deletedAtColumn) return
-
-      countQuery.ignoreDeleted = true
-      countQuery.whereNull(`${query.model.table}.${deletedAtColumn.columnName}`)
     }
   }
 

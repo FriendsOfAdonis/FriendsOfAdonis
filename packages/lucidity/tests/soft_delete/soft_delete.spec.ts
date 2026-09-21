@@ -8,11 +8,13 @@ import {
   afterUpdate,
   BaseModel,
   beforeDelete,
+  beforeFetch,
   beforeSave,
   beforeUpdate,
   column,
 } from '@adonisjs/lucid/orm'
 import { errors } from '@adonisjs/lucid'
+import type { ModelQueryBuilderContract } from '@adonisjs/lucid/types/model'
 import { DateTime } from 'luxon'
 import Factory from '@adonisjs/lucid/factories'
 import { compose } from '@adonisjs/core/helpers'
@@ -20,6 +22,7 @@ import {
   afterRestore,
   beforeRestore,
   E_MODEL_DELETED,
+  E_NOT_SOFT_DELETABLE,
   SoftDeletable,
 } from '../../modules/soft_delete/main.ts'
 
@@ -59,6 +62,34 @@ class User extends compose(BaseModel, SoftDeletable) {
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
+}
+
+/**
+ * User model whose own `beforeFetch` hook includes the trashed rows.
+ */
+class ArchivedUser extends compose(BaseModel, SoftDeletable) {
+  static table = 'users'
+
+  @column()
+  declare id: number
+
+  @beforeFetch()
+  static includeTrashed(query: ModelQueryBuilderContract<typeof ArchivedUser>) {
+    query.withTrashed()
+  }
+}
+
+/**
+ * User model reading the same table without the `SoftDeletable` mixin.
+ */
+class PlainUser extends BaseModel {
+  static table = 'users'
+
+  @column()
+  declare id: number
+
+  @column.dateTime()
+  declare deletedAt: DateTime | null
 }
 
 const UserFactory = Factory.define(User, ({ faker }) => {
@@ -282,6 +313,81 @@ test.group('SoftDelete', (group) => {
     expect(Number(result[0].$extras.total)).toBe(3)
   })
 
+  test('should exclude trashed users from pojo queries', async ({ expect }) => {
+    await UserFactory.createMany(3)
+    await UserFactory.apply('trashed').createMany(7)
+
+    const users = await User.query().pojo()
+    expect(users).toHaveLength(3)
+  })
+
+  test('should not leak trashed users through an orWhere clause', async ({ expect }) => {
+    await UserFactory.apply('trashed').merge({ firstName: 'Jane' }).create()
+    const john = await UserFactory.merge({ firstName: 'John' }).create()
+
+    const users = await User.query().where('firstName', 'Jane').orWhere('firstName', 'John')
+    expect(users.map((user) => user.id)).toEqual([john.id])
+  })
+
+  test('should include trashed users when a beforeFetch hook uses withTrashed', async ({
+    expect,
+  }) => {
+    await UserFactory.createMany(3)
+    await UserFactory.apply('trashed').createMany(7)
+
+    const users = await ArchivedUser.query()
+    expect(users).toHaveLength(10)
+  })
+
+  test('should not leak trashed users through an orWhere clause in a later group', async ({
+    expect,
+  }) => {
+    await UserFactory.apply('trashed').merge({ firstName: 'Jane' }).create()
+    const john = await UserFactory.merge({ firstName: 'John' }).create()
+
+    const users = await User.query()
+      .where('firstName', 'Jane')
+      .wrapExisting()
+      .orWhere('firstName', 'John')
+    expect(users.map((user) => user.id)).toEqual([john.id])
+  })
+
+  test('should hide trashed users when the table is aliased', async ({ expect }) => {
+    await UserFactory.createMany(3)
+    await UserFactory.apply('trashed').createMany(7)
+
+    expect(await User.query().from('users as u')).toHaveLength(3)
+    expect(await User.query().from({ u: 'users' })).toHaveLength(3)
+  })
+
+  test('should keep the where clauses of a query compiled twice', async ({ expect }) => {
+    await UserFactory.merge({ firstName: 'Jane' }).create()
+    await UserFactory.apply('trashed').merge({ firstName: 'Jane' }).create()
+    await UserFactory.merge({ firstName: 'John' }).create()
+
+    const query = User.query().withTrashed().where('firstName', 'Jane').wrapExisting()
+    query.toSQL()
+    expect(await query).toHaveLength(2)
+  })
+
+  test('should keep withTrashed on a cloned query', async ({ expect }) => {
+    await UserFactory.createMany(3)
+    await UserFactory.apply('trashed').createMany(7)
+
+    const users = await User.query().withTrashed().clone()
+    expect(users).toHaveLength(10)
+  })
+
+  test('pagination total should include trashed rows when using withTrashed', async ({
+    expect,
+  }) => {
+    await UserFactory.createMany(3)
+    await UserFactory.apply('trashed').createMany(7)
+
+    const page = await User.query().withTrashed().paginate(1, 5)
+    expect(page.total).toBe(10)
+  })
+
   /**
    * ---------------------------------------------------------------------------
    * Deleting: instance delete is soft, forceDelete is permanent
@@ -445,6 +551,26 @@ test.group('SoftDelete', (group) => {
     }
   })
 
+  test('bulk query delete should not stamp trashed rows again', async ({ expect }) => {
+    const deletedAt = DateTime.fromISO('2020-01-01T00:00:00')
+    const user = await UserFactory.merge({ deletedAt }).create()
+
+    await User.query().delete()
+
+    const row = await rawRow(user.id)
+    expect(DateTime.fromSQL(row.deleted_at).toISO()).toBe(deletedAt.toISO())
+  })
+
+  test('bulk query update should skip trashed rows', async ({ expect }) => {
+    const jane = await UserFactory.merge({ lastName: 'Doe' }).create()
+    const john = await UserFactory.apply('trashed').merge({ lastName: 'Doe' }).create()
+
+    await User.query().update({ lastName: 'Smith' })
+
+    expect((await rawRow(jane.id)).last_name).toBe('Smith')
+    expect((await rawRow(john.id)).last_name).toBe('Doe')
+  })
+
   test('bulk query delete should only soft delete the rows matched by the where clause', async ({
     expect,
   }) => {
@@ -508,9 +634,8 @@ test.group('SoftDelete', (group) => {
   test('bulk query restore is not filtered by the soft-delete scope', async ({ expect }) => {
     await UserFactory.apply('trashed').createMany(4)
 
-    // The scope is a read-time hook (beforeFetch/beforeFind), so it does not
-    // apply to a bulk update: restore reaches the trashed rows even without
-    // an explicit `withTrashed()`.
+    // A bulk restore lifts the scope itself: it reaches the trashed rows even
+    // without an explicit `withTrashed()`.
     await User.query().restore()
 
     expect(await User.query()).toHaveLength(4)
@@ -757,5 +882,57 @@ test.group('SoftDelete', (group) => {
     await trx.rollback()
 
     expect((await rawRow(user.id)).deleted_at).toBeNull()
+  })
+
+  /**
+   * ---------------------------------------------------------------------------
+   * Models without the mixin are left untouched
+   * ---------------------------------------------------------------------------
+   */
+
+  test('should not hide trashed rows of a model without the mixin', async ({ expect }) => {
+    await UserFactory.createMany(3)
+    await UserFactory.apply('trashed').createMany(7)
+
+    expect(await PlainUser.query()).toHaveLength(10)
+    expect(await PlainUser.query().withTrashed()).toHaveLength(10)
+  })
+
+  test('onlyTrashed should throw on a model without the mixin', async ({ expect }) => {
+    expect(() => PlainUser.query().onlyTrashed()).toThrow(E_NOT_SOFT_DELETABLE)
+  })
+
+  test('should permanently delete rows of a model without the mixin', async ({ expect }) => {
+    const users = await UserFactory.createMany(2)
+
+    await PlainUser.query().where('id', users[0].id).delete()
+    const plainUser = await PlainUser.findOrFail(users[1].id)
+    await plainUser.delete()
+
+    expect(await countRows()).toBe(0)
+  })
+
+  /**
+   * ---------------------------------------------------------------------------
+   * Row queries: a model instance always reaches its own row
+   * ---------------------------------------------------------------------------
+   */
+
+  test('should save changes made to a trashed row', async ({ expect }) => {
+    const user = await UserFactory.apply('trashed').merge({ firstName: 'Jane' }).create()
+
+    user.firstName = 'John'
+    await user.save()
+
+    expect((await rawRow(user.id)).first_name).toBe('John')
+  })
+
+  test('should refresh a trashed row', async ({ expect }) => {
+    const user = await UserFactory.apply('trashed').merge({ firstName: 'Jane' }).create()
+    await db.from('users').where('id', user.id).update({ first_name: 'John' })
+
+    await user.refresh()
+
+    expect(user.firstName).toBe('John')
   })
 })

@@ -6,7 +6,7 @@ description: Mark records as deleted instead of removing them, then query, resto
 
 A soft delete marks a record as deleted by stamping a `deletedAt` timestamp on it instead of removing the row from the database. The record stops appearing in your queries, but the data is still there: you can restore it later, or delete it for good once you no longer need it.
 
-The `SoftDeletable` mixin brings this behaviour to any Lucid model. Once applied, `delete()` becomes a soft delete, every read query automatically hides trashed records, and you gain `restore()` and `forceDelete()` to bring records back or remove them permanently.
+The `SoftDeletable` mixin brings this behaviour to any Lucid model. Once applied, `delete()` becomes a soft delete, every query automatically hides trashed records, and you gain `restore()` and `forceDelete()` to bring records back or remove them permanently.
 
 ## Setup
 
@@ -75,7 +75,7 @@ post.deletedAt // DateTime
 
 The instance is not flagged as deleted (`post.$isDeleted` stays `false`) because the underlying row still exists. The `isTrashed` getter tells you whether a record is currently soft deleted.
 
-You can also soft delete in bulk through the query builder. Every matched row is stamped, and no row is removed:
+You can also soft delete in bulk through the query builder. Every matched row is stamped, and no row is removed. Rows that are already trashed keep their original `deletedAt`:
 
 ```ts
 await Post.query().where('status', 'archived').delete()
@@ -83,7 +83,7 @@ await Post.query().where('status', 'archived').delete()
 
 ## Querying records
 
-By default, every read query hides trashed records. This applies to `find`, `findBy`, `first`, `all`, `findOrFail`, `query`, pagination, as well as aggregate and `groupBy` queries:
+By default, every query hides trashed records. This applies to `find`, `findBy`, `first`, `all`, `findOrFail`, `query`, `pojo()` queries, pagination, as well as aggregate and `groupBy` queries:
 
 ```ts
 await Post.all() // only records that are not trashed
@@ -94,6 +94,8 @@ await Post.findOrFail(trashedId) // throws, the record is hidden
 const result = await Post.query().count('* as total')
 result[0].$extras.total
 ```
+
+Bulk updates are scoped as well, so `Post.query().update()` leaves trashed records untouched. A loaded record always reaches its own row though: `save()` and `refresh()` keep working on a trashed record.
 
 ### Including trashed records
 
@@ -111,6 +113,65 @@ Use `onlyTrashed()` to return exclusively the trashed records, for example to bu
 const trashed = await Post.query().onlyTrashed()
 ```
 
+Calling `onlyTrashed()` on a model that does not use the `SoftDeletable` mixin throws `E_NOT_SOFT_DELETABLE`.
+
+## Relationships
+
+Relationships hide trashed records too. Related queries, preloads and relationship subqueries (`has`, `whereHas`, `doesntHave`, `withCount` and `withAggregate`) all ignore the trashed rows of a soft deletable related model:
+
+```ts
+// Only the comments that are not trashed
+const comments = await post.related('comments').query()
+
+// Posts having at least one comment that is not trashed
+const commented = await Post.query().has('comments')
+
+// Counts only the comments that are not trashed
+const counted = await Post.query().withCount('comments')
+```
+
+Each query keeps its own scope, so calling `withTrashed()` on the parent query does not reach the relationship queries. Opt out inside the relationship callback instead:
+
+```ts
+const posts = await Post.query()
+  .whereHas('comments', (query) => query.withTrashed())
+  .preload('comments', (query) => query.onlyTrashed())
+  .withCount('comments', (query) => query.withTrashed())
+```
+
+### Has many through
+
+When the through model of a `hasManyThrough` relationship is soft deletable, the related records reached through its trashed rows are hidden as well. For example, the posts of a trashed user no longer show up among the posts of their country:
+
+```ts title="app/models/country.ts"
+import { BaseModel, hasManyThrough } from '@adonisjs/lucid/orm'
+import type { HasManyThrough } from '@adonisjs/lucid/types/relations'
+import Post from '#models/post'
+import User from '#models/user'
+
+export default class Country extends BaseModel {
+  @hasManyThrough([() => Post, () => User])
+  declare posts: HasManyThrough<typeof Post>
+}
+```
+
+```ts
+// Only the posts of the users that are not trashed
+const posts = await country.related('posts').query()
+```
+
+Use `withTrashedParents()` to include them. It is independent from `withTrashed()`, which still applies to the related model only:
+
+```ts
+const posts = await country.related('posts').query().withTrashedParents()
+
+const countries = await Country.query().whereHas('posts', (query) => {
+  query.withTrashedParents()
+})
+```
+
+Calling `withTrashedParents()` on a query that does not belong to a `hasManyThrough` relationship throws `E_NOT_THROUGH_RELATION`.
+
 ## Restoring a record
 
 Restoring clears the `deletedAt` timestamp and makes the record visible to queries again:
@@ -126,7 +187,7 @@ post.deletedAt // null
 
 You need `withTrashed()` (or `onlyTrashed()`) to load the record first, since the default scope would otherwise hide it. Restoring a record that is not trashed is a no-op and returns the instance unchanged, unless it was force deleted, in which case `restore()` throws `E_MODEL_DELETED`.
 
-You can also restore in bulk through the query builder. A bulk restore is a direct update, so it is not filtered by the soft-delete scope and reaches trashed rows without an explicit `withTrashed()`:
+You can also restore in bulk through the query builder. A bulk restore always reaches the trashed rows, so it does not need an explicit `withTrashed()`:
 
 ```ts
 await Post.query().where('status', 'archived').restore()
@@ -252,13 +313,14 @@ await post.forceDeleteQuietly()
 
 ### Query builder methods
 
-| Method          | Description                                                          |
-| --------------- | -------------------------------------------------------------------- |
-| `withTrashed()` | Include trashed records in the results.                              |
-| `onlyTrashed()` | Return only trashed records.                                         |
-| `delete()`      | Soft delete every matched record.                                    |
-| `restore()`     | Restore every matched record. Not filtered by the soft-delete scope. |
-| `forceDelete()` | Permanently delete every matched record.                             |
+| Method                 | Description                                                                              |
+| ---------------------- | ---------------------------------------------------------------------------------------- |
+| `withTrashed()`        | Include trashed records in the results.                                                  |
+| `onlyTrashed()`        | Return only trashed records. Throws `E_NOT_SOFT_DELETABLE` on a model without the mixin. |
+| `withTrashedParents()` | Include the records reached through trashed rows of a `hasManyThrough` relationship.     |
+| `delete()`             | Soft delete every matched record that is not trashed yet.                                |
+| `restore()`            | Restore every matched record, without an explicit `withTrashed()`.                       |
+| `forceDelete()`        | Permanently delete every matched record, trashed or not.                                 |
 
 ### Decorators
 
