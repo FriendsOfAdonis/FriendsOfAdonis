@@ -69,13 +69,28 @@ export class RouterLoader {
       propertyKey
     )
 
-    for (const param of params) {
-      OperationParameterMetadataStorage.mergeMetadata(
-        target.prototype,
-        [{ in: 'path', type: 'string', name: param, required: true }],
-        propertyKey
-      )
-    }
+    // The metadata registry lives for the whole process and is re-scanned on every
+    // `buildDocument()` call outside production, so rebuild the path parameters from the current
+    // route instead of appending to them. Keep the parameters the route still declares (and any
+    // user-defined `@ApiParam`), drop the renamed/removed ones, then add whatever is missing — so
+    // re-scans stay idempotent and a changed route is always reflected.
+    const existingParams = OperationParameterMetadataStorage.getMetadata(
+      target.prototype,
+      propertyKey
+    )
+    const current = new Set(params)
+
+    const kept = existingParams.filter((p) => p.in !== 'path' || current.has(p.name))
+    const present = new Set(kept.filter((p) => p.in === 'path').map((p) => p.name))
+    const added = params
+      .filter((name) => !present.has(name))
+      .map((name) => ({ in: 'path', type: 'string', name, required: true }) as const)
+
+    OperationParameterMetadataStorage.defineMetadata(
+      target.prototype,
+      [...kept, ...added],
+      propertyKey
+    )
 
     return target
   }
