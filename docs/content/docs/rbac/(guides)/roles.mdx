@@ -1,0 +1,140 @@
+---
+title: Roles
+description: "Give permissions to roles with the withPermissions mixin, then assign, sync and revoke roles on users with withRoles and query users by role."
+icon: Users
+---
+
+Roles are the recommended way to manage permissions. You give permissions to a role such as `editor` or `admin`, then assign the role to users. When the responsibilities of a user change, you change their roles instead of editing permissions one by one.
+
+Two mixins implement the workflow:
+
+- `withPermissions` goes on the `Role` model. It stores the grants of the role in a JSON `permissions` column.
+- `withRoles` goes on the `User` model. It adds a many to many `roles` relationship through a pivot table.
+
+The [Getting Started](/docs/rbac/getting-started) guide sets both up. This page covers what you can do once they are in place.
+
+## Give permissions to a role
+
+The methods of `withPermissions` validate their input, persist the role right away, and accept keys and [wildcards](/docs/rbac/defining-permissions#wildcards).
+
+```ts
+import Role from "#models/role";
+
+const editor = await Role.create({ name: "editor" });
+
+await editor.givePermission("product.create");
+await editor.givePermissions(["product.update", "billing.*"]);
+
+await editor.syncPermissions(["product.create", "product.update"]);
+
+await editor.revokePermission("product.update");
+await editor.revokePermissions(["product.create"]);
+```
+
+- `givePermission` and `givePermissions` add grants. Giving a grant the role already holds does nothing.
+- `syncPermissions` replaces every grant of the role.
+- `revokePermission` and `revokePermissions` remove grants and their stored aliases. Revoking a grant the role does not hold does nothing.
+
+Revoking a key does not narrow a wildcard. If the role holds `product.*`, revoking `product.delete` leaves `product.*` in place. Revoke `product.*` and give the remaining keys instead.
+
+Every method throws `E_UNKNOWN_PERMISSION` when a value is neither a defined key nor a valid wildcard.
+
+## Assign roles to a user
+
+The `withRoles` methods accept a role or its primary key.
+
+```ts
+await user.assignRole(editor);
+await user.assignRoles([editor, moderator.id]);
+```
+
+Assigning a role the user already holds does nothing, so the unique constraint of the pivot table never fails.
+
+## Sync and revoke roles
+
+`syncRoles` replaces every role of the user. Roles missing from the list are removed.
+
+```ts
+await user.syncRoles([admin]);
+```
+
+`revokeRole` and `revokeRoles` remove roles. An empty list removes nothing.
+
+```ts
+await user.revokeRole(editor);
+await user.revokeRoles([editor, moderator]);
+```
+
+## Check role membership
+
+`hasRole` matches a string against the role name and a role against its primary key.
+
+```ts
+await user.hasRole("editor");
+await user.hasRole(editor);
+```
+
+Check permissions rather than roles where you can. A check on `product.delete` keeps working when you rename a role or move the permission to another role.
+
+## Read the roles of a user
+
+`getRoles` returns the roles of the user. It uses the preloaded relationship when there is one and queries the pivot table otherwise.
+
+```ts
+const roles = await user.getRoles();
+```
+
+`roles` is a regular Lucid relationship, so `preload` and `whereHas` work as usual.
+
+```ts
+const users = await User.query()
+  .whereHas("roles", (query) => query.where("name", "editor"))
+  .preload("roles");
+```
+
+The role methods on a user drop the preloaded roles, so the next `getRoles` call reads them again.
+
+## Read the permissions of a user
+
+`getPermissions` merges the grants of every role, then resolves them: aliases become keys, wildcards expand, and inactive and unknown values disappear.
+
+```ts
+await user.getPermissions();
+// ["product.create", "product.update", "billing.refund"]
+
+await user.hasPermission("billing.refund");
+// true
+```
+
+`getGrants` returns the raw values the roles store, before resolution:
+
+```ts
+await user.getGrants();
+// ["product.create", "product.update", "billing.*"]
+```
+
+Both methods load the roles again on every call, unless the roles are preloaded. Inside Bouncer checks, the package loads them once per request. See [Authorization](/docs/rbac/authorization#one-load-per-request).
+
+## Use the generated schema classes
+
+With the Lucid schema generator, compose the mixins on top of the generated class instead of `BaseModel`:
+
+```ts title="app/models/role.ts"
+import { compose } from "@adonisjs/core/helpers";
+import { RoleSchema } from "#database/schema";
+import { withPermissions } from "@foadonis/rbac";
+import { permissions } from "#start/permissions";
+
+export default class Role extends compose(RoleSchema, withPermissions(permissions)) {}
+```
+
+Create the `permissions` column with `table.json()`, as the generated migration does. The generator types a JSON column as `any`, so the generated class and the mixin agree on the column. A `text` column would be typed `string` and conflict with the `string[]` the mixin stores.
+
+## Options of withRoles
+
+| Option                   | Type                    | Description                                                            |
+| ------------------------ | ----------------------- | ---------------------------------------------------------------------- |
+| `role`                   | `() => RoleModel`       | Returns the role model. The model needs a `name` column and `withPermissions`. |
+| `pivotTable`             | `string`                | Name of the pivot table between the model and the roles               |
+| `pivotForeignKey`        | `string`                | Pivot column that references the model. Defaults to the Lucid convention, such as `user_id`. |
+| `pivotRelatedForeignKey` | `string`                | Pivot column that references the role. Defaults to the Lucid convention, `role_id`. |

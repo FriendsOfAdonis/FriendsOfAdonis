@@ -1,0 +1,54 @@
+---
+title: Introduction
+description: "AdonisJS RBAC turns a typed permissions definition into Bouncer abilities, with roles, direct permissions, wildcards and token scoping on Lucid models."
+icon: Album
+---
+
+AdonisJS RBAC is a role-based access control system for AdonisJS. You declare every permission of your application once, store them on roles, assign roles to users, and authorize with the Bouncer API you already use.
+
+```ts title="start/permissions.ts"
+import { definePermissions } from "@foadonis/rbac";
+
+export const permissions = definePermissions({
+  product: {
+    create: "Create new products",
+    update: "Update existing products",
+    delete: "Delete products permanently",
+  },
+  billing: {
+    refund: "Issue refunds to customers",
+  },
+});
+```
+
+```ts title="app/controllers/products_controller.ts"
+import type { HttpContext } from "@adonisjs/core/http";
+
+export default class ProductsController {
+  async destroy({ bouncer }: HttpContext) {
+    await bouncer.authorize("product.delete");
+
+    // The user holds a role that grants product.delete
+  }
+}
+```
+
+## When to use it
+
+[Bouncer](https://docs.adonisjs.com/guides/security/authorization) asks you to write one function per ability. That fits rules that depend on a resource, such as "users can edit their own posts". It gets repetitive for static rules, such as "editors can publish posts", where the answer depends only on the role of the user.
+
+RBAC covers the static rules. It generates one Bouncer ability per permission key, so `bouncer.authorize("product.delete")` sits next to your hand-written abilities and policies. Keep ownership and conditional checks in Bouncer abilities and policies.
+
+## Features
+
+- **Typed keys.** Permission keys are inferred from the definition. A typo in `bouncer.authorize`, `givePermission` or `hasPermission` fails the build.
+- **Wildcards.** Store `*`, `admin:*` or `product.*` on a role. A permission you add later reaches that role without a data migration.
+- **Validated writes.** `givePermission` and `syncPermissions` reject unknown values at runtime, so input from an admin form cannot store garbage.
+- **Aliases and inactive keys.** Rename a key without rewriting stored data, or switch a key off without deleting it.
+- **Token scoping.** Narrow a check to the abilities of an access token. The default `["*"]` token keeps every permission.
+- **One query per request.** The generated abilities load the grants of a user once, however many checks you run.
+- **Teams.** Any Lucid model can hold roles, so a team member can have different roles in each team.
+
+## Next steps
+
+Head over to the [Getting Started](/docs/rbac/getting-started) guide to install the package and protect your first route.

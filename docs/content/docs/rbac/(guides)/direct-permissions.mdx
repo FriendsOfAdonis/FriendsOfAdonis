@@ -1,0 +1,85 @@
+---
+title: Direct Permissions
+description: "Give a user permissions outside of their roles by composing withPermissions into the User model, and merge them with role permissions in one check."
+icon: UserCog
+---
+
+Roles cover most needs. Sometimes one user needs a permission their role does not grant, such as an editor who also handles refunds. Rather than creating a role for one person, give the permission to the user directly.
+
+## Add a permissions column to users
+
+`withPermissions` works on any Lucid model, including `User`. Add a JSON `permissions` column to the `users` table:
+
+```ts title="database/migrations/xxxx_add_permissions_to_users.ts"
+import { BaseSchema } from "@adonisjs/lucid/schema";
+
+export default class extends BaseSchema {
+  protected tableName = "users";
+
+  async up() {
+    this.schema.alterTable(this.tableName, (table) => {
+      table.json("permissions").nullable();
+    });
+  }
+
+  async down() {
+    this.schema.alterTable(this.tableName, (table) => {
+      table.dropColumn("permissions");
+    });
+  }
+}
+```
+
+The column is nullable so existing users stay valid. The mixin reads `null` as an empty list and writes `[]` on create.
+
+## Apply both mixins
+
+Compose `withPermissions` and `withRoles` on the `User` model. The order does not matter.
+
+```ts title="app/models/user.ts"
+import { compose } from "@adonisjs/core/helpers";
+import { BaseModel } from "@adonisjs/lucid/orm";
+import { withPermissions, withRoles } from "@foadonis/rbac";
+import { permissions } from "#start/permissions";
+import Role from "#models/role";
+
+export default class User extends compose(
+  BaseModel,
+  withPermissions(permissions),
+  withRoles(permissions, {
+    role: () => Role,
+    pivotTable: "user_roles",
+  })
+) {
+  // ...your existing columns
+}
+```
+
+## Give, sync and revoke
+
+The user gets the same methods as a role:
+
+```ts
+await user.givePermission("billing.refund");
+await user.givePermissions(["billing.refund", "product.delete"]);
+
+await user.syncPermissions(["billing.refund"]);
+
+await user.revokePermission("billing.refund");
+```
+
+`syncPermissions` and `revokePermission` only touch the grants stored on the user. They never change the roles of the user or the grants of those roles. The [Roles](/docs/rbac/roles#give-permissions-to-a-role) guide describes each method.
+
+## Combined permissions
+
+`getPermissions`, `hasPermission` and the Bouncer abilities use the union of the direct grants and the grants of every role.
+
+```ts
+// The editor role grants product.create and product.update
+// The user also holds billing.refund directly
+
+await user.getPermissions();
+// ["product.create", "product.update", "billing.refund"]
+```
+
+The package has no deny rules. A direct grant can add permissions to a user, but cannot remove a permission that a role grants.

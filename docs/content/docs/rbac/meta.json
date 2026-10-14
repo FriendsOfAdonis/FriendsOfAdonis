@@ -1,0 +1,16 @@
+{
+  "title": "RBAC",
+  "description": "Typed roles and permissions for AdonisJS: define permission keys once, assign them through roles, and authorize with Bouncer.",
+  "icon": "ShieldCheck",
+  "root": true,
+  "pages": [
+    "index",
+    "getting-started",
+    "--- Guides ---",
+    "(guides)/defining-permissions",
+    "(guides)/roles",
+    "(guides)/direct-permissions",
+    "(guides)/authorization",
+    "(guides)/teams"
+  ]
+}

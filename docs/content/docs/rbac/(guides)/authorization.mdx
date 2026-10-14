@@ -1,0 +1,212 @@
+---
+title: Authorization
+description: "Check permissions with the abilities from permissions.abilities(), the authorize middleware and the Access class, and scope checks to access token abilities."
+icon: ShieldCheck
+---
+
+The package authorizes through [AdonisJS Bouncer](https://docs.adonisjs.com/guides/security/authorization). `permissions.abilities()` returns one Bouncer ability per active key, so a permission check uses the same `authorize`, `allows` and `denies` methods as your other abilities. The [Getting Started](/docs/rbac/getting-started#register-the-abilities-with-bouncer) guide registers them in the Bouncer middleware.
+
+## Check a permission in a controller
+
+`bouncer.authorize` throws an `E_AUTHORIZATION_FAILURE` exception, rendered as a 403, when the user does not hold the permission. Guests are always denied.
+
+```ts title="app/controllers/products_controller.ts"
+import type { HttpContext } from "@adonisjs/core/http";
+
+export default class ProductsController {
+  async store({ bouncer }: HttpContext) {
+    await bouncer.authorize("product.create");
+
+    // The user can create products
+  }
+}
+```
+
+Use `bouncer.allows` or `bouncer.denies` when you need a boolean:
+
+```ts title="app/controllers/billing_controller.ts"
+import type { HttpContext } from "@adonisjs/core/http";
+
+export default class BillingController {
+  async index({ bouncer, view }: HttpContext) {
+    const canRefund = await bouncer.allows("billing.refund");
+
+    return view.render("billing/index", { canRefund });
+  }
+}
+```
+
+Only active keys have an ability. A typo or an [inactive key](/docs/rbac/defining-permissions#inactive-permissions) fails to compile.
+
+## Protect a route with the middleware
+
+`node ace configure` registers the `authorize` named middleware. It takes one key, or a list of keys that the user must all hold.
+
+```ts title="start/routes.ts"
+import router from "@adonisjs/core/services/router";
+import { middleware } from "#start/kernel";
+
+const ProductsController = () => import("#controllers/products_controller");
+
+router
+  .group(() => {
+    router.post("/products", [ProductsController, "store"]).use(middleware.authorize("product.create"));
+    router
+      .delete("/products/:id", [ProductsController, "destroy"])
+      .use(middleware.authorize(["product.update", "product.delete"]));
+  })
+  .use(middleware.auth());
+```
+
+Run the `auth` middleware before `authorize`, so Bouncer knows the user. The middleware lives in `app/middleware/authorize_middleware.ts`. Edit it if you need another behavior, such as passing token abilities.
+
+## Scope a check to an access token
+
+An [access token](https://docs.adonisjs.com/guides/authentication/access-tokens-guard) carries a list of abilities. Pass them as the second argument of a check to narrow the permissions of the user to what the token allows.
+
+```ts title="app/controllers/products_controller.ts"
+import type { HttpContext } from "@adonisjs/core/http";
+
+export default class ProductsController {
+  async store({ auth, bouncer }: HttpContext) {
+    const user = auth.getUserOrFail();
+    const tokenAbilities = user.currentAccessToken?.abilities;
+
+    await bouncer.authorize("product.create", tokenAbilities);
+  }
+}
+```
+
+The check passes only when the user holds the permission and the token allows it. The token abilities go through the same resolution as stored grants:
+
+- `["*"]`, the default abilities of an AdonisJS access token, keeps every permission of the user.
+- `["product.*"]` keeps the `product` permissions of the user.
+- `["product.create"]` keeps only that one.
+- `[]` denies everything.
+
+When the request uses a session, `currentAccessToken` is `undefined` and the check uses every permission of the user.
+
+## One load per request
+
+Each generated ability needs the grants of the user. The first check loads them, and every later check on the same user instance reuses them. Ten checks in a request cost the same single query as one.
+
+The cache is tied to the model instance, so it ends with the request. The write methods of the mixins clear it for the instance they change:
+
+```ts
+await user.assignRole(admin);
+await bouncer.allows("billing.refund");
+// Reloads the grants and sees the admin role
+```
+
+A change made through another instance does not clear it. If you change a role and check the same user again in the same request, forget the cached grants yourself:
+
+```ts
+import { forgetGrants } from "@foadonis/rbac";
+
+const user = auth.getUserOrFail();
+await editor.givePermission("billing.refund");
+forgetGrants(user);
+
+await bouncer.allows("billing.refund");
+```
+
+## Check permissions without Bouncer
+
+The `Access` class holds a resolved set of permissions. Use it outside of HTTP requests, in a job, a command or a service.
+
+```ts
+import { permissions } from "#start/permissions";
+
+const access = await permissions.accessFor(user);
+
+access.allows("product.create");
+access.denies("billing.refund");
+access.allowsAll(["product.create", "product.update"]);
+access.allowsAny(["product.delete", "billing.refund"]);
+```
+
+`accessFor` loads the grants of any model with a `getGrants` method. To build an `Access` from raw values, such as the abilities of a token, use `permissions.access`:
+
+```ts
+const access = permissions.access(["product.*", "product.remove"]);
+```
+
+`access.scope` returns a new `Access` limited to the given grants. It leaves the original instance unchanged.
+
+```ts
+const userAccess = await permissions.accessFor(user);
+const tokenAccess = userAccess.scope(token.abilities);
+
+userAccess.allows("billing.refund");
+// true
+tokenAccess.allows("billing.refund");
+// false when the token does not allow it
+```
+
+## Share permissions with a frontend
+
+`access.permissions()` returns the granted keys as an array, and `JSON.stringify` serializes an `Access` to the same array. Send it to your frontend to show or hide actions.
+
+```ts title="app/middleware/share_permissions_middleware.ts"
+import type { HttpContext } from "@adonisjs/core/http";
+import type { NextFn } from "@adonisjs/core/types/http";
+import { permissions } from "#start/permissions";
+
+export default class SharePermissionsMiddleware {
+  async handle(ctx: HttpContext, next: NextFn) {
+    const user = ctx.auth.user;
+    const granted = user ? (await permissions.accessFor(user)).permissions() : [];
+
+    ctx.inertia.share({ permissions: granted });
+
+    return next();
+  }
+}
+```
+
+The frontend list is for display only. Keep the checks on the server.
+
+## Beyond static permissions
+
+A permission answers "can this user perform this kind of action". Some rules depend on the record:
+
+- Ownership, such as "users can only edit their own posts".
+- Conditions, such as "free plans cannot export reports".
+- Relationships, such as "only the project lead can archive a project".
+
+Write these as Bouncer abilities or policies. They live in the same Bouncer instance as the generated abilities.
+
+```ts title="app/abilities/main.ts"
+import { Bouncer } from "@adonisjs/bouncer";
+import type Post from "#models/post";
+import type User from "#models/user";
+
+export const editPost = Bouncer.ability((user: User, post: Post) => {
+  return user.id === post.authorId;
+});
+```
+
+```ts title="app/controllers/posts_controller.ts"
+import type { HttpContext } from "@adonisjs/core/http";
+import Post from "#models/post";
+
+export default class PostsController {
+  async update({ bouncer, params }: HttpContext) {
+    const post = await Post.findOrFail(params.id);
+
+    await bouncer.authorize("post.update");
+    await bouncer.authorize("editPost", post);
+  }
+}
+```
+
+## Access reference
+
+| Method              | Returns              | Description                                                   |
+| ------------------- | -------------------- | ------------------------------------------------------------- |
+| `allows(key)`       | `boolean`            | Whether the key is granted                                    |
+| `denies(key)`       | `boolean`            | Whether the key is not granted                                |
+| `allowsAll(keys)`   | `boolean`            | Whether every key is granted. An empty list returns `true`.   |
+| `allowsAny(keys)`   | `boolean`            | Whether at least one key is granted. An empty list returns `false`. |
+| `scope(grants)`     | `Access`             | A new `Access` with the keys that the grants also cover       |
+| `permissions()`     | `ActivePermission[]` | The granted keys                                              |
