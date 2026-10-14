@@ -318,14 +318,16 @@ export interface WithRolesRow<Name extends string, Active extends string> extend
   syncRoles(names: readonly Name[]): Promise<void>
 
   /**
-   * Removes a role and persists the row.
+   * Removes a role and persists the row. Accepts any name, so stored
+   * roles no longer defined in code can be removed.
    */
-  revokeRole(name: Name): Promise<void>
+  revokeRole(name: Name | (string & {})): Promise<void>
 
   /**
-   * Removes several roles and persists the row.
+   * Removes several roles and persists the row. Accepts any name, so
+   * stored roles no longer defined in code can be removed.
    */
-  revokeRoles(names: readonly Name[]): Promise<void>
+  revokeRoles(names: readonly (Name | (string & {}))[]): Promise<void>
 
   /**
    * Returns the resolved active permissions of the row.

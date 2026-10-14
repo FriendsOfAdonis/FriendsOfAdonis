@@ -156,6 +156,8 @@ test.group('Types', () => {
     expectTypeOf(account.assignRole).parameter(0).toEqualTypeOf<RoleName<typeof roles>>()
     expectTypeOf(account.getRoles()).toEqualTypeOf<RoleName<typeof roles>[]>()
     expectTypeOf(account.roles).toEqualTypeOf<string[]>()
+    expectTypeOf(account.revokeRole).parameter(0).toExtend<string>()
+    expectTypeOf<'moderator'>().toExtend<Parameters<Account['revokeRole']>[0]>()
     expectTypeOf(account.hasPermission)
       .parameter(0)
       .toEqualTypeOf<ActivePermission<typeof permissions>>()

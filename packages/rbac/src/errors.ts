@@ -72,3 +72,21 @@ export const E_UNKNOWN_ROLE = class UnknownRoleException extends Exception {
     this.value = value
   }
 }
+
+/**
+ * The "E_CONFLICTING_ROLE_MIXINS" exception is raised when a model
+ * composes both "withRoles" and "withRoleModel". A model gets its roles
+ * either from code or from the database.
+ */
+export const E_CONFLICTING_ROLE_MIXINS = class ConflictingRoleMixinsException extends Exception {
+  /**
+   * Machine readable error code.
+   */
+  static code = 'E_CONFLICTING_ROLE_MIXINS'
+
+  constructor() {
+    super(
+      'A model cannot use both "withRoles" and "withRoleModel". Pick roles defined in code or roles stored in the database'
+    )
+  }
+}

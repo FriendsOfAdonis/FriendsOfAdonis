@@ -1,6 +1,6 @@
 import type { NormalizeConstructor } from '@adonisjs/core/types/helpers'
 import type { BaseModel } from '@adonisjs/lucid/orm'
-import { E_UNKNOWN_ROLE } from '../errors.ts'
+import { E_CONFLICTING_ROLE_MIXINS, E_UNKNOWN_ROLE } from '../errors.ts'
 import type { Roles } from '../roles.ts'
 import type { WithRolesRow } from '../types.ts'
 import { consumeList, parentGrants, prepareList, storeList, unique } from './utils.ts'
@@ -84,6 +84,10 @@ export function withRoles<
 
         super.boot()
 
+        if (this.$hasRelation('roles')) {
+          throw new E_CONFLICTING_ROLE_MIXINS()
+        }
+
         this.$addColumn('roles', {
           prepare: prepareList,
           consume: consumeList,
@@ -148,21 +152,19 @@ export function withRoles<
 
       /**
        * Removes a role and persists the row. Removing a role that is not
-       * assigned is a no-op.
-       *
-       * @throws {E_UNKNOWN_ROLE} When the name is not a defined role
+       * assigned is a no-op. Accepts any name, so stored roles no longer
+       * defined in code can be removed.
        */
-      async revokeRole(name: Name): Promise<void> {
+      async revokeRole(name: Name | (string & {})): Promise<void> {
         await this.revokeRoles([name])
       }
 
       /**
-       * Removes several roles and persists the row.
-       *
-       * @throws {E_UNKNOWN_ROLE} When a name is not a defined role
+       * Removes several roles and persists the row. Accepts any name, so
+       * stored roles no longer defined in code can be removed.
        */
-      async revokeRoles(names: readonly Name[]): Promise<void> {
-        const revoked = new Set<string>(assertRoles(roles, names))
+      async revokeRoles(names: readonly (Name | (string & {}))[]): Promise<void> {
+        const revoked = new Set<string>(names)
         await storeList(
           this,
           'roles',

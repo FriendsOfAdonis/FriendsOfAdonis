@@ -6,6 +6,7 @@ import type {
   ManyToManyClientContract,
   ManyToManyRelationContract,
 } from '@adonisjs/lucid/types/relations'
+import { E_CONFLICTING_ROLE_MIXINS } from '../errors.ts'
 import { forgetGrants } from '../grants_cache.ts'
 import type { Permissions } from '../permissions.ts'
 import type {
@@ -108,6 +109,10 @@ export function withRoleModel<
         }
 
         super.boot()
+
+        if (this.$hasColumn('roles')) {
+          throw new E_CONFLICTING_ROLE_MIXINS()
+        }
 
         this.$addRelation('roles', 'manyToMany', options.role, {
           pivotTable: options.pivotTable,

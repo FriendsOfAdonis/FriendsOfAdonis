@@ -1,7 +1,11 @@
 import { test } from '@japa/runner'
 import { Bouncer } from '@adonisjs/bouncer'
-import { E_UNKNOWN_ROLE } from '../src/errors.ts'
-import { Account, permissions, ReversedAccount } from './fixtures/models.ts'
+import { compose } from '@adonisjs/core/helpers'
+import { BaseModel } from '@adonisjs/lucid/orm'
+import { E_CONFLICTING_ROLE_MIXINS, E_UNKNOWN_ROLE } from '../src/errors.ts'
+import { withRoleModel } from '../src/mixins/with_role_model.ts'
+import { withRoles } from '../src/mixins/with_roles.ts'
+import { Account, permissions, ReversedAccount, Role, roles } from './fixtures/models.ts'
 import { setupDatabase } from './helpers.ts'
 
 type Database = Awaited<ReturnType<typeof setupDatabase>>
@@ -113,6 +117,17 @@ test.group('withRoles', (group) => {
     assert.deepEqual(withoutPermission.permissions, [])
   })
 
+  test('revokes stored roles that are no longer defined', async ({ assert }) => {
+    const [id] = await database.db
+      .table('accounts')
+      .insert({ email: 'virk@adonisjs.com', roles: '["moderator","editor"]', permissions: '[]' })
+    const account = await Account.findOrFail(id)
+
+    await account.revokeRole('moderator')
+    assert.deepEqual(account.roles, ['editor'])
+    assert.equal(await storedRoles(database, account.id), '["editor"]')
+  })
+
   test('consumes a null roles column as an empty list', async ({ assert }) => {
     const [id] = await database.db
       .table('accounts')
@@ -161,4 +176,27 @@ test.group('withRoles', (group) => {
     await account.revokeRole('editor')
     assert.isFalse(await bouncer.allows('product.create'))
   })
+
+  test('refuses to boot a model composing both role mixins in {$self}')
+    .with(['composition order', 'reverse composition order'])
+    .run(({ assert }, order) => {
+      const fromCode = withRoles(roles)
+      const fromModel = withRoleModel(permissions, { role: () => Role, pivotTable: 'user_roles' })
+
+      const Model =
+        order === 'composition order'
+          ? class extends compose(BaseModel, fromCode, fromModel) {}
+          : class extends compose(BaseModel, fromModel, fromCode) {}
+
+      assert.throws(
+        () => Model.boot(),
+        'A model cannot use both "withRoles" and "withRoleModel". Pick roles defined in code or roles stored in the database'
+      )
+
+      try {
+        Model.boot()
+      } catch (error) {
+        assert.instanceOf(error, E_CONFLICTING_ROLE_MIXINS)
+      }
+    })
 })

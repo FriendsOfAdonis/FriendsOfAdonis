@@ -11,7 +11,7 @@ The package supports two kinds of roles:
 - **Roles in code**, the default. You declare them with `defineRoles` next to your permissions, and the `withRoles` mixin stores the role names of each user in a JSON `roles` column. There is no roles table and no pivot table.
 - **Roles in the database**, for applications where an admin creates and edits roles at runtime. The `withRoleModel` mixin links users to a `Role` model through a pivot table. See [Store roles in the database](#store-roles-in-the-database).
 
-A model uses `withRoles` or `withRoleModel`, never both.
+A model uses `withRoles` or `withRoleModel`, never both. Booting a model that composes both throws `E_CONFLICTING_ROLE_MIXINS`.
 
 ## Define roles
 
@@ -104,7 +104,7 @@ await user.revokeRoles(["writer", "editor"]);
 - `syncRoles` replaces every role of the user.
 - `revokeRole` and `revokeRoles` remove roles. Revoking a role the user does not hold does nothing.
 
-Every method throws `E_UNKNOWN_ROLE` when a name is not a defined role, and saves nothing.
+`assignRole`, `assignRoles` and `syncRoles` throw `E_UNKNOWN_ROLE` when a name is not a defined role, and save nothing. The revoke methods accept any name, so you can clean up roles you removed from the code.
 
 ## Check role membership
 
@@ -118,7 +118,7 @@ user.hasRole("editor");
 // true
 ```
 
-When you remove a role from `defineRoles`, users may still store its name. `getRoles` skips it, `hasRole` returns `false`, and it grants nothing. The raw stored names stay available on `user.roles`.
+When you remove a role from `defineRoles`, users may still store its name. `getRoles` skips it, `hasRole` returns `false`, and it grants nothing. The raw stored names stay available on `user.roles`, and `user.revokeRole("moderator")` removes a stale one.
 
 Check permissions rather than roles where you can. A check on `article.publish` keeps working when you rename a role or move the permission to another role.
 
