@@ -2465,6 +2465,37 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@foadonis/rbac@workspace:packages/rbac":
+  version: 0.0.0-use.local
+  resolution: "@foadonis/rbac@workspace:packages/rbac"
+  dependencies:
+    "@adonisjs/assembler": "catalog:"
+    "@adonisjs/bouncer": "catalog:"
+    "@adonisjs/core": "catalog:"
+    "@adonisjs/lucid": "catalog:"
+    "@japa/assert": "npm:^4.2.0"
+    "@japa/expect-type": "npm:^2.0.4"
+    "@japa/file-system": "npm:^3.0.0"
+    "@japa/runner": "npm:^4.5.0"
+    "@swc/core": "npm:1.15.5"
+    "@types/luxon": "npm:^3.7.1"
+    "@types/node": "catalog:"
+    better-sqlite3: "npm:^12.5.0"
+    c8: "npm:^11.0.0"
+    cpy-cli: "npm:^7.0.0"
+    del-cli: "npm:^7.0.0"
+    luxon: "npm:^3.7.2"
+    reflect-metadata: "npm:^0.2.2"
+    ts-node: "npm:^10.9.2"
+    typescript: "catalog:"
+    youch: "catalog:"
+  peerDependencies:
+    "@adonisjs/bouncer": ^4.0.0
+    "@adonisjs/core": ^7.0.0
+    "@adonisjs/lucid": ^22.0.0
+  languageName: unknown
+  linkType: soft
+
 "@foadonis/shopkeeper@workspace:packages/shopkeeper":
   version: 0.0.0-use.local
   resolution: "@foadonis/shopkeeper@workspace:packages/shopkeeper"
