@@ -1,0 +1,84 @@
+{
+  "name": "@foadonis/rbac",
+  "version": "0.0.0",
+  "description": "Typed role-based access control for AdonisJS, built on Bouncer and Lucid",
+  "keywords": [
+    "acl",
+    "adonis",
+    "adonisjs",
+    "bouncer",
+    "permissions",
+    "rbac",
+    "roles",
+    "typescript"
+  ],
+  "homepage": "https://friendsofadonis.com/docs/rbac",
+  "bugs": {
+    "url": "https://github.com/FriendsOfAdonis/FriendsOfAdonis/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Martin Paucot",
+    "email": "contact@martin-paucot.fr"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FriendsOfAdonis/FriendsOfAdonis",
+    "directory": "packages/rbac"
+  },
+  "files": [
+    "build",
+    "!build/bin",
+    "!build/tests"
+  ],
+  "type": "module",
+  "exports": {
+    ".": "./build/index.js",
+    "./types": "./build/src/types.js"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "latest"
+  },
+  "scripts": {
+    "clean": "del-cli build",
+    "copy:templates": "cpy \"stubs/**/*.stub\" build/stubs",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint",
+    "quick:test": "node --import=./tsnode.esm.js --enable-source-maps bin/test.ts",
+    "test": "c8 yarn quick:test",
+    "build": "yarn clean && tsc && yarn copy:templates",
+    "dev": "tsc --watch",
+    "version": "yarn build"
+  },
+  "devDependencies": {
+    "@adonisjs/assembler": "catalog:",
+    "@adonisjs/bouncer": "catalog:",
+    "@adonisjs/core": "catalog:",
+    "@adonisjs/lucid": "catalog:",
+    "@japa/assert": "^4.2.0",
+    "@japa/expect-type": "^2.0.4",
+    "@japa/file-system": "^3.0.0",
+    "@japa/runner": "^4.5.0",
+    "@swc/core": "1.15.5",
+    "@types/luxon": "^3.7.1",
+    "@types/node": "catalog:",
+    "better-sqlite3": "^12.5.0",
+    "c8": "^11.0.0",
+    "cpy-cli": "^7.0.0",
+    "del-cli": "^7.0.0",
+    "luxon": "^3.7.2",
+    "reflect-metadata": "^0.2.2",
+    "ts-node": "^10.9.2",
+    "typescript": "catalog:",
+    "youch": "catalog:"
+  },
+  "peerDependencies": {
+    "@adonisjs/bouncer": "^4.0.0",
+    "@adonisjs/core": "^7.0.0",
+    "@adonisjs/lucid": "^22.0.0"
+  },
+  "engines": {
+    "node": ">=20.6.0"
+  }
+}

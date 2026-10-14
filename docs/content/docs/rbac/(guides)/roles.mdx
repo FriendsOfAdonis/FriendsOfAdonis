@@ -1,0 +1,395 @@
+---
+title: Roles
+description: "Define roles in code with defineRoles, assign them to users with withRoles, or store roles in the database with withRoleModel when admins edit them."
+icon: Users
+---
+
+Roles are the recommended way to manage permissions. You give permissions to a role such as `editor` or `admin`, then assign the role to users. When the responsibilities of a user change, you change their roles instead of editing permissions one by one.
+
+The package supports two kinds of roles:
+
+- **Roles in code**, the default. You declare them with `defineRoles` next to your permissions, and the `withRoles` mixin stores the role names of each user in a JSON `roles` column. There is no roles table and no pivot table.
+- **Roles in the database**, for applications where an admin creates and edits roles at runtime. The `withRoleModel` mixin links users to a `Role` model through a pivot table. See [Store roles in the database](#store-roles-in-the-database).
+
+A model uses `withRoles` or `withRoleModel`, never both. Booting a model that composes both throws `E_CONFLICTING_ROLE_MIXINS`.
+
+## Define roles
+
+`defineRoles` takes your permissions and a map of role names to definitions. Each role lists its grants: permission keys or [wildcards](/docs/rbac/defining-permissions#wildcards), typed against your permissions.
+
+```ts title="start/rbac.ts"
+import { definePermissions, defineRoles } from "@foadonis/rbac";
+
+export const permissions = definePermissions({
+  article: {
+    create: true,
+    publish: "Publish articles",
+    delete: "Delete articles",
+  },
+  comment: {
+    moderate: "Moderate comments",
+  },
+  admin: {
+    user: { ban: true, impersonate: true },
+  },
+});
+
+export const roles = defineRoles(permissions, {
+  writer: {
+    description: "Writes articles",
+    permissions: ["article.create"],
+  },
+  editor: {
+    permissions: ["article.*", "comment.moderate"],
+  },
+  admin: {
+    description: "Full access",
+    permissions: ["*"],
+  },
+});
+```
+
+The `description` is optional and defaults to the humanized name: `editor` becomes "Editor", and `section_editor` becomes "Section editor".
+
+Role names accept letters, digits, `_` and `-`. `defineRoles` throws `E_INVALID_ROLE_DEFINITION` on an invalid name, a role without a `permissions` list, or a grant that is neither a defined key nor a valid wildcard. Aliases are not accepted as grants.
+
+## Compose roles
+
+Roles have no inheritance. They are plain TypeScript, so share grants with a constant and the spread operator:
+
+```ts title="start/rbac.ts"
+const writer = ["article.create", "comment.moderate"] as const;
+
+export const roles = defineRoles(permissions, {
+  writer: { permissions: writer },
+  editor: { permissions: [...writer, "article.publish", "article.delete"] },
+  admin: { permissions: ["*"] },
+});
+```
+
+The `as const` keeps the keys typed, so a typo in the constant fails to compile.
+
+## Add roles to a model
+
+Apply the `withRoles` mixin to the `User` model, or to any model that holds roles. The [Getting Started](/docs/rbac/getting-started) guide generates the migration that adds the JSON `roles` column to the `users` table.
+
+```ts title="app/models/user.ts"
+import { compose } from "@adonisjs/core/helpers";
+import { BaseModel } from "@adonisjs/lucid/orm";
+import { withRoles } from "@foadonis/rbac";
+import { roles } from "#start/rbac";
+
+export default class User extends compose(BaseModel, withRoles(roles)) {
+  // ...your existing columns
+}
+```
+
+The mixin registers the `roles` column itself. It reads `null` as an empty list and writes `[]` on create.
+
+## Assign, sync and revoke roles
+
+The write methods accept role names. They validate their input, save the model right away, and clear the cached grants of the instance for the next [Bouncer check](/docs/rbac/authorization#one-load-per-request).
+
+```ts
+await user.assignRole("writer");
+await user.assignRoles(["writer", "editor"]);
+
+await user.syncRoles(["admin"]);
+
+await user.revokeRole("admin");
+await user.revokeRoles(["writer", "editor"]);
+```
+
+- `assignRole` and `assignRoles` add roles. Assigning a role the user already holds does nothing.
+- `syncRoles` replaces every role of the user.
+- `revokeRole` and `revokeRoles` remove roles. Revoking a role the user does not hold does nothing.
+
+`assignRole`, `assignRoles` and `syncRoles` throw `E_UNKNOWN_ROLE` when a name is not a defined role, and save nothing. The revoke methods accept any name, so you can clean up roles you removed from the code.
+
+## Check role membership
+
+`getRoles` and `hasRole` read the column of the model, so they are synchronous.
+
+```ts
+user.getRoles();
+// ["writer", "editor"]
+
+user.hasRole("editor");
+// true
+```
+
+When you remove a role from `defineRoles`, users may still store its name. `getRoles` skips it, `hasRole` returns `false`, and it grants nothing. The raw stored names stay available on `user.roles`, and `user.revokeRole("moderator")` removes a stale one.
+
+Check permissions rather than roles where you can. A check on `article.publish` keeps working when you rename a role or move the permission to another role.
+
+## Read the permissions of a user
+
+`getPermissions` merges the grants of every role, then resolves them: aliases become keys, wildcards expand, and inactive and unknown values disappear.
+
+For a user holding the `editor` role:
+
+```ts
+await user.getPermissions();
+// ["article.create", "article.publish", "article.delete", "comment.moderate"]
+
+await user.hasPermission("comment.moderate");
+// true
+```
+
+`getGrants` returns the raw grants before resolution:
+
+```ts
+await user.getGrants();
+// ["article.*", "comment.moderate"]
+```
+
+## Validate input
+
+Values that come from a request are plain strings. `roles.isRole` narrows them to the role names, so you can validate before you write.
+
+```ts title="app/controllers/users_roles_controller.ts"
+import type { HttpContext } from "@adonisjs/core/http";
+import User from "#models/user";
+import { roles } from "#start/rbac";
+
+export default class UsersRolesController {
+  async update({ params, request, response }: HttpContext) {
+    const user = await User.findOrFail(params.id);
+    const input: unknown = request.input("roles");
+
+    if (!Array.isArray(input) || !input.every(roles.isRole)) {
+      return response.unprocessableEntity({ message: "Unknown role" });
+    }
+
+    await user.syncRoles(input);
+  }
+}
+```
+
+## Query the roles
+
+The `roles` object describes the roles at runtime. Use it to build an admin screen that lists the available roles.
+
+```ts
+import { roles } from "#start/rbac";
+
+roles.names();
+// ["writer", "editor", "admin"]
+
+roles.all();
+// [{ name: "writer", description: "Writes articles", permissions: ["article.create"] }, ...]
+
+roles.find("editor");
+// The entry of the editor role, or undefined
+
+roles.grantsOf(["writer", "editor"]);
+// ["article.create", "article.*", "comment.moderate"]
+
+roles.permissions;
+// The permissions the roles are typed against
+```
+
+The `RoleName` type helper returns the role names as a union:
+
+```ts
+import type { RoleName } from "@foadonis/rbac/types";
+import { roles } from "#start/rbac";
+
+type Name = RoleName<typeof roles>;
+// "writer" | "editor" | "admin"
+```
+
+## Store roles in the database
+
+Roles in code cover most applications. When an admin needs to create roles or edit their permissions at runtime, store them in the database instead. You need a `roles` table, a pivot table, a `Role` model and the `withRoleModel` mixin. The `configure` command does not generate these files, so copy them from this section.
+
+### Create the tables
+
+The `roles` table stores the grants of each role in a JSON column:
+
+```ts title="database/migrations/xxxx_create_roles_table.ts"
+import { BaseSchema } from "@adonisjs/lucid/schema";
+
+export default class extends BaseSchema {
+  protected tableName = "roles";
+
+  async up() {
+    this.schema.createTable(this.tableName, (table) => {
+      table.increments("id");
+      table.string("name").notNullable().unique();
+      table.json("permissions").notNullable();
+      table.timestamp("created_at");
+      table.timestamp("updated_at");
+    });
+  }
+
+  async down() {
+    this.schema.dropTable(this.tableName);
+  }
+}
+```
+
+The `user_roles` table links users to roles, with a unique constraint on the pair and foreign keys that cascade on delete:
+
+```ts title="database/migrations/xxxx_create_user_roles_table.ts"
+import { BaseSchema } from "@adonisjs/lucid/schema";
+
+export default class extends BaseSchema {
+  protected tableName = "user_roles";
+
+  async up() {
+    this.schema.createTable(this.tableName, (table) => {
+      table.increments("id");
+      table
+        .integer("user_id")
+        .unsigned()
+        .notNullable()
+        .references("id")
+        .inTable("users")
+        .onDelete("CASCADE");
+      table
+        .integer("role_id")
+        .unsigned()
+        .notNullable()
+        .references("id")
+        .inTable("roles")
+        .onDelete("CASCADE");
+      table.unique(["user_id", "role_id"]);
+    });
+  }
+
+  async down() {
+    this.schema.dropTable(this.tableName);
+  }
+}
+```
+
+<Callout>
+  The pivot migration assumes an integer `users.id` column. Edit `user_id` if
+  your users use UUIDs.
+</Callout>
+
+The migration generated by `node ace configure` adds a `roles` column to `users`. `withRoleModel` does not use it, so remove it from that migration when you store roles in the database.
+
+### Create the Role model
+
+Apply the `withPermissions` mixin to the `Role` model. The model needs a `name` column.
+
+```ts title="app/models/role.ts"
+import { compose } from "@adonisjs/core/helpers";
+import { BaseModel, column } from "@adonisjs/lucid/orm";
+import { withPermissions } from "@foadonis/rbac";
+import { permissions } from "#start/rbac";
+
+export default class Role extends compose(BaseModel, withPermissions(permissions)) {
+  @column({ isPrimary: true })
+  declare id: number;
+
+  @column()
+  declare name: string;
+}
+```
+
+The mixin registers the `permissions` column itself. Do not declare it on the model. Remove the `roles` export from `start/rbac.ts` if you do not use roles in code.
+
+### Add roles to the User model
+
+Apply the `withRoleModel` mixin to the `User` model. It needs your permissions, the role model and the pivot table name.
+
+```ts title="app/models/user.ts"
+import { compose } from "@adonisjs/core/helpers";
+import { BaseModel } from "@adonisjs/lucid/orm";
+import { withRoleModel } from "@foadonis/rbac";
+import { permissions } from "#start/rbac";
+import Role from "#models/role";
+
+export default class User extends compose(
+  BaseModel,
+  withRoleModel(permissions, {
+    role: () => Role,
+    pivotTable: "user_roles",
+  })
+) {
+  // ...your existing columns
+}
+```
+
+### Give permissions to a role
+
+The `withPermissions` methods validate their input, save the role right away, and accept keys and wildcards.
+
+```ts title="database/seeders/role_seeder.ts"
+import { BaseSeeder } from "@adonisjs/lucid/seeders";
+import Role from "#models/role";
+
+export default class extends BaseSeeder {
+  async run() {
+    const writer = await Role.create({ name: "writer" });
+    await writer.givePermission("article.create");
+
+    const editor = await Role.create({ name: "editor" });
+    await editor.givePermissions(["article.*", "comment.moderate"]);
+
+    const admin = await Role.create({ name: "admin" });
+    await admin.givePermission("*");
+  }
+}
+```
+
+`syncPermissions`, `revokePermission` and `revokePermissions` work as described in [Direct permissions](/docs/rbac/direct-permissions#give-sync-and-revoke). Revoking a key does not narrow a wildcard: if the role holds `article.*`, revoking `article.delete` leaves `article.*` in place.
+
+### Assign database roles
+
+The `withRoleModel` methods accept a role or its primary key. They write to the pivot table, and the role reads are asynchronous.
+
+```ts
+import Role from "#models/role";
+
+const editor = await Role.findByOrFail("name", "editor");
+
+await user.assignRole(editor);
+await user.assignRoles([editor, 3]);
+await user.syncRoles([editor]);
+await user.revokeRole(editor);
+
+await user.getRoles();
+// Role instances. Uses the preloaded relationship when there is one.
+
+await user.hasRole("editor");
+await user.hasRole(editor);
+// A string matches the role name, a role matches its primary key
+```
+
+`roles` is a regular Lucid relationship, so `preload` and `whereHas` work as usual:
+
+```ts
+const users = await User.query()
+  .whereHas("roles", (query) => query.where("name", "editor"))
+  .preload("roles");
+```
+
+The role methods drop the preloaded roles, so the next `getRoles` call reads them again.
+
+### Use the generated schema classes
+
+With the Lucid schema generator, compose the mixins on top of the generated class instead of `BaseModel`:
+
+```ts title="app/models/role.ts"
+import { compose } from "@adonisjs/core/helpers";
+import { RoleSchema } from "#database/schema";
+import { withPermissions } from "@foadonis/rbac";
+import { permissions } from "#start/rbac";
+
+export default class Role extends compose(RoleSchema, withPermissions(permissions)) {}
+```
+
+Create the `permissions` column with `table.json()`, as the migration above does. The generator types a JSON column as `any`, so the generated class and the mixin agree on the column. A `text` column would be typed `string` and conflict with the `string[]` the mixin stores.
+
+### Options of withRoleModel
+
+| Option                   | Type                    | Description                                                            |
+| ------------------------ | ----------------------- | ---------------------------------------------------------------------- |
+| `role`                   | `() => RoleModel`       | Returns the role model. The model needs a `name` column and `withPermissions`. |
+| `pivotTable`             | `string`                | Name of the pivot table between the model and the roles               |
+| `pivotForeignKey`        | `string`                | Pivot column that references the model. Defaults to the Lucid convention, such as `user_id`. |
+| `pivotRelatedForeignKey` | `string`                | Pivot column that references the role. Defaults to the Lucid convention, `role_id`. |

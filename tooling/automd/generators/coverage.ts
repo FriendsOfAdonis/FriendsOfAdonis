@@ -22,7 +22,7 @@ export default defineGenerator({
       100: 'brightgreen',
     }
 
-    const color = Object.entries(colors).find(([pct]) => percentage < +pct)[1] ?? 'red'
+    const color = Object.entries(colors).find(([pct]) => percentage < +pct)?.[1] ?? 'brightgreen'
 
     const badgeContent = encodeURIComponent(`coverage-${percentage}%-${color}`)
 

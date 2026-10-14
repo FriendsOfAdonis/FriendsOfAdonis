@@ -1,0 +1,197 @@
+---
+title: Defining Permissions
+description: "Declare permission keys in nested namespaces with definePermissions, grant subtrees with wildcards, rename keys with aliases, and query the definition."
+icon: KeyRound
+---
+
+Every permission of your application lives in one definition, in `start/rbac.ts`. The definition is the source of the key types, the Bouncer abilities and the validation of every write.
+
+## Namespaces and keys
+
+`definePermissions` takes a tree of namespaces. Each leaf produces a key: the dot path from the root to the leaf.
+
+```ts title="start/rbac.ts"
+import { definePermissions } from "@foadonis/rbac";
+
+export const permissions = definePermissions({
+  article: {
+    create: true,
+    publish: "Publish articles",
+    delete: "Delete articles",
+  },
+  comment: {
+    moderate: "Moderate comments",
+  },
+  admin: {
+    user: {
+      ban: true,
+      impersonate: "Sign in as another user",
+    },
+  },
+});
+```
+
+The keys are `article.create`, `article.publish`, `article.delete`, `comment.moderate`, `admin.user.ban` and `admin.user.impersonate`. Namespaces nest at any depth, but a key always has at least two segments: the root of the tree only holds namespaces.
+
+The value of a leaf sets its description:
+
+- `true` generates the description from the last two segments. `article.create` becomes "Create article", and `admin.user.ban` becomes "Ban user".
+- A string is the description.
+
+Names accept letters, digits, `_` and `-`. `definePermissions` throws `E_INVALID_PERMISSION_DEFINITION` on an invalid name, a leaf at the root, or a leaf that is neither `true` nor a string.
+
+## Wildcards
+
+A wildcard is a grant that covers several keys. You store it on a role or a user like a key.
+
+| Wildcard       | Grants                                              |
+| -------------- | --------------------------------------------------- |
+| `*`            | Every active permission                             |
+| `article.*`    | Every active key of the `article` namespace         |
+| `admin.*`      | Every active key below `admin`, such as `admin.user.ban` |
+| `admin.user.*` | Every active key of the `admin.user` namespace      |
+
+A wildcard covers the whole subtree of its namespace. The `*` only goes at the end: `admin.*.ban` and `*.create` are not valid grants.
+
+The package expands wildcards when it reads the grants, not when it stores them. A role holding `article.*` receives `article.archive` as soon as you add it to the definition. Writes only accept wildcards that target a namespace you defined, so `newsletter.*` fails to compile when there is no `newsletter` namespace.
+
+## Aliases
+
+An alias lets you rename a key or a namespace without rewriting stored data. Pass a map of old paths to defined paths as the second argument.
+
+```ts title="start/rbac.ts"
+export const permissions = definePermissions(
+  {
+    article: {
+      create: true,
+      publish: "Publish articles",
+    },
+  },
+  {
+    aliases: {
+      "article.release": "article.publish",
+      "post": "article",
+    },
+  }
+);
+```
+
+- A key alias maps one stored value. A role storing `article.release` passes `bouncer.authorize("article.publish")`.
+- A namespace alias rewrites every stored grant below it, including wildcards. `post.create` becomes `article.create`, and `post.*` becomes `article.*`.
+
+When several aliases match a stored grant, the longest one wins. Aliases are read only: write methods do not accept them, and revoking `article.publish` also removes a stored `article.release`.
+
+An alias must be a dot path that is not already a key or a namespace, and its target must be a defined key or namespace. `definePermissions` throws otherwise.
+
+## Inactive permissions
+
+List keys or namespaces in the `inactive` option to switch them off without deleting them. An inactive namespace disables every key below it.
+
+```ts title="start/rbac.ts"
+export const permissions = definePermissions(
+  {
+    article: { create: true, publish: true },
+    admin: {
+      user: { ban: true, impersonate: true },
+    },
+  },
+  {
+    inactive: ["admin.user.impersonate"],
+  }
+);
+```
+
+The option is typed, so a path that does not exist fails to compile. An inactive key stays in the definition and stays writable, so existing data keeps validating. It has no effect on authorization:
+
+- No Bouncer ability exists for it, so `bouncer.authorize("admin.user.impersonate")` fails to compile.
+- Resolution drops it, even when a role stores it or a wildcard covers it.
+
+## Querying the definition
+
+The `permissions` object describes the definition at runtime. Use it to build an admin screen that lists the available permissions. The example below assumes the definition from the top of this page, with the aliases and the inactive key of the previous sections.
+
+```ts
+import { permissions } from "#start/rbac";
+
+permissions.all();
+// [{ key: "article.create", path: ["article", "create"], description: "Create article", inactive: false }, ...]
+
+permissions.keys();
+// Every key, including inactive ones
+
+permissions.active();
+// Active keys only
+
+permissions.find("article.release");
+// The entry of article.publish, found through its alias
+
+permissions.canonical("post.*");
+// "article.*"
+
+permissions.aliasesOf("article.publish");
+// ["article.release"]
+
+permissions.resolve(["article.release", "admin.*", "unknown.key"]);
+// ["article.publish", "admin.user.ban"]
+```
+
+## Validating input
+
+Values that come from a request are plain strings. `permissions.isGrant` narrows them to the writable type, so you can validate before you write.
+
+```ts title="app/controllers/users_permissions_controller.ts"
+import type { HttpContext } from "@adonisjs/core/http";
+import User from "#models/user";
+import { permissions } from "#start/rbac";
+
+export default class UsersPermissionsController {
+  async update({ params, request, response }: HttpContext) {
+    const user = await User.findOrFail(params.id);
+    const input: unknown = request.input("permissions");
+
+    if (!Array.isArray(input) || !input.every(permissions.isGrant)) {
+      return response.unprocessableEntity({ message: "Unknown permission" });
+    }
+
+    await user.syncPermissions(input);
+  }
+}
+```
+
+Without the check, `syncPermissions` throws `E_UNKNOWN_PERMISSION` for the first unknown value. The example uses [direct permissions](/docs/rbac/direct-permissions).
+
+## Types
+
+The `@foadonis/rbac/types` module exports helpers that derive types from your definition:
+
+```ts
+import type { ActivePermission, Grant, PermissionKey } from "@foadonis/rbac/types";
+import { permissions } from "#start/rbac";
+
+type Key = PermissionKey<typeof permissions>;
+// Every key, including inactive ones
+
+type Active = ActivePermission<typeof permissions>;
+// Active keys only. Bouncer abilities and checks accept these.
+
+type Writable = Grant<typeof permissions>;
+// Keys and wildcards. Write methods accept these.
+```
+
+## Methods reference
+
+| Method                 | Returns                       | Description                                                          |
+| ---------------------- | ----------------------------- | -------------------------------------------------------------------- |
+| `all()`                | `PermissionEntry[]`           | Every entry, including inactive ones, in definition order            |
+| `keys()`               | `PermissionKey[]`             | Every key, including inactive ones                                   |
+| `active()`             | `ActivePermission[]`          | Active keys                                                          |
+| `find(value)`          | `PermissionEntry \| undefined` | The entry of a key or an alias                                      |
+| `canonical(value)`     | `string`                      | The value with aliases rewritten. Other values are returned unchanged. |
+| `aliasesOf(key)`       | `string[]`                    | The aliases that resolve to the key, including namespace aliases     |
+| `isGrant(value)`       | `boolean`                     | Whether the value is a defined key or a valid wildcard               |
+| `resolve(grants)`      | `ActivePermission[]`          | Resolves aliases, expands wildcards, drops inactive and unknown values |
+| `access(grants)`       | `Access`                      | An `Access` built from raw grants                                    |
+| `accessFor(holder)`    | `Promise<Access>`             | An `Access` built from the grants of a model                         |
+| `abilities()`          | `object`                      | One Bouncer ability per active key, built once                       |
+
+A `PermissionEntry` holds the `key`, its `path` segments, its `description` and its `inactive` flag. See [Authorization](/docs/rbac/authorization) for `Access` and `abilities()`.

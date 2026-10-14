@@ -1,0 +1,32 @@
+{{{
+  exports({ to: app.middlewarePath('authorize_middleware.ts') })
+}}}
+import type { HttpContext } from '@adonisjs/core/http'
+import type { NextFn } from '@adonisjs/core/types/http'
+import type { ActivePermission } from '@foadonis/rbac/types'
+import type { permissions } from '#start/rbac'
+
+/**
+ * Authorize middleware ensures the current user holds the given
+ * permissions, using the abilities generated from "start/rbac.ts".
+ *
+ * @example
+ * router.post('/articles', [ArticlesController, 'store']).use(
+ *   middleware.authorize('article.create')
+ * )
+ */
+export default class AuthorizeMiddleware {
+  async handle(
+    ctx: HttpContext,
+    next: NextFn,
+    required: ActivePermission<typeof permissions> | ActivePermission<typeof permissions>[]
+  ) {
+    const keys = Array.isArray(required) ? required : [required]
+
+    for (const key of keys) {
+      await ctx.bouncer.authorize(key)
+    }
+
+    return next()
+  }
+}

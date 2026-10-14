@@ -67,6 +67,12 @@ export const packages: Record<string, PackageInfo> = {
     description:
       'Parse Lucid models through the TypeScript AST to extract property and relationship type information.',
   },
+  'rbac': {
+    package: '@foadonis/rbac',
+    name: 'AdonisJS RBAC',
+    description:
+      'Typed role-based access control for AdonisJS, with roles, wildcards and generated Bouncer abilities.',
+  },
   'flick': {
     package: '@foadonis/flick',
     name: 'AdonisJS Flick',

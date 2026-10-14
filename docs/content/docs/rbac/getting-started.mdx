@@ -1,0 +1,197 @@
+---
+title: Getting Started
+description: "Install @foadonis/rbac, define permissions and roles in start/rbac.ts, add roles to the User model, and authorize a controller action with Bouncer."
+icon: Rocket
+---
+
+This guide sets up the package from scratch. At the end, a `writer` can create articles, an `editor` can also publish them, an `admin` can do everything, and a controller rejects users without the right permission with a 403.
+
+<div className="fd-steps [&_h2]:fd-step">
+
+## Install Bouncer
+
+RBAC authorizes through [AdonisJS Bouncer](https://docs.adonisjs.com/guides/security/authorization). If your application does not use Bouncer yet, install it first:
+
+```sh
+node ace add @adonisjs/bouncer
+```
+
+The command creates `app/middleware/initialize_bouncer_middleware.ts` and registers it in `start/kernel.ts`.
+
+## Install the package
+
+Install and configure the package using the following command:
+
+```sh
+node ace add @foadonis/rbac
+```
+
+The command performs these steps:
+
+1. Creates `start/rbac.ts`, which exports your `permissions` and `roles`.
+2. Creates `app/middleware/authorize_middleware.ts` and registers it as the `authorize` named middleware in `start/kernel.ts`.
+3. Creates a migration that adds nullable JSON `roles` and `permissions` columns to the `users` table.
+
+## Define permissions and roles
+
+Open `start/rbac.ts` and list the permissions of your application, then the roles that group them.
+
+```ts title="start/rbac.ts"
+import { definePermissions, defineRoles } from "@foadonis/rbac";
+
+export const permissions = definePermissions({
+  article: {
+    create: true,
+    publish: "Publish articles",
+    delete: "Delete articles",
+  },
+  comment: {
+    moderate: "Moderate comments",
+  },
+});
+
+export const roles = defineRoles(permissions, {
+  writer: {
+    description: "Writes articles",
+    permissions: ["article.create"],
+  },
+  editor: {
+    description: "Publishes articles and moderates comments",
+    permissions: ["article.*", "comment.moderate"],
+  },
+  admin: {
+    description: "Full access",
+    permissions: ["*"],
+  },
+});
+```
+
+The definition produces four keys: `article.create`, `article.publish`, `article.delete` and `comment.moderate`. Your editor autocompletes them everywhere the package expects a key, including the role grants. `article.*` grants every key of the `article` namespace, and `*` grants every key. See [Defining permissions](/docs/rbac/defining-permissions) for nested namespaces, aliases and inactive keys.
+
+## Run the migration
+
+The generated migration adds the `roles` column, which stores the role names of each user, and the `permissions` column, used by [direct permissions](/docs/rbac/direct-permissions). Both are nullable, so existing users stay valid.
+
+```sh
+node ace migration:run
+```
+
+## Add roles to the User model
+
+Apply the `withRoles` mixin to your `User` model and pass it your roles.
+
+```ts title="app/models/user.ts"
+import { compose } from "@adonisjs/core/helpers";
+import { BaseModel } from "@adonisjs/lucid/orm";
+import { withRoles } from "@foadonis/rbac";
+import { roles } from "#start/rbac";
+
+export default class User extends compose(BaseModel, withRoles(roles)) {
+  // ...your existing columns
+}
+```
+
+The mixin registers the `roles` column itself. Do not declare it on the model. If your `User` model already composes other mixins, such as `withAuthFinder`, add `withRoles` to the same `compose` call.
+
+## Assign a role to a user
+
+`assignRole` accepts a role name. It validates the name, saves the user, and ignores a role the user already holds. A user can hold many roles, and their permissions are the union of every role.
+
+```ts
+import User from "#models/user";
+
+const user = await User.findOrFail(1);
+
+await user.assignRole("editor");
+```
+
+## Register the abilities with Bouncer
+
+Open the Bouncer middleware and add the generated abilities next to your own. Call `permissions.abilities()` outside the class, so it runs once when the file loads.
+
+```ts title="app/middleware/initialize_bouncer_middleware.ts"
+import { Bouncer } from "@adonisjs/bouncer";
+import type { HttpContext } from "@adonisjs/core/http";
+import type { NextFn } from "@adonisjs/core/types/http";
+import * as abilities from "#abilities/main";
+import { policies } from "#generated/policies";
+import { permissions } from "#start/rbac";
+
+const allAbilities = {
+  ...abilities,
+  ...permissions.abilities(),
+};
+
+export default class InitializeBouncerMiddleware {
+  async handle(ctx: HttpContext, next: NextFn) {
+    ctx.bouncer = new Bouncer(
+      () => ctx.auth.user || null,
+      allAbilities,
+      policies
+    ).setContainerResolver(ctx.containerResolver);
+
+    if ("view" in ctx) {
+      ctx.view.share(ctx.bouncer.edgeHelpers);
+    }
+
+    return next();
+  }
+}
+
+declare module "@adonisjs/core/http" {
+  export interface HttpContext {
+    bouncer: Bouncer<
+      Exclude<HttpContext["auth"]["user"], undefined>,
+      typeof allAbilities,
+      typeof policies
+    >;
+  }
+}
+```
+
+Compared with the middleware Bouncer generates, only the `allAbilities` object and the two places that use it change.
+
+## Authorize a controller action
+
+Call `bouncer.authorize` with a permission key. Bouncer throws a 403 when the user does not hold it.
+
+```ts title="app/controllers/articles_controller.ts"
+import type { HttpContext } from "@adonisjs/core/http";
+
+export default class ArticlesController {
+  async store({ bouncer }: HttpContext) {
+    await bouncer.authorize("article.create");
+
+    // The user can create articles
+  }
+
+  async publish({ bouncer }: HttpContext) {
+    await bouncer.authorize("article.publish");
+
+    // The user can publish articles
+  }
+}
+```
+
+A `writer` can create articles and gets a 403 on `publish`. An `editor` and an `admin` can do both.
+
+You can also protect the route instead of the action, with the `authorize` middleware:
+
+```ts title="start/routes.ts"
+import router from "@adonisjs/core/services/router";
+import { middleware } from "#start/kernel";
+
+const ArticlesController = () => import("#controllers/articles_controller");
+
+router
+  .post("/articles/:id/publish", [ArticlesController, "publish"])
+  .use(middleware.authorize("article.publish"));
+```
+
+</div>
+
+## Next steps
+
+- [Defining permissions](/docs/rbac/defining-permissions) covers nested namespaces, wildcards, aliases and inactive keys.
+- [Roles](/docs/rbac/roles) covers assigning, syncing and revoking roles, and storing roles in the database.
+- [Authorization](/docs/rbac/authorization) covers token scoping and the `Access` class.
