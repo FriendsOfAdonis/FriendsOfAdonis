@@ -1,23 +1,18 @@
 ---
 title: Teams
-description: "Scope roles to teams by applying withRoles to a TeamMember model, then authorize each request against the team member with its own Bouncer instance."
+description: "Scope roles to teams by holding them on a TeamMember model, with code roles or withRoleModel, then authorize each request with its own Bouncer."
 icon: Building2
 ---
 
-In a multi-tenant application, the permissions of a user depend on the team they act in. A user can be an admin in one team and a viewer in another. The permission definition and the roles are shared. What changes is which roles each membership holds.
+In a multi-tenant application, the permissions of a user depend on the team they act in. A user can be an admin in one team and a writer in another. The permission definition and the roles are shared. What changes is which roles each membership holds.
 
-You model this with a `TeamMember` model that holds the roles, instead of the `User` model. Any Lucid model can hold roles through `withRoles`.
+You model this with a `TeamMember` model that holds the roles, instead of the `User` model. Any Lucid model can hold roles, either [in code](/docs/rbac/roles) with `withRoles` or [in the database](/docs/rbac/roles#store-roles-in-the-database) with `withRoleModel`. Pick one of the two options below.
 
-## Create the tables
+## Option 1: roles in code
 
-Generate two migrations:
+### Create the table
 
-```sh
-node ace make:migration team_members
-node ace make:migration team_member_roles
-```
-
-The `team_members` table stores one row per user and team:
+The `team_members` table stores one row per user and team, with the role names of the membership in a JSON `roles` column:
 
 ```ts title="database/migrations/xxxx_create_team_members_table.ts"
 import { BaseSchema } from "@adonisjs/lucid/schema";
@@ -30,6 +25,7 @@ export default class extends BaseSchema {
       table.increments("id");
       table.integer("team_id").unsigned().notNullable().references("id").inTable("teams").onDelete("CASCADE");
       table.integer("user_id").unsigned().notNullable().references("id").inTable("users").onDelete("CASCADE");
+      table.json("roles").nullable();
       table.unique(["team_id", "user_id"]);
       table.timestamp("created_at");
       table.timestamp("updated_at");
@@ -42,7 +38,51 @@ export default class extends BaseSchema {
 }
 ```
 
-The `team_member_roles` table links memberships to roles:
+### Create the TeamMember model
+
+Apply `withRoles` with the roles from `start/rbac.ts`. The mixin registers the `roles` column itself.
+
+```ts title="app/models/team_member.ts"
+import { compose } from "@adonisjs/core/helpers";
+import { BaseModel, column } from "@adonisjs/lucid/orm";
+import { withRoles } from "@foadonis/rbac";
+import { roles } from "#start/rbac";
+
+export default class TeamMember extends compose(BaseModel, withRoles(roles)) {
+  @column({ isPrimary: true })
+  declare id: number;
+
+  @column()
+  declare teamId: number;
+
+  @column()
+  declare userId: number;
+}
+```
+
+### Assign roles per team
+
+When a user joins a team, create the membership and assign its roles by name.
+
+```ts
+import TeamMember from "#models/team_member";
+
+const inTeamA = await TeamMember.create({ teamId: teamA.id, userId: user.id });
+await inTeamA.assignRole("writer");
+
+const inTeamB = await TeamMember.create({ teamId: teamB.id, userId: user.id });
+await inTeamB.assignRole("admin");
+```
+
+The same user is a writer in team A and an admin in team B.
+
+## Option 2: roles in the database
+
+Use this option when admins edit roles at runtime. It assumes the `roles` table and the `Role` model from the [Roles](/docs/rbac/roles#store-roles-in-the-database) guide.
+
+### Create the tables
+
+Create the `team_members` table as in option 1, without the `roles` column. Then link memberships to roles with a `team_member_roles` pivot table:
 
 ```ts title="database/migrations/xxxx_create_team_member_roles_table.ts"
 import { BaseSchema } from "@adonisjs/lucid/schema";
@@ -71,20 +111,20 @@ export default class extends BaseSchema {
 }
 ```
 
-## Create the TeamMember model
+### Create the TeamMember model
 
-Apply `withRoles` with the team pivot table. Set `pivotForeignKey`, because the column is `team_member_id`.
+Apply `withRoleModel` with the team pivot table. Set `pivotForeignKey`, because the column is `team_member_id`. Set `pivotRelatedForeignKey` too if your role column is not `role_id`.
 
 ```ts title="app/models/team_member.ts"
 import { compose } from "@adonisjs/core/helpers";
 import { BaseModel, column } from "@adonisjs/lucid/orm";
-import { withRoles } from "@foadonis/rbac";
-import { permissions } from "#start/permissions";
+import { withRoleModel } from "@foadonis/rbac";
+import { permissions } from "#start/rbac";
 import Role from "#models/role";
 
 export default class TeamMember extends compose(
   BaseModel,
-  withRoles(permissions, {
+  withRoleModel(permissions, {
     role: () => Role,
     pivotTable: "team_member_roles",
     pivotForeignKey: "team_member_id",
@@ -101,39 +141,35 @@ export default class TeamMember extends compose(
 }
 ```
 
-## Assign roles per team
-
-When a user joins a team, create the membership and assign its roles.
+### Assign roles per team
 
 ```ts
 import Role from "#models/role";
 import TeamMember from "#models/team_member";
 
-const editor = await Role.findByOrFail("name", "editor");
+const writer = await Role.findByOrFail("name", "writer");
 const admin = await Role.findByOrFail("name", "admin");
 
 const inTeamA = await TeamMember.create({ teamId: teamA.id, userId: user.id });
-await inTeamA.assignRole(editor);
+await inTeamA.assignRole(writer);
 
 const inTeamB = await TeamMember.create({ teamId: teamB.id, userId: user.id });
 await inTeamB.assignRole(admin);
 ```
 
-The same user is an editor in team A and an admin in team B.
-
 ## Authorize against the team member
 
-`ctx.bouncer` checks the authenticated user. For a team action, load the membership and create a Bouncer instance for it. Create the abilities once, outside the controller class.
+Both options authorize the same way. `ctx.bouncer` checks the authenticated user. For a team action, load the membership and create a Bouncer instance for it. Create the abilities once, outside the controller class.
 
-```ts title="app/controllers/team_products_controller.ts"
+```ts title="app/controllers/team_articles_controller.ts"
 import { Bouncer } from "@adonisjs/bouncer";
 import type { HttpContext } from "@adonisjs/core/http";
 import TeamMember from "#models/team_member";
-import { permissions } from "#start/permissions";
+import { permissions } from "#start/rbac";
 
 const permissionAbilities = permissions.abilities();
 
-export default class TeamProductsController {
+export default class TeamArticlesController {
   async store({ auth, params }: HttpContext) {
     const user = auth.getUserOrFail();
 
@@ -143,9 +179,9 @@ export default class TeamProductsController {
       .firstOrFail();
 
     const bouncer = new Bouncer(member, permissionAbilities);
-    await bouncer.authorize("product.create");
+    await bouncer.authorize("article.create");
 
-    // The member can create products in this team
+    // The member can create articles in this team
   }
 }
 ```
@@ -157,10 +193,11 @@ A user who is not a member of the team gets a 404 from `firstOrFail`. A member w
 Pass the token abilities as the second argument, as you would on `ctx.bouncer`:
 
 ```ts
+const user = auth.getUserOrFail();
 const tokenAbilities = user.currentAccessToken?.abilities;
 
 const bouncer = new Bouncer(member, permissionAbilities);
-await bouncer.authorize("product.create", tokenAbilities);
+await bouncer.authorize("article.create", tokenAbilities);
 ```
 
 The check passes when the roles of the member grant the permission and the token allows it.

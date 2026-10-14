@@ -23,26 +23,26 @@ test.group('Access', () => {
     assert.isTrue(access.allowsAll([]))
 
     assert.isTrue(access.allowsAny(['product.update', 'billing.refund']))
-    assert.isFalse(access.allowsAny(['product.update', 'admin:user.ban']))
+    assert.isFalse(access.allowsAny(['product.update', 'admin.user.ban']))
     assert.isFalse(access.allowsAny([]))
   })
 
   test('scopes to the intersection with explicit keys', ({ assert }) => {
     const access = permissions.access(['product.*', 'billing.refund'])
-    const scoped = access.scope(['product.create', 'product.update', 'admin:user.ban'])
+    const scoped = access.scope(['product.create', 'product.update', 'admin.user.ban'])
 
     assert.deepEqual(scoped.permissions(), ['product.create', 'product.update'])
     assert.isFalse(scoped.allows('billing.refund'))
-    assert.isFalse(scoped.allows('admin:user.ban'))
+    assert.isFalse(scoped.allows('admin.user.ban'))
   })
 
   test('keeps everything with a ["*"] scope', ({ assert }) => {
-    const access = permissions.access(['product.create', 'admin:*'])
+    const access = permissions.access(['product.create', 'admin.*'])
 
     assert.deepEqual(access.scope(['*']).permissions(), [
       'product.create',
-      'admin:user.ban',
-      'admin:user.impersonate',
+      'admin.user.ban',
+      'admin.user.impersonate',
     ])
   })
 
@@ -69,14 +69,14 @@ test.group('Access', () => {
     assert.deepEqual(scoped.permissions(), ['billing.refund'])
 
     const list = access.permissions()
-    list.push('admin:user.ban')
-    assert.isFalse(access.allows('admin:user.ban'))
+    list.push('admin.user.ban')
+    assert.isFalse(access.allows('admin.user.ban'))
 
     assert.isTrue(Object.isFrozen(access))
     assert.throws(() => {
       ;(access as unknown as { allows: unknown }).allows = () => true
     })
-    assert.isFalse(access.allows('admin:user.ban'))
+    assert.isFalse(access.allows('admin.user.ban'))
   })
 
   test('serializes to the list of keys', ({ assert }) => {

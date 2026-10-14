@@ -1,46 +1,48 @@
 import { test } from '@japa/runner'
 import { Bouncer } from '@adonisjs/bouncer'
-import { definePermissions, prefix } from '../src/define_permissions.ts'
+import { definePermissions } from '../src/define_permissions.ts'
+import { defineRoles } from '../src/define_roles.ts'
 import type { Access } from '../src/access.ts'
 import type {
   ActivePermission,
   Grant,
   PermissionHolder,
   PermissionKey,
+  RoleName,
   RoleRow,
 } from '../src/types.ts'
-import { Member, permissions, Role, TeamMember, User } from './fixtures/models.ts'
+import { Account, Member, permissions, Role, roles, TeamMember, User } from './fixtures/models.ts'
 
 const catalog = definePermissions(
   {
-    product: {
-      create: true,
-      delete: { aliases: ['product.remove'] },
-      archive: { inactive: true },
-    },
+    product: { create: true, delete: 'Delete products', archive: true },
+    admin: { user: { ban: 'Ban users' }, team: { create: true } },
   },
-  prefix('admin', { user: { ban: 'Ban users' } })
+  { aliases: { 'product.remove': 'product.delete' }, inactive: ['product.archive', 'admin.team'] }
 )
 
 test.group('Types', () => {
   test('infers every key as a literal union, including inactive keys', ({ expectTypeOf }) => {
-    expectTypeOf<PermissionKey<typeof catalog>>().toEqualTypeOf<
-      'product.create' | 'product.delete' | 'product.archive' | 'admin:user.ban'
-    >()
-    expectTypeOf(catalog.keys()).toEqualTypeOf<
-      ('product.create' | 'product.delete' | 'product.archive' | 'admin:user.ban')[]
-    >()
+    type Key =
+      | 'product.create'
+      | 'product.delete'
+      | 'product.archive'
+      | 'admin.user.ban'
+      | 'admin.team.create'
+
+    expectTypeOf<PermissionKey<typeof catalog>>().toEqualTypeOf<Key>()
+    expectTypeOf(catalog.keys()).toEqualTypeOf<Key[]>()
   })
 
-  test('excludes inactive keys from the active keys', ({ expectTypeOf }) => {
+  test('excludes inactive keys and namespaces from the active keys', ({ expectTypeOf }) => {
     expectTypeOf<ActivePermission<typeof catalog>>().toEqualTypeOf<
-      'product.create' | 'product.delete' | 'admin:user.ban'
+      'product.create' | 'product.delete' | 'admin.user.ban'
     >()
     expectTypeOf(catalog.active()).toEqualTypeOf<
-      ('product.create' | 'product.delete' | 'admin:user.ban')[]
+      ('product.create' | 'product.delete' | 'admin.user.ban')[]
     >()
     expectTypeOf(catalog.access([])).toEqualTypeOf<
-      Access<'product.create' | 'product.delete' | 'admin:user.ban'>
+      Access<'product.create' | 'product.delete' | 'admin.user.ban'>
     >()
   })
 
@@ -49,12 +51,30 @@ test.group('Types', () => {
       | 'product.create'
       | 'product.delete'
       | 'product.archive'
-      | 'admin:user.ban'
+      | 'admin.user.ban'
+      | 'admin.team.create'
       | '*'
       | 'product.*'
-      | 'admin:*'
-      | 'admin:user.*'
+      | 'admin.*'
+      | 'admin.user.*'
+      | 'admin.team.*'
     >()
+  })
+
+  test('rejects unknown paths in the options', () => {
+    /**
+     * Never executed: the assertions are the compile errors.
+     */
+    const neverCalled = () => {
+      // @ts-expect-error unknown inactive path
+      definePermissions({ product: { create: true } }, { inactive: ['product.craete'] })
+      // @ts-expect-error unknown alias target
+      definePermissions({ product: { create: true } }, { aliases: { 'item.add': 'product.add' } })
+      // @ts-expect-error actions cannot sit at the root
+      definePermissions({ export: true })
+    }
+
+    void neverCalled
   })
 
   test('narrows unknown input with isGrant', ({ expectTypeOf }) => {
@@ -95,8 +115,10 @@ test.group('Types', () => {
       void role.givePermission('product.craete')
       // @ts-expect-error aliases are read-only
       void role.givePermission('product.remove')
-      // @ts-expect-error unknown resource wildcard
+      // @ts-expect-error unknown namespace wildcard
       void role.givePermission('order.*')
+      // @ts-expect-error wildcards only end a path
+      void role.givePermission('admin.*.ban')
       // @ts-expect-error inactive keys cannot be checked
       void user.hasPermission('product.archive')
       // @ts-expect-error inactive keys cannot be checked
@@ -114,11 +136,48 @@ test.group('Types', () => {
 
     const neverCalled = async () => {
       await bouncer.authorize('product.create')
-      await bouncer.authorize('admin:user.ban', ['*'])
+      await bouncer.authorize('admin.user.ban', ['*'])
       // @ts-expect-error inactive keys have no ability
       await bouncer.authorize('product.archive')
       // @ts-expect-error unknown ability
       await bouncer.authorize('product.craete')
+    }
+
+    void neverCalled
+  })
+
+  test('infers role names as a literal union', ({ expectTypeOf }) => {
+    expectTypeOf<RoleName<typeof roles>>().toEqualTypeOf<'editor' | 'billing_manager' | 'admin'>()
+    expectTypeOf(roles.names()).toEqualTypeOf<('editor' | 'billing_manager' | 'admin')[]>()
+  })
+
+  test('types the code roles mixin', ({ expectTypeOf }) => {
+    const account = new Account()
+    expectTypeOf(account.assignRole).parameter(0).toEqualTypeOf<RoleName<typeof roles>>()
+    expectTypeOf(account.getRoles()).toEqualTypeOf<RoleName<typeof roles>[]>()
+    expectTypeOf(account.roles).toEqualTypeOf<string[]>()
+    expectTypeOf(account.hasPermission)
+      .parameter(0)
+      .toEqualTypeOf<ActivePermission<typeof permissions>>()
+    expectTypeOf(account.givePermission).parameter(0).toEqualTypeOf<Grant<typeof permissions>>()
+    expectTypeOf(account).toExtend<PermissionHolder>()
+  })
+
+  test('rejects unknown grants and role names at compile time', () => {
+    const account = new Account()
+
+    /**
+     * Never executed: the assertions are the compile errors.
+     */
+    const neverCalled = () => {
+      // @ts-expect-error typo in a role grant
+      defineRoles(catalog, { editor: { permissions: ['product.craete'] } })
+      // @ts-expect-error aliases cannot be granted by a role
+      defineRoles(catalog, { editor: { permissions: ['product.remove'] } })
+      // @ts-expect-error unknown role
+      void account.assignRole('moderator')
+      // @ts-expect-error unknown role
+      account.hasRole('moderator')
     }
 
     void neverCalled

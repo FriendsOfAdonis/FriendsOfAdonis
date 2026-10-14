@@ -1,0 +1,25 @@
+{{{
+  exports({ to: app.startPath('rbac.ts') })
+}}}
+import { definePermissions, defineRoles } from '@foadonis/rbac'
+
+/**
+ * Permissions of the application, as dot path keys such as
+ * "article.publish". Generated Bouncer abilities and the "authorize"
+ * middleware use these keys.
+ */
+export const permissions = definePermissions({
+  article: {
+    create: true,
+    publish: 'Publish articles',
+    delete: 'Delete articles',
+  },
+})
+
+/**
+ * Roles of the application. Assign them with the "withRoles" mixin.
+ */
+export const roles = defineRoles(permissions, {
+  writer: { description: 'Writes articles', permissions: ['article.create'] },
+  admin: { description: 'Full access', permissions: ['*'] },
+})

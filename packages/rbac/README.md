@@ -35,26 +35,30 @@ node ace add @foadonis/rbac
 ```
 
 ```ts
-// start/permissions.ts
+// start/rbac.ts
 export const permissions = definePermissions({
-  product: { create: true, delete: 'Delete products' },
+  article: { create: true, publish: 'Publish articles' },
+  admin: { user: { ban: true } },
 })
 
-// app/models/role.ts
-export default class Role extends compose(BaseModel, withPermissions(permissions)) {}
+export const roles = defineRoles(permissions, {
+  writer: { permissions: ['article.create'] },
+  admin: { description: 'Full access', permissions: ['*'] },
+})
 
 // app/models/user.ts
 export default class User extends compose(
   BaseModel,
-  withRoles(permissions, { role: () => Role, pivotTable: 'user_roles' })
+  withRoles(roles),
+  withPermissions(permissions)
 ) {}
 
-// Grants are typed, validated and may be wildcards
-await admin.givePermission('*')
-await user.assignRole(admin)
+// Role names and grants are typed and validated
+await user.assignRole('writer')
+await user.givePermission('admin.*')
 
 // Bouncer abilities are generated for every active permission
-await bouncer.authorize('product.delete')
+await bouncer.authorize('article.publish')
 ```
 
 [Installation & Getting Started](https://friendsofadonis.com/docs/rbac)

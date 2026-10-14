@@ -1,9 +1,8 @@
 import type { NormalizeConstructor } from '@adonisjs/core/types/helpers'
 import type { BaseModel } from '@adonisjs/lucid/orm'
-import { forgetGrants } from '../grants_cache.ts'
 import type { Permissions } from '../permissions.ts'
 import type { WithPermissionsRow } from '../types.ts'
-import { assertGrants, parentGrants, sameList, unique } from './utils.ts'
+import { assertGrants, consumeList, parentGrants, prepareList, storeList, unique } from './utils.ts'
 
 /**
  * Model class returned by the "withPermissions" mixin.
@@ -14,54 +13,6 @@ export type WithPermissionsModel<
   Active extends string,
 > = Model & {
   new (...args: any[]): WithPermissionsRow<Writable, Active>
-}
-
-/**
- * Serializes the grants for the "permissions" column.
- */
-function preparePermissions(value: unknown): string {
-  return JSON.stringify(Array.isArray(value) ? value : [])
-}
-
-/**
- * Reads the "permissions" column. Accepts a JSON string (sqlite, mysql,
- * text columns), an already parsed array (pg json and jsonb) and null.
- */
-function consumePermissions(value: unknown): string[] {
-  let parsed = value
-  if (typeof value === 'string') {
-    try {
-      parsed = JSON.parse(value)
-    } catch {
-      parsed = []
-    }
-  }
-
-  if (!Array.isArray(parsed)) {
-    return []
-  }
-
-  return parsed.filter((grant): grant is string => typeof grant === 'string')
-}
-
-/**
- * Assigns the grants when they changed, persists the row and forgets
- * the grants cached for Bouncer. Lucid rows are proxies, which rules out
- * private class members, hence a function.
- */
-async function storeGrants(
-  row: { permissions: string[]; save(): Promise<unknown> },
-  grants: string[]
-): Promise<void> {
-  if (!Array.isArray(row.permissions) || !sameList(row.permissions, grants)) {
-    row.permissions = grants
-  }
-
-  try {
-    await row.save()
-  } finally {
-    forgetGrants(row)
-  }
 }
 
 /**
@@ -82,7 +33,7 @@ async function storeGrants(
  *   declare name: string
  * }
  *
- * await role.givePermissions(['product.create', 'billing.*'])
+ * await role.givePermissions(['article.create', 'comment.*'])
  */
 export function withPermissions<Key extends string, Active extends Key, Wildcard extends string>(
   permissions: Permissions<Key, Active, Wildcard>
@@ -110,8 +61,8 @@ export function withPermissions<Key extends string, Active extends Key, Wildcard
         super.boot()
 
         this.$addColumn('permissions', {
-          prepare: preparePermissions,
-          consume: consumePermissions,
+          prepare: prepareList,
+          consume: consumeList,
         })
 
         this.before('create', (row: WithPermissionsImpl) => {
@@ -128,7 +79,7 @@ export function withPermissions<Key extends string, Active extends Key, Wildcard
 
       /**
        * Returns the stored grants, merged with the grants of the class
-       * this mixin extends (for example roles from "withRoles").
+       * this mixin extends (for example roles from "withRoles" or "withRoleModel").
        */
       async getGrants(): Promise<string[]> {
         const inherited = await parentGrants(WithPermissionsImpl, this)
@@ -165,7 +116,7 @@ export function withPermissions<Key extends string, Active extends Key, Wildcard
        */
       async givePermissions(grants: readonly (Key | Wildcard)[]): Promise<void> {
         const values = assertGrants(permissions, grants)
-        await storeGrants(this, unique([...(this.permissions ?? []), ...values]))
+        await storeList(this, 'permissions', unique([...(this.permissions ?? []), ...values]))
       }
 
       /**
@@ -175,7 +126,7 @@ export function withPermissions<Key extends string, Active extends Key, Wildcard
        */
       async syncPermissions(grants: readonly (Key | Wildcard)[]): Promise<void> {
         const values = assertGrants(permissions, grants)
-        await storeGrants(this, unique(values))
+        await storeList(this, 'permissions', unique(values))
       }
 
       /**
@@ -197,11 +148,10 @@ export function withPermissions<Key extends string, Active extends Key, Wildcard
       async revokePermissions(grants: readonly (Key | Wildcard)[]): Promise<void> {
         const revoked = new Set<string>(assertGrants(permissions, grants))
         const remaining = (this.permissions ?? []).filter((stored) => {
-          const canonical = permissions.find(stored)?.key ?? stored
-          return !revoked.has(stored) && !revoked.has(canonical)
+          return !revoked.has(stored) && !revoked.has(permissions.canonical(stored))
         })
 
-        await storeGrants(this, remaining)
+        await storeList(this, 'permissions', remaining)
       }
     }
 

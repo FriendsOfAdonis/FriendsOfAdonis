@@ -36,8 +36,8 @@ test.group('Bouncer abilities', (group) => {
       'product.update',
       'product.delete',
       'billing.refund',
-      'admin:user.ban',
-      'admin:user.impersonate',
+      'admin.user.ban',
+      'admin.user.impersonate',
     ])
     assert.notProperty(abilities, 'product.archive')
     assert.strictEqual(permissions.abilities(), abilities)
@@ -123,15 +123,15 @@ test.group('Bouncer abilities', (group) => {
 
   test('authorizes a team member as the holder', async ({ assert }) => {
     const admin = await Role.create({ name: 'admin' })
-    await admin.givePermission('admin:*')
+    await admin.givePermission('admin.*')
     const member = await TeamMember.create({ teamId: 1, userId: 1 })
     await member.assignRole(admin)
 
     const bouncer = new Bouncer(member, permissions.abilities())
 
-    assert.isTrue(await bouncer.allows('admin:user.ban'))
+    assert.isTrue(await bouncer.allows('admin.user.ban'))
     assert.isFalse(await bouncer.allows('product.create'))
-    assert.isFalse(await bouncer.allows('admin:user.ban', ['product.*']))
+    assert.isFalse(await bouncer.allows('admin.user.ban', ['product.*']))
   })
 
   test('loads the grants once for several checks on the same user', async ({ assert }) => {

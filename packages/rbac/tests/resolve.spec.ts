@@ -1,5 +1,4 @@
 import { test } from '@japa/runner'
-import { parseGrant } from '../src/grants.ts'
 import { permissions } from './fixtures/models.ts'
 
 test.group('Resolver', () => {
@@ -24,23 +23,26 @@ test.group('Resolver', () => {
           'product.update',
           'product.delete',
           'billing.refund',
-          'admin:user.ban',
-          'admin:user.impersonate',
+          'admin.user.ban',
+          'admin.user.impersonate',
         ],
       },
       {
         grants: ['product.*'],
         expected: ['product.create', 'product.update', 'product.delete'],
       },
-      { grants: ['admin:*'], expected: ['admin:user.ban', 'admin:user.impersonate'] },
-      { grants: ['admin:user.*'], expected: ['admin:user.ban', 'admin:user.impersonate'] },
+      { grants: ['admin.*'], expected: ['admin.user.ban', 'admin.user.impersonate'] },
+      { grants: ['admin.user.*'], expected: ['admin.user.ban', 'admin.user.impersonate'] },
+      { grants: ['backoffice.*'], expected: ['admin.user.ban', 'admin.user.impersonate'] },
+      { grants: ['backoffice.user.ban'], expected: ['admin.user.ban'] },
+      { grants: ['admin.user'], expected: [] },
+      { grants: ['admin.*.ban'], expected: [] },
+      { grants: ['product.create.*'], expected: [] },
       { grants: ['user.*'], expected: [] },
-      { grants: ['admin:product.*'], expected: [] },
-      { grants: ['staff:*'], expected: [] },
       { grants: ['order.*'], expected: [] },
       {
-        grants: ['billing.*', 'admin:user.ban'],
-        expected: ['billing.refund', 'admin:user.ban'],
+        grants: ['billing.*', 'admin.user.ban'],
+        expected: ['billing.refund', 'admin.user.ban'],
       },
     ])
     .run(({ assert }, { grants, expected }) => {
@@ -59,26 +61,4 @@ test.group('Resolver', () => {
       'billing.refund',
     ])
   })
-
-  test('parses {value}')
-    .with([
-      { value: '*', expected: { kind: 'all' } },
-      { value: 'admin:*', expected: { kind: 'prefix', prefix: 'admin' } },
-      {
-        value: 'product.*',
-        expected: { kind: 'resource', prefix: undefined, resource: 'product' },
-      },
-      {
-        value: 'admin:user.*',
-        expected: { kind: 'resource', prefix: 'admin', resource: 'user' },
-      },
-      { value: 'product.create', expected: { kind: 'key', key: 'product.create' } },
-      { value: 'admin:user.ban', expected: { kind: 'key', key: 'admin:user.ban' } },
-      { value: 'product', expected: null },
-      { value: '*.create', expected: null },
-      { value: 'a:b:c.d', expected: null },
-    ])
-    .run(({ assert }, { value, expected }) => {
-      assert.deepEqual(parseGrant(value), expected)
-    })
 })

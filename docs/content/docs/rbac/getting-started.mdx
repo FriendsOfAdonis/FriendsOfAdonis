@@ -1,10 +1,10 @@
 ---
 title: Getting Started
-description: "Install @foadonis/rbac, run the generated roles migrations, compose withPermissions and withRoles into your models, and authorize a controller with Bouncer."
+description: "Install @foadonis/rbac, define permissions and roles in start/rbac.ts, add roles to the User model, and authorize a controller action with Bouncer."
 icon: Rocket
 ---
 
-This guide sets up the package from scratch. At the end, an `editor` role can create products, an `admin` role can do everything, and a controller rejects users without the right permission with a 403.
+This guide sets up the package from scratch. At the end, a `writer` can create articles, an `editor` can also publish them, an `admin` can do everything, and a controller rejects users without the right permission with a 403.
 
 <div className="fd-steps [&_h2]:fd-step">
 
@@ -28,126 +28,81 @@ node ace add @foadonis/rbac
 
 The command performs these steps:
 
-1. Creates `start/permissions.ts` with an example definition.
+1. Creates `start/rbac.ts`, which exports your `permissions` and `roles`.
 2. Creates `app/middleware/authorize_middleware.ts` and registers it as the `authorize` named middleware in `start/kernel.ts`.
-3. Creates two migrations: one for the `roles` table and one for the `user_roles` pivot table.
+3. Creates a migration that adds nullable JSON `roles` and `permissions` columns to the `users` table.
 
-## Define your permissions
+## Define permissions and roles
 
-Open `start/permissions.ts` and list the permissions of your application. Each key follows the `resource.action` pattern.
+Open `start/rbac.ts` and list the permissions of your application, then the roles that group them.
 
-```ts title="start/permissions.ts"
-import { definePermissions } from "@foadonis/rbac";
+```ts title="start/rbac.ts"
+import { definePermissions, defineRoles } from "@foadonis/rbac";
 
 export const permissions = definePermissions({
-  product: {
-    create: "Create new products",
-    update: "Update existing products",
-    delete: "Delete products permanently",
+  article: {
+    create: true,
+    publish: "Publish articles",
+    delete: "Delete articles",
   },
-  billing: {
-    refund: "Issue refunds to customers",
+  comment: {
+    moderate: "Moderate comments",
+  },
+});
+
+export const roles = defineRoles(permissions, {
+  writer: {
+    description: "Writes articles",
+    permissions: ["article.create"],
+  },
+  editor: {
+    description: "Publishes articles and moderates comments",
+    permissions: ["article.*", "comment.moderate"],
+  },
+  admin: {
+    description: "Full access",
+    permissions: ["*"],
   },
 });
 ```
 
-The definition produces four keys: `product.create`, `product.update`, `product.delete` and `billing.refund`. Your editor autocompletes them everywhere the package expects a key. See [Defining permissions](/docs/rbac/defining-permissions) for prefixes, aliases and inactive keys.
+The definition produces four keys: `article.create`, `article.publish`, `article.delete` and `comment.moderate`. Your editor autocompletes them everywhere the package expects a key, including the role grants. `article.*` grants every key of the `article` namespace, and `*` grants every key. See [Defining permissions](/docs/rbac/defining-permissions) for nested namespaces, aliases and inactive keys.
 
-## Run the migrations
+## Run the migration
 
-The generated `roles` migration stores the permissions of each role in a JSON column. The `user_roles` migration links users to roles, with a unique constraint on the pair and foreign keys that cascade on delete.
+The generated migration adds the `roles` column, which stores the role names of each user, and the `permissions` column, used by [direct permissions](/docs/rbac/direct-permissions). Both are nullable, so existing users stay valid.
 
 ```sh
 node ace migration:run
 ```
 
-<Callout>
-  The pivot migration assumes an integer `users.id` column. Edit `user_id` if
-  your users use UUIDs.
-</Callout>
-
-## Create the Role model
-
-Apply the `withPermissions` mixin to a `Role` model. Pass it your definition, so its write methods only accept your keys.
-
-```ts title="app/models/role.ts"
-import { compose } from "@adonisjs/core/helpers";
-import { BaseModel, column } from "@adonisjs/lucid/orm";
-import { withPermissions } from "@foadonis/rbac";
-import { permissions } from "#start/permissions";
-
-export default class Role extends compose(BaseModel, withPermissions(permissions)) {
-  @column({ isPrimary: true })
-  declare id: number;
-
-  @column()
-  declare name: string;
-}
-```
-
-The mixin registers the `permissions` column itself. Do not declare it on the model.
-
 ## Add roles to the User model
 
-Apply the `withRoles` mixin to your `User` model. It needs the definition, the role model and the pivot table name.
+Apply the `withRoles` mixin to your `User` model and pass it your roles.
 
 ```ts title="app/models/user.ts"
 import { compose } from "@adonisjs/core/helpers";
 import { BaseModel } from "@adonisjs/lucid/orm";
 import { withRoles } from "@foadonis/rbac";
-import { permissions } from "#start/permissions";
-import Role from "#models/role";
+import { roles } from "#start/rbac";
 
-export default class User extends compose(
-  BaseModel,
-  withRoles(permissions, {
-    role: () => Role,
-    pivotTable: "user_roles",
-  })
-) {
+export default class User extends compose(BaseModel, withRoles(roles)) {
   // ...your existing columns
 }
 ```
 
-If your `User` model already composes other mixins, such as `withAuthFinder`, add `withRoles` to the same `compose` call.
-
-## Seed the roles
-
-Create the roles and give them permissions. The `*` wildcard grants every active permission, including the ones you define later.
-
-```ts title="database/seeders/role_seeder.ts"
-import { BaseSeeder } from "@adonisjs/lucid/seeders";
-import Role from "#models/role";
-
-export default class extends BaseSeeder {
-  async run() {
-    const editor = await Role.create({ name: "editor" });
-    await editor.givePermissions(["product.create", "product.update"]);
-
-    const admin = await Role.create({ name: "admin" });
-    await admin.givePermission("*");
-  }
-}
-```
-
-Run the seeder:
-
-```sh
-node ace db:seed
-```
+The mixin registers the `roles` column itself. Do not declare it on the model. If your `User` model already composes other mixins, such as `withAuthFinder`, add `withRoles` to the same `compose` call.
 
 ## Assign a role to a user
 
-`assignRole` accepts a role or its id. A user can hold many roles, and their permissions are the union of every role.
+`assignRole` accepts a role name. It validates the name, saves the user, and ignores a role the user already holds. A user can hold many roles, and their permissions are the union of every role.
 
 ```ts
-import Role from "#models/role";
 import User from "#models/user";
 
 const user = await User.findOrFail(1);
-const editor = await Role.findByOrFail("name", "editor");
 
-await user.assignRole(editor);
+await user.assignRole("editor");
 ```
 
 ## Register the abilities with Bouncer
@@ -160,7 +115,7 @@ import type { HttpContext } from "@adonisjs/core/http";
 import type { NextFn } from "@adonisjs/core/types/http";
 import * as abilities from "#abilities/main";
 import { policies } from "#generated/policies";
-import { permissions } from "#start/permissions";
+import { permissions } from "#start/rbac";
 
 const allAbilities = {
   ...abilities,
@@ -200,25 +155,25 @@ Compared with the middleware Bouncer generates, only the `allAbilities` object a
 
 Call `bouncer.authorize` with a permission key. Bouncer throws a 403 when the user does not hold it.
 
-```ts title="app/controllers/products_controller.ts"
+```ts title="app/controllers/articles_controller.ts"
 import type { HttpContext } from "@adonisjs/core/http";
 
-export default class ProductsController {
+export default class ArticlesController {
   async store({ bouncer }: HttpContext) {
-    await bouncer.authorize("product.create");
+    await bouncer.authorize("article.create");
 
-    // The user can create products
+    // The user can create articles
   }
 
-  async destroy({ bouncer }: HttpContext) {
-    await bouncer.authorize("product.delete");
+  async publish({ bouncer }: HttpContext) {
+    await bouncer.authorize("article.publish");
 
-    // The user can delete products
+    // The user can publish articles
   }
 }
 ```
 
-An `editor` can create products and gets a 403 on `destroy`. An `admin` can do both.
+A `writer` can create articles and gets a 403 on `publish`. An `editor` and an `admin` can do both.
 
 You can also protect the route instead of the action, with the `authorize` middleware:
 
@@ -226,17 +181,17 @@ You can also protect the route instead of the action, with the `authorize` middl
 import router from "@adonisjs/core/services/router";
 import { middleware } from "#start/kernel";
 
-const ProductsController = () => import("#controllers/products_controller");
+const ArticlesController = () => import("#controllers/articles_controller");
 
 router
-  .delete("/products/:id", [ProductsController, "destroy"])
-  .use(middleware.authorize("product.delete"));
+  .post("/articles/:id/publish", [ArticlesController, "publish"])
+  .use(middleware.authorize("article.publish"));
 ```
 
 </div>
 
 ## Next steps
 
-- [Defining permissions](/docs/rbac/defining-permissions) covers prefixes, wildcards, aliases and inactive keys.
-- [Roles](/docs/rbac/roles) covers syncing, revoking and querying roles.
+- [Defining permissions](/docs/rbac/defining-permissions) covers nested namespaces, wildcards, aliases and inactive keys.
+- [Roles](/docs/rbac/roles) covers assigning, syncing and revoking roles, and storing roles in the database.
 - [Authorization](/docs/rbac/authorization) covers token scoping and the `Access` class.

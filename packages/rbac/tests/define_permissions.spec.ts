@@ -1,18 +1,18 @@
 import { test } from '@japa/runner'
-import { definePermissions, prefix } from '../src/define_permissions.ts'
+import { definePermissions } from '../src/define_permissions.ts'
 import { E_INVALID_PERMISSION_DEFINITION } from '../src/errors.ts'
 import { permissions } from './fixtures/models.ts'
 
 test.group('definePermissions | keys', () => {
-  test('produces resource.action keys in definition order', ({ assert }) => {
+  test('produces dot path keys in definition order', ({ assert }) => {
     assert.deepEqual(permissions.keys(), [
       'product.create',
       'product.update',
       'product.delete',
       'product.archive',
       'billing.refund',
-      'admin:user.ban',
-      'admin:user.impersonate',
+      'admin.user.ban',
+      'admin.user.impersonate',
     ])
   })
 
@@ -22,8 +22,8 @@ test.group('definePermissions | keys', () => {
       'product.update',
       'product.delete',
       'billing.refund',
-      'admin:user.ban',
-      'admin:user.impersonate',
+      'admin.user.ban',
+      'admin.user.impersonate',
     ])
   })
 
@@ -31,73 +31,61 @@ test.group('definePermissions | keys', () => {
     assert.deepEqual(permissions.all(), [
       {
         key: 'product.create',
-        prefix: undefined,
-        resource: 'product',
-        action: 'create',
+        path: ['product', 'create'],
         description: 'Create product',
         inactive: false,
-        aliases: [],
       },
       {
         key: 'product.update',
-        prefix: undefined,
-        resource: 'product',
-        action: 'update',
+        path: ['product', 'update'],
         description: 'Update products',
         inactive: false,
-        aliases: [],
       },
       {
         key: 'product.delete',
-        prefix: undefined,
-        resource: 'product',
-        action: 'delete',
+        path: ['product', 'delete'],
         description: 'Delete products',
         inactive: false,
-        aliases: ['product.remove'],
       },
       {
         key: 'product.archive',
-        prefix: undefined,
-        resource: 'product',
-        action: 'archive',
+        path: ['product', 'archive'],
         description: 'Archive products',
         inactive: true,
-        aliases: [],
       },
       {
         key: 'billing.refund',
-        prefix: undefined,
-        resource: 'billing',
-        action: 'refund',
+        path: ['billing', 'refund'],
         description: 'Issue refunds',
         inactive: false,
-        aliases: [],
       },
       {
-        key: 'admin:user.ban',
-        prefix: 'admin',
-        resource: 'user',
-        action: 'ban',
+        key: 'admin.user.ban',
+        path: ['admin', 'user', 'ban'],
         description: 'Ban user',
         inactive: false,
-        aliases: [],
       },
       {
-        key: 'admin:user.impersonate',
-        prefix: 'admin',
-        resource: 'user',
-        action: 'impersonate',
+        key: 'admin.user.impersonate',
+        path: ['admin', 'user', 'impersonate'],
         description: 'Impersonate users',
         inactive: false,
-        aliases: [],
       },
     ])
   })
 
+  test('nests namespaces at any depth', ({ assert }) => {
+    const defined = definePermissions({
+      shop: { catalog: { product: { publish: true } }, order: { refund: true } },
+    })
+
+    assert.deepEqual(defined.keys(), ['shop.catalog.product.publish', 'shop.order.refund'])
+    assert.equal(defined.find('shop.catalog.product.publish')?.description, 'Publish product')
+  })
+
   test('generates readable descriptions from snake and kebab case names', ({ assert }) => {
     const defined = definePermissions({
-      blog_post: { 'mass_delete': true, 'soft-delete': {} },
+      blog_post: { 'mass_delete': true, 'soft-delete': true },
     })
 
     assert.deepEqual(
@@ -106,41 +94,74 @@ test.group('definePermissions | keys', () => {
     )
   })
 
+  test('marks every key of an inactive namespace as inactive', ({ assert }) => {
+    const defined = definePermissions(
+      { admin: { user: { ban: true }, team: { create: true } }, post: { create: true } },
+      { inactive: ['admin.user'] }
+    )
+
+    assert.deepEqual(defined.active(), ['admin.team.create', 'post.create'])
+    assert.isTrue(defined.find('admin.user.ban')?.inactive)
+  })
+
   test('returns frozen entries', ({ assert }) => {
     const [entry] = permissions.all()
     assert.isTrue(Object.isFrozen(entry))
+    assert.isTrue(Object.isFrozen(entry.path))
     assert.throws(() => {
       ;(entry as { key: string }).key = 'hacked.key'
     })
     assert.equal(permissions.all()[0].key, 'product.create')
   })
 
-  test('merges several definitions and prefixes', ({ assert }) => {
-    const defined = definePermissions(
-      prefix('admin', { product: { create: true } }),
-      { product: { create: true } },
-      prefix('admin', { billing: { refund: true } })
-    )
-
-    assert.deepEqual(defined.keys(), [
-      'admin:product.create',
-      'product.create',
-      'admin:billing.refund',
-    ])
-  })
-
-  test('returns the plain shape from prefix()', ({ assert }) => {
-    assert.deepEqual(prefix('admin', { user: { ban: true } }), {
-      prefix: 'admin',
-      resources: { user: { ban: true } },
-    })
-  })
-
   test('finds entries by key or alias', ({ assert }) => {
     assert.equal(permissions.find('product.delete')?.key, 'product.delete')
     assert.equal(permissions.find('product.remove')?.key, 'product.delete')
+    assert.equal(permissions.find('backoffice.user.ban')?.key, 'admin.user.ban')
     assert.isUndefined(permissions.find('product.*'))
+    assert.isUndefined(permissions.find('admin.user'))
     assert.isUndefined(permissions.find('order.create'))
+  })
+
+  test('returns the canonical form of {value}')
+    .with([
+      { value: 'product.remove', expected: 'product.delete' },
+      { value: 'backoffice.user.ban', expected: 'admin.user.ban' },
+      { value: 'backoffice.*', expected: 'admin.*' },
+      { value: 'backoffice.user.*', expected: 'admin.user.*' },
+      { value: 'product.create', expected: 'product.create' },
+      { value: 'order.create', expected: 'order.create' },
+      { value: '*', expected: '*' },
+    ])
+    .run(({ assert }, { value, expected }) => {
+      assert.equal(permissions.canonical(value), expected)
+    })
+
+  test('lists the aliases of a key, including namespace aliases', ({ assert }) => {
+    assert.deepEqual(permissions.aliasesOf('product.delete'), ['product.remove'])
+    assert.deepEqual(permissions.aliasesOf('admin.user.ban'), ['backoffice.user.ban'])
+    assert.deepEqual(permissions.aliasesOf('product.create'), [])
+  })
+
+  test('rewrites a nested alias of a namespace', ({ assert }) => {
+    const defined = definePermissions(
+      { admin: { user: { ban: true } } },
+      { aliases: { 'legacy.all': 'admin' } }
+    )
+
+    assert.deepEqual(defined.resolve(['legacy.all.*']), ['admin.user.ban'])
+    assert.deepEqual(defined.resolve(['legacy.all.user.ban']), ['admin.user.ban'])
+  })
+
+  test('skips namespace aliases shadowed by a longer alias', ({ assert }) => {
+    const defined = definePermissions(
+      { store: { product: { create: true } }, catalog: { item: { create: true } } },
+      { aliases: { 'shop': 'store', 'shop.product': 'catalog.item' } }
+    )
+
+    assert.deepEqual(defined.aliasesOf('store.product.create'), [])
+    assert.deepEqual(defined.aliasesOf('catalog.item.create'), ['shop.product.create'])
+    assert.equal(defined.canonical('shop.product.create'), 'catalog.item.create')
   })
 })
 
@@ -149,18 +170,20 @@ test.group('definePermissions | isGrant', () => {
     .with([
       { value: 'product.create', expected: true },
       { value: 'product.archive', expected: true },
-      { value: 'admin:user.ban', expected: true },
+      { value: 'admin.user.ban', expected: true },
       { value: '*', expected: true },
       { value: 'product.*', expected: true },
-      { value: 'admin:*', expected: true },
-      { value: 'admin:user.*', expected: true },
+      { value: 'admin.*', expected: true },
+      { value: 'admin.user.*', expected: true },
       { value: 'product.remove', expected: false },
+      { value: 'backoffice.*', expected: false },
       { value: 'product.craete', expected: false },
+      { value: 'product.create.*', expected: false },
       { value: 'order.*', expected: false },
       { value: 'user.*', expected: false },
-      { value: 'staff:*', expected: false },
-      { value: 'admin:product.*', expected: false },
+      { value: 'admin.*.ban', expected: false },
       { value: '*.create', expected: false },
+      { value: 'admin.user', expected: false },
       { value: 'product', expected: false },
       { value: '', expected: false },
       { value: 42, expected: false },
@@ -178,89 +201,82 @@ test.group('definePermissions | isGrant', () => {
 })
 
 test.group('definePermissions | validation', () => {
-  test('rejects a {$self}')
+  test('rejects {title}')
     .with([
       {
-        title: 'duplicate key',
-        definitions: [{ product: { create: true } }, { product: { create: 'Again' } }],
-        message: 'Duplicate permission "product.create". Each key must be defined once',
-      },
-      {
-        title: 'duplicate prefixed key',
-        definitions: [prefix('a', { p: { c: true } }), prefix('a', { p: { c: true } })],
-        message: 'Duplicate permission "a:p.c". Each key must be defined once',
-      },
-      {
-        title: 'alias equal to an existing key',
-        definitions: [{ product: { create: true, delete: { aliases: ['product.create'] } } }],
+        title: 'an action at the root',
+        tree: { export: true },
+        options: undefined,
         message:
-          'Alias "product.create" of permission "product.delete" collides with an existing permission key',
+          'Invalid permission "export". Permissions must be nested under at least one namespace, as in "resource.action"',
       },
       {
-        title: 'alias equal to a key defined later',
-        definitions: [
-          { product: { delete: { aliases: ['billing.refund'] } } },
-          { billing: { refund: true } },
-        ],
+        title: 'an invalid name',
+        tree: { 'pro duct': { create: true } },
+        options: undefined,
         message:
-          'Alias "billing.refund" of permission "product.delete" collides with an existing permission key',
+          'Invalid permission name "pro duct". Only letters, digits, "_" and "-" are allowed',
       },
       {
-        title: 'alias claimed twice',
-        definitions: [
-          {
-            product: {
-              delete: { aliases: ['product.remove'] },
-              destroy: { aliases: ['product.remove'] },
-            },
-          },
-        ],
-        message: 'Alias "product.remove" is claimed by both "product.delete" and "product.destroy"',
-      },
-      {
-        title: 'malformed alias',
-        definitions: [{ product: { delete: { aliases: ['remove'] } } }],
+        title: 'a dotted name',
+        tree: { product: { 'create.all': true } },
+        options: undefined,
         message:
-          'Invalid alias "remove" for permission "product.delete". Aliases must look like "resource.action" or "prefix:resource.action"',
+          'Invalid permission name "create.all". Only letters, digits, "_" and "-" are allowed',
       },
       {
-        title: 'invalid resource name',
-        definitions: [{ 'pro duct': { create: true } }],
+        title: 'an invalid leaf',
+        tree: { product: { create: false } },
+        options: undefined,
         message:
-          'Invalid permission resource "pro duct". Only letters, digits, "_" and "-" are allowed',
+          'Invalid definition for permission "product.create". Expected true, a description or a nested namespace',
       },
       {
-        title: 'invalid action name',
-        definitions: [{ product: { 'create.all': true } }],
+        title: 'an alias of a defined path',
+        tree: { product: { create: true, delete: true } },
+        options: { aliases: { 'product.create': 'product.delete' } },
+        message: 'Alias "product.create" collides with a defined permission or namespace',
+      },
+      {
+        title: 'an alias of a defined namespace',
+        tree: { product: { create: true }, item: { create: true } },
+        options: { aliases: { product: 'item' } },
+        message: 'Alias "product" collides with a defined permission or namespace',
+      },
+      {
+        title: 'a malformed alias',
+        tree: { product: { create: true } },
+        options: { aliases: { 'product.*': 'product.create' } },
+        message: 'Invalid alias "product.*". Aliases must be dot paths, as in "resource.action"',
+      },
+      {
+        title: 'an alias targeting an unknown path',
+        tree: { product: { create: true } },
+        options: { aliases: { 'item.create': 'product.add' } },
         message:
-          'Invalid permission action "create.all". Only letters, digits, "_" and "-" are allowed',
+          'Alias "item.create" targets "product.add", which is neither a defined permission nor a namespace',
       },
       {
-        title: 'invalid prefix name',
-        definitions: [prefix('ad:min', { product: { create: true } })],
+        title: 'a single segment alias targeting a permission',
+        tree: { article: { publish: true } },
+        options: { aliases: { legacy: 'article.publish' } },
         message:
-          'Invalid permission prefix "ad:min". Only letters, digits, "_" and "-" are allowed',
+          'Alias "legacy" targets the permission "article.publish". Permission aliases need at least two segments, as in "resource.action"',
       },
       {
-        title: 'non object actions',
-        definitions: [{ product: 'create' }],
-        message: 'Invalid actions for resource "product". Expected an object',
-      },
-      {
-        title: 'invalid action definition',
-        definitions: [{ product: { create: false } }],
-        message:
-          'Invalid definition for permission "product.create". Expected true, a description or an object',
+        title: 'an unknown inactive path',
+        tree: { product: { create: true } },
+        options: { inactive: ['product.delete'] },
+        message: 'Inactive path "product.delete" is neither a defined permission nor a namespace',
       },
     ])
-    .run(({ assert }, { definitions, message }) => {
-      assert.throws(
-        () => (definePermissions as (...values: unknown[]) => unknown)(...definitions),
-        message
-      )
+    .run(({ assert }, { tree, options, message }) => {
+      const define = definePermissions as unknown as (tree: unknown, options?: unknown) => unknown
+
+      assert.throws(() => define(tree, options), message)
 
       try {
-        ;(definePermissions as (...values: unknown[]) => unknown)(...definitions)
+        define(tree, options)
       } catch (error) {
         assert.instanceOf(error, E_INVALID_PERMISSION_DEFINITION)
         assert.equal((error as { code: string }).code, 'E_INVALID_PERMISSION_DEFINITION')

@@ -1,43 +1,17 @@
 import { E_INVALID_PERMISSION_DEFINITION } from './errors.ts'
-import { NAME_PATTERN, parseKey, resourceId, type PermissionRegistry } from './grants.ts'
+import { isPath, NAME_PATTERN, type PermissionRegistry } from './grants.ts'
 import { Permissions } from './permissions.ts'
 import type {
-  ActionDefinition,
-  ActiveKeysOf,
+  ActiveOf,
+  InactiveOf,
   KeysOf,
+  NamespacesOf,
   PermissionEntry,
   PermissionsDefinition,
-  PrefixedDefinition,
-  ResourcesDefinition,
+  PermissionsOptions,
+  PermissionTree,
   WildcardsOf,
 } from './types.ts'
-
-/**
- * Namespaces a group of resources under a prefix. The keys of the group
- * become "prefix:resource.action".
- *
- * @example
- * definePermissions(
- *   prefix('admin', { product: { create: true } }),
- *   { billing: { refund: true } }
- * )
- * // keys: 'admin:product.create', 'billing.refund'
- */
-export function prefix<const P extends string, const R extends ResourcesDefinition>(
-  name: P,
-  resources: R
-): PrefixedDefinition<P, R> {
-  return { prefix: name, resources }
-}
-
-/**
- * Returns whether the definition was created with "prefix".
- */
-function isPrefixed(
-  definition: PermissionsDefinition
-): definition is PrefixedDefinition<string, ResourcesDefinition> {
-  return typeof definition.prefix === 'string' && typeof definition.resources === 'object'
-}
 
 /**
  * Turns "blog_post" into "blog post".
@@ -47,171 +21,183 @@ function humanize(name: string): string {
 }
 
 /**
- * Generates the description of a permission, as in "Create product".
+ * Generates the description of a permission from its last two segments,
+ * as in "Publish article" for "blog.article.publish".
  */
-function describe(resource: string, action: string): string {
-  const verb = humanize(action)
-  return `${verb.charAt(0).toUpperCase()}${verb.slice(1)} ${humanize(resource)}`
+function describe(path: readonly string[]): string {
+  const verb = humanize(path[path.length - 1])
+  return `${verb.charAt(0).toUpperCase()}${verb.slice(1)} ${humanize(path[path.length - 2])}`
 }
 
 /**
- * Throws when a prefix, resource or action name is invalid.
+ * Throws when a segment name is invalid.
  */
-function assertName(kind: string, name: string): void {
+function assertName(name: string): void {
   if (!NAME_PATTERN.test(name)) {
     throw new E_INVALID_PERMISSION_DEFINITION(
-      `Invalid permission ${kind} "${name}". Only letters, digits, "_" and "-" are allowed`
+      `Invalid permission name "${name}". Only letters, digits, "_" and "-" are allowed`
     )
   }
 }
 
 /**
- * Normalizes an action definition into an entry.
+ * Returns whether the path is a defined key or namespace.
  */
-function toEntry(
-  prefixName: string | undefined,
-  resource: string,
-  action: string,
-  definition: ActionDefinition
-): PermissionEntry {
-  const key = `${resourceId(prefixName, resource)}.${action}`
-  const base = { key, prefix: prefixName, resource, action }
+function isDefined(registry: PermissionRegistry, path: string): boolean {
+  return registry.entries.has(path) || registry.namespaces.has(path)
+}
 
-  if (definition === true) {
-    return { ...base, description: describe(resource, action), inactive: false, aliases: [] }
-  }
+/**
+ * Walks a namespace and registers its keys and nested namespaces.
+ */
+function walk(registry: PermissionRegistry, parent: readonly string[], tree: PermissionTree) {
+  registry.namespaces.add(parent.join('.'))
 
-  if (typeof definition === 'string') {
-    return { ...base, description: definition, inactive: false, aliases: [] }
-  }
+  for (const [name, value] of Object.entries(tree)) {
+    assertName(name)
+    const path = [...parent, name]
 
-  if (typeof definition !== 'object' || definition === null || Array.isArray(definition)) {
-    throw new E_INVALID_PERMISSION_DEFINITION(
-      `Invalid definition for permission "${key}". Expected true, a description or an object`
-    )
-  }
+    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      walk(registry, path, value)
+      continue
+    }
 
-  return {
-    ...base,
-    description: definition.description ?? describe(resource, action),
-    inactive: definition.inactive === true,
-    aliases: Object.freeze([...(definition.aliases ?? [])]),
+    const key = path.join('.')
+    if (value !== true && typeof value !== 'string') {
+      throw new E_INVALID_PERMISSION_DEFINITION(
+        `Invalid definition for permission "${key}". Expected true, a description or a nested namespace`
+      )
+    }
+
+    const entry: PermissionEntry = {
+      key,
+      path: Object.freeze(path),
+      description: value === true ? describe(path) : value,
+      inactive: false,
+    }
+    registry.entries.set(key, entry)
   }
 }
 
 /**
- * Validates the definitions and builds the registry.
+ * Validates the aliases and registers them.
+ */
+function registerAliases(registry: PermissionRegistry, aliases: Record<string, string>) {
+  for (const [alias, target] of Object.entries(aliases)) {
+    if (!isPath(alias)) {
+      throw new E_INVALID_PERMISSION_DEFINITION(
+        `Invalid alias "${alias}". Aliases must be dot paths, as in "resource.action"`
+      )
+    }
+
+    if (isDefined(registry, alias)) {
+      throw new E_INVALID_PERMISSION_DEFINITION(
+        `Alias "${alias}" collides with a defined permission or namespace`
+      )
+    }
+
+    if (!isDefined(registry, target)) {
+      throw new E_INVALID_PERMISSION_DEFINITION(
+        `Alias "${alias}" targets "${target}", which is neither a defined permission nor a namespace`
+      )
+    }
+
+    if (registry.entries.has(target) && !alias.includes('.')) {
+      throw new E_INVALID_PERMISSION_DEFINITION(
+        `Alias "${alias}" targets the permission "${target}". Permission aliases need at least two segments, as in "resource.action"`
+      )
+    }
+
+    registry.aliases.set(alias, target)
+  }
+}
+
+/**
+ * Validates the inactive paths and flags the entries they cover.
+ */
+function markInactive(registry: PermissionRegistry, paths: readonly string[]) {
+  for (const path of paths) {
+    if (!isDefined(registry, path)) {
+      throw new E_INVALID_PERMISSION_DEFINITION(
+        `Inactive path "${path}" is neither a defined permission nor a namespace`
+      )
+    }
+
+    for (const entry of registry.entries.values()) {
+      if (entry.key === path || entry.key.startsWith(`${path}.`)) {
+        entry.inactive = true
+      }
+    }
+  }
+}
+
+/**
+ * Validates the definition and builds the registry.
  *
- * @throws {E_INVALID_PERMISSION_DEFINITION} When a name is invalid, a key
- * is defined twice, or an alias is malformed, collides with a key, or is
- * claimed twice.
+ * @throws {E_INVALID_PERMISSION_DEFINITION} When a name, an alias or an
+ * inactive path is invalid, or when an action sits at the root.
  */
-function buildRegistry(definitions: readonly PermissionsDefinition[]): PermissionRegistry {
+function buildRegistry(
+  definition: PermissionsDefinition,
+  options: PermissionsOptions
+): PermissionRegistry {
   const registry: PermissionRegistry = {
     entries: new Map(),
+    namespaces: new Set(),
     aliases: new Map(),
-    prefixes: new Set(),
-    resources: new Set(),
   }
 
-  /**
-   * First pass: collect every key, so aliases can be checked against
-   * keys defined later.
-   */
-  for (const definition of definitions) {
-    const prefixName = isPrefixed(definition) ? definition.prefix : undefined
-    const resources = isPrefixed(definition) ? definition.resources : definition
-
-    if (prefixName !== undefined) {
-      assertName('prefix', prefixName)
-      registry.prefixes.add(prefixName)
+  for (const [name, tree] of Object.entries(definition)) {
+    assertName(name)
+    if (typeof tree !== 'object' || tree === null || Array.isArray(tree)) {
+      throw new E_INVALID_PERMISSION_DEFINITION(
+        `Invalid permission "${name}". Permissions must be nested under at least one namespace, as in "resource.action"`
+      )
     }
 
-    for (const [resource, actions] of Object.entries(resources)) {
-      assertName('resource', resource)
-      if (typeof actions !== 'object' || actions === null) {
-        throw new E_INVALID_PERMISSION_DEFINITION(
-          `Invalid actions for resource "${resourceId(prefixName, resource)}". Expected an object`
-        )
-      }
-
-      registry.resources.add(resourceId(prefixName, resource))
-
-      for (const [action, actionDefinition] of Object.entries(actions)) {
-        assertName('action', action)
-        const entry = toEntry(prefixName, resource, action, actionDefinition)
-
-        if (registry.entries.has(entry.key)) {
-          throw new E_INVALID_PERMISSION_DEFINITION(
-            `Duplicate permission "${entry.key}". Each key must be defined once`
-          )
-        }
-
-        registry.entries.set(entry.key, Object.freeze(entry))
-      }
-    }
+    walk(registry, [name], tree)
   }
 
-  /**
-   * Second pass: register the aliases.
-   */
+  registerAliases(registry, options.aliases ?? {})
+  markInactive(registry, options.inactive ?? [])
+
   for (const entry of registry.entries.values()) {
-    for (const alias of entry.aliases) {
-      if (typeof alias !== 'string' || !parseKey(alias)) {
-        throw new E_INVALID_PERMISSION_DEFINITION(
-          `Invalid alias "${String(alias)}" for permission "${entry.key}". Aliases must look like "resource.action" or "prefix:resource.action"`
-        )
-      }
-
-      if (registry.entries.has(alias)) {
-        throw new E_INVALID_PERMISSION_DEFINITION(
-          `Alias "${alias}" of permission "${entry.key}" collides with an existing permission key`
-        )
-      }
-
-      const owner = registry.aliases.get(alias)
-      if (owner !== undefined) {
-        throw new E_INVALID_PERMISSION_DEFINITION(
-          `Alias "${alias}" is claimed by both "${owner}" and "${entry.key}"`
-        )
-      }
-
-      registry.aliases.set(alias, entry.key)
-    }
+    Object.freeze(entry)
   }
 
   return registry
 }
 
 /**
- * Defines the permissions of the application. Accepts any number of
- * resources definitions and prefixed groups, merged into a single
- * Permissions instance.
- *
- * Each action accepts `true` (generated description), a description
- * string, or an object with "description", "inactive" and "aliases".
+ * Defines the permissions of the application as a tree of namespaces.
+ * Each key is the dot path to an action, as in "article.publish" or
+ * "admin.user.ban". An action accepts `true` (generated description) or
+ * a description string.
  *
  * @throws {E_INVALID_PERMISSION_DEFINITION} When the definition is invalid
  *
  * @example
  * export const permissions = definePermissions(
  *   {
- *     product: {
- *       create: true,
- *       delete: { description: 'Delete products', aliases: ['product.remove'] },
- *       archive: { inactive: true },
- *     },
+ *     article: { publish: true, archive: 'Archive old articles' },
+ *     admin: { user: { ban: true, impersonate: true } },
  *   },
- *   prefix('admin', { user: { ban: 'Ban users' } })
+ *   {
+ *     aliases: { 'article.release': 'article.publish' },
+ *     inactive: ['admin.user.impersonate'],
+ *   }
  * )
  */
-export function definePermissions<const D extends readonly PermissionsDefinition[]>(
-  ...definitions: D
-): Permissions<KeysOf<D[number]>, ActiveKeysOf<D[number]>, WildcardsOf<D[number]>> {
+export function definePermissions<
+  const T extends PermissionsDefinition,
+  const O extends PermissionsOptions<KeysOf<T> | NamespacesOf<T>> = {},
+>(
+  definition: T,
+  options?: O
+): Permissions<KeysOf<T>, ActiveOf<KeysOf<T>, InactiveOf<O>>, WildcardsOf<T>> {
   /**
-   * The registry is built from the same definitions the key types are
-   * computed from.
+   * The registry is built from the same tree the key types are computed from.
    */
-  const registry = buildRegistry(definitions) as PermissionRegistry<KeysOf<D[number]>>
+  const registry = buildRegistry(definition, options ?? {}) as PermissionRegistry<KeysOf<T>>
   return new Permissions(registry)
 }

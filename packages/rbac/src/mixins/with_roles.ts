@@ -1,94 +1,77 @@
 import type { NormalizeConstructor } from '@adonisjs/core/types/helpers'
 import type { BaseModel } from '@adonisjs/lucid/orm'
-import type { LucidModel, LucidRow } from '@adonisjs/lucid/types/model'
-import type {
-  ManyToMany,
-  ManyToManyClientContract,
-  ManyToManyRelationContract,
-} from '@adonisjs/lucid/types/relations'
-import { forgetGrants } from '../grants_cache.ts'
-import type { Permissions } from '../permissions.ts'
-import type { RoleModel, RoleReference, RoleRow, WithRolesOptions, WithRolesRow } from '../types.ts'
-import { parentGrants, unique } from './utils.ts'
+import { E_UNKNOWN_ROLE } from '../errors.ts'
+import type { Roles } from '../roles.ts'
+import type { WithRolesRow } from '../types.ts'
+import { consumeList, parentGrants, prepareList, storeList, unique } from './utils.ts'
 
 /**
  * Model class returned by the "withRoles" mixin.
  */
 export type WithRolesModel<
   Model extends NormalizeConstructor<typeof BaseModel>,
-  Role extends RoleModel,
+  Name extends string,
   Active extends string,
 > = Model & {
-  new (...args: any[]): WithRolesRow<Role, Active>
+  new (...args: any[]): WithRolesRow<Name, Active>
 }
 
 /**
- * Returns the query client of the "roles" relationship of a row.
+ * Returns the names when every one of them is a defined role.
  *
- * Lucid types "related()" through "ExtractModelRelations<this>", which
- * TypeScript cannot evaluate inside the generic mixin class, hence the
- * cast to the shape the relationship is registered with.
+ * @throws {E_UNKNOWN_ROLE} When a name is not a defined role
  */
-function rolesClient(
-  row: LucidRow
-): ManyToManyClientContract<ManyToManyRelationContract<LucidModel, LucidModel>, LucidModel> {
-  return (
-    row as unknown as {
-      related(
-        name: 'roles'
-      ): ManyToManyClientContract<ManyToManyRelationContract<LucidModel, LucidModel>, LucidModel>
+function assertRoles<Name extends string>(
+  roles: Roles<Name, string, string, string>,
+  names: Iterable<Name>
+): Name[] {
+  const values = [...names]
+  for (const value of values) {
+    if (!roles.isRole(value)) {
+      throw new E_UNKNOWN_ROLE(value)
     }
-  ).related('roles')
+  }
+
+  return values
 }
 
 /**
- * Returns the primary key value of a role reference.
- */
-function roleId(role: RoleRow | number | string): number | string {
-  return typeof role === 'object' ? role.$primaryKeyValue! : role
-}
-
-/**
- * Unsets the preloaded roles, so the next read queries them again, and
- * forgets the grants cached for Bouncer.
- */
-function invalidate(row: LucidRow): void {
-  delete row.$preloaded.roles
-  forgetGrants(row)
-}
-
-/**
- * Connects a Lucid model to roles through a pivot table. The holder
- * receives the grants of every assigned role. Apply it to a user model,
- * or to a team member model for per-team roles.
+ * Stores the names of roles declared in code (with "defineRoles") in a
+ * JSON "roles" column of a Lucid model. The holder receives the grants
+ * of every assigned role. Apply it to a user model, or to a team member
+ * model for per-team roles.
  *
- * The role model must expose a "name" column and the "withPermissions"
- * mixin (or any "getGrants" method).
+ * Writes are typed against the role names and validated at runtime.
+ * Stored names no longer defined in code are ignored. For roles stored
+ * in the database, use "withRoleModel" instead. A model uses one or the
+ * other, never both.
  *
  * @example
  * export default class User extends compose(
  *   BaseModel,
- *   withRoles(permissions, { role: () => Role, pivotTable: 'user_roles' })
+ *   withRoles(roles),
+ *   withPermissions(permissions)
  * ) {
  *   @column({ isPrimary: true })
  *   declare id: number
  * }
  *
- * await user.assignRole(editor)
- * await user.hasPermission('product.create')
+ * await user.assignRole('editor')
+ * await user.hasPermission('article.publish')
  */
 export function withRoles<
+  Name extends string,
   Key extends string,
   Active extends Key,
   Wildcard extends string,
-  Role extends RoleModel,
->(permissions: Permissions<Key, Active, Wildcard>, options: WithRolesOptions<Role>) {
+>(roles: Roles<Name, Key, Active, Wildcard>) {
   return <Model extends NormalizeConstructor<typeof BaseModel>>(
     superclass: Model
-  ): WithRolesModel<Model, Role, Active> => {
-    class WithRolesImpl extends superclass implements WithRolesRow<Role, Active> {
+  ): WithRolesModel<Model, Name, Active> => {
+    class WithRolesImpl extends superclass implements WithRolesRow<Name, Active> {
       /**
-       * Registers the "roles" many to many relationship.
+       * Registers the "roles" column and defaults it to an empty list
+       * on create.
        */
       static boot() {
         /**
@@ -101,93 +84,90 @@ export function withRoles<
 
         super.boot()
 
-        this.$addRelation('roles', 'manyToMany', options.role, {
-          pivotTable: options.pivotTable,
-          pivotForeignKey: options.pivotForeignKey,
-          pivotRelatedForeignKey: options.pivotRelatedForeignKey,
+        this.$addColumn('roles', {
+          prepare: prepareList,
+          consume: consumeList,
+        })
+
+        this.before('create', (row: WithRolesImpl) => {
+          if (!Array.isArray(row.roles)) {
+            row.roles = []
+          }
         })
       }
 
       /**
-       * Many to many relationship with the role model.
+       * Names of the roles stored on the row.
        */
-      declare roles: ManyToMany<Role>
+      declare roles: string[]
 
       /**
-       * Returns the roles of the row. Uses the preloaded relationship
-       * when present, queries it otherwise.
+       * Returns the assigned roles that are defined in code.
        */
-      async getRoles(): Promise<InstanceType<Role>[]> {
-        if (this.$hasRelated('roles')) {
-          return this.$getRelated('roles') as InstanceType<Role>[]
-        }
-
-        return (await rolesClient(this).query()) as InstanceType<Role>[]
+      getRoles(): Name[] {
+        return (this.roles ?? []).filter(roles.isRole)
       }
 
       /**
-       * Returns whether the row has the role. A string is matched against
-       * the role name, a row against its primary key.
+       * Returns whether the row has the role.
        */
-      async hasRole(role: string | InstanceType<Role>): Promise<boolean> {
-        const roles: RoleRow[] = await this.getRoles()
-        if (typeof role === 'string') {
-          return roles.some((row) => row.name === role)
-        }
-
-        return roles.some((row) => row.$primaryKeyValue === role.$primaryKeyValue)
+      hasRole(name: Name): boolean {
+        return this.getRoles().includes(name)
       }
 
       /**
-       * Assigns a role. Assigning an already assigned role is a no-op.
+       * Assigns a role and persists the row. Assigning an assigned role
+       * is a no-op.
+       *
+       * @throws {E_UNKNOWN_ROLE} When the name is not a defined role
        */
-      async assignRole(role: RoleReference<Role>): Promise<void> {
-        await this.assignRoles([role])
+      async assignRole(name: Name): Promise<void> {
+        await this.assignRoles([name])
       }
 
       /**
-       * Assigns several roles. Already assigned roles are skipped, so the
-       * unique pivot constraint is never hit.
+       * Assigns several roles and persists the row. Assigned roles are
+       * skipped.
+       *
+       * @throws {E_UNKNOWN_ROLE} When a name is not a defined role
        */
-      async assignRoles(roles: readonly RoleReference<Role>[]): Promise<void> {
-        try {
-          await rolesClient(this).sync(unique(roles.map(roleId)), false)
-        } finally {
-          invalidate(this)
-        }
+      async assignRoles(names: readonly Name[]): Promise<void> {
+        const values = assertRoles(roles, names)
+        await storeList(this, 'roles', unique([...(this.roles ?? []), ...values]))
       }
 
       /**
-       * Replaces every assigned role.
+       * Replaces every assigned role and persists the row.
+       *
+       * @throws {E_UNKNOWN_ROLE} When a name is not a defined role
        */
-      async syncRoles(roles: readonly RoleReference<Role>[]): Promise<void> {
-        try {
-          await rolesClient(this).sync(unique(roles.map(roleId)))
-        } finally {
-          invalidate(this)
-        }
+      async syncRoles(names: readonly Name[]): Promise<void> {
+        const values = assertRoles(roles, names)
+        await storeList(this, 'roles', unique(values))
       }
 
       /**
-       * Removes a role. Removing a role that is not assigned is a no-op.
+       * Removes a role and persists the row. Removing a role that is not
+       * assigned is a no-op.
+       *
+       * @throws {E_UNKNOWN_ROLE} When the name is not a defined role
        */
-      async revokeRole(role: RoleReference<Role>): Promise<void> {
-        await this.revokeRoles([role])
+      async revokeRole(name: Name): Promise<void> {
+        await this.revokeRoles([name])
       }
 
       /**
-       * Removes several roles. An empty list removes nothing.
+       * Removes several roles and persists the row.
+       *
+       * @throws {E_UNKNOWN_ROLE} When a name is not a defined role
        */
-      async revokeRoles(roles: readonly RoleReference<Role>[]): Promise<void> {
-        if (roles.length === 0) {
-          return
-        }
-
-        try {
-          await rolesClient(this).detach(unique(roles.map(roleId)))
-        } finally {
-          invalidate(this)
-        }
+      async revokeRoles(names: readonly Name[]): Promise<void> {
+        const revoked = new Set<string>(assertRoles(roles, names))
+        await storeList(
+          this,
+          'roles',
+          (this.roles ?? []).filter((stored) => !revoked.has(stored))
+        )
       }
 
       /**
@@ -197,16 +177,14 @@ export function withRoles<
        */
       async getGrants(): Promise<string[]> {
         const inherited = await parentGrants(WithRolesImpl, this)
-        const roles: RoleRow[] = await this.getRoles()
-        const fromRoles = await Promise.all(roles.map((role) => role.getGrants()))
-        return unique([...inherited, ...fromRoles.flat()])
+        return unique([...inherited, ...roles.grantsOf(this.roles ?? [])])
       }
 
       /**
        * Returns the resolved active permissions of the row.
        */
       async getPermissions(): Promise<Active[]> {
-        return permissions.resolve(await this.getGrants())
+        return roles.permissions.resolve(await this.getGrants())
       }
 
       /**

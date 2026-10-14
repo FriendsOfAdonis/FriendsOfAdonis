@@ -108,13 +108,13 @@ test.group('withPermissions', (group) => {
 
   test('accepts inactive keys and every wildcard kind', async ({ assert }) => {
     const role = await Role.create({ name: 'admin' })
-    await role.givePermissions(['product.archive', '*', 'admin:*', 'admin:user.*', 'product.*'])
+    await role.givePermissions(['product.archive', '*', 'admin.*', 'admin.user.*', 'product.*'])
 
     assert.deepEqual(role.permissions, [
       'product.archive',
       '*',
-      'admin:*',
-      'admin:user.*',
+      'admin.*',
+      'admin.user.*',
       'product.*',
     ])
   })
@@ -157,10 +157,10 @@ test.group('withPermissions', (group) => {
   test('syncs permissions by replacing the stored list', async ({ assert }) => {
     const role = await Role.create({ name: 'editor' })
     await role.givePermissions(['product.create', 'product.update'])
-    await role.syncPermissions(['billing.refund', 'billing.refund', 'admin:*'])
+    await role.syncPermissions(['billing.refund', 'billing.refund', 'admin.*'])
 
-    assert.deepEqual(role.permissions, ['billing.refund', 'admin:*'])
-    assert.equal(await storedPermissions(database, role.id), '["billing.refund","admin:*"]')
+    assert.deepEqual(role.permissions, ['billing.refund', 'admin.*'])
+    assert.equal(await storedPermissions(database, role.id), '["billing.refund","admin.*"]')
 
     await role.syncPermissions([])
     assert.equal(await storedPermissions(database, role.id), '[]')
@@ -193,6 +193,19 @@ test.group('withPermissions', (group) => {
 
     assert.deepEqual(role.permissions, ['product.create'])
     assert.equal(await storedPermissions(database, role.id), '["product.create"]')
+  })
+
+  test('removes stored namespace aliases when revoking the canonical grant', async ({ assert }) => {
+    await database.db
+      .table('roles')
+      .insert({ name: 'legacy', permissions: '["backoffice.*","backoffice.user.ban"]' })
+    const role = await Role.findByOrFail('name', 'legacy')
+
+    await role.revokePermission('admin.*')
+    assert.deepEqual(role.permissions, ['backoffice.user.ban'])
+
+    await role.revokePermission('admin.user.ban')
+    assert.deepEqual(role.permissions, [])
   })
 
   test('does not narrow a stored wildcard when revoking a key', async ({ assert }) => {
@@ -248,11 +261,11 @@ test.group('withPermissions', (group) => {
 
   test('keeps the column on subclasses', async ({ assert }) => {
     const role = await SpecialRole.create({ name: 'special' })
-    await role.givePermission('admin:*')
+    await role.givePermission('admin.*')
 
     const fresh = await SpecialRole.findOrFail(role.id)
-    assert.deepEqual(fresh.permissions, ['admin:*'])
-    assert.deepEqual(await fresh.getPermissions(), ['admin:user.ban', 'admin:user.impersonate'])
+    assert.deepEqual(fresh.permissions, ['admin.*'])
+    assert.deepEqual(await fresh.getPermissions(), ['admin.user.ban', 'admin.user.impersonate'])
   })
 
   test('serializes permissions as an array', async ({ assert }) => {

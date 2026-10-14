@@ -1,7 +1,12 @@
 import { Bouncer } from '@adonisjs/bouncer'
 import { Access } from './access.ts'
 import { cachedGrants } from './grants_cache.ts'
-import { isWritableGrant, resolveGrants, type PermissionRegistry } from './grants.ts'
+import {
+  canonicalGrant,
+  isWritableGrant,
+  resolveGrants,
+  type PermissionRegistry,
+} from './grants.ts'
 import type {
   PermissionAbilities,
   PermissionAbility,
@@ -15,11 +20,11 @@ import type {
  *
  * @example
  * const permissions = definePermissions({
- *   product: { create: true, delete: 'Delete products' },
+ *   article: { create: true, delete: 'Delete articles' },
  * })
  *
- * permissions.resolve(['product.*'])
- * // ['product.create', 'product.delete']
+ * permissions.resolve(['article.*'])
+ * // ['article.create', 'article.delete']
  */
 export class Permissions<
   Key extends string = string,
@@ -69,16 +74,51 @@ export class Permissions<
 
   /**
    * Returns the entry of a key or of an alias. Returns undefined for
-   * unknown values and wildcards.
+   * unknown values, namespaces and wildcards.
    */
   find(value: string): PermissionEntry<Key> | undefined {
-    const key = this.#registry.aliases.get(value) ?? value
-    return this.#registry.entries.get(key as Key)
+    return this.#registry.entries.get(this.canonical(value) as Key)
+  }
+
+  /**
+   * Returns the canonical form of a stored grant, with aliases rewritten.
+   * Values matched by no alias are returned unchanged.
+   *
+   * @example
+   * permissions.canonical('shop.*') // 'store.*' with the alias shop → store
+   */
+  canonical(value: string): string {
+    return canonicalGrant(this.#registry, value)
+  }
+
+  /**
+   * Returns the aliases resolving to a key, including the paths produced
+   * by namespace aliases.
+   */
+  aliasesOf(key: Key): string[] {
+    const aliases: string[] = []
+    for (const [alias, target] of this.#registry.aliases) {
+      let candidate: string | undefined
+      if (key === target) {
+        candidate = alias
+      } else if (key.startsWith(`${target}.`)) {
+        candidate = `${alias}${key.slice(target.length)}`
+      }
+
+      /**
+       * A longer alias may shadow the candidate, hence the round trip.
+       */
+      if (candidate !== undefined && this.canonical(candidate) === key) {
+        aliases.push(candidate)
+      }
+    }
+
+    return aliases
   }
 
   /**
    * Returns whether the value is writable as a grant: a defined key or a
-   * wildcard targeting a defined prefix or resource. Use it to validate
+   * wildcard targeting a defined namespace. Use it to validate
    * untrusted input, such as the payload of an admin UI.
    *
    * Bound to the instance, so it can be passed as a callback.

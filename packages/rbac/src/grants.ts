@@ -1,24 +1,15 @@
-import type { ParsedGrant, PermissionEntry } from './types.ts'
+import type { PermissionEntry } from './types.ts'
 
 /**
- * Allowed characters for a prefix, a resource or an action.
+ * Allowed characters for each segment of a permission path.
  */
 export const NAME_PATTERN = /^[A-Za-z0-9_-]+$/
 
 /**
- * Matches "resource.action" and "prefix:resource.action".
+ * Matches a dot path of one or more segments, as in "admin" or
+ * "admin.user.ban".
  */
-const KEY_PATTERN = /^(?:([A-Za-z0-9_-]+):)?([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+)$/
-
-/**
- * Matches "prefix:*".
- */
-const PREFIX_WILDCARD_PATTERN = /^([A-Za-z0-9_-]+):\*$/
-
-/**
- * Matches "resource.*" and "prefix:resource.*".
- */
-const RESOURCE_WILDCARD_PATTERN = /^(?:([A-Za-z0-9_-]+):)?([A-Za-z0-9_-]+)\.\*$/
+const PATH_PATTERN = /^[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)*$/
 
 /**
  * Normalized lookup tables built from a permissions definition.
@@ -30,111 +21,83 @@ export interface PermissionRegistry<Key extends string = string> {
   entries: Map<Key, PermissionEntry<Key>>
 
   /**
-   * Canonical key by alias.
+   * Every defined namespace, as a dot path.
    */
-  aliases: Map<string, Key>
+  namespaces: Set<string>
 
   /**
-   * Every defined prefix.
+   * Target path by alias path. A target is a key or a namespace.
    */
-  prefixes: Set<string>
-
-  /**
-   * Every defined resource, identified with "resourceId".
-   */
-  resources: Set<string>
+  aliases: Map<string, string>
 }
 
 /**
- * Returns the identifier of a resource inside the registry, as in
- * "product" or "admin:product".
+ * Returns whether the value is a dot path, as in "admin.user.ban".
  */
-export function resourceId(prefix: string | undefined, resource: string): string {
-  return prefix === undefined ? resource : `${prefix}:${resource}`
+export function isPath(value: string): boolean {
+  return PATH_PATTERN.test(value)
 }
 
 /**
- * Splits a "[prefix:]resource.action" key into its segments. Returns
- * null when the value is not shaped like a key.
+ * Rewrites a grant through the aliases. The longest alias matching the
+ * start of the grant wins, so "shop.*" becomes "store.*" with the alias
+ * "shop" → "store". Values matched by no alias are returned unchanged.
  */
-export function parseKey(
-  value: string
-): { prefix?: string; resource: string; action: string } | null {
-  const match = KEY_PATTERN.exec(value)
-  if (!match) {
-    return null
+export function canonicalGrant(registry: PermissionRegistry, value: string): string {
+  let source: string | undefined
+  for (const alias of registry.aliases.keys()) {
+    const matches = value === alias || value.startsWith(`${alias}.`)
+    if (matches && (source === undefined || alias.length > source.length)) {
+      source = alias
+    }
   }
 
-  return { prefix: match[1], resource: match[2], action: match[3] }
+  return source === undefined
+    ? value
+    : `${registry.aliases.get(source)}${value.slice(source.length)}`
 }
 
 /**
- * Parses a raw grant. Returns null when the value is neither a key nor
- * a wildcard.
+ * Returns the keys matched by a canonical grant: every key for "*",
+ * every key of a namespace for "namespace.*", the key itself otherwise.
  */
-export function parseGrant(value: string): ParsedGrant | null {
-  if (value === '*') {
-    return { kind: 'all' }
+function matcher<Key extends string>(grant: string): (entry: PermissionEntry<Key>) => boolean {
+  if (grant === '*') {
+    return () => true
   }
 
-  const prefixMatch = PREFIX_WILDCARD_PATTERN.exec(value)
-  if (prefixMatch) {
-    return { kind: 'prefix', prefix: prefixMatch[1] }
+  if (grant.endsWith('.*')) {
+    const namespace = grant.slice(0, -1)
+    return (entry) => entry.key.startsWith(namespace)
   }
 
-  const resourceMatch = RESOURCE_WILDCARD_PATTERN.exec(value)
-  if (resourceMatch) {
-    return { kind: 'resource', prefix: resourceMatch[1], resource: resourceMatch[2] }
-  }
-
-  if (KEY_PATTERN.test(value)) {
-    return { kind: 'key', key: value }
-  }
-
-  return null
-}
-
-/**
- * Returns whether the entry is matched by the parsed grant. Aliases are
- * resolved through the registry.
- */
-function matches<Key extends string>(
-  registry: PermissionRegistry<Key>,
-  grant: ParsedGrant,
-  entry: PermissionEntry<Key>
-): boolean {
-  switch (grant.kind) {
-    case 'all':
-      return true
-    case 'prefix':
-      return entry.prefix === grant.prefix
-    case 'resource':
-      return entry.prefix === grant.prefix && entry.resource === grant.resource
-    case 'key':
-      return entry.key === grant.key || registry.aliases.get(grant.key) === entry.key
-  }
+  return (entry) => entry.key === grant
 }
 
 /**
  * Resolves raw grants to the active keys they cover, in definition order.
- * Aliases map to their canonical key, wildcards expand to active keys,
- * inactive and unknown values are dropped.
+ * Aliases are rewritten, wildcards expand to active keys, inactive and
+ * unknown values are dropped.
  */
 export function resolveGrants<Key extends string>(
   registry: PermissionRegistry<Key>,
   grants: Iterable<string>
 ): Key[] {
-  const parsed: ParsedGrant[] = []
+  const matchers: ((entry: PermissionEntry<Key>) => boolean)[] = []
   for (const grant of grants) {
-    const result = typeof grant === 'string' ? parseGrant(grant) : null
-    if (result) {
-      parsed.push(result)
+    if (typeof grant !== 'string') {
+      continue
+    }
+
+    const canonical = canonicalGrant(registry, grant)
+    if (isWritableGrant(registry, canonical)) {
+      matchers.push(matcher<Key>(canonical))
     }
   }
 
   const resolved: Key[] = []
   for (const entry of registry.entries.values()) {
-    if (!entry.inactive && parsed.some((grant) => matches(registry, grant, entry))) {
+    if (!entry.inactive && matchers.some((matches) => matches(entry))) {
       resolved.push(entry.key)
     }
   }
@@ -144,7 +107,7 @@ export function resolveGrants<Key extends string>(
 
 /**
  * Returns whether the value can be written as a grant: a defined key
- * (active or not) or a wildcard targeting a defined prefix or resource.
+ * (active or not), "*", or a wildcard targeting a defined namespace.
  * Aliases are not writable.
  */
 export function isWritableGrant(registry: PermissionRegistry, value: unknown): boolean {
@@ -152,19 +115,13 @@ export function isWritableGrant(registry: PermissionRegistry, value: unknown): b
     return false
   }
 
-  const grant = parseGrant(value)
-  if (!grant) {
-    return false
+  if (value === '*') {
+    return true
   }
 
-  switch (grant.kind) {
-    case 'all':
-      return true
-    case 'prefix':
-      return registry.prefixes.has(grant.prefix)
-    case 'resource':
-      return registry.resources.has(resourceId(grant.prefix, grant.resource))
-    case 'key':
-      return registry.entries.has(grant.key)
+  if (value.endsWith('.*')) {
+    return registry.namespaces.has(value.slice(0, -2))
   }
+
+  return registry.entries.has(value)
 }

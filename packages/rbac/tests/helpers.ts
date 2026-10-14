@@ -40,6 +40,12 @@ async function createSchema(db: Database) {
     table.string('email').notNullable()
     table.json('permissions').notNullable()
   })
+  await schema().createTable('accounts', (table) => {
+    table.increments('id')
+    table.string('email').notNullable()
+    table.json('roles').nullable()
+    table.json('permissions').nullable()
+  })
   await schema().createTable('roles', (table) => {
     table.increments('id')
     table.string('name').notNullable().unique()

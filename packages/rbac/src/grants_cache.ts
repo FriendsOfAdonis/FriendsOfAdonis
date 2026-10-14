@@ -38,7 +38,7 @@ export function cachedGrants(holder: PermissionHolder): Promise<string[]> {
  * holder through another instance, for example after updating a role.
  *
  * @example
- * await role.givePermission('product.delete')
+ * await role.givePermission('article.delete')
  * forgetGrants(user)
  */
 export function forgetGrants(holder: object): void {

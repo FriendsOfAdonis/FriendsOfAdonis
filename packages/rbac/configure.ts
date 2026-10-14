@@ -1,22 +1,18 @@
 import type ConfigureCommand from '@adonisjs/core/commands/configure'
-import type { Codemods } from '@adonisjs/core/ace/codemods'
 import { stubsRoot } from './stubs/main.ts'
-
-/**
- * Migrations published by the configure hook, in the order they must run.
- */
-const MIGRATIONS = ['create_roles_table', 'create_user_roles_table']
 
 /**
  * Configures the package. Invoked by "node ace configure @foadonis/rbac".
  *
- * Creates the permissions definition, the "authorize" middleware and the
- * roles migrations, then registers the middleware as a named middleware.
+ * Creates the permissions and roles definition, the "authorize"
+ * middleware and the migration adding the "roles" and "permissions"
+ * columns to the users table, then registers the middleware as a named
+ * middleware.
  */
 export async function configure(command: ConfigureCommand) {
   const codemods = await command.createCodemods()
 
-  await codemods.makeUsingStub(stubsRoot, 'start/permissions.stub', {})
+  await codemods.makeUsingStub(stubsRoot, 'start/rbac.stub', {})
   await codemods.makeUsingStub(stubsRoot, 'make/middleware/authorize.stub', {})
 
   await codemods.registerMiddleware('named', [
@@ -26,23 +22,15 @@ export async function configure(command: ConfigureCommand) {
     },
   ])
 
-  await generateMigrations(command, codemods)
+  await codemods.makeUsingStub(
+    stubsRoot,
+    'database/migrations/add_rbac_columns_to_users_table.stub',
+    {
+      filePath: command.app.migrationsPath(`${Date.now()}_add_rbac_columns_to_users_table.ts`),
+    }
+  )
 
   logSuccess(command)
-}
-
-/**
- * Publishes the migrations. Each one gets its own timestamp so the roles
- * table is always created before the pivot table referencing it.
- */
-async function generateMigrations(command: ConfigureCommand, codemods: Codemods) {
-  const timestamp = Date.now()
-
-  for (const [index, name] of MIGRATIONS.entries()) {
-    await codemods.makeUsingStub(stubsRoot, `database/migrations/${name}.stub`, {
-      filePath: command.app.migrationsPath(`${timestamp + index}_${name}.ts`),
-    })
-  }
 }
 
 /**

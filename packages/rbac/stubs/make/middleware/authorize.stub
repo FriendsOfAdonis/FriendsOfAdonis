@@ -4,15 +4,15 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import type { NextFn } from '@adonisjs/core/types/http'
 import type { ActivePermission } from '@foadonis/rbac/types'
-import type { permissions } from '#start/permissions'
+import type { permissions } from '#start/rbac'
 
 /**
  * Authorize middleware ensures the current user holds the given
- * permissions, using the abilities generated from "start/permissions.ts".
+ * permissions, using the abilities generated from "start/rbac.ts".
  *
  * @example
- * router.post('/products', [ProductsController, 'store']).use(
- *   middleware.authorize('product.create')
+ * router.post('/articles', [ArticlesController, 'store']).use(
+ *   middleware.authorize('article.create')
  * )
  */
 export default class AuthorizeMiddleware {

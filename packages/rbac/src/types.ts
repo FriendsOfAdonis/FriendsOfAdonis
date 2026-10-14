@@ -2,86 +2,61 @@ import type { AuthorizerResponse } from '@adonisjs/bouncer/types'
 import type { LucidModel, LucidRow } from '@adonisjs/lucid/types/model'
 import type { ManyToMany } from '@adonisjs/lucid/types/relations'
 import type { Permissions } from './permissions.ts'
+import type { Roles } from './roles.ts'
 
 /**
- * Definition of a single action. Use `true` for a generated description,
- * a string for a custom description, or an object for full control.
+ * A namespace of permissions. Each value is either an action (`true` for
+ * a generated description, or a description string) or a nested
+ * namespace.
+ *
+ * @example
+ * { create: true, delete: 'Delete articles', comment: { moderate: true } }
  */
-export type ActionDefinition =
-  | true
-  | string
-  | {
-      /**
-       * Human readable description. Defaults to a description generated
-       * from the action and resource names, for example "Create product".
-       */
-      description?: string
-
-      /**
-       * Inactive permissions stay in the definition but never grant
-       * access. Defaults to false.
-       */
-      inactive?: boolean
-
-      /**
-       * Legacy keys that resolve to this permission when found in stored
-       * grants. Defaults to an empty list.
-       */
-      aliases?: readonly string[]
-    }
-
-/**
- * A map of resources to their actions, for example
- * `{ product: { create: true } }`.
- */
-export type ResourcesDefinition = Record<string, Record<string, ActionDefinition>>
-
-/**
- * A group of resources namespaced under a prefix. Created with the
- * "prefix" function.
- */
-export interface PrefixedDefinition<P extends string, R extends ResourcesDefinition> {
-  /**
-   * The prefix prepended to every key of the group, as in "admin:product.create".
-   */
-  readonly prefix: P
-
-  /**
-   * The resources namespaced under the prefix.
-   */
-  readonly resources: R
+export interface PermissionTree {
+  readonly [name: string]: true | string | PermissionTree
 }
 
 /**
- * Any value accepted by "definePermissions".
+ * The tree accepted by "definePermissions". The root only holds
+ * namespaces, so every key has at least two segments, as in
+ * "resource.action".
  */
-export type PermissionsDefinition =
-  | ResourcesDefinition
-  | PrefixedDefinition<string, ResourcesDefinition>
+export interface PermissionsDefinition {
+  readonly [namespace: string]: PermissionTree
+}
+
+/**
+ * Options accepted by "definePermissions".
+ */
+export interface PermissionsOptions<Path extends string = string> {
+  /**
+   * Legacy paths rewritten to a defined key or namespace when found in
+   * stored grants. A namespace alias rewrites every grant below it, so
+   * `{ shop: 'store' }` turns "shop.*" into "store.*". Defaults to no
+   * aliases.
+   */
+  aliases?: { readonly [alias: string]: Path }
+
+  /**
+   * Keys or namespaces that stay in the definition but never grant
+   * access. Defaults to an empty list.
+   */
+  inactive?: readonly Path[]
+}
 
 /**
  * Normalized metadata of a single permission.
  */
 export interface PermissionEntry<Key extends string = string> {
   /**
-   * Canonical key, as in "product.create" or "admin:product.create".
+   * Canonical key, as in "article.create" or "admin.user.ban".
    */
   key: Key
 
   /**
-   * Prefix of the key, when the permission was defined with "prefix".
+   * Segments of the key, as in ["admin", "user", "ban"].
    */
-  prefix?: string
-
-  /**
-   * Resource segment of the key.
-   */
-  resource: string
-
-  /**
-   * Action segment of the key.
-   */
-  action: string
+  path: readonly string[]
 
   /**
    * Human readable description.
@@ -92,108 +67,87 @@ export interface PermissionEntry<Key extends string = string> {
    * Whether the permission is inactive. Inactive permissions never grant access.
    */
   inactive: boolean
-
-  /**
-   * Legacy keys resolving to this permission.
-   */
-  aliases: readonly string[]
 }
 
 /**
- * A stored grant parsed into its shape. Exact keys and aliases share
- * the "key" kind, the other kinds are wildcards.
+ * Every permission key (including inactive ones) produced by a tree.
  */
-export type ParsedGrant =
-  | {
-      /**
-       * Matches every active permission ("*").
-       */
-      kind: 'all'
-    }
-  | {
-      /**
-       * Matches every active permission of a prefix ("admin:*").
-       */
-      kind: 'prefix'
-
-      /**
-       * The matched prefix.
-       */
-      prefix: string
-    }
-  | {
-      /**
-       * Matches every active action of a resource ("product.*" or "admin:product.*").
-       */
-      kind: 'resource'
-
-      /**
-       * The prefix of the resource, when any.
-       */
-      prefix?: string
-
-      /**
-       * The matched resource.
-       */
-      resource: string
-    }
-  | {
-      /**
-       * Matches a single permission by key or alias.
-       */
-      kind: 'key'
-
-      /**
-       * The key or alias.
-       */
-      key: string
-    }
+export type KeysOf<T, Prefix extends string = ''> = {
+  [K in keyof T & string]: T[K] extends object ? KeysOf<T[K], `${Prefix}${K}.`> : `${Prefix}${K}`
+}[keyof T & string]
 
 /**
- * Builds the "resource.action" keys of a resources definition. Inactive
- * actions are dropped when Mode is "active".
+ * Every namespace produced by a tree, as dot paths.
  */
-type ResourceKeys<R, Mode extends 'all' | 'active'> = {
-  [Res in keyof R & string]: {
-    [A in keyof R[Res] & string]: Mode extends 'active'
-      ? R[Res][A] extends { inactive: true }
-        ? never
-        : `${Res}.${A}`
-      : `${Res}.${A}`
-  }[keyof R[Res] & string]
-}[keyof R & string]
+export type NamespacesOf<T, Prefix extends string = ''> = {
+  [K in keyof T & string]: T[K] extends object
+    ? `${Prefix}${K}` | NamespacesOf<T[K], `${Prefix}${K}.`>
+    : never
+}[keyof T & string]
 
 /**
- * Every permission key (including inactive ones) produced by a definition.
+ * The paths listed in the "inactive" option.
  */
-export type KeysOf<D> =
-  D extends PrefixedDefinition<infer P, infer R>
-    ? `${P}:${ResourceKeys<R, 'all'>}`
-    : D extends ResourcesDefinition
-      ? ResourceKeys<D, 'all'>
-      : never
+export type InactiveOf<O> = O extends { inactive: readonly (infer Path extends string)[] }
+  ? Path
+  : never
 
 /**
- * The active permission keys produced by a definition.
+ * The keys left active once the inactive keys and namespaces are removed.
  */
-export type ActiveKeysOf<D> =
-  D extends PrefixedDefinition<infer P, infer R>
-    ? `${P}:${ResourceKeys<R, 'active'>}`
-    : D extends ResourcesDefinition
-      ? ResourceKeys<D, 'active'>
-      : never
+export type ActiveOf<Key extends string, Inactive extends string> = Key extends
+  | Inactive
+  | `${Inactive}.${string}`
+  ? never
+  : Key
 
 /**
- * The wildcard grants accepted for a definition: "*", "prefix:*",
- * "resource.*" and "prefix:resource.*".
+ * The wildcard grants accepted for a tree: "*" and "namespace.*".
  */
-export type WildcardsOf<D> =
-  | '*'
-  | (D extends PrefixedDefinition<infer P, infer R>
-      ? `${P}:*` | `${P}:${keyof R & string}.*`
-      : D extends ResourcesDefinition
-        ? `${keyof D & string}.*`
-        : never)
+export type WildcardsOf<T> = '*' | `${NamespacesOf<T>}.*`
+
+/**
+ * Definition of a role declared in code.
+ */
+export interface RoleDefinition<Grant extends string = string> {
+  /**
+   * Human readable description. Defaults to the humanized role name,
+   * for example "Billing manager" for "billing_manager".
+   */
+  description?: string
+
+  /**
+   * Grants of the role: permission keys or wildcards.
+   */
+  permissions: readonly Grant[]
+}
+
+/**
+ * The map of role names to definitions accepted by "defineRoles".
+ */
+export interface RolesDefinition<Grant extends string = string> {
+  readonly [name: string]: RoleDefinition<Grant>
+}
+
+/**
+ * Normalized metadata of a role declared in code.
+ */
+export interface RoleEntry<Name extends string = string> {
+  /**
+   * Unique name of the role.
+   */
+  name: Name
+
+  /**
+   * Human readable description.
+   */
+  description: string
+
+  /**
+   * Grants of the role, as declared.
+   */
+  permissions: readonly string[]
+}
 
 /**
  * Every permission key of a "Permissions" instance, including inactive ones.
@@ -224,8 +178,17 @@ export type Grant<P> =
   P extends Permissions<infer Key, infer _Active, infer Wildcard> ? Key | Wildcard : never
 
 /**
+ * The role names of a "Roles" instance.
+ *
+ * @example
+ * type Name = RoleName<typeof roles>
+ */
+export type RoleName<R> =
+  R extends Roles<infer Name, infer _Key, infer _Active, infer _Wildcard> ? Name : never
+
+/**
  * Anything able to list its raw grants. Models get it from the
- * "withPermissions" and "withRoles" mixins.
+ * "withPermissions", "withRoles" and "withRoleModel" mixins.
  */
 export interface PermissionHolder {
   /**
@@ -320,7 +283,63 @@ export interface WithPermissionsRow<
 }
 
 /**
- * Shape of the rows of a role model usable with "withRoles".
+ * Instance members added by the "withRoles" mixin.
+ */
+export interface WithRolesRow<Name extends string, Active extends string> extends PermissionHolder {
+  /**
+   * Names of the roles stored on the row, including names no longer
+   * defined in code.
+   */
+  roles: string[]
+
+  /**
+   * Returns the assigned roles that are defined in code.
+   */
+  getRoles(): Name[]
+
+  /**
+   * Returns whether the row has the role.
+   */
+  hasRole(name: Name): boolean
+
+  /**
+   * Assigns a role and persists the row. Assigning a role twice is a no-op.
+   */
+  assignRole(name: Name): Promise<void>
+
+  /**
+   * Assigns several roles and persists the row. Assigned roles are skipped.
+   */
+  assignRoles(names: readonly Name[]): Promise<void>
+
+  /**
+   * Replaces every assigned role and persists the row.
+   */
+  syncRoles(names: readonly Name[]): Promise<void>
+
+  /**
+   * Removes a role and persists the row.
+   */
+  revokeRole(name: Name): Promise<void>
+
+  /**
+   * Removes several roles and persists the row.
+   */
+  revokeRoles(names: readonly Name[]): Promise<void>
+
+  /**
+   * Returns the resolved active permissions of the row.
+   */
+  getPermissions(): Promise<Active[]>
+
+  /**
+   * Returns whether the row holds the given active permission.
+   */
+  hasPermission(key: Active): Promise<boolean>
+}
+
+/**
+ * Shape of the rows of a role model usable with "withRoleModel".
  */
 export type RoleRow = LucidRow &
   PermissionHolder & {
@@ -341,9 +360,9 @@ export type RoleModel = LucidModel & { new (): RoleRow }
 export type RoleReference<Role extends RoleModel> = InstanceType<Role> | number | string
 
 /**
- * Options accepted by the "withRoles" mixin.
+ * Options accepted by the "withRoleModel" mixin.
  */
-export interface WithRolesOptions<Role extends RoleModel> {
+export interface WithRoleModelOptions<Role extends RoleModel> {
   /**
    * Returns the role model.
    */
@@ -368,9 +387,9 @@ export interface WithRolesOptions<Role extends RoleModel> {
 }
 
 /**
- * Instance members added by the "withRoles" mixin.
+ * Instance members added by the "withRoleModel" mixin.
  */
-export interface WithRolesRow<
+export interface WithRoleModelRow<
   Role extends RoleModel,
   Active extends string,
 > extends PermissionHolder {

@@ -4,10 +4,10 @@
  *
  * @example
  * const access = await permissions.accessFor(user)
- * access.allows('product.create')
+ * access.allows('article.create')
  *
  * const tokenAccess = access.scope(token.abilities)
- * tokenAccess.allows('product.delete')
+ * tokenAccess.allows('article.delete')
  */
 export class Access<Active extends string> {
   /**
