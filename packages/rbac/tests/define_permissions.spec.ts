@@ -169,6 +169,12 @@ test.group('definePermissions | isGrant', () => {
     .run(({ assert }, { value, expected }) => {
       assert.equal(permissions.isGrant(value), expected)
     })
+
+  test('works when passed as a callback', ({ assert }) => {
+    const input: unknown[] = ['product.create', 'product.remove', '*', 42]
+
+    assert.deepEqual(input.filter(permissions.isGrant), ['product.create', '*'])
+  })
 })
 
 test.group('definePermissions | validation', () => {

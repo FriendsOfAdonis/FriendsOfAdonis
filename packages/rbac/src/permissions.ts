@@ -80,8 +80,13 @@ export class Permissions<
    * Returns whether the value is writable as a grant: a defined key or a
    * wildcard targeting a defined prefix or resource. Use it to validate
    * untrusted input, such as the payload of an admin UI.
+   *
+   * Bound to the instance, so it can be passed as a callback.
+   *
+   * @example
+   * input.filter(permissions.isGrant)
    */
-  isGrant(value: unknown): value is Key | Wildcard {
+  isGrant = (value: unknown): value is Key | Wildcard => {
     return isWritableGrant(this.#registry, value)
   }
 
