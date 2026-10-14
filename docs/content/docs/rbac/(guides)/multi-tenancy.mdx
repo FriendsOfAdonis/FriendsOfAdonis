@@ -1,0 +1,203 @@
+---
+title: Multi-tenancy
+description: "Scope roles to organizations by holding them on an OrganizationMember model, with code roles or withRoleModel, then authorize each request with its own Bouncer."
+icon: Building2
+---
+
+In a multi-tenant application, the permissions of a user depend on the organization they act in. A user can be an admin in one organization and a writer in another. The permission definition and the roles are shared. What changes is which roles each membership holds.
+
+You model this with an `OrganizationMember` model that holds the roles, instead of the `User` model. Any Lucid model can hold roles, either [in code](/docs/rbac/roles) with `withRoles` or [in the database](/docs/rbac/roles#store-roles-in-the-database) with `withRoleModel`. Pick one of the two options below.
+
+## Option 1: roles in code
+
+### Create the table
+
+The `organization_members` table stores one row per user and organization, with the role names of the membership in a JSON `roles` column:
+
+```ts title="database/migrations/xxxx_create_organization_members_table.ts"
+import { BaseSchema } from "@adonisjs/lucid/schema";
+
+export default class extends BaseSchema {
+  protected tableName = "organization_members";
+
+  async up() {
+    this.schema.createTable(this.tableName, (table) => {
+      table.increments("id");
+      table.integer("organization_id").unsigned().notNullable().references("id").inTable("organizations").onDelete("CASCADE");
+      table.integer("user_id").unsigned().notNullable().references("id").inTable("users").onDelete("CASCADE");
+      table.json("roles").nullable();
+      table.unique(["organization_id", "user_id"]);
+      table.timestamp("created_at");
+      table.timestamp("updated_at");
+    });
+  }
+
+  async down() {
+    this.schema.dropTable(this.tableName);
+  }
+}
+```
+
+### Create the OrganizationMember model
+
+Apply `withRoles` with the roles from `start/rbac.ts`. The mixin registers the `roles` column itself.
+
+```ts title="app/models/organization_member.ts"
+import { compose } from "@adonisjs/core/helpers";
+import { BaseModel, column } from "@adonisjs/lucid/orm";
+import { withRoles } from "@foadonis/rbac";
+import { roles } from "#start/rbac";
+
+export default class OrganizationMember extends compose(BaseModel, withRoles(roles)) {
+  @column({ isPrimary: true })
+  declare id: number;
+
+  @column()
+  declare organizationId: number;
+
+  @column()
+  declare userId: number;
+}
+```
+
+### Assign roles per organization
+
+When a user joins an organization, create the membership and assign its roles by name.
+
+```ts
+import OrganizationMember from "#models/organization_member";
+
+const inOrganizationA = await OrganizationMember.create({ organizationId: organizationA.id, userId: user.id });
+await inOrganizationA.assignRole("writer");
+
+const inOrganizationB = await OrganizationMember.create({ organizationId: organizationB.id, userId: user.id });
+await inOrganizationB.assignRole("admin");
+```
+
+The same user is a writer in organization A and an admin in organization B.
+
+## Option 2: roles in the database
+
+Use this option when admins edit roles at runtime. It assumes the `roles` table and the `Role` model from the [Roles](/docs/rbac/roles#store-roles-in-the-database) guide.
+
+### Create the tables
+
+Create the `organization_members` table as in option 1, without the `roles` column. Then link memberships to roles with an `organization_member_roles` pivot table:
+
+```ts title="database/migrations/xxxx_create_organization_member_roles_table.ts"
+import { BaseSchema } from "@adonisjs/lucid/schema";
+
+export default class extends BaseSchema {
+  protected tableName = "organization_member_roles";
+
+  async up() {
+    this.schema.createTable(this.tableName, (table) => {
+      table.increments("id");
+      table
+        .integer("organization_member_id")
+        .unsigned()
+        .notNullable()
+        .references("id")
+        .inTable("organization_members")
+        .onDelete("CASCADE");
+      table.integer("role_id").unsigned().notNullable().references("id").inTable("roles").onDelete("CASCADE");
+      table.unique(["organization_member_id", "role_id"]);
+    });
+  }
+
+  async down() {
+    this.schema.dropTable(this.tableName);
+  }
+}
+```
+
+### Create the OrganizationMember model
+
+Apply `withRoleModel` with the organization pivot table. Set `pivotForeignKey`, because the column is `organization_member_id`. Set `pivotRelatedForeignKey` too if your role column is not `role_id`.
+
+```ts title="app/models/organization_member.ts"
+import { compose } from "@adonisjs/core/helpers";
+import { BaseModel, column } from "@adonisjs/lucid/orm";
+import { withRoleModel } from "@foadonis/rbac";
+import { permissions } from "#start/rbac";
+import Role from "#models/role";
+
+export default class OrganizationMember extends compose(
+  BaseModel,
+  withRoleModel(permissions, {
+    role: () => Role,
+    pivotTable: "organization_member_roles",
+    pivotForeignKey: "organization_member_id",
+  })
+) {
+  @column({ isPrimary: true })
+  declare id: number;
+
+  @column()
+  declare organizationId: number;
+
+  @column()
+  declare userId: number;
+}
+```
+
+### Assign roles per organization
+
+```ts
+import Role from "#models/role";
+import OrganizationMember from "#models/organization_member";
+
+const writer = await Role.findByOrFail("name", "writer");
+const admin = await Role.findByOrFail("name", "admin");
+
+const inOrganizationA = await OrganizationMember.create({ organizationId: organizationA.id, userId: user.id });
+await inOrganizationA.assignRole(writer);
+
+const inOrganizationB = await OrganizationMember.create({ organizationId: organizationB.id, userId: user.id });
+await inOrganizationB.assignRole(admin);
+```
+
+## Authorize against the organization member
+
+Both options authorize the same way. `ctx.bouncer` checks the authenticated user. For an organization action, load the membership and create a Bouncer instance for it. Create the abilities once, outside the controller class.
+
+```ts title="app/controllers/organization_articles_controller.ts"
+import { Bouncer } from "@adonisjs/bouncer";
+import type { HttpContext } from "@adonisjs/core/http";
+import OrganizationMember from "#models/organization_member";
+import { permissions } from "#start/rbac";
+
+const permissionAbilities = permissions.abilities();
+
+export default class OrganizationArticlesController {
+  async store({ auth, params }: HttpContext) {
+    const user = auth.getUserOrFail();
+
+    const member = await OrganizationMember.query()
+      .where("organizationId", params.organizationId)
+      .where("userId", user.id)
+      .firstOrFail();
+
+    const bouncer = new Bouncer(member, permissionAbilities);
+    await bouncer.authorize("article.create");
+
+    // The member can create articles in this organization
+  }
+}
+```
+
+A user who is not a member of the organization gets a 404 from `firstOrFail`. A member without the permission gets a 403.
+
+## Scope organization checks to a token
+
+Pass the token abilities as the second argument, as you would on `ctx.bouncer`:
+
+```ts
+const user = auth.getUserOrFail();
+const tokenAbilities = user.currentAccessToken?.abilities;
+
+const bouncer = new Bouncer(member, permissionAbilities);
+await bouncer.authorize("article.create", tokenAbilities);
+```
+
+The check passes when the roles of the member grant the permission and the token allows it.

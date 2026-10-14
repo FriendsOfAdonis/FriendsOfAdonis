@@ -11,6 +11,6 @@
     "(guides)/roles",
     "(guides)/direct-permissions",
     "(guides)/authorization",
-    "(guides)/teams"
+    "(guides)/multi-tenancy"
   ]
 }
