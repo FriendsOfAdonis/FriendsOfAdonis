@@ -1,8 +1,9 @@
+import 'reflect-metadata'
 import { IgnitorFactory } from '@adonisjs/core/factories'
 import appConfig from './app_config.js'
 import { Shopkeeper } from '../src/shopkeeper.js'
-import { ApplicationService } from '@adonisjs/core/types'
-import { Kernel } from '@adonisjs/core/ace'
+import { type ApplicationService } from '@adonisjs/core/types'
+import { type Kernel } from '@adonisjs/core/ace'
 
 export const BASE_URL = new URL('./tmp/', import.meta.url)
 
@@ -18,6 +19,10 @@ export async function createApp() {
     .merge(appConfig)
     .withCoreConfig()
     .withCoreProviders()
+    .preload(async (application) => {
+      const server = await application.container.make('server')
+      server.use([() => import('@adonisjs/core/bodyparser_middleware')])
+    })
     .create(BASE_URL, {
       importer: (filePath) => {
         if (filePath.startsWith('./') || filePath.startsWith('../')) {
@@ -35,6 +40,9 @@ export async function createApp() {
 
   ace = await app.container.make('ace')
   shopkeeper = await app.container.make(Shopkeeper)
+
+  shopkeeper.registerRoutes()
+  shopkeeper.registerWebhookListeners()
 
   return { app, ace, shopkeeper }
 }

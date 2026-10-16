@@ -1,13 +1,13 @@
 import { SimplePaginator } from '@adonisjs/lucid/database'
-import { SearchBuilder } from '../builder.js'
-import { AlgoliaConfig, SearchableModel, SearchableRow } from '../types.js'
-import { MagnifyEngine } from './main.js'
+import { type SearchBuilder } from '../builder.js'
+import { type AlgoliaConfig, type SearchableModel, type SearchableRow } from '../types.js'
+import { type MagnifyEngine } from './main.js'
 import {
   algoliasearch,
-  Algoliasearch,
-  NumericFilters,
-  SearchParams,
-  SearchResponse,
+  type Algoliasearch,
+  type NumericFilters,
+  type SearchParams,
+  type SearchResponse,
 } from 'algoliasearch'
 import is from '@adonisjs/core/helpers/is'
 

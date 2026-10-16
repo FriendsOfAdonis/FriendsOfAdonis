@@ -1,9 +1,9 @@
 import { compose } from '@adonisjs/core/helpers'
 import { BaseModel, column } from '@adonisjs/lucid/orm'
-import { Billable } from '../../src/mixins/billable.js'
+import { billable } from '../../src/mixins/billable.js'
 import { DateTime } from 'luxon'
 
-export default class User extends compose(BaseModel, Billable) {
+export default class User extends compose(BaseModel, billable()) {
   @column({ isPrimary: true })
   declare id: number
 

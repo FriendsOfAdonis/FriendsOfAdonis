@@ -1,4 +1,4 @@
-import { HttpContext } from '@adonisjs/core/http'
+import { type HttpContext } from '@adonisjs/core/http'
 import { createParameterDecorator, AuthenticationError } from 'type-graphql'
 import { UnavailableFeatureError } from '../errors/unavailable_feature.js'
 

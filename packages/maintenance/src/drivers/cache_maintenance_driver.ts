@@ -1,5 +1,5 @@
-import { MaintenanceDriver } from './maintenance_driver.js'
-import { DownPayload } from '../types.js'
+import { type MaintenanceDriver } from './maintenance_driver.js'
+import { type DownPayload } from '../types.js'
 import { RuntimeException } from '@adonisjs/core/exceptions'
 
 export class CacheMaintenanceDriver implements MaintenanceDriver {

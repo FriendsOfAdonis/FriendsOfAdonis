@@ -1,6 +1,6 @@
 import { test } from '@japa/runner'
 import { TypesenseEngine } from '../../src/engines/typesense.js'
-import { StartedTestContainer } from 'testcontainers'
+import { type StartedTestContainer } from 'testcontainers'
 import User from '../fixtures/user.js'
 import Import from '../../commands/import.js'
 import Flush from '../../commands/flush.js'
@@ -12,8 +12,8 @@ import {
   setupFakeAdonisApp,
   sleep,
 } from '../helpers.js'
-import { ApplicationService } from '@adonisjs/core/types'
-import { Kernel } from '@adonisjs/core/ace'
+import { type ApplicationService } from '@adonisjs/core/types'
+import { type Kernel } from '@adonisjs/core/ace'
 import { defineConfig as defineMagnifyConfig } from '../../src/define_config.js'
 import { FileSystem } from '@japa/file-system'
 import { fileURLToPath } from 'node:url'

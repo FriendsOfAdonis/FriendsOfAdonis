@@ -1,9 +1,9 @@
 import { assert } from '@japa/assert'
 import { fileSystem } from '@japa/file-system'
 import { expectTypeOf } from '@japa/expect-type'
-import { processCLIArgs, configure, run } from '@japa/runner'
+import { configure, processCLIArgs, run } from '@japa/runner'
 import { BASE_URL, createApp } from '../tests/app.js'
-import { copyFile, mkdir } from 'node:fs/promises'
+import { cp, rm } from 'node:fs/promises'
 import { apiClient } from '@japa/api-client'
 import { expect } from '@japa/expect'
 
@@ -32,23 +32,23 @@ configure({
     },
     {
       name: 'commands',
-      files: ['tests/commands/**/*.spec.(js|ts)'],
+      files: ['tests/commands/**/*.spec.{ts,js}'],
     },
     {
       name: 'functional',
-      files: ['tests/functional/**/*.spec.(js|ts)'],
+      files: ['tests/functional/**/*.spec.{ts,js}'],
       configure(suite) {
         return suite
           .setup(async () => {
             const testUtils = await import('@adonisjs/core/services/test_utils').then(
               (m) => m.default
             )
-            await mkdir(app.migrationsPath(), { recursive: true })
-
-            await copyFile(
-              new URL('../tests/fixtures/migrations/00000_create_users_table.ts', import.meta.url)
-                .pathname,
-              app.migrationsPath('00000_create_users_table.ts')
+            await rm(app.migrationsPath(), { recursive: true, force: true })
+            await rm(new URL('../tests/tmp/db.sqlite', import.meta.url).pathname, { force: true })
+            await cp(
+              new URL('../tests/fixtures/migrations', import.meta.url).pathname,
+              app.migrationsPath(),
+              { recursive: true }
             )
 
             await testUtils.db().migrate()
@@ -65,7 +65,7 @@ configure({
     expect(),
     fileSystem({ basePath: BASE_URL, autoClean: false }),
     expectTypeOf(),
-    apiClient({ baseURL: `http://localhost:${process.env.PORT}` }),
+    apiClient({ baseURL: `http://localhost:${process.env.PORT || 3333}` }),
   ],
   teardown: [() => app.terminate()],
 })

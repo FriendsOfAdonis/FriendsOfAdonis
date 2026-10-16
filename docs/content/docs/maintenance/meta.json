@@ -1,6 +1,6 @@
 {
   "title": "Maintenance",
-  "description": "Put your application in maintenance mode",
+  "description": "Put your AdonisJS application in maintenance mode with simple Ace commands and bypass secrets",
   "root": true,
   "icon": "Wrench",
   "pages": ["---Guide---", "index", "getting-started", "------", "commands", "drivers"]

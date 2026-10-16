@@ -1,7 +1,7 @@
 import { configProvider } from '@adonisjs/core'
-import { ConfigProvider } from '@adonisjs/core/types'
+import { type ConfigProvider } from '@adonisjs/core/types'
 import { InvalidArgumentsException } from '@adonisjs/core/exceptions'
-import { ManagerModeFactory } from './types.js'
+import { type ManagerModeFactory } from './types.js'
 import type { FileMaintenanceDriver } from './drivers/file_maintenance_driver.js'
 import type { CacheMaintenanceDriver } from './drivers/cache_maintenance_driver.js'
 

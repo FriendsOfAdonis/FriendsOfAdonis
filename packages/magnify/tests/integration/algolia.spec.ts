@@ -10,8 +10,8 @@ import {
   sleep,
 } from '../helpers.js'
 import { defineConfig as defineMagnifyConfig } from '../../src/define_config.js'
-import { ApplicationService } from '@adonisjs/core/types'
-import { Kernel } from '@adonisjs/core/ace'
+import { type ApplicationService } from '@adonisjs/core/types'
+import { type Kernel } from '@adonisjs/core/ace'
 import Import from '../../commands/import.js'
 import Flush from '../../commands/flush.js'
 import { FileSystem } from '@japa/file-system'

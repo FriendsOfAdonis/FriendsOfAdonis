@@ -1,5 +1,5 @@
 import { RuntimeException } from '@adonisjs/core/exceptions'
-import { ManagerEngineFactory } from './types.js'
+import { type ManagerEngineFactory } from './types.js'
 
 export class MagnifyManager<KnownEngines extends Record<string, ManagerEngineFactory>> {
   #cachedEngines: Map<keyof KnownEngines, ReturnType<KnownEngines[keyof KnownEngines]>> = new Map()

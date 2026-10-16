@@ -1,6 +1,6 @@
 {
   "title": "Crypt",
-  "description": "Safely store your credentials in your repository",
+  "description": "Public-key encryption for AdonisJS dotenv files, so secrets live in version control and only the private key stays out of the repository.",
   "root": true,
   "icon": "Vault",
   "pages": ["---Guide---", "index", "getting_started", "------", "commands"]

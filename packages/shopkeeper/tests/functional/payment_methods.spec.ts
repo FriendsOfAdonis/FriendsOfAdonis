@@ -89,7 +89,7 @@ test.group('PaymentMethods', () => {
     assert.equal(paymentMethod.card?.last4, '4242')
     assert.isTrue(user.hasDefaultPaymentMethod())
 
-    const found = (await user.defaultPaymentMethod()) as PaymentMethod
+    const found = await user.defaultPaymentMethod()
     assert.instanceOf(found, PaymentMethod)
     assert.equal(paymentMethod.card?.brand, 'visa')
     assert.equal(paymentMethod.card?.last4, '4242')

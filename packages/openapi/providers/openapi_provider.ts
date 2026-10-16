@@ -1,6 +1,6 @@
-import { ApplicationService } from '@adonisjs/core/types'
+import { type ApplicationService } from '@adonisjs/core/types'
 import { OpenAPI } from '../src/openapi.js'
-import { OpenAPIConfig } from '../src/types.js'
+import { type OpenAPIConfig } from '../src/types.js'
 
 export default class OpenAPIProvider {
   constructor(protected app: ApplicationService) {}

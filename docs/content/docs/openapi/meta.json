@@ -1,6 +1,6 @@
 {
   "title": "OpenAPI",
-  "description": "Generate OpenAPI specifications",
+  "description": "Generate OpenAPI V3 documentation from your AdonisJS controllers and models using TypeScript decorators.",
   "root": true,
   "icon": "Server",
   "pages": [
@@ -9,12 +9,15 @@
     "--- Guide ---",
     "types-and-parameters",
     "operations",
-    "security",
+    "validators",
+    "transformers",
+    "frontend",
     "---References---",
     "(references)/configuration",
-    "[Decorators](https://openapi-ts.dev/openapi-metadata/decorators)",
+    "(references)/decorators",
     "---Advanced---",
     "(advanced)/generic-types",
-    "(advanced)/mapped-types"
+    "(advanced)/mapped-types",
+    "(advanced)/custom-type-loaders"
   ]
 }

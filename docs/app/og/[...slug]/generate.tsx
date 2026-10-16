@@ -4,6 +4,8 @@ import type { ReactNode } from 'react'
 
 export type GenerateProps = {
   description?: ReactNode
+  /** Small accent line above the title, used for the library name */
+  eyebrow?: ReactNode
   title: ReactNode
 }
 
@@ -27,9 +29,10 @@ export async function getImageResponseOptions(): Promise<ImageResponseOptions> {
   }
 }
 
-export function generate({ title, description }: GenerateProps) {
+export function generate({ title, description, eyebrow }: GenerateProps) {
   const siteName = 'FriendsOfAdonis'
   const primaryTextColor = 'rgb(240,240,240)'
+  const accentColor = '#E74343'
 
   const logo = (
     <svg
@@ -86,6 +89,18 @@ export function generate({ title, description }: GenerateProps) {
           padding: '4rem',
         }}
       >
+        {eyebrow ? (
+          <span
+            style={{
+              fontWeight: 600,
+              fontSize: '40px',
+              color: accentColor,
+              marginBottom: '8px',
+            }}
+          >
+            {eyebrow}
+          </span>
+        ) : null}
         <span
           style={{
             fontWeight: 600,

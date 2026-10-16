@@ -16,6 +16,7 @@ export default defineConfig({
   webhook: {
     secret: env.get("STRIPE_WEBHOOK_SECRET"),
     tolerance: 300,
+    enforceSecret: env.get("NODE_ENV") === "production"
   },
 
   models: {

@@ -1,7 +1,7 @@
-import { Algoliasearch } from 'algoliasearch'
-import { MeiliSearch } from 'meilisearch'
+import { type Algoliasearch } from 'algoliasearch'
+import { type MeiliSearch } from 'meilisearch'
 import { test } from '@japa/runner'
-import { Client } from 'typesense'
+import { type Client } from 'typesense'
 
 import { MeilisearchEngine } from '../../src/engines/meilisearch.js'
 import { TypesenseEngine } from '../../src/engines/typesense.js'

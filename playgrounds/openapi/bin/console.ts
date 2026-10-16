@@ -13,6 +13,7 @@
 
 import 'reflect-metadata'
 import { Ignitor, prettyPrintError } from '@adonisjs/core'
+import { ActionCommandsLoader } from '@foadonis/actions'
 
 /**
  * URL to the application root. AdonisJS need it to resolve
@@ -40,6 +41,7 @@ new Ignitor(APP_ROOT, { importer: IMPORTER })
     app.listenIf(app.managedByPm2, 'SIGINT', () => app.terminate())
   })
   .ace()
+  .configure(ActionCommandsLoader.configure)
   .handle(process.argv.splice(2))
   .catch((error) => {
     process.exitCode = 1

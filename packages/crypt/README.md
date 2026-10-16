@@ -21,7 +21,7 @@
 
 <!-- automd:coverage -->
 
-![Coverage](https://img.shields.io/badge/coverage-0%25-red)
+![Coverage](https://img.shields.io/badge/coverage-81%25-brightgreen)
 
 <!-- /automd -->
 
@@ -29,7 +29,7 @@
 
 ## Quickstart
 
-[Installation & Getting Started](https://friendsofadonis.github.io/docs/crypt/getting-started)
+[Installation & Getting Started](https://friendsofadonis.com/docs/crypt/getting-started)
 
 ## License
 

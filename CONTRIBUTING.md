@@ -71,8 +71,8 @@ The current minimum coverage is: **80%**
 ### Code Style
 
 - **TypeScript**: We use strict TypeScript configuration based on `@adonisjs/tsconfig`
-- **ESLint**: Follow our custom ESLint configuration (`@foadonis/eslint-config`)
-- **Prettier**: Code formatting is handled by `@adonisjs/prettier-config`
+- **oxlint**: Follow our custom configuration
+- **oxfmt**: Code formatting is handled by oxfmt
 
 ### Comments
 

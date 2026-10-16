@@ -1,5 +1,154 @@
 # @foadonis/graphql
 
+## 1.2.1
+
+### Patch Changes
+
+- [#157](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/157) [`620e93f`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/620e93f69a447ec6abd9ef9c287fd86ca906d602) Thanks [@kerwanp](https://github.com/kerwanp)! - Cleanup disposable in `WebsocketSubscriptionDriver` for idempotent shutdown.
+
+## 1.2.0
+
+### Minor Changes
+
+- [#153](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/153) [`b1c669a`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/b1c669afcd8902fc4af046734497297c0b993bac) Thanks [@kerwanp](https://github.com/kerwanp)! - Test your GraphQL API with the new Japa plugin exported from `@foadonis/graphql/plugins/api_client`. It adds `client.query` and `client.mutate` to the API client, along with GraphQL assertions on the response.
+
+  ```ts
+  test("lists posts", async ({ client }) => {
+    const response = await client
+      .query(`query { posts { id title } }`)
+      .loginAs(user);
+
+    response.assertNoErrors();
+    response.assertData({ posts: [{ id: "1", title: "Hello" }] });
+  });
+  ```
+
+### Patch Changes
+
+- [#155](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/155) [`82d51d1`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/82d51d1a10dd9b541809bc8dabebf464b4efb58c) Thanks [@kerwanp](https://github.com/kerwanp)! - The Redis PubSub clients are now closed when the application terminates in every environment, not only the web server. An ace command, a seeder or a queue worker that published an event no longer keeps the process alive, and shutdown waits for the publishes still in flight to reach Redis instead of dropping them.
+
+- [#153](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/153) [`b1c669a`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/b1c669afcd8902fc4af046734497297c0b993bac) Thanks [@kerwanp](https://github.com/kerwanp)! - The Yoga driver now serves the `path` configured in `config/graphql.ts`. Previously, any path not ending with `/graphql` answered a 404 unless `graphqlEndpoint` was also passed to the driver.
+
+## 1.1.1
+
+### Patch Changes
+
+- [#146](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/146) [`8c1a901`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/8c1a901964797d22da8c2fff49c70ba5f19a0fb3) Thanks [@kerwanp](https://github.com/kerwanp)! - Set GraphQLServer.buildSchema method public allowing building schema without starting the server.
+
+## 1.1.0
+
+### Minor Changes
+
+- [#143](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/143) [`39673b6`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/39673b696c980e01f24a8d1c58b4504d3794cdab) Thanks [@kerwanp](https://github.com/kerwanp)! - `@Authorized` now accepts Bouncer policies (`@Authorized(RecipePolicy, 'edit')`) and passes the parent object to abilities and policy methods when protecting fields. Authorization is fully delegated to Bouncer, so `allowGuest` abilities and policy methods are now evaluated for unauthenticated users.
+
+### Patch Changes
+
+- [#143](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/143) [`39673b6`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/39673b696c980e01f24a8d1c58b4504d3794cdab) Thanks [@kerwanp](https://github.com/kerwanp)! - The Yoga driver now streams multipart requests to GraphQL Yoga, enabling file uploads through the GraphQL multipart request specification. Previously `request.raw()` returned `null` for multipart bodies (which the bodyparser never buffers), so uploads always failed. Add your GraphQL endpoint to the bodyparser `processManually` list to use file uploads.
+
+## 1.0.1
+
+### Patch Changes
+
+- [#115](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/115) [`d8771e8`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/d8771e8f18cbd1bfef15541f6f716705aea63731) Thanks [@kerwanp](https://github.com/kerwanp)! - Bump peer dependencies
+
+- [#111](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/111) [`ad872d6`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/ad872d6b8372056ff5e8bcb53a126a2ed05de904) Thanks [@NadimD](https://github.com/NadimD)! - Fix stub templates being copied to the wrong directory during build.
+
+## 1.0.0
+
+### Major Changes
+
+- [`ea99649`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/ea996495e36a2c57cf0c4eb06e20ab77aa25ac8b) Thanks [@kerwanp](https://github.com/kerwanp)! - GraphQL v1 🚀
+
+  ## New features
+  - ✨ Support for AdonisJS V7
+  - ✨ Support for Yoga and Apollo server
+  - ✨ Built-in support for PubSub system (native and redis)
+  - ✨ Built-in support for Subscriptions over Websocket
+  - ✨ Resolvers autoloading with HMR support
+  - ✨ make:resolver command
+
+  ## How to migrate
+
+  Update the `config/graphql.ts`:
+
+  ```ts
+  import { defineConfig, drivers, pubsubs } from "@foadonis/graphql";
+
+  export default defineConfig({
+    path: "/graphql",
+
+    driver: drivers.apollo({
+      playground: true,
+      introspection: true,
+    }),
+
+    logger: "app",
+
+    emitSchemaFile: true,
+  });
+  ```
+
+  Remove the `start/graphql.ts` as resolvers are now autoloaded.
+
+  Install `@graphql-yoga/subscription`:
+
+  ```bash
+  npm i @graphql-yoga/subscription
+  ```
+
+### Patch Changes
+
+- [`9c5a59b`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/9c5a59b1770d89e1d3c58d630e43dd5a4f4b36e3) Thanks [@kerwanp](https://github.com/kerwanp)! - Bump AdonisJS packages for V7 support release
+
+## 1.0.0-next.1
+
+### Patch Changes
+
+- [#107](https://github.com/FriendsOfAdonis/FriendsOfAdonis/pull/107) [`9c5a59b`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/9c5a59b1770d89e1d3c58d630e43dd5a4f4b36e3) Thanks [@github-actions](https://github.com/apps/github-actions)! - Bump AdonisJS packages for V7 support release
+
+## 1.0.0-next.0
+
+### Major Changes
+
+- [`ea99649`](https://github.com/FriendsOfAdonis/FriendsOfAdonis/commit/ea996495e36a2c57cf0c4eb06e20ab77aa25ac8b) Thanks [@kerwanp](https://github.com/kerwanp)! - GraphQL v1 🚀
+
+  ## New features
+  - ✨ Support for AdonisJS V7
+  - ✨ Support for Yoga and Apollo server
+  - ✨ Built-in support for PubSub system (native and redis)
+  - ✨ Built-in support for Subscriptions over Websocket
+  - ✨ Resolvers autoloading with HMR support
+  - ✨ make:resolver command
+
+  ## How to migrate
+
+  Update the `config/graphql.ts`:
+
+  ```ts
+  import { defineConfig, drivers, pubsubs } from "@foadonis/graphql";
+
+  export default defineConfig({
+    path: "/graphql",
+
+    driver: drivers.apollo({
+      playground: true,
+      introspection: true,
+    }),
+
+    logger: "app",
+
+    emitSchemaFile: true,
+  });
+  ```
+
+  Remove the `start/graphql.ts` as resolvers are now autoloaded.
+
+  Install `@graphql-yoga/subscription`:
+
+  ```bash
+  npm i @graphql-yoga/subscription
+  ```
+
 ## 0.1.0
 
 ### Minor Changes

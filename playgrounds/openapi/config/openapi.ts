@@ -1,4 +1,3 @@
-import { CustomVineLoader } from '#loaders/custom_vine_loader'
 import { defineConfig } from '@foadonis/openapi'
 
 export default defineConfig({
@@ -9,5 +8,5 @@ export default defineConfig({
       version: '1.0.0',
     },
   },
-  loaders: [CustomVineLoader],
+  loaders: [],
 })

@@ -1,6 +1,7 @@
 import { defineConfig as defineDatabaseConfig } from '@adonisjs/lucid'
 import { defineConfig } from '../src/define_config.js'
 import { WEBHOOK_EVENTS } from '../src/constants.js'
+import { Secret } from '@adonisjs/core/helpers'
 
 export default {
   rcFileContents: {
@@ -12,8 +13,8 @@ export default {
   },
   config: {
     shopkeeper: defineConfig({
-      key: 'random',
-      secret: process.env.STRIPE_SECRET as string,
+      key: new Secret('random'),
+      secret: new Secret(process.env.STRIPE_SECRET as string),
 
       currency: 'EUR',
       currencyLocale: 'fr-FR',
@@ -21,6 +22,7 @@ export default {
       webhook: {
         tolerance: 300,
         events: WEBHOOK_EVENTS,
+        enforceSecret: false,
       },
 
       models: {

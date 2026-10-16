@@ -1,15 +1,15 @@
 import {
-  Config as MeilisearchClientConfig,
-  Settings as MeilisearchIndexSettings,
+  type Config as MeilisearchClientConfig,
+  type Settings as MeilisearchIndexSettings,
 } from 'meilisearch'
-import { ConfigurationOptions as TypesenseClientOptions } from 'typesense/lib/Typesense/Configuration.js'
-import { algoliasearch } from 'algoliasearch'
-import { MagnifyManager } from './magnify_manager.js'
-import { ConfigProvider } from '@adonisjs/core/types'
-import { MagnifyEngine } from './engines/main.js'
-import { CollectionCreateSchema } from 'typesense/lib/Typesense/Collections.js'
-import { LucidModel, LucidRow, ModelObject } from '@adonisjs/lucid/types/model'
-import { SearchBuilder } from './builder.js'
+import { type ConfigurationOptions as TypesenseClientOptions } from 'typesense/lib/Typesense/Configuration.js'
+import { type algoliasearch } from 'algoliasearch'
+import { type MagnifyManager } from './magnify_manager.js'
+import { type ConfigProvider } from '@adonisjs/core/types'
+import { type MagnifyEngine } from './engines/main.js'
+import { type CollectionCreateSchema } from 'typesense/lib/Typesense/Collections.js'
+import { type LucidModel, type LucidRow, type ModelObject } from '@adonisjs/lucid/types/model'
+import { type SearchBuilder } from './builder.js'
 
 export type MeilisearchConfig = MeilisearchClientConfig & {
   indexSettings?: Record<string, MeilisearchIndexSettings>

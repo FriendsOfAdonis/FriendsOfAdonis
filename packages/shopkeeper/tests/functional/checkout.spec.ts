@@ -24,16 +24,14 @@ test.group('Checkout', () => {
       unit_amount: 1500,
     })
 
-    const checkout = await user.checkout(
-      {
-        [price1.id]: 5,
-        [price2.id]: 1,
-      },
-      {
+    const checkout = await user
+      .checkout()
+      .addLineItem(price1.id, 5)
+      .addLineItem(price2.id, 1)
+      .sessionParams({
         success_url: 'http://example.org',
         cancel_url: 'http://example.org',
-      }
-    )
+      })
 
     assert.instanceOf(checkout, Checkout)
   })
@@ -61,10 +59,14 @@ test.group('Checkout', () => {
       currency: 'EUR',
     })
 
-    const checkout = await user.withCoupon(coupon.id).checkout(price.id, {
-      success_url: 'http://example.org',
-      cancel_url: 'http://example.org',
-    })
+    const checkout = await user
+      .checkout()
+      .addLineItem(price.id)
+      .withCoupon(coupon.id)
+      .sessionParams({
+        success_url: 'http://example.org',
+        cancel_url: 'http://example.org',
+      })
 
     assert.instanceOf(checkout, Checkout)
   })
@@ -72,7 +74,7 @@ test.group('Checkout', () => {
   test('customers can start a one off charge checkout session', async ({ assert }) => {
     const user = await createCustomer('customers_can_start_a_one_off_charge_checkout_session')
 
-    const checkout = await user.checkoutCharge(1200, 'Sinoda', 1, {
+    const checkout = await user.checkoutCharge(1200, 'Sinoda').sessionParams({
       success_url: 'http://example.org',
       cancel_url: 'http://example.org',
     })
@@ -143,7 +145,7 @@ test.group('Checkout', () => {
       unit_amount: 1500,
     })
 
-    const checkout = await Checkout.guest().create(price.id, {
+    const checkout = await Checkout.guest().addLineItem(price.id).sessionParams({
       success_url: 'http://example.org',
       cancel_url: 'http://example.org',
     })
@@ -163,13 +165,10 @@ test.group('Checkout', () => {
       unit_amount: 1500,
     })
 
-    const checkout = await user.checkout(
-      { [price.id]: 5 },
-      {
-        ui_mode: 'embedded',
-        return_url: 'http://example.org',
-      }
-    )
+    const checkout = await user.checkout().addLineItem(price.id, 5).sessionParams({
+      ui_mode: 'embedded',
+      return_url: 'http://example.org',
+    })
 
     assert.instanceOf(checkout, Checkout)
   })

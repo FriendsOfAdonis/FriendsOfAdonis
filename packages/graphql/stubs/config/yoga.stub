@@ -1,0 +1,43 @@
+{{{
+  exports({ to: app.configPath('graphql.ts') })
+}}}
+import env from '#start/env'
+import { defineConfig, drivers } from '@foadonis/graphql'
+import { useDisableIntrospection } from '@graphql-yoga/plugin-disable-introspection'
+
+const isDevelopment = env.get('NODE_ENV') === 'development'
+
+const graphqlConfig = defineConfig({
+  /**
+   * Path to the GraphQL endpoint.
+   */
+  path: '/graphql',
+
+  /**
+   * GraphQL server driver (Apollo or Yoga).
+   */
+  driver: drivers.yoga({
+    graphiql: isDevelopment,
+    plugins: isDevelopment ? [] : [useDisableIntrospection()]
+  })
+
+  /**
+   * Logger name used by the GraphQL server.
+   *
+   * @see {@link https://docs.adonisjs.com/guides/digging-deeper/logger#using-multiple-loggers}
+   */
+  logger: 'app',
+
+  /**
+   * Automatically emit the "schema.graphql" file.
+   */
+  emitSchemaFile: true,
+})
+
+export default graphqlConfig
+
+declare module '@foadonis/graphql/types' {
+  export interface GraphQLDriver extends InferGraphQLDriver<typeof graphqlConfig> {}
+  export interface PubSubDriver extends InferPubSubDriver<typeof graphqlConfig> {}
+  export interface SubscriptionDriver extends InferSubscriptionDriver<typeof graphqlConfig> {}
+}

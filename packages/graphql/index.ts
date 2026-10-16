@@ -1,23 +1,16 @@
-import { BouncerAbility } from '@adonisjs/bouncer/types'
-
 export { configure } from './configure.js'
-export { defineConfig } from './src/define_config.js'
+export { defineConfig, drivers } from './src/define_config.js'
 export * as errors from './src/errors/main.js'
 export { CurrentUser } from './src/decorators/user.js'
+export { Authorized } from './src/decorators/authorized.js'
+export { indexResolvers } from './src/hooks/index_resolvers.js'
 
 export type {
   ResolverData,
   GraphQLMiddleware,
   GraphQLConfig as GraphQlConfig,
+  AuthorizationRule,
+  PolicyAuthorizationRule,
 } from './src/types.js'
-
-type MethodPropClassDecorator = PropertyDecorator & MethodDecorator & ClassDecorator
-
-// Overwrite Authorized decorator declaration
-export declare function Authorized(): MethodPropClassDecorator
-export declare function Authorized(roles: readonly BouncerAbility<any>[]): MethodPropClassDecorator
-export declare function Authorized(
-  ...roles: readonly BouncerAbility<any>[]
-): MethodPropClassDecorator
 
 export * from 'type-graphql'

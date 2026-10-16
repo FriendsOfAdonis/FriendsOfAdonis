@@ -1,12 +1,12 @@
 import { test } from '@japa/runner'
-import { StartedTestContainer } from 'testcontainers'
+import { type StartedTestContainer } from 'testcontainers'
 import SyncIndexSettings from '../../commands/sync_index_settings.js'
 import { MeilisearchEngine } from '../../src/engines/meilisearch.js'
 import User from '../fixtures/user.js'
 import Import from '../../commands/import.js'
 import Flush from '../../commands/flush.js'
-import { ApplicationService } from '@adonisjs/core/types'
-import { Kernel } from '@adonisjs/core/ace'
+import { type ApplicationService } from '@adonisjs/core/types'
+import { type Kernel } from '@adonisjs/core/ace'
 import {
   assertSearchResults,
   CONTAINERS,

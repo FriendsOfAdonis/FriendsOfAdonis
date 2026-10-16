@@ -1,0 +1,17 @@
+import { features } from '#generated/features'
+import { defineConfig, drivers } from '@foadonis/flick'
+
+const flickConfig = defineConfig({
+  features,
+  driver: 'memory',
+  drivers: {
+    memory: drivers.memory(),
+  },
+})
+
+export default flickConfig
+
+declare module '@foadonis/flick/types' {
+  interface KnownFeatures extends InferFeatures<typeof flickConfig> {}
+  interface KnownDriver extends InferFlickDriver<typeof flickConfig> {}
+}

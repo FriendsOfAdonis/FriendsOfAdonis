@@ -12,10 +12,10 @@
 |
 */
 
-import ConfigureCommand from '@adonisjs/core/commands/configure'
+import type ConfigureCommand from '@adonisjs/core/commands/configure'
 import { stubsRoot } from './stubs/main.js'
-import { Codemods } from '@adonisjs/core/ace/codemods'
-import { BaseCommand } from '@adonisjs/core/ace'
+import { type Codemods } from '@adonisjs/core/ace/codemods'
+import { type BaseCommand } from '@adonisjs/core/ace'
 import stringHelpers from '@adonisjs/core/helpers/string'
 
 export const ENGINE_CONFIGURATIONS = [

@@ -1,4 +1,13 @@
 {
-  "pages": ["magnify", "shopkeeper", "openapi", "graphql", "actions", "maintenance", "crypt"],
-  "description": "Documentation for the Friends Of Adonis packages"
+  "pages": [
+    "magnify",
+    "shopkeeper",
+    "openapi",
+    "graphql",
+    "actions",
+    "flick",
+    "maintenance",
+    "crypt"
+  ],
+  "description": "Guides and API references for the Friends Of Adonis packages: GraphQL, OpenAPI, Stripe billing, search, feature flags, actions and maintenance mode for AdonisJS."
 }

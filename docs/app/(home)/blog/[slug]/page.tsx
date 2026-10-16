@@ -9,7 +9,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { buttonVariants } from '@/components/ui/button'
 import { blog } from '@/lib/source'
-import { createMetadata } from '@/utils/metadata'
+import { createMetadata, siteDescription } from '@/utils/metadata'
 import { Control } from './page.client'
 
 export default async function Page(props: { readonly params: Promise<{ slug: string }> }) {
@@ -71,17 +71,19 @@ export async function generateMetadata(props: {
 
   if (!page) notFound()
 
+  const image = { url: page.data.thumbnail, width: 1_000, height: 420, alt: page.data.title }
+
   return createMetadata({
     title: page.data.title,
-    description: page.data.description ?? '',
+    description: page.data.description ?? siteDescription,
+    path: page.url,
     openGraph: {
       type: 'article',
-      images: {
-        url: page.data.thumbnail,
-        width: 1_000,
-        height: 420,
-      },
+      publishedTime: new Date(page.data.date).toISOString(),
+      authors: [page.data.author],
+      images: [image],
     },
+    twitter: { images: [image] },
   })
 }
 

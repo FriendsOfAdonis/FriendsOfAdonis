@@ -1,0 +1,90 @@
+{
+  "name": "@foadonis/autoloader",
+  "version": "0.0.2",
+  "description": "Autoload modules with HMR support",
+  "keywords": [
+    "adonis",
+    "adonisjs",
+    "esm",
+    "hothook",
+    "typescript"
+  ],
+  "homepage": "https://friendsofadonis.com/docs/autoloader",
+  "bugs": {
+    "url": "https://github.com/FriendsOfAdonis/FriendsOfAdonis/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Martin Paucot",
+    "email": "contact@martin-paucot.fr"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FriendsOfAdonis/FriendsOfAdonis",
+    "directory": "packages/autoloader"
+  },
+  "files": [
+    "build",
+    "!build/bin",
+    "!build/tests"
+  ],
+  "type": "module",
+  "exports": {
+    ".": "./build/index.js",
+    "./types": "./build/src/types.js"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "latest"
+  },
+  "scripts": {
+    "clean": "del-cli build",
+    "copy:templates": "cpy \"stubs/**/*.stub\" build/stubs",
+    "index:commands": "adonis-kit index build/commands",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint",
+    "quick:test": "node --import=./tsnode.esm.js --enable-source-maps bin/test.ts",
+    "test": "c8 yarn quick:test",
+    "build": "yarn clean && tsc && yarn copy:templates && yarn index:commands",
+    "dev": "tsc --watch",
+    "version": "yarn build",
+    "prepublishOnly": "yarn build"
+  },
+  "dependencies": {
+    "@poppinss/hooks": "^7.3.0",
+    "chokidar": "^5.0.0",
+    "fast-glob": "^3.3.3",
+    "globby": "^16.0.0",
+    "picomatch": "^4.0.3"
+  },
+  "devDependencies": {
+    "@adonisjs/core": "^6.19.1",
+    "@japa/assert": "^4.2.0",
+    "@japa/expect": "^3.0.7",
+    "@japa/runner": "^4.5.0",
+    "@swc/core": "1.15.5",
+    "@types/node": "^25.0.2",
+    "@types/picomatch": "^4",
+    "c8": "^11.0.0",
+    "cpy-cli": "^7.0.0",
+    "del-cli": "^7.0.0",
+    "hot-hook": "^0.4.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "hot-hook": "^4.0.0"
+  },
+  "c8": {
+    "exclude": [
+      "tests/**"
+    ],
+    "reporter": [
+      "text",
+      "html"
+    ]
+  },
+  "engines": {
+    "node": ">=20.6.0"
+  }
+}

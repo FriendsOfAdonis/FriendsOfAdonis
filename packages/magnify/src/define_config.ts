@@ -1,6 +1,11 @@
 import { configProvider } from '@adonisjs/core'
-import { ConfigProvider } from '@adonisjs/core/types'
-import { AlgoliaConfig, ManagerEngineFactory, MeilisearchConfig, TypesenseConfig } from './types.js'
+import { type ConfigProvider } from '@adonisjs/core/types'
+import {
+  type AlgoliaConfig,
+  type ManagerEngineFactory,
+  type MeilisearchConfig,
+  type TypesenseConfig,
+} from './types.js'
 import { InvalidArgumentsException } from '@adonisjs/core/exceptions'
 import type { MeilisearchEngine } from './engines/meilisearch.js'
 import type { TypesenseEngine } from './engines/typesense.js'

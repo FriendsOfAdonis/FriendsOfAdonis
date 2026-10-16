@@ -1,0 +1,98 @@
+---
+title: Yoga Driver
+description: "Set up GraphQL Yoga through drivers.yoga(), enable file uploads with the AdonisJS bodyparser processManually list and a File scalar, and add Yoga plugins"
+---
+
+[GraphQL Yoga](https://the-guild.dev/graphql/yoga-server) is a **modern, lightweight** GraphQL server. It's fully open-source, optimized for developer experience, and built with flexibility in mind.
+
+## Configuration
+
+The Yoga driver is configured using the `driver` option with `drivers.yoga()` in your GraphQL configuration file. The configuration accepts all [GraphQL Yoga server options](https://the-guild.dev/graphql/yoga-server/docs/configuration) except for `schema` (which is automatically provided).
+
+```ts title="config/graphql.ts"
+import env from '#start/env'
+import { defineConfig, drivers } from '@foadonis/graphql'
+import { useDisableIntrospection } from '@graphql-yoga/plugin-disable-introspection'
+
+const isDevelopment = env.get('NODE_ENV') === 'development'
+
+export default defineConfig({
+  driver: drivers.yoga({
+    // Yoga server configuration
+    graphiql: isDevelopment,
+    plugins: isDevelopment ? [] : [useDisableIntrospection()],
+  }),
+})
+```
+
+<Callout type="warn">
+
+It is highly recommended **to disable the playground and introspection** in production for security reasons as it exposes the available operations of your application.
+
+</Callout>
+
+### Endpoint path
+
+Yoga only answers requests whose URL matches its `graphqlEndpoint` option. The driver sets it to the `path` of your GraphQL configuration, so a custom path such as `/api/v1/gql` works without further setup. Pass `graphqlEndpoint` explicitly to `drivers.yoga()` to override it.
+
+## File Uploads
+
+GraphQL Yoga supports file uploads out of the box using the [GraphQL multipart request specification](https://github.com/jaydenseric/graphql-multipart-request-spec). For the uploads to reach Yoga, the AdonisJS bodyparser must not consume the multipart stream: add your GraphQL endpoint to the `processManually` list in your bodyparser configuration.
+
+```ts title="config/bodyparser.ts"
+import { defineConfig } from '@adonisjs/core/bodyparser'
+
+const bodyParserConfig = defineConfig({
+  multipart: {
+    autoProcess: true,
+    processManually: ['/graphql'],
+  },
+})
+
+export default bodyParserConfig
+```
+
+You can then declare a `File` scalar and use it as an argument in your mutations. The resolver receives a [WHATWG `File`](https://developer.mozilla.org/en-US/docs/Web/API/File) instance.
+
+```ts title="app/graphql/scalars/file.ts"
+import { GraphQLScalarType } from 'graphql'
+
+export const FileScalar = new GraphQLScalarType({
+  name: 'File',
+  description: 'The `File` scalar type represents a file upload.',
+})
+```
+
+```ts title="app/graphql/resolvers/document_resolver.ts"
+import { Arg, Mutation, Resolver } from '@foadonis/graphql'
+import { FileScalar } from '../scalars/file.js'
+
+@Resolver()
+export default class DocumentResolver {
+  @Mutation(() => String)
+  async uploadDocument(@Arg('file', () => FileScalar) file: File) {
+    return `Received ${file.name} (${file.size} bytes)`
+  }
+}
+```
+
+## Plugins
+
+GraphQL Yoga supports a powerful plugin system that allows you to extend the server's functionality. You can add plugins to handle logging, error reporting, caching, and more.
+
+```ts title="config/graphql.ts"
+import { defineConfig, drivers } from '@foadonis/graphql'
+import { useDisableIntrospection } from '@graphql-yoga/plugin-disable-introspection'
+
+export default defineConfig({
+  driver: drivers.yoga({
+    plugins: [useDisableIntrospection()],
+  }),
+})
+```
+
+<Callout>
+
+You can find more information about GraphQL Yoga plugins in the [official documentation](https://the-guild.dev/graphql/yoga-server/docs/plugins).
+
+</Callout>

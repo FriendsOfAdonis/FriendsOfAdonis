@@ -21,7 +21,7 @@
 
 <!-- automd:coverage -->
 
-![Coverage](https://img.shields.io/badge/coverage-81%25-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-0%25-red)
 
 <!-- /automd -->
 
@@ -55,7 +55,7 @@ const posts = await Post.search('Adonis').take(10).get()
 
 ## Quickstart
 
-[Installation & Getting Started](https://friendsofadonis.github.io/docs/magnify/getting-started)
+[Installation & Getting Started](https://friendsofadonis.com/docs/magnify/getting-started)
 
 ## License
 

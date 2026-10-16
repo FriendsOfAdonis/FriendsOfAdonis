@@ -1,6 +1,6 @@
 import { test } from '@japa/runner'
 import { Index } from 'meilisearch'
-import sinon, { SinonMock } from 'sinon'
+import sinon, { type SinonMock } from 'sinon'
 import { MeilisearchEngine } from '../../src/engines/meilisearch.js'
 import { SearchableModel } from '../fixtures/searchable_model.js'
 import { SearchableCustomKeyModel } from '../fixtures/searchable_custom_key_model.js'

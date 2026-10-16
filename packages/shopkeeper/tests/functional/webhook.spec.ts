@@ -4,9 +4,9 @@ import { createCustomer } from '../utils.js'
 import SubscriptionItem from '../../src/models/subscription_item.js'
 import string from '@adonisjs/core/helpers/string'
 import { DateTime } from 'luxon'
-import Stripe from 'stripe'
+import type Stripe from 'stripe'
 import { createApp } from '../app.js'
-import { Shopkeeper } from '../../src/shopkeeper.js'
+import { type Shopkeeper } from '../../src/shopkeeper.js'
 
 function randomCustomerId() {
   return `cus_${string.random(16)}`
@@ -18,6 +18,10 @@ function randomSubscriptionId() {
 
 function randomSubscriptionItemId() {
   return `sub_${string.random(10)}`
+}
+
+function randomEventId() {
+  return `evt_${string.random(16)}`
 }
 
 let product: Stripe.Product
@@ -50,7 +54,7 @@ test.group('Webhook', (group) => {
     const subscriptionId = randomSubscriptionId()
     const itemId = randomSubscriptionItemId()
     const response = await client.post('/stripe/webhook').json({
-      id: 'foo',
+      id: randomEventId(),
       type: 'customer.subscription.created',
       data: {
         object: {
@@ -68,12 +72,12 @@ test.group('Webhook', (group) => {
 
     response.assertStatus(200)
 
-    // TODO: Filter quantity
     const subscription = await Subscription.findByOrFail({
       type: 'default',
       userId: user.id,
       stripeId: subscriptionId,
       stripeStatus: 'active',
+      quantity: 10,
     })
 
     await SubscriptionItem.findByOrFail({
@@ -106,7 +110,7 @@ test.group('Webhook', (group) => {
     })
 
     const response = await client.post('/stripe/webhook').json({
-      id: 'foo',
+      id: randomEventId(),
       type: 'customer.subscription.updated',
       data: {
         object: {
@@ -162,7 +166,7 @@ test.group('Webhook', (group) => {
     })
 
     const response = await client.post('/stripe/webhook').json({
-      id: 'foo',
+      id: randomEventId(),
       type: 'customer.subscription.updated',
       data: {
         object: {
@@ -209,7 +213,7 @@ test.group('Webhook', (group) => {
     await subscription.load('items')
 
     const response = await client.post('/stripe/webhook').json({
-      id: 'foo',
+      id: randomEventId(),
       type: 'customer.subscription.updated',
       data: {
         object: {
@@ -243,7 +247,7 @@ test.group('Webhook', (group) => {
     await subscription.load('items')
 
     const response = await client.post('/stripe/webhook').json({
-      id: 'foo',
+      id: randomEventId(),
       type: 'customer.subscription.deleted',
       data: {
         object: { id: subscription.stripeId, customer: user.stripeId, quantity: 1 },
@@ -260,7 +264,7 @@ test.group('Webhook', (group) => {
     const subscription = await user.newSubscription('main', price.id).create('pm_card_visa')
 
     const response = await client.post('/stripe/webhook').json({
-      id: 'foo',
+      id: randomEventId(),
       type: 'customer.subscription.updated',
       data: {
         object: {

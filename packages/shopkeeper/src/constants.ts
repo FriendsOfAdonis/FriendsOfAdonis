@@ -1,5 +1,5 @@
-import Stripe from 'stripe'
-import { StripeEventTypes } from './types.js'
+import type Stripe from 'stripe'
+import { type StripeEventTypes } from './types.js'
 
 export const WEBHOOK_EVENTS: StripeEventTypes[] = [
   'customer.subscription.created',
@@ -12,4 +12,4 @@ export const WEBHOOK_EVENTS: StripeEventTypes[] = [
   'invoice.payment_succeeded',
 ]
 
-export const STRIPE_VERSION: Stripe.WebhookEndpointCreateParams.ApiVersion = '2023-10-16'
+export const STRIPE_VERSION: Stripe.WebhookEndpointCreateParams.ApiVersion = '2026-02-25.clover'

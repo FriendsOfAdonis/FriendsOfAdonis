@@ -20,7 +20,7 @@ export function toOpenAPIPath(path: string): string {
 export function isConstructor(fn: Function) {
   try {
     Reflect.construct(String, [], fn)
-  } catch (e) {
+  } catch {
     return false
   }
   return true

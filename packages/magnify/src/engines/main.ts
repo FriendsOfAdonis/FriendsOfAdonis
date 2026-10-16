@@ -1,6 +1,6 @@
-import { SimplePaginator } from '@adonisjs/lucid/database'
-import { SearchBuilder } from '../builder.js'
-import { SearchableModel, SearchableRow } from '../types.js'
+import { type SimplePaginator } from '@adonisjs/lucid/database'
+import { type SearchBuilder } from '../builder.js'
+import { type SearchableModel, type SearchableRow } from '../types.js'
 
 export abstract class MagnifyEngine {
   /**

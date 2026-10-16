@@ -1,4 +1,4 @@
-import { SimplePaginator } from '@adonisjs/lucid/database'
+import { type SimplePaginator } from '@adonisjs/lucid/database'
 import { MagnifyEngine } from '../../src/engines/main.js'
 
 export class FakeEngine extends MagnifyEngine {

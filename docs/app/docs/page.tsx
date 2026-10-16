@@ -1,6 +1,15 @@
 import { Card, Cards } from 'fumadocs-ui/components/card'
 import { DocsBody, DocsDescription, DocsPage, DocsTitle } from 'fumadocs-ui/page'
+import type { Metadata } from 'next'
 import { source } from '@/lib/source'
+import { createMetadata, siteDescription } from '@/utils/metadata'
+
+export const metadata: Metadata = createMetadata({
+  title: { absolute: 'AdonisJS Packages Documentation | Friends Of Adonis' },
+  description:
+    'Documentation for the Friends Of Adonis packages: OpenAPI specs, GraphQL APIs, Stripe billing, full-text search, feature flags and more for AdonisJS.',
+  path: '/docs',
+})
 
 export default function Page() {
   const pages = source.getPageTree()
@@ -8,9 +17,7 @@ export default function Page() {
   return (
     <DocsPage>
       <DocsTitle>Friends Of Adonis</DocsTitle>
-      <DocsDescription>
-        Well-crafted and battle-tested Adonis packages made with ♥ by the community
-      </DocsDescription>
+      <DocsDescription>{siteDescription}</DocsDescription>
       <DocsBody>
         <Cards>
           {pages.children

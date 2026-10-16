@@ -20,10 +20,10 @@ export class CryptBaseCommand extends BaseCommand {
   }
 
   protected createPrivateKey() {
-    return CryptPrivateKey.create(this.app.makeURL())
+    return CryptPrivateKey.load(this.app.appRoot)
   }
 
   protected createPublicKey() {
-    return CryptPublicKey.create(this.app.makeURL())
+    return CryptPublicKey.load(this.app.appRoot)
   }
 }

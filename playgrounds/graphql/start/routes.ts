@@ -8,5 +8,6 @@
 */
 
 import router from '@adonisjs/core/services/router'
+import graphql from '@foadonis/graphql/services/main'
 
-router.get('/', async () => 'It works!')
+graphql.registerRoute(router)

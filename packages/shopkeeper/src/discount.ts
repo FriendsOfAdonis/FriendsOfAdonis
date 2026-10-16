@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon'
-import Stripe from 'stripe'
+import type Stripe from 'stripe'
 import { PromotionCode } from './promotion_code.js'
 import { Coupon } from './coupon.js'
 
@@ -24,7 +24,11 @@ export class Discount {
    * Get the coupon applied to the discount.
    */
   coupon(): Coupon {
-    return new Coupon(this.#discount.coupon)
+    const coupon = this.#discount.source.coupon
+    if (!coupon || typeof coupon === 'string') {
+      throw new Error('Discount source coupon was not expanded')
+    }
+    return new Coupon(coupon)
   }
 
   /**

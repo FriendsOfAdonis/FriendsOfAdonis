@@ -1,4 +1,4 @@
-import { DownPayload } from '../types.js'
+import { type DownPayload } from '../types.js'
 
 export abstract class MaintenanceDriver {
   abstract activate(data: DownPayload): Promise<void>

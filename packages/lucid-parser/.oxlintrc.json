@@ -1,0 +1,4 @@
+{
+  "extends": ["../../.oxlintrc.json"],
+  "ignorePatterns": ["tests/fixtures/no_export.ts"]
+}

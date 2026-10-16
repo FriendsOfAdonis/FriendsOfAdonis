@@ -21,7 +21,7 @@
 
 <!-- automd:coverage from="branches,functions" -->
 
-![Coverage](https://img.shields.io/badge/coverage-66%25-orange)
+![Coverage](https://img.shields.io/badge/coverage-75%25-brightgreen)
 
 <!-- /automd -->
 
@@ -29,7 +29,7 @@
 
 ## Quickstart
 
-[Installation & Getting Started](https://friendsofadonis.github.io/docs/openapi/getting-started)
+[Installation & Getting Started](https://friendsofadonis.com/docs/graphql/getting-started)
 
 ## License
 

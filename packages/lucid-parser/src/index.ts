@@ -2,7 +2,12 @@ import { promises as fsp } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { parse } from 'recast'
 import { getBabelParser } from './babel.js'
-import { ColumnProperty, ComputedProperty, FileNode, ParsedModel } from './types.js'
+import {
+  type ColumnProperty,
+  type ComputedProperty,
+  type FileNode,
+  type ParsedModel,
+} from './types.js'
 import {
   getClassMethods,
   getClassProperties,
@@ -11,7 +16,7 @@ import {
   getPropertyTypeFromClassProperty,
 } from './ast.js'
 import { LucidParserError } from './errors.js'
-import { ClassMethod, ClassProperty, Decorator } from '@babel/types'
+import { type ClassMethod, type ClassProperty, type Decorator } from '@babel/types'
 
 export async function loadModule(path: URL | string) {
   const filepath = fileURLToPath(path)

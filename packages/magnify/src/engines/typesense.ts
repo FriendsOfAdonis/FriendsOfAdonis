@@ -1,10 +1,10 @@
-import { SearchableModel, SearchableRow, TypesenseConfig } from '../types.js'
+import { type SearchableModel, type SearchableRow, type TypesenseConfig } from '../types.js'
 import { Client } from 'typesense'
-import { MagnifyEngine } from './main.js'
-import { SearchBuilder } from '../builder.js'
+import { type MagnifyEngine } from './main.js'
+import { type SearchBuilder } from '../builder.js'
 import { SimplePaginator } from '@adonisjs/lucid/database'
-import Collection from 'typesense/lib/Typesense/Collection.js'
-import { SearchParams, SearchResponse } from 'typesense/lib/Typesense/Documents.js'
+import type Collection from 'typesense/lib/Typesense/Collection.js'
+import { type SearchParams, type SearchResponse } from 'typesense/lib/Typesense/Documents.js'
 import is from '@adonisjs/core/helpers/is'
 
 export class TypesenseEngine implements MagnifyEngine {

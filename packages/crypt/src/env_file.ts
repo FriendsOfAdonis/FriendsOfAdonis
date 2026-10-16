@@ -3,7 +3,8 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { replace } from './utils/replace.js'
 
 /**
- * Utility class to work with dotenv files.
+ * Utility class to parse and update dotenv files
+ * without touching comments and blank lines.
  */
 export class EnvFile {
   #path: string
@@ -24,7 +25,7 @@ export class EnvFile {
       .then((c) => c.toString())
       .catch(() => '')
 
-    const parsed = await new EnvParser(content).parse()
+    const parsed = await new EnvParser(content, new URL(import.meta.url)).parse()
 
     return new EnvFile(path, content, parsed)
   }

@@ -1,9 +1,9 @@
 {
   "name": "@foadonis/typescript-config",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "license": "MIT",
   "dependencies": {
-    "@adonisjs/tsconfig": "^1.4.1"
+    "@adonisjs/tsconfig": "catalog:"
   }
 }

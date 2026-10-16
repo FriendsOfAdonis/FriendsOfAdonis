@@ -1,7 +1,7 @@
 import app from '@adonisjs/core/services/app'
-import { MaintenanceDriver } from './maintenance_driver.js'
+import { type MaintenanceDriver } from './maintenance_driver.js'
 import { rm, writeFile, stat, readFile } from 'node:fs/promises'
-import { DownPayload } from '../types.js'
+import { type DownPayload } from '../types.js'
 
 export class FileMaintenanceDriver implements MaintenanceDriver {
   public async activate(data: DownPayload): Promise<void> {

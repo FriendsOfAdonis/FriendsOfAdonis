@@ -3,7 +3,7 @@
 
 ## @foadonis/openapi
 
-### Generate OpenAPI compliant specifications powered by openapi-metadata for you Adonis Application
+### Build OpenAPI compliant APIs with Adonis
 
 <br/>
 </div>
@@ -21,7 +21,7 @@
 
 <!-- automd:coverage -->
 
-![Coverage](https://img.shields.io/badge/coverage-62%25-orange)
+![Coverage](https://img.shields.io/badge/coverage-0%25-red)
 
 <!-- /automd -->
 
@@ -29,7 +29,7 @@
 
 ## Quickstart
 
-[Installation & Getting Started](https://friendsofadonis.github.io/docs/openapi/getting-started)
+[Installation & Getting Started](https://friendsofadonis.com/docs/openapi/getting-started)
 
 ## License
 

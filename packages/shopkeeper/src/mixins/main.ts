@@ -1,1 +1,1 @@
-export { Billable } from './billable.js'
+export { billable } from './billable.js'

@@ -10,6 +10,7 @@
 
 import router from '@adonisjs/core/services/router'
 import server from '@adonisjs/core/services/server'
+import graphql from '@foadonis/graphql/services/main'
 
 /**
  * The error handler is used to convert an exception
@@ -47,3 +48,8 @@ export const middleware = router.named({
   guest: () => import('#middleware/guest_middleware'),
   auth: () => import('#middleware/auth_middleware'),
 })
+
+graphql.subscription.use([
+  () => import('@adonisjs/auth/initialize_auth_middleware'),
+  () => import('@adonisjs/session/session_middleware'),
+])

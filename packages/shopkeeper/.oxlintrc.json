@@ -1,0 +1,9 @@
+{
+  "extends": ["../../.oxlintrc.json"],
+  "rules": {
+    "unicorn/no-useless-spread": "off",
+    "typescript/no-unsafe-declaration-merging": "off",
+    "eslint/no-unused-expressions": "off",
+    "eslint/no-unused-private-class-members": "off"
+  }
+}

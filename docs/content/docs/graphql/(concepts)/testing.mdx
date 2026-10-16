@@ -1,0 +1,185 @@
+---
+title: Testing
+description: "Test your AdonisJS GraphQL API with Japa: send queries and mutations with client.query and client.mutate, then assert data and errors with GraphQL-aware assertions"
+---
+
+`@foadonis/graphql` ships a Japa plugin that extends the [API client](https://docs.adonisjs.com/guides/testing/http-tests) with GraphQL helpers. Requests go through the real HTTP stack, so middleware, authentication and `loginAs` behave exactly as they do in production.
+
+## Setup
+
+The plugin requires the [`@japa/api-client`](https://japa.dev/docs/plugins/api-client) plugin. Register both in `tests/bootstrap.ts`.
+
+```ts title="tests/bootstrap.ts"
+import type { Config } from '@japa/runner/types'
+import { assert } from '@japa/assert'
+import { apiClient } from '@japa/api-client'
+import { pluginAdonisJS } from '@japa/plugin-adonisjs'
+import { graphqlApiClient } from '@foadonis/graphql/plugins/api_client'
+import app from '@adonisjs/core/services/app'
+
+export const plugins: Config['plugins'] = [
+  assert(),
+  apiClient(),
+  pluginAdonisJS(app),
+  graphqlApiClient(app),
+]
+```
+
+The GraphQL server is started on the first GraphQL request of the test run and stopped when the run ends. Suites that never touch GraphQL pay nothing.
+
+## Sending operations
+
+Use `client.query` and `client.mutate` from the test context. Both accept a document as a string or a `DocumentNode`, followed by the variables.
+
+```ts title="tests/functional/posts.spec.ts"
+import { test } from '@japa/runner'
+
+test.group('Posts', () => {
+  test('lists posts', async ({ client }) => {
+    const response = await client.query(
+      `query Posts($limit: Int!) {
+        posts(limit: $limit) { id title }
+      }`,
+      { limit: 10 }
+    )
+
+    response.assertNoErrors()
+    response.assertData({ posts: [{ id: '1', title: 'Hello' }] })
+  })
+
+  test('creates a post', async ({ client }) => {
+    const response = await client.mutate(
+      `mutation CreatePost($title: String!) {
+        createPost(title: $title) { id }
+      }`,
+      { title: 'Hello' }
+    )
+
+    response.assertNoErrors()
+    response.assertDataContains({ createPost: { id: '1' } })
+  })
+})
+```
+
+The returned request is a regular API client request. Every helper from `@japa/api-client` and the AdonisJS plugins is available, including authentication.
+
+```ts
+const response = await client
+  .query(`query { me { email } }`)
+  .loginAs(user)
+  .header('Accept-Language', 'fr')
+```
+
+### Operation name
+
+When a document defines several operations, select the one to execute with `operationName`.
+
+```ts
+const response = await client
+  .query(`query First { posts { id } } query Second { users { id } }`)
+  .operationName('Second')
+```
+
+### Sending queries over GET
+
+Queries are sent as `POST` with a JSON body. Pass the `method` option to send them as `GET` instead, for example to test persisted queries or CDN caching.
+
+```ts
+const response = await client.query(`query { posts { id } }`, {}, { method: 'GET' })
+```
+
+File uploads cannot be combined with `GET`.
+
+### File uploads
+
+Attach files to variables with `upload`. The request is sent following the [GraphQL multipart request specification](https://github.com/jaydenseric/graphql-multipart-request-spec). Nested variables use a dotted path.
+
+```ts
+const response = await client
+  .mutate(`mutation Upload($file: File!) { upload(file: $file) }`)
+  .upload('file', new File(['Hello'], 'hello.txt', { type: 'text/plain' }))
+```
+
+Accepted values are a file path, a `Buffer`, a `ReadStream`, a `Blob` or a `File`. The filename defaults to the name of a `File` or to the variable name, and can be overridden with the third argument. List variables use indexed paths such as `files.0`.
+
+<Callout type="warn">
+
+File uploads are only supported by the [Yoga driver](/docs/graphql/drivers/yoga). Using `upload` with the Apollo driver fails with an explicit error.
+
+</Callout>
+
+## Reading the response
+
+The response exposes the members of the GraphQL response body.
+
+```ts
+const response = await client.query(`query { posts { id } }`)
+
+response.data // { posts: [...] }
+response.errors // []
+response.extensions // {}
+```
+
+### Typed documents
+
+Documents produced by [GraphQL Code Generator](https://the-guild.dev/graphql/codegen) carry their result and variables types. Passing a `TypedDocumentNode` types both the variables argument and `response.data`.
+
+```ts
+import { PostsDocument } from '#graphql/generated'
+
+const response = await client.query(PostsDocument, { limit: 10 })
+
+response.data.posts // typed
+```
+
+## Assertions
+
+Errors are inert until asserted on, like HTTP status codes. Assertions require the [`@japa/assert`](https://japa.dev/docs/plugins/assert) plugin.
+
+```ts
+const response = await client.query(`query { posts { id } }`)
+
+// The body is a GraphQL response without errors
+response.assertNoErrors()
+
+// The data member deeply equals the expected value
+response.assertData({ posts: [{ id: '1' }] })
+
+// The data member contains the expected subset
+response.assertDataContains({ posts: [{ id: '1' }] })
+```
+
+```ts
+const response = await client.query(`query { secret }`)
+
+// At least one error
+response.assertErrors()
+
+// Exactly two errors
+response.assertErrors(2)
+
+// At least one error with the given extensions.code
+response.assertErrorCode('UNAUTHENTICATED')
+
+// At least one error message matching a string or a regular expression
+response.assertErrorMessage(/Access denied/)
+```
+
+`assertNoErrors` also fails when the body is not a GraphQL response, for example a `404` from a wrong path, so a broken setup never passes silently.
+
+### Debugging
+
+Assertion failures list every error with its path and code. To print them on demand, call `dumpErrors`. The built-in `dump` helpers still apply: `request.dumpBody()` prints the operation and variables that were sent.
+
+```ts
+const response = await client.query(`query { secret }`)
+response.dumpErrors()
+```
+
+## Endpoint resolution
+
+Requests are sent to the route named `graphql`, registered by `graphql.registerRoute(router)` in `start/routes.ts`. To target another path, pass the `path` option.
+
+```ts
+graphqlApiClient(app, { path: '/api/graphql' })
+```

@@ -1,5 +1,5 @@
 export function keynames(type: 'private' | 'public') {
-  return [keyname(type), `CRYPT_${type.toUpperCase()}_KEY`]
+  return [...new Set([keyname(type), `CRYPT_${type.toUpperCase()}_KEY`])]
 }
 
 export function keyname(type: 'private' | 'public') {

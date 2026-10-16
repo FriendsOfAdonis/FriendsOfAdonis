@@ -1,6 +1,6 @@
-import { ConfigProvider } from '@adonisjs/core/types'
-import { MaintenanceDriver } from './drivers/maintenance_driver.js'
-import { MaintenanceManager } from './maintenance_manager.js'
+import { type ConfigProvider } from '@adonisjs/core/types'
+import { type MaintenanceDriver } from './drivers/maintenance_driver.js'
+import { type MaintenanceManager } from './maintenance_manager.js'
 
 export type DownPayload = {
   retry?: number

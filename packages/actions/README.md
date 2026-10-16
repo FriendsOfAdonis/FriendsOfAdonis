@@ -29,7 +29,7 @@
 
 ## Quickstart
 
-[Installation & Getting Started](https://friendsofadonis.github.io/docs/actions/getting-started)
+[Installation & Getting Started](https://friendsofadonis.com/docs/actions/getting-started)
 
 ## License
 

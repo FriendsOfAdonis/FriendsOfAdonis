@@ -12,9 +12,9 @@
 |
 */
 
-import ConfigureCommand from '@adonisjs/core/commands/configure'
+import type ConfigureCommand from '@adonisjs/core/commands/configure'
 import { stubsRoot } from './stubs/main.js'
-import { Codemods } from '@adonisjs/core/ace/codemods'
+import { type Codemods } from '@adonisjs/core/ace/codemods'
 
 export async function configure(command: ConfigureCommand) {
   const codemods = await command.createCodemods()
@@ -45,6 +45,7 @@ export async function configure(command: ConfigureCommand) {
   await generateMigration(command, codemods, 'create_customer_stripe_columns')
   await generateMigration(command, codemods, 'create_subscriptions_table')
   await generateMigration(command, codemods, 'create_subscription_items_table')
+  await generateMigration(command, codemods, 'create_stripe_webhook_events_table')
 
   logSuccess(command)
 }

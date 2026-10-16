@@ -1,8 +1,8 @@
-import { KeysFile } from '../src/keys_file.js'
 import { CryptBaseCommand } from '../src/base_command.js'
-import { keyname } from '../src/utils/keynames.js'
-import { EnvFile } from '../src/env_file.js'
-import { keypair } from '../src/utils/keypair.js'
+import { EnvFile } from '../src/env_file.ts'
+import { KeysFile } from '../src/keys_file.ts'
+import { keyname } from '../src/utils/keynames.ts'
+import { keypair } from '../src/utils/keypair.ts'
 
 export default class InitCommand extends CryptBaseCommand {
   static commandName = 'crypt:init'
@@ -29,9 +29,11 @@ export default class InitCommand extends CryptBaseCommand {
     keys.set(privateKeyName, keyPair.privateKey)
 
     await envFile.save()
-    this.logger.success(`[${this.filename()}] ✔ generated "${publicKeyName}" public key`)
-    this.logger.success(`[.env.keys] ✔ generated "${privateKeyName}" private key`)
+    this.logger.success(`[${this.filename()}] generated "${publicKeyName}" public key`)
+    this.logger.success(`[.env.keys] generated "${privateKeyName}" private key`)
 
     await keys.save()
+
+    return keyPair
   }
 }

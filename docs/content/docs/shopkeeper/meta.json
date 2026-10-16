@@ -1,20 +1,25 @@
 {
   "title": "Shopkeeper",
-  "description": "Fluent interface for Stripe",
+  "description": "Expressive, fluent Stripe billing for AdonisJS: subscriptions, checkout, invoices, and webhooks",
   "icon": "CircleDollarSign",
   "root": true,
   "pages": [
-    "---Guide---",
     "index",
     "getting-started",
-    "------",
-    "customers",
-    "payment-methods",
-    "subscriptions",
-    "subscription-trials",
-    "webhooks",
-    "checkout",
-    "single-charges",
-    "invoices"
+    "--- Payments ---",
+    "(guides)/accepting-payments",
+    "(guides)/single-charges",
+    "(guides)/invoices-and-receipts",
+    "--- Subscriptions ---",
+    "(guides)/managing-subscriptions",
+    "(guides)/offering-trials",
+    "(guides)/metered-billing",
+    "--- Configuration ---",
+    "(guides)/handling-webhooks",
+    "(guides)/managing-customers",
+    "(guides)/managing-payment-methods",
+    "(guides)/taxes",
+    "---",
+    "migration"
   ]
 }
